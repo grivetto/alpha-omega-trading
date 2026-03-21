@@ -14,6 +14,8 @@ DASHBOARD_DIR = os.path.join(BASE_DIR, 'dashboard')
 
 STATUS_FILE = os.path.join(BASE_DIR, 'multi_status.json')
 GRID_STATUS_FILE = os.path.join(BASE_DIR, 'grid_status.json')
+QUANT_STATUS_FILE = os.path.join(BASE_DIR, 'quant_status.json')
+CRYPTOCOM_STATUS_FILE = os.path.join(BASE_DIR, 'cryptocom_status.json')
 
 class Handler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
@@ -35,6 +37,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         elif self.path == '/grid_status.json' or self.path.startswith('/grid_status.json?'):
             self.send_json_file(GRID_STATUS_FILE)
             return
+        elif self.path == '/quant_status.json' or self.path.startswith('/quant_status.json?'):
+            self.send_json_file(QUANT_STATUS_FILE)
+            return
+        elif self.path == '/cryptocom_status.json' or self.path.startswith('/cryptocom_status.json?'):
+            self.send_json_file(CRYPTOCOM_STATUS_FILE)
+            return
         return super().do_GET()
     
     def send_json_file(self, filepath):
@@ -48,9 +56,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         except Exception as e:
             self.send_error(404, str(e))
 
+class ThreadedHTTPServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
+    allow_reuse_address = True
+
 if __name__ == '__main__':
     print(f"🚀 Dashboard: http://localhost:{PORT}")
-    print(f"   Multi-Coin: http://localhost:{PORT}/")
-    print(f"   Grid Bot:   http://localhost:{PORT}/grid")
-    with socketserver.TCPServer(("0.0.0.0", PORT), Handler) as httpd:
+    with ThreadedHTTPServer(("0.0.0.0", PORT), Handler) as httpd:
         httpd.serve_forever()
