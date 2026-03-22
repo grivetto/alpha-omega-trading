@@ -21,9 +21,10 @@ def get_bot_status():
         "OMEGA-FEED": "omega_bottom_feeder.py",
         "SIGMA-CHAOS": "sigma_chaos_engine.py",
         "FLASH-UNIT": "flash_surge_unit.py",
-        "CENTURION-REV": "centurion_reversion_squad.py",
-        "OSCILLATOR": "oscillator_counter_unit.py",
-        "ARCHITECT": "architect_ai.py"
+        "LIQUID-HARV": "liquidity_harvester.py",
+        "NEURAL-PLS": "neural_pulse_v2.py",
+        "ARCHITECT": "architect_ai.py",
+        "EVOLUTION": "evolution_engine.py"
     }
     status_report = []
     ps_output = os.popen("ps aux").read()
@@ -56,23 +57,10 @@ def get_detailed_metrics():
                 total_eur += eur_val
                 asset_list.append({"name": asset, "qty": f"{qty:.6f}", "val": round(eur_val, 2)})
 
-        all_activity = []
-        symbols = ['BTCEUR', 'SOLEUR', 'AVAXBTC', 'DOGEBTC', 'ETHBTC', 'SOLBTC', 'ADABTC']
-        total_vol = 0
-        for s in symbols:
-            try:
-                trades = client.get_my_trades(symbol=s, limit=10)
-                for t in trades:
-                    total_vol += float(t['quoteQty']) if 'EUR' in s else float(t['quoteQty']) * prices.get("BTCEUR", 60000)
-                    all_activity.append({
-                        "timestamp": t['time'],
-                        "time": datetime.fromtimestamp(t['time']/1000).strftime("%H:%M:%S"),
-                        "bot": "SQUAD",
-                        "action": f"{'BUY' if t['isBuyer'] else 'SELL'} {s} @ {float(t['price']):.6f}",
-                        "val": float(t['quoteQty'])
-                    })
-            except: continue
-        all_activity.sort(key=lambda x: x['timestamp'], reverse=True)
+        # Evolve DNA Data
+        dna = {"generation": 0}
+        if os.path.exists("fleet_dna.json"):
+            with open("fleet_dna.json", "r") as f: dna = json.load(f)
 
         return {
             "total_val": round(total_eur, 2),
@@ -80,8 +68,7 @@ def get_detailed_metrics():
             "btc_price": prices.get("BTCEUR", 0),
             "sol_price": prices.get("SOLEUR", 0),
             "assets": sorted(asset_list, key=lambda x: x['val'], reverse=True),
-            "recent_trades": all_activity[:25],
-            "daily_volume": round(total_vol, 2)
+            "dna_gen": dna.get("generation", 0)
         }
     except: return None
 
@@ -92,7 +79,7 @@ def main():
             metrics = get_detailed_metrics()
             if metrics:
                 history.append({"time": datetime.now().strftime("%H:%M"), "val": metrics['total_val']})
-                if len(history) > 120: history.pop(0)
+                if len(history) > 100: history.pop(0)
             report = {"timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "bots": get_bot_status(), "metrics": metrics, "history": history}
             with open('/root/.openclaw/workspace/dashboard/fleet_stats.json', 'w') as f:
                 json.dump(report, f, indent=2)
