@@ -3,203 +3,189 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ALPHA-FLEET COMMAND | Sergio Grivetto</title>
+    <title>ALPHA-FLEET COMMAND v2</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap');
-        body { background-color: #050505; color: #e2e8f0; font-family: 'Inter', sans-serif; }
-        .bento-card {
-            background: rgba(15, 15, 15, 0.8);
-            border: 1px solid #222;
-            border-radius: 1.5rem;
-            backdrop-filter: blur(10px);
-            transition: all 0.3s ease;
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
+        body { background-color: #030303; color: #f8fafc; font-family: 'Space Grotesk', sans-serif; overflow-x: hidden; }
+        .glass-card {
+            background: linear-gradient(145deg, rgba(20, 20, 20, 0.9) 0%, rgba(10, 10, 10, 0.95) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 1.25rem;
+            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        .bento-card:hover { border-color: #3b82f6; transform: translateY(-2px); }
-        .status-pill { border-radius: 9999px; padding: 2px 10px; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; }
-        .glow-blue { text-shadow: 0 0 15px rgba(59, 130, 246, 0.5); }
+        .glass-card:hover { border-color: #3b82f6; transform: translateY(-4px); box-shadow: 0 20px 40px -10px rgba(59, 130, 246, 0.2); }
+        .cyber-header { background: linear-gradient(90deg, #1e3a8a, #3b82f6, #0ea5e9); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .status-badge { font-size: 0.65rem; font-weight: 800; padding: 2px 8px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+        .glow-text { text-shadow: 0 0 20px rgba(59, 130, 246, 0.5); }
+        .bg-grid { background-image: radial-gradient(circle, #1e293b 1px, transparent 1px); background-size: 30px 30px; }
+        .pulse-emerald { animation: pulse-green 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        @keyframes pulse-green { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
     </style>
 </head>
-<body class="p-4 md:p-8 min-h-screen">
-    <div class="max-w-7xl mx-auto">
-        <!-- Header -->
-        <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+<body class="bg-grid p-4 md:p-8">
+    <div class="max-w-[1400px] mx-auto">
+        <!-- Top Stats Bar -->
+        <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-10 gap-6">
             <div>
-                <h1 class="text-3xl font-extrabold tracking-tighter">ALPHA-FLEET <span class="text-blue-500">COMMAND</span></h1>
-                <p class="text-slate-500 text-sm font-mono mt-1">Status: <span class="text-emerald-400 font-bold animate-pulse">GOD_MODE ACTIVE</span> | 10 Bots Coordinating</p>
+                <h1 class="text-4xl font-black cyber-header italic tracking-tight">ALPHA-FLEET : COMMAND CENTER</h1>
+                <p class="text-slate-500 font-mono text-xs mt-2 uppercase tracking-widest">Global Status: <span class="text-blue-400 font-bold glow-text">GOD_MODE v2.0</span></p>
             </div>
-            <div class="flex gap-4">
-                <div class="bg-[#111] px-4 py-2 rounded-xl border border-[#222]">
-                    <p class="text-[10px] text-slate-500 uppercase font-bold text-center">Profitto Netto (vs €722)</p>
-                    <p class="text-2xl font-mono font-bold text-emerald-400 text-center" id="profit-val">+0.00€</p>
+            
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-4 w-full lg:w-auto">
+                <div class="glass-card px-6 py-4 border-l-4 border-emerald-500">
+                    <p class="text-[10px] text-slate-500 uppercase font-bold mb-1">PROFITTO NETTO (TOT)</p>
+                    <p class="text-3xl font-mono font-bold text-emerald-400" id="profit-val">+0.00€</p>
                 </div>
-                <div class="bg-[#111] px-4 py-2 rounded-xl border border-[#222]">
-                    <p class="text-[10px] text-slate-500 uppercase font-bold text-center">Total Fleet Value</p>
-                    <p class="text-2xl font-mono font-bold text-white text-center">€<span id="global-total">0.00</span></p>
+                <div class="glass-card px-6 py-4 border-l-4 border-blue-500">
+                    <p class="text-[10px] text-slate-500 uppercase font-bold mb-1">VALORE TOTALE FLOTTA</p>
+                    <p class="text-3xl font-mono font-bold text-white">€<span id="global-total">0.00</span></p>
+                </div>
+                <div class="glass-card px-6 py-4 border-l-4 border-slate-700 hidden md:block">
+                    <p class="text-[10px] text-slate-500 uppercase font-bold mb-1">CAPITALE VERSATO</p>
+                    <p class="text-3xl font-mono font-bold text-slate-400">€722.00</p>
                 </div>
             </div>
         </div>
 
-        <!-- Main Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-            
-            <!-- Asset Status -->
-            <div class="bento-card p-6 md:col-span-2 border-blue-500/50">
-                <div class="flex justify-between items-start mb-4">
-                    <span class="status-pill bg-blue-500/20 text-blue-400 border border-blue-500/30">Binance Main Pool</span>
-                    <div class="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></div>
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <!-- Main Systems Monitor -->
+            <div class="lg:col-span-3 space-y-6">
+                <!-- Bot Status Row -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4" id="bot-grid">
+                    <!-- Bots will be injected here -->
                 </div>
-                <h2 class="text-xl font-bold mb-4">Portafoglio Live</h2>
-                <div class="grid grid-cols-2 gap-4 font-mono">
-                    <div class="bg-black/40 p-3 rounded-lg border border-[#222]">
-                        <p class="text-[10px] text-slate-500 uppercase">Bitcoin</p>
-                        <p class="text-lg text-white" id="b-btc">0.000000</p>
+
+                <!-- Main Chart -->
+                <div class="glass-card p-6 min-h-[400px]">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="font-bold text-blue-400 uppercase tracking-widest text-sm flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-blue-500 pulse-emerald"></span>
+                            Bitcoin Performance Analytics (1m)
+                        </h3>
+                        <div class="text-[10px] font-mono text-slate-600 uppercase" id="last-update">Syncing...</div>
                     </div>
-                    <div class="bg-black/40 p-3 rounded-lg border border-[#222]">
-                        <p class="text-[10px] text-slate-500 uppercase">Solana</p>
-                        <p class="text-lg text-white" id="b-sol">0.00</p>
-                    </div>
-                    <div class="bg-black/40 p-3 rounded-lg border border-[#222]">
-                        <p class="text-[10px] text-slate-500 uppercase">Euro Liquidi</p>
-                        <p class="text-lg text-emerald-400" id="b-eur">0.00€</p>
-                    </div>
-                    <div class="bg-black/40 p-3 rounded-lg border border-[#222]">
-                        <p class="text-[10px] text-slate-500 uppercase">USDT Pool</p>
-                        <p class="text-lg text-indigo-400" id="c-bal">0.00</p>
+                    <div class="h-80">
+                        <canvas id="performanceChart"></canvas>
                     </div>
                 </div>
             </div>
 
-            <!-- Bot Status Column 1 -->
-            <div class="bento-card p-6 border-cyan-500/30">
-                <span class="status-pill bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 mb-4 inline-block">Assault</span>
-                <h2 class="font-bold mb-2">🌑 SHADOW</h2>
-                <p class="text-[10px] text-slate-500 mb-4">Ultra-Scalping (1m)</p>
-                <div class="text-xs font-mono text-cyan-400" id="shadow-status">ACTIVE: SCANNING...</div>
-                <div class="mt-4 text-[10px] text-slate-600">Risk: €70/trade</div>
-            </div>
-
-            <!-- Bot Status Column 2 -->
-            <div class="bento-card p-6 border-indigo-500/30">
-                <span class="status-pill bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 mb-4 inline-block">Heavy</span>
-                <h2 class="font-bold mb-2">👻 GHOST RIDER</h2>
-                <p class="text-[10px] text-slate-500 mb-4">Swing Trend (1h)</p>
-                <div class="text-xs font-mono text-indigo-400" id="ghost-status">ACTIVE: MONITORING...</div>
-                <div class="mt-4 text-[10px] text-slate-600">Risk: €110/trade</div>
-            </div>
-
-            <!-- Hunter/Sniper Row -->
-            <div class="bento-card p-4 border-orange-500/20">
-                <h3 class="text-xs font-bold uppercase text-orange-400 mb-2">🎯 Rebound Sniper</h3>
-                <div class="text-[10px] font-mono" id="sniper-status">RSI < 28 Check...</div>
-            </div>
-            <div class="bento-card p-4 border-cyan-500/20">
-                <h3 class="text-xs font-bold uppercase text-cyan-400 mb-2">🚀 Volatility Hunter</h3>
-                <div class="text-[10px] font-mono" id="hunter-status">Vol Spike Check...</div>
-            </div>
-            <div class="bento-card p-4 border-[#222]">
-                <h3 class="text-xs font-bold uppercase text-blue-400 mb-2">🟢 Multi-Coin</h3>
-                <div class="text-[10px] font-mono">100 Pairs Online</div>
-            </div>
-            <div class="bento-card p-4 border-[#222]">
-                <h3 class="text-xs font-bold uppercase text-emerald-400 mb-2">₿ Smart Grid</h3>
-                <div class="text-[10px] font-mono">Profit Mode: ON</div>
-            </div>
-
-            <!-- Activity Log -->
-            <div class="bento-card p-6 md:col-span-4">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="font-bold text-blue-400 uppercase tracking-widest text-sm">Squad Activity Feed</h3>
-                    <div class="text-[10px] font-mono text-slate-500 animate-pulse">LIVE FROM SERVER</div>
-                </div>
-                <div id="fleet-activity" class="font-mono text-[10px] space-y-1 max-h-32 overflow-y-auto">
-                    <div class="text-slate-600 italic">Reading encrypted squad logs...</div>
+            <!-- Right Sidebar: Activity & Alerts -->
+            <div class="space-y-6">
+                <!-- Live Activity Feed -->
+                <div class="glass-card p-6 h-full flex flex-col">
+                    <h3 class="font-bold text-slate-400 uppercase tracking-widest text-sm mb-4">Tactical Log</h3>
+                    <div id="activity-feed" class="font-mono text-[10px] space-y-3 overflow-y-auto flex-grow max-h-[600px] pr-2">
+                        <div class="text-slate-700 italic">Initializing encrypted feed...</div>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-white/5 text-[10px] text-blue-500 font-mono">
+                        >> SCANNING 100 CRYPTO PAIRS...
+                    </div>
                 </div>
             </div>
-
-            <!-- Chart -->
-            <div class="bento-card p-6 md:col-span-4">
-                <div class="h-48">
-                    <canvas id="performanceChart"></canvas>
-                </div>
-            </div>
-
         </div>
     </div>
 
     <script>
+        // Init Chart with high-res styling
         const ctx = document.getElementById('performanceChart').getContext('2d');
+        const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+        gradient.addColorStop(0, 'rgba(59, 130, 246, 0.2)');
+        gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
         const chart = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: [],
                 datasets: [{
-                    label: 'BTC/EUR',
+                    label: 'BTCEUR',
                     data: [],
-                    borderColor: '#f59e0b',
-                    backgroundColor: 'rgba(245, 158, 11, 0.05)',
-                    borderWidth: 1,
+                    borderColor: '#3b82f6',
+                    borderWidth: 2,
                     fill: true,
-                    tension: 0.4,
-                    pointRadius: 0
+                    backgroundColor: gradient,
+                    tension: 0.3,
+                    pointRadius: 0,
+                    pointHoverRadius: 5
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 scales: {
-                    y: { grid: { color: '#111' }, ticks: { color: '#444', font: { size: 9 } } },
-                    x: { grid: { display: false }, ticks: { display: false } }
+                    y: { grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { color: '#475569', font: { family: 'JetBrains Mono', size: 10 } } },
+                    x: { grid: { display: false }, ticks: { color: '#475569', font: { family: 'JetBrains Mono', size: 10 } } }
                 },
                 plugins: { legend: { display: false } }
             }
         });
 
-        async function updateData() {
+        async function refreshDashboard() {
             try {
-                const b_res = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCEUR');
-                const b_data = await b_res.json();
-                const btc_price = parseFloat(b_data.price);
-
-                const sol_res = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=SOLEUR');
-                const sol_data = await sol_res.json();
-                const sol_price = parseFloat(sol_data.price);
-
-                // Live values from server sync
-                const b_btc = 0.01173314;
-                const b_eur = 1.39561670;
-                const b_sol = 0.21922100;
-                const c_usdt = 1.03;
-                const total_versato = 722.00;
-
-                document.getElementById('b-btc').textContent = b_btc.toFixed(6);
-                document.getElementById('b-sol').textContent = b_sol.toFixed(2);
-                document.getElementById('b-eur').textContent = b_eur.toFixed(2) + "€";
-                document.getElementById('c-bal').textContent = "$" + c_usdt.toFixed(2);
+                // Fetch internal status
+                const res = await fetch('/fleet_stats.json?' + Date.now());
+                const data = await res.json();
                 
-                const total = (b_btc * btc_price) + (b_sol * sol_price) + b_eur + c_usdt + 8.50;
-                const profit = total - total_versato;
+                // Update Top Stats
+                if (data.metrics) {
+                    const total = data.metrics.total_val;
+                    const profit = data.metrics.profit;
+                    document.getElementById('global-total').textContent = total.toFixed(2);
+                    const profitEl = document.getElementById('profit-val');
+                    profitEl.textContent = (profit >= 0 ? "+" : "") + profit.toFixed(2) + "€";
+                    profitEl.className = "text-3xl font-mono font-bold " + (profit >= 0 ? "text-emerald-400" : "text-rose-400");
+                }
 
-                document.getElementById('global-total').textContent = total.toFixed(2);
-                const profitEl = document.getElementById('profit-val');
-                profitEl.textContent = (profit >= 0 ? "+" : "") + profit.toFixed(2) + "€";
-                profitEl.className = "text-2xl font-mono font-bold text-center " + (profit >= 0 ? "text-emerald-400" : "text-rose-400");
+                // Update Bot Grid
+                const botGrid = document.getElementById('bot-grid');
+                botGrid.innerHTML = data.bots.map(bot => `
+                    <div class="glass-card p-4 border-t-2 ${bot.status === 'ONLINE' ? 'border-blue-500' : 'border-rose-500'}">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-[9px] font-black text-slate-500 uppercase">${bot.name}</span>
+                            <span class="status-badge ${bot.status === 'ONLINE' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}">
+                                ${bot.status}
+                            </span>
+                        </div>
+                        <div class="font-mono text-xs text-slate-300">Uptime: ${bot.uptime}</div>
+                        <div class="text-[8px] text-slate-600 mt-2 italic">Last: ${bot.last_ping}</div>
+                    </div>
+                `).join('');
 
+                // Update Feed
+                if (data.metrics && data.metrics.activity) {
+                    const feed = document.getElementById('activity-feed');
+                    feed.innerHTML = data.metrics.activity.map(a => `
+                        <div class="flex gap-2 border-b border-white/5 pb-2">
+                            <span class="text-slate-600">[${a.time}]</span>
+                            <span class="text-blue-500 font-bold">${a.bot}</span>
+                            <span class="text-slate-300">${a.action}</span>
+                        </div>
+                    `).join('');
+                }
+
+                // Chart Sync (Fetch price separately for faster updates)
+                const p_res = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCEUR');
+                const p_data = await p_res.json();
+                const btc_price = parseFloat(p_data.price);
+                
                 const now = new Date().toLocaleTimeString();
                 chart.data.labels.push(now);
                 chart.data.datasets[0].data.push(btc_price);
-                if (chart.data.labels.length > 30) {
+                if (chart.data.labels.length > 50) {
                     chart.data.labels.shift();
                     chart.data.datasets[0].data.shift();
                 }
-                chart.update();
+                chart.update('none'); // Update without animation for performance
+                document.getElementById('last-update').textContent = 'Live: ' + btc_price.toFixed(2) + ' EUR';
 
-            } catch (e) { console.error(e); }
+            } catch (e) { console.error("Monitor Sync Error:", e); }
         }
 
-        updateData();
-        setInterval(updateData, 5000);
+        setInterval(refreshDashboard, 5000);
+        refreshDashboard();
     </script>
 </body>
 </html>
