@@ -7,49 +7,56 @@ from dotenv import load_dotenv
 load_dotenv()
 client = Client(os.getenv('BINANCE_API_KEY'), os.getenv('BINANCE_API_SECRET'))
 
-# Asset da monitorare per chiusura rapida
+# Asset da monitorare per chiusura rapida con precisione corretta
 ASSETS = {
-    "SOL": "SOLBTC",
-    "ETH": "ETHBTC",
-    "AVAX": "AVAXBTC",
-    "DOGE": "DOGEBTC"
+    "SOL": {"s": "SOLBTC", "p": 3},
+    "ETH": {"s": "ETHBTC", "p": 4}, # Corretto a 4 per Filter LOT_SIZE
+    "AVAX": {"s": "AVAXBTC", "p": 2},
+    "DOGE": {"s": "DOGEBTC", "p": 0}
 }
 
 def main():
-    print("🚀 PROTOCOLLO CASH-OUT AGGRESSIVO ATTIVATO")
+    print("🚀 PROTOCOLLO CASH-OUT AGGRESSIVO v1.1 (PRECISION FIX)")
     while True:
         try:
-            for asset, symbol in ASSETS.items():
-                # 1. Saldo reale
-                bal = float(client.get_asset_balance(asset=asset)['free'])
-                if bal <= 0.001 and asset != "DOGE": continue
-                if asset == "DOGE" and bal < 10: continue
+            btc_price = float(client.get_symbol_ticker(symbol="BTCEUR")['price'])
+            for asset, data in ASSETS.items():
+                symbol = data['s']
+                precision = data['p']
                 
-                # 2. Ultimo acquisto
+                bal = float(client.get_asset_balance(asset=asset)['free'])
+                if bal <= 0.0001: continue
+                
                 trades = client.get_my_trades(symbol=symbol, limit=1)
-                if not trades: continue
+                if not trades or not trades[0]['isBuyer']: continue
                 entry_price = float(trades[0]['price'])
                 
-                # 3. Prezzo attuale
                 curr_price = float(client.get_symbol_ticker(symbol=symbol)['price'])
                 pnl = (curr_price - entry_price) / entry_price
                 
-                # 4. VENDITA FORZATA (Margine ridotto allo 0.2% per sbloccare euro subito)
-                if pnl >= 0.002:
-                    print(f"🎯 TARGET RAGGIUNTO {symbol} (+{pnl:.2%}). Vendo tutto!")
+                # VENDITA FORZATA allo 0.18% (Cash out immediato)
+                if pnl >= 0.0018:
+                    print(f"🎯 TARGET RAGGIUNTO {symbol} (+{pnl:.2%}). Vendo...")
                     try:
-                        client.create_order(symbol=symbol, side='SELL', type='MARKET', quantity=bal)
+                        qty_str = "{:0.{}f}".format(bal, precision)
+                        client.create_order(symbol=symbol, side='SELL', type='MARKET', quantity=qty_str)
+                        
+                        # Calcolo guadagno reale in Euro
+                        val_buy = float(trades[0]['quoteQty']) * btc_price
+                        profit_eur = val_buy * pnl
+                        
+                        # CREAZIONE FLAG PER TELEGRAM CON CIFRA REALE
                         with open('/root/.openclaw/workspace/strike_alert.flag', 'w') as f:
-                            f.write(f"CASH OUT {asset}: +{pnl:.2%}")
+                            f.write(f"{profit_eur:.2f}")
+                            
+                        print(f"✅ VENDUTA {asset} | Profitto: €{profit_eur:.2f}")
                     except Exception as e:
                         print(f"❌ Error selling {symbol}: {e}")
-                else:
-                    print(f"⌛ {symbol}: {pnl:+.2%} (Waiting for +0.20%)")
             
-            time.sleep(10)
+            time.sleep(8)
         except Exception as e:
             print(f"Loop Error: {e}")
-            time.sleep(30)
+            time.sleep(20)
 
 if __name__ == "__main__":
     main()
