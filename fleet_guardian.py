@@ -35,7 +35,10 @@ BOT_REGISTRY = {
     "OMEGA-FEED": "omega_bottom_feeder.py",
     "SIGMA-CHAOS": "sigma_chaos_engine.py",
     "ARCHITECT": "architect_ai.py",
-    "EVOLUTION": "evolution_engine.py"
+    "EVOLUTION": "evolution_engine.py",
+    "WAR-MACHINE": "war_machine.py",
+    "OMEGA-WAR": "omega_war_machine.py",
+    "BAIT-TRAP": "bait_and_trap_engine.py"
 }
 
 # Directory di lavoro e ambiente

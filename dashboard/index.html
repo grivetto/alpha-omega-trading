@@ -3,97 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TRIAD MATRIX | OVERDRIVE v13.0</title>
+    <title>TRIAD SUPREMACY | TOTAL BATTLEFIELD v14.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=JetBrains+Mono:wght@200;400;700&display=swap');
-        body { background-color: #000; color: #fff; font-family: 'JetBrains Mono', monospace; overflow: hidden; }
-        .bg-matrix { background: radial-gradient(circle at 50% 50%, #001a1a 0%, #000 100%); }
-        .cyber-panel { background: rgba(0, 15, 15, 0.9); border: 1px solid #004444; border-radius: 4px; box-shadow: 0 0 30px rgba(0, 255, 204, 0.05); position: relative; }
-        .cyber-panel::before { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 1px; background: linear-gradient(90deg, transparent, #00ffcc, transparent); }
-        .stat-value { font-family: 'Syncopate', sans-serif; letter-spacing: -2px; }
-        .glow-cyan { color: #00ffcc; text-shadow: 0 0 15px #00ffcc; }
-        .glow-red { color: #ff3131; text-shadow: 0 0 15px #ff3131; }
-        .glow-blue { color: #3b82f6; text-shadow: 0 0 15px #3b82f6; }
-        .bot-tag { font-size: 0.6rem; font-weight: 800; padding: 2px 6px; border-radius: 2px; text-transform: uppercase; }
-        .scanline { width: 100%; height: 100px; z-index: 100; background: linear-gradient(0deg, transparent 0%, rgba(0,255,204,0.03) 50%, transparent 100%); position: absolute; animation: scan 6s linear infinite; pointer-events: none; }
-        @keyframes scan { from { top: -100px; } to { top: 100%; } }
-        .pulse-border { animation: pulse-b 2s infinite; }
-        @keyframes pulse-b { 0% { border-color: #004444; } 50% { border-color: #00ffcc; } 100% { border-color: #004444; } }
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@200;400;800&display=swap');
+        body { background-color: #010101; color: #00ffcc; font-family: 'JetBrains Mono', monospace; overflow-x: hidden; }
+        .bg-hex { background-image: radial-gradient(circle at 50% 50%, #001a1a 0%, #000 100%); }
+        .cyber-card { background: rgba(0, 10, 10, 0.9); border: 1px solid #003333; border-radius: 2px; position: relative; }
+        .stat-glow { font-family: 'Orbitron', sans-serif; text-shadow: 0 0 15px #00ffcc; }
+        .bot-online { border-left: 2px solid #00ffcc; background: rgba(0, 255, 204, 0.05); }
+        .bot-offline { border-left: 2px solid #ff0044; background: rgba(255, 0, 68, 0.05); opacity: 0.5; }
+        .scanline { width: 100%; height: 2px; background: rgba(0, 255, 204, 0.05); position: absolute; animation: scan 10s linear infinite; pointer-events: none; }
+        @keyframes scan { from { top: 0; } to { top: 100%; } }
+        ::-webkit-scrollbar { width: 3px; }
+        ::-webkit-scrollbar-thumb { background: #004444; }
     </style>
 </head>
-<body class="bg-matrix min-h-screen p-4">
+<body class="bg-hex min-h-screen p-2 lg:p-6">
     <div class="scanline"></div>
-    
-    <!-- TOP HUD -->
     <div class="max-w-[2400px] mx-auto">
-        <div class="flex flex-col xl:flex-row justify-between items-center gap-6 mb-8 border-b border-[#004444] pb-8">
-            <div class="text-center xl:text-left">
-                <h1 class="text-6xl font-black stat-value glow-cyan italic">TRIAD_OVERDRIVE</h1>
-                <p class="text-[9px] text-[#008888] uppercase tracking-[1em] mt-2">Autonomous War Machine Matrix / Sergio Grivetto</p>
+        
+        <!-- HEADER HUD -->
+        <div class="grid grid-cols-1 xl:grid-cols-12 gap-6 mb-8 border-b border-[#003333] pb-8">
+            <div class="xl:col-span-4">
+                <h1 class="text-5xl font-black italic tracking-tighter stat-glow uppercase">TOTAL_WAR v14.0</h1>
+                <p class="text-[9px] text-[#006666] uppercase tracking-[0.8em] mt-2">Unified Squad Monitor / Sergio Grivetto</p>
             </div>
-
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 w-full xl:w-auto">
-                <div class="cyber-panel p-5 min-w-[200px] border-l-4 border-[#00ffcc]">
-                    <p class="text-[8px] text-[#008888] font-black mb-1 uppercase">Net_Profit_Extraction</p>
-                    <p class="stat-value text-2xl glow-cyan" id="profit-val">+0.00€</p>
+            <div class="xl:col-span-8 grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="cyber-card p-4 border-l-4 border-[#00ffcc]">
+                    <p class="text-[8px] text-[#008888] font-bold uppercase">Net_Profit</p>
+                    <p class="text-2xl stat-glow" id="profit-val">+0.00€</p>
                 </div>
-                <div class="cyber-panel p-5 min-w-[200px] border-l-4 border-white">
-                    <p class="text-[8px] text-slate-500 font-black mb-1 uppercase">Fleet_Asset_Value</p>
-                    <p class="stat-value text-2xl text-white">€<span id="global-total">0.00</span></p>
+                <div class="cyber-card p-4 border-l-4 border-white">
+                    <p class="text-[8px] text-slate-500 font-bold uppercase">Total_Portfolio</p>
+                    <p class="text-2xl stat-glow text-white">€<span id="global-total">0.00</span></p>
                 </div>
-                <div class="cyber-panel p-5 min-w-[150px] border-l-4 border-blue-500">
-                    <p class="text-[8px] text-blue-900 font-black mb-1 uppercase">DNA_Generation</p>
-                    <p class="stat-value text-2xl text-blue-500" id="dna-gen">18</p>
+                <div class="cyber-card p-4 border-l-4 border-blue-500">
+                    <p class="text-[8px] text-blue-800 font-bold uppercase">Active_Nodes</p>
+                    <p class="text-2xl stat-glow text-blue-400" id="node-count">0/17</p>
                 </div>
-                <div class="cyber-panel p-5 min-w-[150px] border-l-4 border-red-500">
-                    <p class="text-[8px] text-red-900 font-black mb-1 uppercase">Market_Regime</p>
-                    <p class="stat-value text-xl text-red-500 uppercase text-[10px]" id="btc-price">Live Syncing...</p>
+                <div class="cyber-card p-4 border-l-4 border-orange-500 text-center">
+                    <p class="text-[8px] text-orange-900 font-bold uppercase mb-1">Live_BTC</p>
+                    <p class="text-xl stat-glow text-orange-400" id="btc-price">0.00</p>
                 </div>
             </div>
         </div>
 
         <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
             
-            <!-- ALPHA SQUAD MONITOR -->
-            <div class="xl:col-span-3 space-y-6">
-                <div class="flex items-center gap-3 mb-2">
-                    <div class="h-[1px] flex-grow bg-blue-500/30"></div>
-                    <h2 class="stat-value text-blue-500 text-xs italic">ALPHA_SQUAD [TREND]</h2>
-                </div>
-                <div id="alpha-bots" class="grid grid-cols-1 gap-2"></div>
-                <div class="cyber-panel p-4 bg-blue-500/5 border-blue-900/30">
-                    <h3 class="text-[8px] font-black text-blue-400 mb-3 uppercase tracking-widest">Active Asset Split</h3>
-                    <div id="asset-list" class="space-y-2 text-[10px]"></div>
+            <!-- LEFT: FULL BOT MONITOR -->
+            <div class="xl:col-span-4 space-y-4">
+                <h3 class="text-[10px] font-black text-[#00ffcc] uppercase tracking-widest border-b border-[#003333] pb-2">Full Fleet Node Connectivity</h3>
+                <div id="bot-matrix" class="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-[700px] overflow-y-auto pr-2">
+                    <!-- Bots will be injected here -->
                 </div>
             </div>
 
-            <!-- CENTRAL BATTLEFIELD -->
-            <div class="xl:col-span-6 space-y-6">
-                <div class="cyber-panel p-8 min-h-[550px] bg-black/50 pulse-border">
-                    <div class="flex justify-between items-center mb-10">
-                        <span class="bot-tag bg-[#00ffcc]/20 text-[#00ffcc] border border-[#00ffcc]/30">Global Neural Trajectory</span>
-                        <div id="status-automa" class="text-[9px] font-bold text-[#008888] animate-pulse uppercase">Automa: Monitoring...</div>
-                    </div>
-                    <div class="h-[450px]">
+            <!-- CENTER: TRAJECTORY & LOGS -->
+            <div class="xl:col-span-5 space-y-6">
+                <div class="cyber-card p-6 min-h-[400px]">
+                    <h3 class="text-[9px] font-black text-[#008888] uppercase tracking-widest mb-6 italic">Neural Capital Trajectory</h3>
+                    <div class="h-80">
                         <canvas id="mainChart"></canvas>
                     </div>
                 </div>
+                <div class="cyber-card p-4 h-[280px] overflow-hidden flex flex-col">
+                    <h3 class="text-[9px] font-black text-slate-600 uppercase tracking-widest mb-4">Tactical Intelligence Feed</h3>
+                    <div id="trade-feed" class="text-[9px] font-mono space-y-2 overflow-y-auto flex-grow">
+                        <div class="text-[#004444] italic">> Scanning encrypted signals...</div>
+                    </div>
+                </div>
             </div>
 
-            <!-- OMEGA SQUAD MONITOR -->
+            <!-- RIGHT: ASSETS & SYSTEMS -->
             <div class="xl:col-span-3 space-y-6">
-                <div class="flex items-center gap-3 mb-2">
-                    <h2 class="stat-value text-red-500 text-xs italic">OMEGA_SQUAD [ANTI-TREND]</h2>
-                    <div class="h-[1px] flex-grow bg-red-500/30"></div>
+                <div class="cyber-card p-5">
+                    <h3 class="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-6">Cryptographic Asset Matrix</h3>
+                    <div id="asset-list" class="space-y-3"></div>
                 </div>
-                <div id="omega-bots" class="grid grid-cols-1 gap-2"></div>
-                
-                <div class="cyber-panel p-6 border-[#00ffcc]/20 bg-[#00ffcc]/5">
-                    <h3 class="text-[9px] font-black text-[#00ffcc] uppercase tracking-widest mb-4">Autonomous Matrix Log</h3>
-                    <div id="activity-feed" class="text-[8px] font-mono space-y-3 max-h-64 overflow-y-auto pr-2">
-                        <div class="text-[#008888]">> Establishing neural link...</div>
+                <div class="cyber-card p-5 border-emerald-500/20 bg-emerald-500/5">
+                    <h3 class="text-[9px] font-black text-emerald-500 uppercase tracking-widest mb-3">Architect_Log</h3>
+                    <div class="text-[8px] font-mono text-emerald-400/60 space-y-1">
+                        <div>> All squads synchronized: 100%</div>
+                        <div>> Forced cash-out enabled</div>
+                        <div>> DNS Latency: 14ms</div>
+                        <div class="animate-pulse">> Analyzing chaos patterns...</div>
                     </div>
                 </div>
             </div>
@@ -105,11 +100,11 @@
         const ctx = document.getElementById('mainChart').getContext('2d');
         const chart = new Chart(ctx, {
             type: 'line',
-            data: { labels: [], datasets: [{ label: 'CAPITAL', data: [], borderColor: '#00ffcc', borderWidth: 1, fill: true, backgroundColor: 'rgba(0, 255, 204, 0.05)', tension: 0.1, pointRadius: 0 }] },
-            options: { responsive: true, maintainAspectRatio: false, scales: { y: { grid: { color: 'rgba(0,255,204,0.02)' }, ticks: { color: '#004444', font: { size: 9 } } }, x: { display: false } }, plugins: { legend: { display: false } } }
+            data: { labels: [], datasets: [{ label: 'VALUE', data: [], borderColor: '#00ffcc', borderWidth: 1, fill: true, backgroundColor: 'rgba(0, 255, 204, 0.03)', tension: 0.1, pointRadius: 0 }] },
+            options: { responsive: true, maintainAspectRatio: false, scales: { y: { grid: { color: '#001111' }, ticks: { color: '#004444', font: { size: 9 } } }, x: { display: false } }, plugins: { legend: { display: false } } }
         });
 
-        async function syncMatrix() {
+        async function updatev14() {
             try {
                 const res = await fetch('/fleet_stats.json?' + Date.now());
                 const data = await res.json();
@@ -119,41 +114,44 @@
                     const profit = data.vitals.profit;
                     const pEl = document.getElementById('profit-val');
                     pEl.textContent = (profit >= 0 ? "+" : "") + profit.toFixed(2) + "€";
-                    pEl.className = "stat-value text-2xl " + (profit >= 0 ? "glow-cyan" : "glow-red");
-                    document.getElementById('btc-price').textContent = "BTC: €" + data.vitals.btc_price.toFixed(0);
+                    pEl.className = "text-2xl stat-glow " + (profit >= 0 ? "text-[#00ffcc]" : "text-red-500");
+                    document.getElementById('btc-price').textContent = '€' + Math.round(data.vitals.btc_price);
 
                     document.getElementById('asset-list').innerHTML = data.vitals.assets.map(a => `
-                        <div class="flex justify-between border-b border-white/5 pb-1">
-                            <span class="text-slate-400 font-bold">${a.asset}</span>
-                            <span class="text-blue-400 font-mono">€${a.val}</span>
+                        <div class="flex justify-between border-b border-[#002222] pb-1">
+                            <span class="font-bold text-white text-xs">${a.name}</span>
+                            <div class="text-right">
+                                <p class="text-[#008888] text-[8px] font-mono">${a.qty}</p>
+                                <p class="text-blue-400 font-mono text-[10px]">€${a.val}</p>
+                            </div>
                         </div>
                     `).join('');
                 }
 
-                if (data.squads) {
-                    const renderBots = (squad, targetId, colorClass) => {
-                        document.getElementById(targetId).innerHTML = Object.entries(data.squads[squad]).map(([name, status]) => `
-                            <div class="cyber-panel p-3 flex justify-between items-center bg-black/40">
-                                <span class="text-[9px] font-black text-slate-500 uppercase">${name}</span>
-                                <span class="stat-value text-[9px] ${status === 'ONLINE' ? colorClass : 'text-slate-700'}">${status}</span>
+                if (data.bot_matrix) {
+                    document.getElementById('bot-matrix').innerHTML = data.bot_matrix.map(b => `
+                        <div class="cyber-card p-3 flex flex-col justify-between ${b.status === 'ONLINE' ? 'bot-online' : 'bot-offline'}">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-[8px] font-black text-slate-500 truncate">${b.id}</span>
+                                <span class="text-[7px] ${b.status === 'ONLINE' ? 'text-[#00ffcc]' : 'text-red-500'} font-black italic uppercase">${b.status}</span>
                             </div>
-                        `).join('');
-                    };
-                    renderBots("ALPHA", "alpha-bots", "glow-blue");
-                    renderBots("OMEGA", "omega-bots", "glow-red");
+                            <div class="text-[6px] text-slate-700 italic truncate">${b.script}</div>
+                        </div>
+                    `).join('');
+                    const onlineCount = data.bot_matrix.filter(b => b.status === 'ONLINE').length;
+                    document.getElementById('node-count').textContent = onlineCount + "/" + data.bot_matrix.length;
                 }
 
                 const now = new Date().toLocaleTimeString();
                 chart.data.labels.push(now);
                 chart.data.datasets[0].data.push(data.vitals.total_val);
-                if (chart.data.labels.length > 60) { chart.data.labels.shift(); chart.data.datasets[0].data.shift(); }
+                if (chart.data.labels.length > 50) { chart.data.labels.shift(); chart.data.datasets[0].data.shift(); }
                 chart.update('none');
 
-            } catch (e) { console.log(e); }
+            } catch (e) { }
         }
-
-        setInterval(syncMatrix, 4000);
-        syncMatrix();
+        setInterval(updatev14, 3000);
+        updatev14();
     </script>
 </body>
 </html>

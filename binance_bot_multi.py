@@ -30,7 +30,7 @@ RSI_SELL_THRESHOLD = 55 # Vendi subito!
 
 RISK_PER_TRADE = 0.50 # 50% del saldo libero per trade per essere sicuri di avere EUR
 STOP_LOSS_PCT = 0.015
-TAKE_PROFIT_PCT = 0.003 # 0.3% scalp rapidissimo
+TAKE_PROFIT_PCT = 0.0025
 TRAILING_STOP_PCT = 0.001
 
 STATUS_FILE = '/root/.openclaw/workspace/multi_status.json'

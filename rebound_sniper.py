@@ -18,7 +18,7 @@ SNIPE_LIST = ["ETHBTC", "SOLBTC", "BNBBTC", "LINKBTC", "AVAXBTC"]
 TIMEFRAME = '5m'
 RSI_BUY = 28.0          # Iper-venduto estremo
 RSI_PERIOD = 14
-TARGET_REBOUND = 0.025  # 2.5% rimbalzo
+TARGET_REBOUND = 0.0025
 STOP_LOSS = 0.04       # 4% sicurezza
 RISK_BTC = 0.0015       # Circa 90€ per trade
 

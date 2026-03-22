@@ -18,7 +18,7 @@ SYMBOLS = ["SOLBTC", "AVAXBTC", "ETHBTC", "FETBTC", "PEPEBTC", "DOGEBTC"]
 TIMEFRAME = '1m'
 # Ingressi basati su anomalie di volume improvvise (Big Money tracking)
 VOL_SENSITIVITY = 3.5  # Volume > 350% media
-PROFIT_TARGET = 0.013  # 1.3% rapido
+PROFIT_TARGET = 0.002
 RISK_BTC = 0.0018      # Circa 100€ per operazione
 
 logging.basicConfig(

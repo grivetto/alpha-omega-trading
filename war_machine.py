@@ -15,12 +15,12 @@ API_SECRET = os.getenv('BINANCE_API_SECRET')
 # Focus sulle coppie EUR per evitare conversioni inutili e massimizzare il fiat
 TRADING_PAIRS = ['SOLEUR', 'ETHEUR', 'BNBEUR', 'BTCEUR'] # Focus solo sui Big
 INTERVAL = '1m'
-SLEEP_TIME = 2 # Velocità estrema
+SLEEP_TIME = 15 # Ridotto per evitare ban API (era 2)
 
 # Parametri Scalping Ultra-Aggressivo
 RSI_PERIOD = 7
-RSI_BUY_THRESHOLD = 50 
-RSI_SELL_THRESHOLD = 51 
+RSI_BUY_THRESHOLD = 45 # Più selettivo (era 50)
+RSI_SELL_THRESHOLD = 55 # Più respiro (era 51) 
 
 RISK_PER_TRADE_EUR = 100.0 # Posizioni pesanti da 100 EUR per colpire duro
 STOP_LOSS_PCT = 0.008      # 0.8% Stop stretto
