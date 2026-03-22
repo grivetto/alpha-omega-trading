@@ -20,6 +20,7 @@ def get_bot_status():
         "OMEGA-REV": "contrarian_omega_squad.py",
         "OMEGA-FEED": "omega_bottom_feeder.py",
         "SIGMA-CHAOS": "sigma_chaos_engine.py",
+        "FLASH-UNIT": "flash_surge_unit.py",
         "QUANT-MAX": "advanced_quant_bot.py"
     }
     
