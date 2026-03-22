@@ -54,13 +54,13 @@ def get_squad_stats():
         
         msg = "🚀 *STATO OPERATIVO TRIADE*\n"
         msg += "------------------------------------\n"
-        msg += f"🔹 *ALPHA:* {a_on} ONLINE\n"
-        msg += f"🔸 *OMEGA:* {o_on} ONLINE\n"
-        msg += f"🔮 *SIGMA:* {s_on} ONLINE\n"
+        msg += f"🔹 *ALPHA:* {a_on}/{len(alpha)} ONLINE\n"
+        msg += f"🔸 *OMEGA:* {o_on}/{len(omega)} ONLINE\n"
+        msg += f"🔮 *SIGMA:* {s_on}/{len(sigma)} ONLINE\n"
         msg += "------------------------------------\n"
-        msg += "💎 *MODE:* GOD_MODE"
+        msg += "💎 *MODE:* GOD_MODE ACTIVE"
         return msg
-    except: return "⚠️ Errore stato."
+    except: return "⚠️ Errore stato squadre."
 
 def get_trade_history():
     try:
@@ -98,6 +98,19 @@ def get_realized_pnl():
         return f"🥇 *INCASSO REALE TRIADE*\n------------------------------------\n💰 Somma Netta: *€{total_pnl:.2f}*\n------------------------------------"
     except: return "⚠️ Errore PnL."
 
+def get_sentinel_log():
+    try:
+        # Recupero log dal Sentinel o dal file di monitoraggio
+        if os.path.exists('/root/.openclaw/workspace/dashboard/sentinel_data.json'):
+            with open('/root/.openclaw/workspace/dashboard/sentinel_data.json', 'r') as f:
+                data = json.load(f)
+            msg = "📡 *SENTINEL: SPIKE RILEVATI*\n\n"
+            for s in data[-5:]:
+                msg += f"• {s['time']} - {s['symbol']} {s['direction']}\n"
+            return msg
+        return "📡 Nessun segnale rilevato dal Sentinel."
+    except: return "⚠️ Errore lettura Sentinel."
+
 def send_telegram_message(token, chat_id, text, reply_markup=None):
     url = f"https://api.telegram.org/bot{token}/sendMessage"
     data = {'chat_id': chat_id, 'text': text, 'parse_mode': 'Markdown'}
@@ -111,7 +124,7 @@ def main_loop():
     sergio_id = os.getenv('TELEGRAM_CHAT_ID')
     last_update_id = 0
     
-    admin_keyboard = {
+    main_keyboard = {
         "keyboard": [
             [{"text": "📊 STATO SQUADRE"}, {"text": "💰 BILANCIO LIVE"}],
             [{"text": "🥇 INCASSO REALE"}, {"text": "📜 STORICO TRADE"}],
@@ -121,7 +134,7 @@ def main_loop():
         "resize_keyboard": True
     }
     
-    logging.info("Starting Triad Bot...")
+    logging.info("Triad Bot Online.")
     while True:
         try:
             if os.path.exists('/root/.openclaw/workspace/strike_alert.flag'):
@@ -143,17 +156,31 @@ def main_loop():
                         text = update["message"]["text"].upper()
                         chat_id = str(update["message"]["chat"]["id"])
                         
-                        if text == "/START": send_telegram_message(token, chat_id, "🤖 Console Triade Attiva", admin_keyboard)
-                        elif "STATO SQUADRE" in text: send_telegram_message(token, chat_id, get_squad_stats())
-                        elif "BILANCIO LIVE" in text: send_telegram_message(token, chat_id, get_full_status())
-                        elif "INCASSO REALE" in text: send_telegram_message(token, chat_id, get_realized_pnl())
-                        elif "STORICO TRADE" in text: send_telegram_message(token, chat_id, get_trade_history())
+                        if text == "/START": 
+                            send_telegram_message(token, chat_id, "🤖 Console TRIADE Attiva", main_keyboard)
+                        elif "STATO SQUADRE" in text: 
+                            send_telegram_message(token, chat_id, get_squad_stats())
+                        elif "BILANCIO LIVE" in text: 
+                            send_telegram_message(token, chat_id, get_full_status())
+                        elif "INCASSO REALE" in text: 
+                            send_telegram_message(token, chat_id, get_realized_pnl())
+                        elif "STORICO TRADE" in text: 
+                            send_telegram_message(token, chat_id, get_trade_history())
+                        elif "SENTINEL LOG" in text:
+                            send_telegram_message(token, chat_id, get_sentinel_log())
                         elif "SOLANA PNL" in text:
                             res = requests.get('https://api.binance.com/api/v3/ticker/price?symbol=SOLEUR').json()
                             p = float(res['price'])
                             send_telegram_message(token, chat_id, f"☀️ *SOL:* €{p:.2f}")
-                        elif "DASHBOARD WEB" in text: send_telegram_message(token, chat_id, "🌐 [Dashboard](https://sgrivett.ddns.net:8443)")
-            time.sleep(0.5)
+                        elif "WHALE ALERTS" in text:
+                            try:
+                                with open('/root/.openclaw/workspace/whale_events.json', 'r') as f: lines = f.readlines()[-5:]
+                                msg = "🐋 *ULTIMI MOVIMENTI BALENE*\n\n" + "".join([f"• {json.loads(l)['time']} | {json.loads(l)['side']} {json.loads(l)['qty']:.2f} BTC\n" for l in lines])
+                                send_telegram_message(token, chat_id, msg)
+                            except: send_telegram_message(token, chat_id, "🐋 Nessun movimento rilevato.")
+                        elif "DASHBOARD WEB" in text: 
+                            send_telegram_message(token, chat_id, "🌐 [Dashboard](https://sgrivett.ddns.net:8443)")
+            time.sleep(0.1)
         except Exception as e:
             logging.error(f"Error: {e}")
             time.sleep(5)
