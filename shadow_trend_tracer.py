@@ -81,7 +81,7 @@ def main():
                             logger.info(f"✅ SHADOW PROFIT: {symbol} | PnL: {pnl:.2%}")
                             del positions[symbol]
                             with open('/root/.openclaw/workspace/strike_alert.flag', 'w') as f:
-                                f.write(f"{(RISK_BTC * pnl * 59500):.2f}")
+                                f.write(f"{(RISK_BTC * pnl * 1.0):.2f}")
                         except Exception as e: logger.error(f"❌ SHADOW FAILED SELL {symbol}: {e}")
             
             time.sleep(30)

@@ -66,7 +66,7 @@ def main():
                         del positions[symbol]
                         if pnl > 0:
                             with open('/root/.openclaw/workspace/strike_alert.flag', 'w') as f:
-                                f.write(f"{(RISK_BTC * pnl * 59500):.2f}")
+                                f.write(f"{(RISK_BTC * pnl * 1.0):.2f}")
 
             time.sleep(30)
         except Exception as e:

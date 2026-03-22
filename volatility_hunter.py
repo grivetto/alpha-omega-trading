@@ -90,7 +90,7 @@ def main():
                             del positions[symbol]
                             # Creiamo il flag per lo strike su Telegram
                             with open('/root/.openclaw/workspace/strike_alert.flag', 'w') as f:
-                                f.write(f"{(RISK_BTC * pnl * 59500):.2f}")
+                                f.write(f"{(RISK_BTC * pnl * 1.0):.2f}")
                         except Exception as e:
                             logger.error(f"❌ FAILED SELL {symbol}: {e}")
             

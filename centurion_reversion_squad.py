@@ -72,7 +72,7 @@ def main():
                             logger.info(f"✅ CENTURION PROFIT: {s} | PnL: {pnl:.2%}")
                             del positions[s]
                             with open('/root/.openclaw/workspace/strike_alert.flag', 'w') as f:
-                                f.write(f"{(RISK_BTC * pnl * 60000):.2f}")
+                                f.write(f"{(RISK_BTC * pnl * 1.0):.2f}")
                         except: pass
             
             time.sleep(30)

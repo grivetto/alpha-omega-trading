@@ -17,9 +17,9 @@ API_KEY = os.getenv('BINANCE_API_KEY')
 API_SECRET = os.getenv('BINANCE_API_SECRET')
 
 SYMBOL = 'SOLEUR'
-QUANTITY = 0.10  # Scalp mini lotti di 0.10 SOL (~8 EUR)
-PROFIT_TARGET_PCT = 0.008  # 0.8% profit
-STOP_LOSS_PCT = 0.015     # 1.5% loss protection
+QUANTITY = 0.20  # Lotti raddoppiati a 0.20 SOL (~16 EUR)
+PROFIT_TARGET_PCT = 0.003  # 0.3% profit (Rapid-fire scalp)
+STOP_LOSS_PCT = 0.01      # 1.0% loss protection
 
 logging.basicConfig(
     level=logging.INFO,

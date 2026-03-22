@@ -82,7 +82,7 @@ def main():
                             logger.info(f"✅ {reason} {symbol} @ {price} | PnL: {pnl:.2%}")
                             del positions[symbol]
                             with open('/root/.openclaw/workspace/strike_alert.flag', 'w') as f:
-                                f.write(f"{(RISK_BTC * pnl * 59500):.2f}")
+                                f.write(f"{(RISK_BTC * pnl * 1.0):.2f}")
                         except Exception as e:
                             logger.error(f"❌ FAILED SNIPE SELL {symbol}: {e}")
             

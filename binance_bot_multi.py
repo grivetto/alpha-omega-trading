@@ -16,23 +16,22 @@ API_KEY = os.getenv('BINANCE_API_KEY')
 API_SECRET = os.getenv('BINANCE_API_SECRET')
 
 TRADING_PAIRS = [
-    'ETHBTC', 'SOLBTC', 'BNBBTC', 'ADABTC', 'DOGEBTC', 'AVAXBTC', 'DOTBTC', 'LINKBTC', 'MATICBTC', 'SHIBBTC',
-    'LTCBTC', 'UNIBTC', 'ATOMBTC', 'FILBTC', 'AAVEBTC', 'APTBTC', 'NEARBTC', 'ARBBTC', 'OPBTC', 'MKRBTC'
+    'SOLEUR', 'ETHEUR', 'BNBEUR', 'BTCEUR', 'ADAEUR', 'DOGEEUR', 'AVAXEUR'
 ]
 
-QUOTE_ASSET = 'BTC'
-INTERVAL = '5m'
-SLEEP_TIME = 45
+QUOTE_ASSET = 'EUR'
+INTERVAL = '1m'
+SLEEP_TIME = 10
 
-# Indicatori (GOD MODE MAX)
-RSI_PERIOD = 14
-RSI_BUY_THRESHOLD = 58
-RSI_SELL_THRESHOLD = 45
+# Indicatori (GOD MODE MAX - HYPER-AGGRESSIVE)
+RSI_PERIOD = 7
+RSI_BUY_THRESHOLD = 45 # Compra prima!
+RSI_SELL_THRESHOLD = 55 # Vendi subito!
 
-RISK_PER_TRADE = 0.95
-STOP_LOSS_PCT = 0.08
-TAKE_PROFIT_PCT = 0.003
-TRAILING_STOP_PCT = 0.003
+RISK_PER_TRADE = 0.50 # 50% del saldo libero per trade per essere sicuri di avere EUR
+STOP_LOSS_PCT = 0.015
+TAKE_PROFIT_PCT = 0.003 # 0.3% scalp rapidissimo
+TRAILING_STOP_PCT = 0.001
 
 STATUS_FILE = '/root/.openclaw/workspace/multi_status.json'
 
@@ -70,7 +69,7 @@ def main():
     logger.info("🚀 GOD MODE MAX - ALPHA SQUAD OVERDRIVE")
     while True:
         try:
-            btc_balance = float(client.get_asset_balance(asset='BTC')['free'])
+            # Rimosso btc_balance riga non più necessaria
             for symbol in TRADING_PAIRS:
                 df = get_data(symbol)
                 if df is None: continue
@@ -81,15 +80,17 @@ def main():
                 state = coin_states[symbol]
 
                 if rsi < RSI_BUY_THRESHOLD and not state.in_position:
-                    qty_to_buy_btc = btc_balance * 0.3 # Usa il 30% per permettere più trade pesanti
-                    if qty_to_buy_btc > 0.0001:
+                    # Usa il saldo EUR per comprare
+                    eur_balance = float(client.get_asset_balance(asset='EUR')['free'])
+                    qty_to_buy_eur = eur_balance * RISK_PER_TRADE
+                    if qty_to_buy_eur > 10.0: # Binance min 10 EUR
                         try:
-                            order = client.create_order(symbol=symbol, side='BUY', type='MARKET', quoteOrderQty=round(qty_to_buy_btc, 6))
+                            order = client.create_order(symbol=symbol, side='BUY', type='MARKET', quoteOrderQty=round(qty_to_buy_eur, 2))
                             state.in_position = True
                             state.entry_price = price
                             state.position_quantity = float(order['executedQty'])
                             state.highest_price = price
-                            logger.info(f"🟢 OVERDRIVE BUY {symbol} @ {price} BTC")
+                            logger.info(f"🟢 OVERDRIVE BUY {symbol} @ {price} EUR")
                         except Exception as e: logger.error(f"❌ BUY ERROR {symbol}: {e}")
 
                 elif state.in_position:
@@ -108,7 +109,7 @@ def main():
                             logger.info(f"🔴 OVERDRIVE SELL {symbol} | PnL: {pnl:.2%}")
                             state.in_position = False
                             with open('/root/.openclaw/workspace/strike_alert.flag', 'w') as f:
-                                f.write(f"{(state.position_quantity * price * pnl * 59500):.2f}")
+                                f.write(f"{(state.position_quantity * price * pnl * 1.0):.2f}")
                         except Exception as e: logger.error(f"❌ SELL ERROR {symbol}: {e}")
             
             time.sleep(SLEEP_TIME)
