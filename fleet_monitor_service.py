@@ -21,8 +21,8 @@ def get_bot_status():
         "OMEGA-FEED": "omega_bottom_feeder.py",
         "SIGMA-CHAOS": "sigma_chaos_engine.py",
         "FLASH-UNIT": "flash_surge_unit.py",
-        "LIQUID-HARV": "liquidity_harvester.py",
-        "NEURAL-PLS": "neural_pulse_v2.py",
+        "CENTURION-REV": "centurion_reversion_squad.py",
+        "OSCILLATOR": "oscillator_counter_unit.py",
         "ARCHITECT": "architect_ai.py"
     }
     status_report = []
@@ -57,7 +57,7 @@ def get_detailed_metrics():
                 asset_list.append({"name": asset, "qty": f"{qty:.6f}", "val": round(eur_val, 2)})
 
         all_activity = []
-        symbols = ['BTCEUR', 'SOLEUR', 'AVAXBTC', 'DOGEBTC', 'ETHBTC']
+        symbols = ['BTCEUR', 'SOLEUR', 'AVAXBTC', 'DOGEBTC', 'ETHBTC', 'SOLBTC', 'ADABTC']
         total_vol = 0
         for s in symbols:
             try:
@@ -80,7 +80,7 @@ def get_detailed_metrics():
             "btc_price": prices.get("BTCEUR", 0),
             "sol_price": prices.get("SOLEUR", 0),
             "assets": sorted(asset_list, key=lambda x: x['val'], reverse=True),
-            "recent_trades": all_activity[:20],
+            "recent_trades": all_activity[:25],
             "daily_volume": round(total_vol, 2)
         }
     except: return None
@@ -92,7 +92,7 @@ def main():
             metrics = get_detailed_metrics()
             if metrics:
                 history.append({"time": datetime.now().strftime("%H:%M"), "val": metrics['total_val']})
-                if len(history) > 100: history.pop(0)
+                if len(history) > 120: history.pop(0)
             report = {"timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "bots": get_bot_status(), "metrics": metrics, "history": history}
             with open('/root/.openclaw/workspace/dashboard/fleet_stats.json', 'w') as f:
                 json.dump(report, f, indent=2)
