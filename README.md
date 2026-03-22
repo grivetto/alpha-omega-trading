@@ -1,42 +1,39 @@
-# Binance Pro Trading Bot Infrastructure
+# 🚀 Progetto Alpha-Fleet: Trading Engine Automativo v2.1
 
-## 🚀 Avanzamento Lavori & Architettura (Live)
+## 👨‍💻 Visione Strategica
+Alpha-Fleet è un ecosistema di trading algoritmico multi-bot progettato per operare in sinergia sui mercati delle criptovalute (Binance e Crypto.com). Il sistema è strutturato per massimizzare il profitto attraverso la diversificazione delle strategie, riducendo al contempo il rischio operativo grazie a un'intelligenza centrale di coordinamento.
 
-Questa repository contiene l'infrastruttura completa del sistema di trading automatizzato, configurato per operare in reale sul mercato **Spot di Binance** con un micro-capitale (adattato per EUR, target 24€).
+---
 
-### 🤖 Componenti Attivi
+## 🏗️ Architettura del Sistema (I 3 Livelli)
 
-1. **Advanced Quant Bot (`advanced_quant_bot.py`)**
-   - **Ruolo**: Cecchino ad alta frequenza (Scalper).
-   - **Target**: `BTCEUR`, `ETHEUR`, `SOLEUR`, `BNBEUR`
-   - **Timeframe**: 3 minuti
-   - **Indicatori**: RSI (<40), Breakout Bande di Bollinger (deviazione 1.8), Spike di Volume (1.3x).
-   - **Risk Management**: Capitale fisso di 5.5€ a trade, Trailing Stop-Loss aggressivo all'1.0%, Take Profit rapido al +2.0%.
-   - **Stato**: In esecuzione continua (`quant-bot.service`).
+### 1. Master Control Layer (Cervello Centrale)
+*   **Neural Commander**: Un bot decisionale che analizza la volatilità del mercato h24. Non esegue trade direttamente, ma modifica i parametri (es. ampiezza griglia, soglie di ingresso) di tutti gli altri bot in base al regime di mercato individuato (Laterale vs Volatile).
+*   **Fleet Reporter**: Aggregatore di log che monitora la salute di ogni servizio e popola la dashboard web in tempo reale.
 
-2. **Grid Trading Bot (`binance_grid_bot.py`)**
-   - **Ruolo**: Compra e vendi sui ritracciamenti per incassare la volatilità orizzontale.
-   - **Target**: `SOLEUR` (Solana)
-   - **Parametri Griglia**: 4 livelli (da 70€ a 84€), allocazione statica di 6€ per livello per rispettare i requisiti `NOTIONAL` minimi di Binance (5€).
-   - **Stato**: In esecuzione continua (`binance-grid-bot.service`).
+### 2. Execution Layer (Le Squadre d'Attacco)
+*   **Squadra ALPHA (Smart Grid BTC)**: Gestisce il capitale principale (Core) su Bitcoin. Utilizza una strategia a griglia (20+ livelli) per catturare micro-oscillazioni. Compra basso e vende alto sistematicamente ad ogni variazione dello 0.3% - 0.5%.
+*   **Squadra BRAVO (Scalp ETH)**: Specializzata su Ethereum. Entra in gioco quando il Commander rileva trend solidi, operando con acquisti e vendite veloci.
+*   **Squadra CHARLIE (SOL Interceptor)**: Un bot ad alta frequenza focalizzato su Solana (SOL). Cerca profitti rapidi dello 0.8% sfruttando l'alta volatilità dell'asset.
 
-3. **Telegram Controller (`telegram_bot.py`)**
-   - **Ruolo**: Centro di comando mobile e sistema di notifica.
-   - **Features**: Visualizza un resoconto istantaneo e formattato del PnL, segnali aperti, stato della griglia, bilanci tramite `/status`. Fornisce scorciatoie per la web dashboard tramite `/dashboard`.
-   - **Stato**: In esecuzione continua (`telegram-bot.service`).
+### 3. Intelligence Layer (I Radar)
+*   **Whale Monitor**: Scansiona il book di Binance alla ricerca di ordini istituzionali (sopra i 0.5 BTC). Fornisce segnali di "pompaggio" o "dump" imminente.
+*   **Sentinel Trend**: Analizza un paniere di 5 monete (BTC, ETH, SOL, BNB, ADA) rilevando spike improvvisi di volume che indicano l'inizio di un breakout.
+*   **Arbitrage Sentinel**: Monitora costantemente la differenza di prezzo tra Binance e Crypto.com per identificare opportunità di guadagno prive di rischio direzionale.
 
-### 🌐 Infrastruttura Web (HTTPS / Reverse Proxy)
-Il server espone le metriche in modo sicuro usando Apache2 e Let's Encrypt (Certbot):
-- **OpenClaw UI**: `https://sgrivett.ddns.net` (Porta 443)
-- **Multi-Coin Dashboard**: `https://sgrivett.ddns.net:8443` (Porta 8443)
-- **Grid Dashboard**: `https://sgrivett.ddns.net:8443/grid`
+---
 
-### ⚙️ Installazione & Dipendenze
-Tutto l'ambiente è isolato virtualmente per mantenere l'host pulito.
-Le dipendenze chiave (situate in `trading_bot_env`):
-- `python-binance` (API Exchange)
-- `pandas` e `pandas_ta` (Indicatori e data manipulation)
-- `python-telegram-bot` con `job-queue` (Controller bot)
-- `ccxt` (Aggiunto per future integrazioni cross-exchange, es. Crypto.com)
+## 📊 Parametri Tecnici Correnti
+- **Capitale Operativo**: ~€360.00 (distribuito tra BTC, SOL e Liquidità).
+- **Target Profit Medio**: +0.8% per operazione di scalp.
+- **Sicurezza**: Trailing Stop Loss dinamico e sistema anti-spam per le notifiche di profitto (Cooldown 1h).
+- **Infrastruttura**: Servizi systemd su Linux gestiti tramite OpenClaw Engine.
 
-*Note: The `.env` file containing API keys is strictly ignored in git to ensure maximum security.*
+---
+
+## 🔗 Accesso al Centro di Comando
+- **Dashboard Live (HTTPS)**: `https://sgrivett.ddns.net:8443`
+- **Controllo Mobile**: Bot Telegram Interattivo (@Sergiotrdxbot) con permessi granulari (Admin vs Guest).
+
+---
+*Progetto sviluppato da Stella (AI Assistant) per Sergio Grivetto.*
