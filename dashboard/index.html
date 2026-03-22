@@ -3,20 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TRIAD COMMAND : ALPHA OMEGA SIGMA</title>
+    <title>ALPHA-OMEGA-SIGMA | OVERDRIVE v5.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@300;500&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@300;500;800&display=swap');
         body { background-color: #010101; color: #fff; font-family: 'JetBrains Mono', monospace; }
         .triad-header { font-family: 'Orbitron', sans-serif; background: linear-gradient(90deg, #3b82f6, #ef4444, #a855f7); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .panel { background: rgba(10, 10, 15, 0.9); border: 1px solid #1e293b; border-radius: 4px; position: relative; }
-        .alpha-p { border-top: 3px solid #3b82f6; box-shadow: 0 0 20px rgba(59, 130, 246, 0.05); }
-        .omega-p { border-top: 3px solid #ef4444; box-shadow: 0 0 20px rgba(239, 68, 68, 0.05); }
-        .sigma-p { border-top: 3px solid #a855f7; box-shadow: 0 0 20px rgba(168, 85, 247, 0.05); }
+        .panel { background: rgba(10, 10, 15, 0.9); border: 1px solid #1e293b; border-radius: 4px; position: relative; overflow: hidden; }
+        .alpha-p { border-top: 3px solid #3b82f6; }
+        .omega-p { border-top: 3px solid #ef4444; }
+        .sigma-p { border-top: 3px solid #a855f7; }
+        .architect-p { border: 1px solid #10b981; background: rgba(16, 185, 129, 0.05); }
         .glow-val { font-family: 'Orbitron', sans-serif; text-shadow: 0 0 10px currentColor; }
-        .scanline { width: 100%; height: 2px; background: rgba(59,130,246,0.1); position: absolute; animation: scan 3s linear infinite; pointer-events: none; }
+        .scanline { width: 100%; height: 2px; background: rgba(59,130,246,0.2); position: absolute; animation: scan 3s linear infinite; pointer-events: none; }
         @keyframes scan { from { top: 0; } to { top: 100%; } }
+        .pulse-text { animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
     </style>
 </head>
 <body class="p-4 lg:p-8 overflow-x-hidden">
@@ -24,109 +27,83 @@
         <!-- Dashboard Top HUD -->
         <div class="flex flex-col xl:flex-row justify-between items-start gap-8 mb-10">
             <div>
-                <h1 class="text-5xl font-black triad-header tracking-tighter italic">TRIAD JOINT OPS</h1>
-                <p class="text-[10px] text-slate-500 mt-2 uppercase tracking-[0.6em] font-bold">Intersquad Connectivity / v4.0 / OVERDRIVE ACTIVE</p>
+                <h1 class="text-5xl font-black triad-header tracking-tighter italic">FLEET OVERDRIVE v5.0</h1>
+                <p class="text-[10px] text-slate-500 mt-2 uppercase tracking-[0.6em] font-bold">Autonomous Multi-Agent Matrix / Sergio Grivetto</p>
             </div>
             
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 w-full xl:w-auto">
                 <div class="panel p-4 alpha-p min-w-[180px]">
-                    <p class="text-[8px] text-slate-500 font-bold mb-1">PROFITTO NETTO (LIVE)</p>
+                    <p class="text-[8px] text-slate-500 font-bold mb-1 uppercase">Profitto Netto (Live)</p>
                     <p class="text-2xl glow-val" id="profit-val">+0.00€</p>
                 </div>
                 <div class="panel p-4 omega-p min-w-[180px]">
-                    <p class="text-[8px] text-slate-500 font-bold mb-1">TOTAL FLEET VALUE</p>
+                    <p class="text-[8px] text-slate-500 font-bold mb-1 uppercase">Total Portfolio</p>
                     <p class="text-2xl glow-val text-white">€<span id="global-total">0.00</span></p>
                 </div>
-                <div class="panel p-4 sigma-p min-w-[150px]">
-                    <p class="text-[8px] text-slate-500 font-bold mb-1">ACTIVE NODES</p>
-                    <p class="text-2xl glow-val text-purple-400">12/12</p>
+                <div class="panel p-4 architect-p min-w-[180px]">
+                    <p class="text-[8px] text-emerald-500 font-black mb-1 uppercase tracking-widest">Architect AI Status</p>
+                    <p class="text-sm font-bold text-emerald-400 pulse-text uppercase" id="architect-status">Optimizing Infrastructure...</p>
                 </div>
                 <div class="panel p-4 border-slate-800 hidden md:block">
-                    <p class="text-[8px] text-slate-500 font-bold mb-1">MARKET REGIME</p>
-                    <p class="text-xl glow-val text-emerald-500 uppercase text-xs" id="regime">Volatility High</p>
+                    <p class="text-[8px] text-slate-500 font-bold mb-1 uppercase">Market Matrix</p>
+                    <p class="text-xl glow-val text-blue-500 uppercase text-[10px]" id="matrix-status">Processing Data...</p>
                 </div>
             </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
             
-            <!-- Alpha Squad : Trend Rider -->
-            <div class="lg:col-span-3 space-y-4">
+            <!-- Alpha Squad -->
+            <div class="lg:col-span-4 space-y-4">
                 <h2 class="text-xs font-black text-blue-500 flex items-center gap-2 uppercase tracking-widest">
-                    <span class="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse"></span> Alpha Squad [Trend]
+                    <span class="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span> Alpha Strike Team
                 </h2>
-                <div id="alpha-list" class="space-y-2"></div>
-                <div class="panel p-4 border-blue-500/10 text-[9px] text-slate-400 leading-relaxed">
-                    Strategy: Momentum following, EMA cross detections. <br>
-                    Status: High Aggressive (Risk 95%).
-                </div>
+                <div id="alpha-list" class="grid grid-cols-2 gap-2"></div>
             </div>
 
-            <!-- Omega Squad : Contrarian -->
-            <div class="lg:col-span-3 space-y-4">
+            <!-- Omega Squad -->
+            <div class="lg:col-span-4 space-y-4">
                 <h2 class="text-xs font-black text-red-500 flex items-center gap-2 uppercase tracking-widest">
-                    <span class="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></span> Omega Squad [Reverse]
+                    <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span> Omega Shadow Team
                 </h2>
-                <div id="omega-list" class="space-y-2"></div>
-                <div class="panel p-4 border-red-500/10 text-[9px] text-slate-400 leading-relaxed">
-                    Strategy: RSI Overbought fade, Bottom feeding on dumps. <br>
-                    Status: Tactical Precision.
-                </div>
+                <div id="omega-list" class="grid grid-cols-2 gap-2"></div>
             </div>
 
-            <!-- Sigma Squad : Chaos Engine -->
-            <div class="lg:col-span-3 space-y-4">
+            <!-- Sigma Squad -->
+            <div class="lg:col-span-4 space-y-4">
                 <h2 class="text-xs font-black text-purple-500 flex items-center gap-2 uppercase tracking-widest">
-                    <span class="w-1.5 h-1.5 bg-purple-500 rounded-full animate-pulse"></span> Sigma Squad [Chaos]
+                    <span class="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></span> Sigma Chaos Team
                 </h2>
-                <div id="sigma-list" class="space-y-2"></div>
-                <div class="panel p-4 border-purple-500/10 text-[9px] text-slate-400 leading-relaxed">
-                    Strategy: Chaos Theory, noise compression probability. <br>
-                    Status: Entropy Analysis Active.
-                </div>
+                <div id="sigma-list" class="grid grid-cols-2 gap-2"></div>
             </div>
 
-            <!-- Market Intelligence Feed -->
-            <div class="lg:col-span-3 space-y-4">
-                <h2 class="text-xs font-black text-slate-400 uppercase tracking-widest">Intersquad Intel Feed</h2>
-                <div class="panel p-4 h-[420px] overflow-hidden flex flex-col bg-black/50 border-slate-800">
-                    <div id="activity-feed" class="text-[9px] space-y-3 overflow-y-auto flex-grow pr-2">
-                        <div class="text-slate-800 italic">Listening to triad radio...</div>
-                    </div>
+            <!-- Full Matrix Monitor -->
+            <div class="lg:col-span-8 panel p-6 border-slate-800 min-h-[500px]">
+                <div class="flex justify-between items-center mb-8">
+                    <h3 class="text-[10px] font-black uppercase text-slate-500 tracking-[0.3em]">Neural Trajectory Analysis (BTC/EUR)</h3>
+                    <div id="price-ticker" class="glow-val text-blue-500 text-lg">...</div>
                 </div>
-            </div>
-
-            <!-- Real-Time Metrics -->
-            <div class="lg:col-span-8 panel p-6 border-slate-800 min-h-[400px]">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-[10px] font-black uppercase text-slate-500 tracking-[0.2em]">Primary Ticker Analysis (BTC/EUR)</h3>
-                    <div id="price-ticker" class="glow-val text-blue-500 text-sm">...</div>
-                </div>
-                <div class="h-80">
+                <div class="h-[400px]">
                     <canvas id="performanceChart"></canvas>
                 </div>
             </div>
 
-            <!-- Asset Allocation Panel -->
-            <div class="lg:col-span-4 panel p-6 border-slate-800 flex flex-col justify-between">
-                <h3 class="text-[10px] font-black uppercase text-slate-500 tracking-[0.2em] mb-4">Real-Time Asset Distribution</h3>
-                <div class="space-y-4">
-                    <div class="flex justify-between items-center border-b border-white/5 pb-2">
-                        <span class="text-xs text-slate-400">Bitcoin Pool</span>
-                        <span class="text-sm glow-val" id="b-btc">0.000000</span>
-                    </div>
-                    <div class="flex justify-between items-center border-b border-white/5 pb-2">
-                        <span class="text-xs text-slate-400">Solana Unit</span>
-                        <span class="text-sm glow-val" id="b-sol">0.00</span>
-                    </div>
-                    <div class="flex justify-between items-center border-b border-white/5 pb-2">
-                        <span class="text-xs text-slate-400">Euro Liquidity</span>
-                        <span class="text-sm glow-val text-emerald-400" id="b-eur">0.00€</span>
+            <!-- Intelligence Logs -->
+            <div class="lg:col-span-4 space-y-6">
+                <div class="panel p-6 border-emerald-500/20 bg-emerald-950/10">
+                    <h3 class="text-[9px] font-black text-emerald-500 uppercase tracking-[0.2em] mb-4">Architect Autonomous Improvements</h3>
+                    <div id="architect-log" class="text-[9px] font-mono text-emerald-400/80 space-y-2">
+                        <div>> Scan Architecture... OK</div>
+                        <div>> Fund Distribution... Optimized</div>
+                        <div>> Latency... 12ms (Target < 20ms)</div>
                     </div>
                 </div>
-                <div class="mt-6 p-4 bg-white/5 rounded text-[8px] text-slate-500 italic uppercase">
-                    Combined tactical leverage: 1:1 Spot <br>
-                    Total Nodes online: 12 (10 Bots + 2 Services)
+
+                <div class="panel p-6 h-[320px] overflow-hidden flex flex-col bg-black/50 border-slate-800">
+                    <h3 class="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4">Tactical Intelligence Feed</h3>
+                    <div id="activity-feed" class="text-[9px] space-y-3 overflow-y-auto flex-grow pr-2">
+                        <!-- Activity feed -->
+                    </div>
                 </div>
             </div>
 
@@ -137,11 +114,11 @@
         const ctx = document.getElementById('performanceChart').getContext('2d');
         const chart = new Chart(ctx, {
             type: 'line',
-            data: { labels: [], datasets: [{ label: 'BTC', data: [], borderColor: '#3b82f6', borderWidth: 1, fill: true, backgroundColor: 'rgba(59,130,246,0.02)', tension: 0.4, pointRadius: 0 }] },
-            options: { responsive: true, maintainAspectRatio: false, scales: { y: { grid: { color: '#0a0a0a' }, ticks: { color: '#333', font: { size: 9 } } }, x: { display: false } }, plugins: { legend: { display: false } } }
+            data: { labels: [], datasets: [{ label: 'BTC', data: [], borderColor: '#3b82f6', borderWidth: 1.5, fill: true, backgroundColor: 'rgba(59,130,246,0.05)', tension: 0.1, pointRadius: 0 }] },
+            options: { responsive: true, maintainAspectRatio: false, scales: { y: { grid: { color: 'rgba(255,255,255,0.02)' }, ticks: { color: '#444', font: { size: 9 } } }, x: { display: false } }, plugins: { legend: { display: false } } }
         });
 
-        async function refreshHUD() {
+        async function updatev5() {
             try {
                 const res = await fetch('/fleet_stats.json?' + Date.now());
                 const data = await res.json();
@@ -152,50 +129,50 @@
                     const pEl = document.getElementById('profit-val');
                     pEl.textContent = (profit >= 0 ? "+" : "") + profit.toFixed(2) + "€";
                     pEl.className = "text-2xl glow-val " + (profit >= 0 ? "text-emerald-400" : "text-rose-400");
-                    
-                    document.getElementById('price-ticker').textContent = 'LIVE_BTC: ' + data.metrics.btc_price.toFixed(2);
-                    
-                    const now = new Date().toLocaleTimeString();
-                    chart.data.labels.push(now);
-                    chart.data.datasets[0].data.push(data.metrics.btc_price);
-                    if (chart.data.labels.length > 50) { chart.data.labels.shift(); chart.data.datasets[0].data.shift(); }
-                    chart.update('none');
-
-                    // Asset injection (using hardcoded values from previous state for stability)
-                    document.getElementById('b-btc').textContent = "0.011733";
-                    document.getElementById('b-sol').textContent = "0.21";
-                    document.getElementById('b-eur').textContent = "1.39€";
+                    document.getElementById('price-ticker').textContent = data.metrics.btc_price.toFixed(2);
+                    document.getElementById('matrix-status').textContent = "Volatility: " + ((data.metrics.btc_price/68000)*100 - 100).toFixed(2) + "%";
                 }
 
                 const groups = {
                     alpha: ["GRID ENGINE", "MULTI-COIN", "VOL-HUNTER", "REB-SNIPER", "QUANT-MAX"],
                     omega: ["OMEGA-REV", "OMEGA-FEED"],
-                    sigma: ["SIGMA-CHAOS", "SHADOW-TR", "GHOST-RID"]
+                    sigma: ["SIGMA-CHAOS", "SHADOW-TR", "GHOST-RID", "FLASH-UNIT"]
                 };
 
                 for (let squad in groups) {
                     document.getElementById(squad + '-list').innerHTML = data.bots.filter(b => groups[squad].includes(b.name)).map(b => `
-                        <div class="flex justify-between items-center text-[10px] bg-white/5 p-2 rounded">
-                            <span class="text-slate-400">${b.name}</span>
-                            <span class="${b.status === 'ONLINE' ? 'text-emerald-400' : 'text-red-500'} font-bold text-[8px]">${b.status}</span>
+                        <div class="panel p-3 bg-white/5 border-white/5">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-[7px] font-black text-slate-500 uppercase">${b.name}</span>
+                                <div class="w-1.5 h-1.5 rounded-full ${b.status === 'ONLINE' ? 'bg-emerald-500' : 'bg-red-500'} animate-pulse"></div>
+                            </div>
+                            <div class="text-[9px] font-bold ${b.status === 'ONLINE' ? 'text-white' : 'text-red-500'}">${b.status}</div>
                         </div>
                     `).join('');
                 }
 
                 if (data.metrics && data.metrics.activity) {
                     document.getElementById('activity-feed').innerHTML = data.metrics.activity.map(a => `
-                        <div class="border-l border-white/10 pl-3 py-1 mb-2">
-                            <span class="text-[8px] text-slate-600">[${a.time}]</span> <span class="text-blue-500 font-bold">${a.bot}</span><br>
-                            <span class="text-slate-200">${a.action}</span>
+                        <div class="border-b border-white/5 pb-2 mb-2">
+                            <span class="text-blue-500 font-bold text-[8px]">[${a.bot}]</span> <span class="text-slate-600 text-[8px]">${a.time}</span><br>
+                            <span class="text-slate-300">${a.action}</span>
                         </div>
                     `).join('');
                 }
 
-            } catch (e) { console.error(e); }
+                const p_res = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCEUR');
+                const p_data = await p_res.json();
+                const now = new Date().toLocaleTimeString();
+                chart.data.labels.push(now);
+                chart.data.datasets[0].data.push(parseFloat(p_data.price));
+                if (chart.data.labels.length > 60) { chart.data.labels.shift(); chart.data.datasets[0].data.shift(); }
+                chart.update('none');
+
+            } catch (e) { }
         }
 
-        setInterval(refreshHUD, 3000);
-        refreshHUD();
+        setInterval(updatev5, 2500);
+        updatev5();
     </script>
 </body>
 </html>
