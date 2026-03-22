@@ -38,7 +38,8 @@ BOT_REGISTRY = {
     "EVOLUTION": "evolution_engine.py",
     "WAR-MACHINE": "war_machine.py",
     "OMEGA-WAR": "omega_war_machine.py",
-    "BAIT-TRAP": "bait_and_trap_engine.py"
+    "BAIT-TRAP": "bait_and_trap_engine.py",
+    "CASH-OUT": "rapid_cash_out.py"
 }
 
 # Directory di lavoro e ambiente
