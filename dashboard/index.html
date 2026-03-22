@@ -30,57 +30,63 @@
                 <p class="text-slate-500 text-sm font-mono italic mt-1">
                     <a href="/grid.html" class="hover:text-blue-400 transition-colors">→ Visualizza Griglia Interna</a>
                 </p>
-                <p class="text-slate-500 text-sm font-mono mt-1">Status: <span class="text-emerald-400">ACTIVE</span> | 3 Bots Online</p>
+                <p class="text-slate-500 text-sm font-mono mt-1">Status: <span class="text-emerald-400">GOD_MODE</span> | 8 Bots Online</p>
             </div>
-            <div class="bg-[#111] px-4 py-2 rounded-xl border border-[#222]">
-                <p class="text-[10px] text-slate-500 uppercase font-bold">Total Portfolio Value</p>
-                <p class="text-2xl font-mono font-bold text-white">€<span id="global-total">0.00</span></p>
+            <div class="flex gap-4">
+                <div class="bg-[#111] px-4 py-2 rounded-xl border border-[#222]">
+                    <p class="text-[10px] text-slate-500 uppercase font-bold text-center">Profitto Netto (vs €722)</p>
+                    <p class="text-2xl font-mono font-bold text-emerald-400 text-center" id="profit-val">+0.00€</p>
+                </div>
+                <div class="bg-[#111] px-4 py-2 rounded-xl border border-[#222]">
+                    <p class="text-[10px] text-slate-500 uppercase font-bold text-center">Total Portfolio Value</p>
+                    <p class="text-2xl font-mono font-bold text-white text-center">€<span id="global-total">0.00</span></p>
+                </div>
             </div>
         </div>
 
         <!-- Main Grid -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             
-            <!-- Bot 1: Binance SOL Scalper -->
-            <div class="bento-card p-6 flex flex-col justify-between">
+            <!-- Bot 1: Binance Squad -->
+            <div class="bento-card p-6 flex flex-col justify-between border-blue-500/50">
                 <div>
                     <div class="flex justify-between items-start mb-4">
-                        <span class="status-pill bg-blue-500/20 text-blue-400 border border-blue-500/30">Binance</span>
+                        <span class="status-pill bg-blue-500/20 text-blue-400 border border-blue-500/30">Binance Main</span>
                         <div class="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></div>
                     </div>
-                    <h2 class="text-xl font-bold mb-1">SOL Scalper</h2>
-                    <p class="text-slate-500 text-xs mb-4">Asset: SOL/EUR</p>
-                    <div class="flex items-baseline gap-2">
-                        <span class="text-3xl font-mono font-bold" id="b-bal">0.00</span>
-                        <span class="text-slate-500 text-sm">SOL</span>
+                    <h2 class="text-xl font-bold mb-1">Trading Squad</h2>
+                    <p class="text-slate-500 text-xs mb-4">Asset: BTC, SOL, EUR</p>
+                    <div class="space-y-2 font-mono text-sm">
+                        <div class="flex justify-between"><span class="text-slate-500">BTC:</span> <span id="b-btc">0.000000</span></div>
+                        <div class="flex justify-between"><span class="text-slate-500">SOL:</span> <span id="b-sol">0.00</span></div>
+                        <div class="flex justify-between"><span class="text-slate-500">EUR:</span> <span id="b-eur">0.00€</span></div>
                     </div>
                 </div>
                 <div class="mt-6 pt-4 border-t border-[#222]">
                     <div class="flex justify-between text-xs font-mono">
-                        <span class="text-slate-500">Profit Target</span>
-                        <span class="text-emerald-400">+0.8%</span>
+                        <span class="text-blue-400 font-bold italic">EXTREME AGGRESSIVE</span>
                     </div>
                 </div>
             </div>
 
-            <!-- Bot 2: Crypto.com SOL Scalper -->
+            <!-- Bot 2: Crypto.com Monitor -->
             <div class="bento-card p-6 flex flex-col justify-between">
                 <div>
                     <div class="flex justify-between items-start mb-4">
                         <span class="status-pill bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">Crypto.com</span>
                         <div class="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></div>
                     </div>
-                    <h2 class="text-xl font-bold mb-1">SOL Scalper</h2>
-                    <p class="text-slate-500 text-xs mb-4">Asset: SOL/USDT</p>
+                    <h2 class="text-xl font-bold mb-1">Secondary Wallet</h2>
+                    <p class="text-slate-500 text-xs mb-4">Assets in App</p>
                     <div class="flex items-baseline gap-2">
-                        <span class="text-3xl font-mono font-bold" id="c-bal">0.00</span>
-                        <span class="text-slate-500 text-sm">SOL</span>
+                        <span class="text-3xl font-mono font-bold" id="c-bal">1.03</span>
+                        <span class="text-slate-500 text-sm">USDT</span>
                     </div>
                 </div>
                 <div class="mt-6 pt-4 border-t border-[#222]">
                     <div class="flex justify-between text-xs font-mono">
-                        <span class="text-slate-500">Liquidity Ready</span>
-                        <span class="text-white">$<span id="c-usdt">0.00</span></span>
+                        <span class="text-slate-500">Other Assets</span>
+                        <span class="text-white">SHIB / ELON</span>
                     </div>
                 </div>
             </div>
@@ -99,86 +105,47 @@
                 </div>
             </div>
 
-            <!-- Bot 4: Sentinel Trend -->
-            <div class="bento-card p-6 flex flex-col justify-between">
-                <div>
-                    <div class="flex justify-between items-start mb-4">
-                        <span class="status-pill bg-rose-500/20 text-rose-400 border border-rose-500/30">Sentinel</span>
-                        <div class="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></div>
-                    </div>
-                    <h2 class="text-xl font-bold mb-1">Sentinel Trend</h2>
-                    <div id="sentinel-log" class="text-[10px] font-mono text-rose-400/80 h-16 overflow-hidden">
-                        Scanning watchlist...
-                    </div>
-                </div>
-                <div class="mt-4 pt-4 border-t border-[#222]">
-                    <p class="text-[10px] text-slate-500 uppercase font-bold">Scanning: BTC, ETH, SOL, BNB, ADA</p>
-                </div>
-            </div>
-
-            <!-- Bot 5: Arbitrage Sentinel -->
-            <div class="bento-card p-6 flex flex-col justify-between">
-                <div>
-                    <div class="flex justify-between items-start mb-4">
-                        <span class="status-pill bg-purple-500/20 text-purple-400 border border-purple-500/30">Arbitrage</span>
-                        <div class="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></div>
-                    </div>
-                    <h2 class="text-xl font-bold mb-1">Arbitrage Monitor</h2>
-                    <div id="arbitrage-log" class="text-[10px] font-mono text-purple-400/80 h-16 overflow-hidden">
-                        Comparing Binance & Crypto.com...
-                    </div>
-                </div>
-            </div>
-
             <!-- Bot 6: Volatility Hunter -->
-            <div class="bento-card p-6 flex flex-col justify-between">
+            <div class="bento-card p-6 flex flex-col justify-between border-cyan-500/30">
                 <div>
                     <div class="flex justify-between items-start mb-4">
-                        <span class="status-pill bg-cyan-500/20 text-cyan-400 border border-cyan-500/30">Breakout</span>
+                        <span class="status-pill bg-cyan-500/20 text-cyan-400 border border-cyan-500/30">Hunter v2</span>
                         <div class="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></div>
                     </div>
                     <h2 class="text-xl font-bold mb-1">Volatility Hunter</h2>
-                    <div id="hunter-log" class="text-[10px] font-mono text-cyan-400/80 h-16 overflow-hidden">
-                        Hunting for breakouts...
+                    <div id="hunter-status" class="text-xs font-mono text-cyan-400">
+                        Scanning Breakouts...
                     </div>
+                </div>
+                <div class="mt-4 pt-4 border-t border-[#222]">
+                    <p class="text-[10px] text-slate-500 uppercase font-bold">Risk: 50€ | Target: +2.2%</p>
                 </div>
             </div>
 
             <!-- Bot 7: Rebound Sniper -->
-            <div class="bento-card p-6 flex flex-col justify-between">
+            <div class="bento-card p-6 flex flex-col justify-between border-orange-500/30">
                 <div>
                     <div class="flex justify-between items-start mb-4">
-                        <span class="status-pill bg-orange-500/20 text-orange-400 border border-orange-500/30">Rebound</span>
+                        <span class="status-pill bg-orange-500/20 text-orange-400 border border-orange-500/30">Sniper v2</span>
                         <div class="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></div>
                     </div>
                     <h2 class="text-xl font-bold mb-1">Rebound Sniper</h2>
-                    <div id="sniper-log" class="text-[10px] font-mono text-orange-400/80 h-16 overflow-hidden">
-                        Waiting for dips...
+                    <div id="sniper-status" class="text-xs font-mono text-orange-400">
+                        Waiting for Dips (RSI < 32)
                     </div>
+                </div>
+                <div class="mt-4 pt-4 border-t border-[#222]">
+                    <p class="text-[10px] text-slate-500 uppercase font-bold">Risk: 60€ | Target: +2.5%</p>
                 </div>
             </div>
 
             <!-- Bot 8: Neural Commander -->
             <div class="bento-card p-6 flex flex-col justify-between border-2 border-sky-500/50">
-                <div class="ping"><span class="ping-circle" style="background-color: #0ea5e9;"></span><span class="ping-dot" style="background-color: #0ea5e9;"></span></div>
                 <div>
                     <div class="inline-block bg-sky-500/20 text-sky-400 border border-sky-500/30 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full mb-4">Master Brain</div>
                     <h2 class="text-xl font-bold mb-1 italic">Neural Commander</h2>
                     <div id="commander-log" class="text-[10px] font-mono text-sky-400/80 h-16 overflow-hidden">
                         Initializing neural net...
-                    </div>
-                </div>
-            </div>
-
-            <!-- Bot 9: Squadra Bravo -->
-            <div class="bento-card p-6 flex flex-col justify-between border-2 border-indigo-500/50">
-                <div class="ping"><span class="ping-circle" style="background-color: #6366f1;"></span><span class="ping-dot" style="background-color: #6366f1;"></span></div>
-                <div>
-                    <div class="inline-block bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full mb-4">Attack Squad</div>
-                    <h2 class="text-xl font-bold mb-1">Squadra BRAVO</h2>
-                    <p class="text-slate-500 text-xs mb-4">Target: ETH/EUR</p>
-                    <div id="bravo-log" class="text-[10px] font-mono text-indigo-400/80 h-16 overflow-hidden">
-                        Awaiting mission...
                     </div>
                 </div>
             </div>
@@ -197,7 +164,7 @@
             <!-- Chart Row -->
             <div class="bento-card p-6 md:col-span-3">
                 <div class="flex justify-between items-center mb-6">
-                    <h3 class="font-bold text-lg">Solana Market Performance (Target 0.8%)</h3>
+                    <h3 class="font-bold text-lg">Bitcoin Market Performance</h3>
                     <div class="text-xs font-mono text-slate-500">LIVE SYNC</div>
                 </div>
                 <div class="h-64">
@@ -216,10 +183,10 @@
             data: {
                 labels: [],
                 datasets: [{
-                    label: 'SOL/EUR (Binance)',
+                    label: 'BTC/EUR (Binance)',
                     data: [],
-                    borderColor: '#3b82f6',
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    borderColor: '#f59e0b',
+                    backgroundColor: 'rgba(245, 158, 11, 0.1)',
                     borderWidth: 2,
                     fill: true,
                     tension: 0.4
@@ -238,92 +205,68 @@
 
         async function updateData() {
             try {
-                // Fetch Binance Price
-                const b_res = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=SOLEUR');
+                // Fetch Binance Prices
+                const b_res = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCEUR');
                 const b_data = await b_res.json();
-                const sol_price = parseFloat(b_data.price);
+                const btc_price = parseFloat(b_data.price);
 
-                // Fetch real balances from our local bot logs/status
-                // Actual consolidated values (Binance + Crypto.com + Assets)
-                const binance_sol = 0.22;
-                const crypto_sol = 0.167;
-                const crypto_usdt = 8.81;
-                const pending_btc_val = 200.00; // Updated to include the latest 50€ (100+50+50)
-                const confirmed_btc_val = 50.00; // First 50€ already confirmed
-                const dormant_assets = 27.12; // SHIB/ELON in App
+                const sol_res = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=SOLEUR');
+                const sol_data = await sol_res.json();
+                const sol_price = parseFloat(sol_data.price);
+
+                // Real balances from Stella
+                const b_btc = 0.01173314;
+                const b_eur = 1.39561670;
+                const b_sol = 0.21922100;
+                const c_usdt = 1.03;
+                const dormant_assets = 8.50; // Estimated value for APP assets
+                const total_versato = 722.00;
 
                 // Update UI
-                document.getElementById('b-bal').textContent = binance_sol.toFixed(2);
-                document.getElementById('c-bal').textContent = crypto_sol.toFixed(3);
-                document.getElementById('c-usdt').textContent = crypto_usdt.toFixed(2);
+                document.getElementById('b-btc').textContent = b_btc.toFixed(8);
+                document.getElementById('b-sol').textContent = b_sol.toFixed(2);
+                document.getElementById('b-eur').textContent = b_eur.toFixed(2) + "€";
+                document.getElementById('c-bal').textContent = c_usdt.toFixed(2);
                 
-                // Total calculation: Realized + Latent + Pending
-                const total = (binance_sol * sol_price) + (crypto_sol * (sol_price * 1.15)) + 1.23 + crypto_usdt + confirmed_btc_val + pending_btc_val + dormant_assets;
+                // Total calculation
+                const total = (b_btc * btc_price) + (b_sol * sol_price) + b_eur + c_usdt + dormant_assets;
+                const profit = total - total_versato;
+
                 document.getElementById('global-total').textContent = total.toFixed(2);
-                
-                // Keep the rest of the chart and log logic...
+                const profitEl = document.getElementById('profit-val');
+                profitEl.textContent = (profit >= 0 ? "+" : "") + profit.toFixed(2) + "€";
+                profitEl.className = "text-2xl font-mono font-bold text-center " + (profit >= 0 ? "text-emerald-400" : "text-rose-400");
 
                 // Chart update
                 const now = new Date().toLocaleTimeString();
                 chart.data.labels.push(now);
-                chart.data.datasets[0].data.push(sol_price);
+                chart.data.datasets[0].data.push(btc_price);
                 if (chart.data.labels.length > 20) {
                     chart.data.labels.shift();
                     chart.data.datasets[0].data.shift();
                 }
                 chart.update();
 
-                // Whale Data update
+                // Other updates...
+                const hunterRes = await fetch('/hunter_status.json?' + Date.now()).catch(() => null);
+                if (hunterRes && hunterRes.ok) {
+                    const hunter = await hunterRes.json();
+                    document.getElementById('hunter-status').innerHTML = `Active: ${hunter.active_hunters} | Scanning ${hunter.watchlist.length} coins`;
+                }
+
+                const sniperRes = await fetch('/sniper_status.json?' + Date.now()).catch(() => null);
+                if (sniperRes && sniperRes.ok) {
+                    const sniper = await sniperRes.json();
+                    document.getElementById('sniper-status').innerHTML = `Active: ${sniper.active_snipes} | Monitoring Targets`;
+                }
+
                 const whaleRes = await fetch('/whale_data.json?' + Date.now());
-                const whales = await whaleRes.json();
-                const logEl = document.getElementById('whale-log');
-                if (whales.length > 0) {
-                    logEl.innerHTML = whales.map(w => `<div>[${w.time}] ${w.side} ${w.qty} BTC @ ${w.price}</div>`).join('');
-                }
-
-                // Sentinel Data update
-                const sentinelRes = await fetch('/sentinel_data.json?' + Date.now()).catch(() => null);
-                if (sentinelRes && sentinelRes.ok) {
-                    const signals = await sentinelRes.json();
-                    const sLogEl = document.getElementById('sentinel-log');
-                    if (signals.length > 0) {
-                        sLogEl.innerHTML = signals.map(s => `<div>[${s.time}] ${s.symbol} ${s.direction} ${s.change}</div>`).join('');
+                if (whaleRes && whaleRes.ok) {
+                    const whales = await whaleRes.json();
+                    const logEl = document.getElementById('whale-log');
+                    if (whales.length > 0) {
+                        logEl.innerHTML = whales.map(w => `<div>[${w.time}] ${w.side} ${w.qty} BTC @ ${w.price}</div>`).join('');
                     }
-                }
-
-                // Arbitrage Data update
-                const arbRes = await fetch('/arbitrage_data.json?' + Date.now()).catch(() => null);
-                if (arbRes && arbRes.ok) {
-                    const arb = await arbRes.json();
-                    document.getElementById('arbitrage-log').innerHTML = `<div>Last: ${arb.time}</div><div>Spread: ${arb.spread}</div><div>B: ${arb.b_price} | C: ${arb.c_price}</div>`;
-                }
-
-                // Commander Data update
-                const commRes = await fetch('/commander_data.json?' + Date.now()).catch(() => null);
-                if (commRes && commRes.ok) {
-                    const comm = await commRes.json();
-                    document.getElementById('commander-log').innerHTML = `<div>Regime: ${comm.market_regime}</div><div>State: ${comm.commander_status}</div><div>Last: ${comm.time}</div>`;
-                }
-
-                // Squad Bravo Data update
-                const bravoRes = await fetch('/squad_bravo_data.json?' + Date.now()).catch(() => null);
-                if (bravoRes && bravoRes.ok) {
-                    const bravo = await bravoRes.json();
-                    document.getElementById('bravo-log').innerHTML = `<div>Status: ${bravo.status}</div><div>ETH Price: €${bravo.price.toFixed(2)}</div><div>Last: ${bravo.last_update.substring(11,19)}</div>`;
-                }
-
-                // Fleet Activity update
-                const activityRes = await fetch('/fleet_activity.json?' + Date.now()).catch(() => null);
-                if (activityRes && activityRes.ok) {
-                    const activity = await activityRes.json();
-                    const actEl = document.getElementById('fleet-activity');
-                    actEl.innerHTML = activity.map(a => `
-                        <div class="flex gap-3 border-b border-[#111] py-1">
-                            <span class="text-slate-500 w-16">${a.time}</span>
-                            <span class="text-blue-400 font-bold w-24">[${a.bot}]</span>
-                            <span class="text-slate-300 italic">${a.action}</span>
-                        </div>
-                    `).join('');
                 }
 
             } catch (e) { console.error(e); }
