@@ -2,6 +2,7 @@ import os
 import time
 import requests
 import logging
+import json
 from binance.client import Client
 from dotenv import load_dotenv
 

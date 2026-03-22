@@ -1,173 +1,277 @@
 import os
 import json
 import logging
+import requests
 import time
-import asyncio
-from datetime import datetime
+import subprocess
+from binance.client import Client
 from dotenv import load_dotenv
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup
-from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, CallbackQueryHandler, MessageHandler, filters
 
-# Caricamento configurazioni
-load_dotenv('/root/.openclaw/workspace/.env.telegram')
-TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN', '')
-TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID', '')
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')
 
-# Configurazione logging
-logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO,
-    filename='/root/.openclaw/workspace/telegram_bot_interactive.log'
-)
-logger = logging.getLogger(__name__)
-
-# --- Helper Functions per i Dati ---
-
-def get_status_data(filename):
+def get_full_status(is_admin=False):
     try:
-        path = f'/root/.openclaw/workspace/{filename}'
-        if os.path.exists(path):
-            with open(path, 'r') as f:
-                return json.load(f)
+        load_dotenv('/root/.openclaw/workspace/.env')
+        b_client = Client(os.getenv('BINANCE_API_KEY'), os.getenv('BINANCE_API_SECRET'))
+        b_eur = float(b_client.get_asset_balance(asset='EUR')['free'])
+        b_btc = float(b_client.get_asset_balance(asset='BTC')['free'])
+        b_sol = float(b_client.get_asset_balance(asset='SOL')['free'])
+        
+        res = requests.get('https://api.binance.com/api/v3/ticker/price?symbol=SOLEUR').json()
+        sol_price_eur = float(res['price'])
+        res_btc = requests.get('https://api.binance.com/api/v3/ticker/price?symbol=BTCEUR').json()
+        btc_price_eur = float(res_btc['price'])
+        
+        b_total_eur = b_eur + (b_btc * btc_price_eur) + (b_sol * sol_price_eur)
+        total_global = b_total_eur
+        
+        msg = "💰 *BILANCIO ALPHA-FLEET (BINANCE)* 💰\n"
+        msg += "------------------------------------\n"
+        msg += f"🏦 *VALORE TOTALE: €{total_global:.2f}*\n\n"
+        
+        if is_admin:
+            msg += f"🚢 *FLOTTA:* 8 Bot Operativi\n"
+            msg += f" ├ ₿ BTC: {b_btc:.8f} (~€{b_btc*btc_price_eur:.2f})\n"
+            msg += f" ├ ☀️ SOL: {b_sol:.2f} (~€{b_sol*sol_price_eur:.2f})\n"
+            msg += f" └ 💶 Liquido: €{b_eur:.2f}\n"
+        else:
+            msg += "📈 *STATO:* Flotta in navigazione h24.\n"
+        
+        msg += "------------------------------------\n"
+        msg += f"🕒 _Aggiornato al: {time.strftime('%H:%M:%S')}_"
+        return msg
     except Exception as e:
-        logger.error(f"Errore lettura {filename}: {e}")
-    return None
+        return f"⚠️ Errore calcolo: {str(e)}"
 
-def get_formatted_balance():
-    quant = get_status_data('quant_status.json')
-    grid = get_status_data('grid_status.json')
-    multi = get_status_data('multi_status.json')
-    
-    binance_bal = quant.get('balance', 0) if quant else 0
-    # Crypto.com balance spesso in grid_status o multi_status come USDT
-    cdc_bal = grid.get('balance', {}).get('usdt', 0) if grid else 0
-    
-    # Valori stimati per asset dormienti (SHIB/ELON)
-    shib_val = 4544739 * 0.00000511
-    elon_val = 118000000 * 0.000000033
-    dormant = shib_val + elon_val
-    
-    eur_total = binance_bal + (cdc_bal * 0.94) + dormant
-    
-    msg = (
-        "💰 *BILANCIO OPERATIVO* 💰\n"
-        "⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n"
-        f"📊 *Capitale Totale:* `€{eur_total:.2f}`\n\n"
-        f"🔸 *Binance (Fiat):* `€{binance_bal:.2f}`\n"
-        f"🔹 *Crypto.com (USDT):* `${cdc_bal:.2f}`\n"
-        f"💎 *Asset Dormienti:* `€{dormant:.2f}`\n"
-        "⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n"
-        f"🕒 _Aggiornato al: {datetime.now().strftime('%H:%M:%S')}_"
-    )
-    return msg
+def get_performance():
+    try:
+        res = requests.get('https://api.binance.com/api/v3/ticker/price?symbol=SOLEUR').json()
+        sol_price = float(res['price'])
+        avg_entry = 78.13 
+        pnl_pct = ((sol_price - avg_entry) / avg_entry) * 100
+        
+        msg = "📈 *ANALISI SOLANA* 📈\n"
+        msg += "------------------------------------\n"
+        msg += f"☀️ *Prezzo SOL:* {sol_price:.2f} €\n"
+        msg += f"📊 *PnL Posizione:* {pnl_pct:+.2%}\n\n"
+        msg += "🎯 *Target Vendita:* +0.8%\n"
+        return msg
+    except:
+        return "⚠️ Errore recupero andamento."
 
-# --- Handlers ---
+def get_whale_alerts():
+    try:
+        with open('/root/.openclaw/workspace/whale_events.json', 'r') as f:
+            lines = f.readlines()[-5:]
+            if not lines: return "🐋 Nessun movimento balene rilevato."
+            msg = "🐋 *ULTIMI MOVIMENTI BALENE*\n\n"
+            for line in lines:
+                data = json.loads(line)
+                msg += f"• {data['time']} | {data['side']} {data['qty']:.3f} BTC @ {data['price']:.0f}€\n"
+            return msg
+    except:
+        return "⚠️ Errore lettura Whale Monitor."
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Messaggio di benvenuto con tastiera fissa e link Dashboard"""
-    keyboard = [
-        ['📊 Stato Generale', '💰 Bilancio'],
-        ['🎯 Segnali Quant', '🌐 Grid Engine'],
-        ['📈 Web Dashboard', '🔄 Refresh']
+def get_money_status():
+    try:
+        # 1. Carica dati dai vari bot
+        with open('/root/.openclaw/workspace/grid_status.json', 'r') as f:
+            grid = json.load(f)
+        with open('/root/.openclaw/workspace/quant_status.json', 'r') as f:
+            quant = json.load(f)
+        with open('/root/.openclaw/workspace/multi_status.json', 'r') as f:
+            multi = json.load(f)
+        with open('/root/.openclaw/workspace/cryptocom_status.json', 'r') as f:
+            crypto = json.load(f)
+        
+        # Nuovi bot della squadra
+        try:
+            with open('/root/.openclaw/workspace/hunter_status.json', 'r') as f:
+                hunter = json.load(f)
+        except: hunter = {}
+        try:
+            with open('/root/.openclaw/workspace/sniper_status.json', 'r') as f:
+                sniper = json.load(f)
+        except: sniper = {}
+
+        # 2. Calcola i totali
+        # Investito (Asset in lavorazione)
+        invested_btc = grid.get('balance', {}).get('btc_value_usdt', 0)
+        invested_multi = multi.get('summary', {}).get('active_positions', 0) * 20 
+        invested_hunter = hunter.get('active_hunters', 0) * 15
+        invested_sniper = sniper.get('active_snipes', 0) * 20
+        
+        # In lavorazione (Liquidità pronta a entrare)
+        liquid_grid = grid.get('balance', {}).get('usdt', 0)
+        liquid_quant = quant.get('balance', 0)
+        liquid_crypto = crypto.get('balance', 0)
+        
+        total_invested = invested_btc + invested_multi + invested_hunter + invested_sniper
+        total_working = liquid_grid + liquid_quant + liquid_crypto
+        
+        # Profitto Realizzato (Incassato)
+        profit_grid = grid.get('total_profit', 0)
+        profit_multi = multi.get('summary', {}).get('total_pnl', 0)
+        
+        total_profit = profit_grid + profit_multi
+
+        msg = "📊 *STATO FINANZIARIO SQUADRA* 📊\n"
+        msg += "------------------------------------\n"
+        msg += f"📥 *INVESTITO:* €{total_invested:.2f}\n"
+        msg += f" └ _Asset in mercato (8 Bot totali)_\n\n"
+        msg += f"⚙️ *IN LAVORAZIONE:* €{total_working:.2f}\n"
+        msg += f" └ _Liquidità pronta per segnali_\n\n"
+        msg += f"💰 *INCASSATO:* €{total_profit:.2f}\n"
+        msg += f" └ _Profitto netto già realizzato_\n"
+        msg += "------------------------------------\n"
+        msg += f"🚀 *SQUADRA:* 8 Bot Operativi\n"
+        msg += f" 🔥 _Hunter attiva su:_ {len(hunter.get('watchlist', []))} crypto\n"
+        msg += f" 🎯 _Sniper attiva su:_ {len(sniper.get('targets', []))} crypto\n"
+        msg += "------------------------------------\n"
+        msg += f"📈 *RENDIMENTO:* {((total_profit/682.50)*100):+.2f}%"
+        return msg
+    except Exception as e:
+        return f"⚠️ Errore calcolo finanziario: {str(e)}"
+
+def send_telegram_message(token, chat_id, text, reply_markup=None):
+    url = f"https://api.telegram.org/bot{token}/sendMessage"
+    data = {'chat_id': chat_id, 'text': text, 'parse_mode': 'Markdown'}
+    if reply_markup:
+        data['reply_markup'] = json.dumps(reply_markup)
+    try:
+        r = requests.post(url, data=data)
+        logging.info(f"Telegram send to {chat_id}: {r.status_code}")
+    except Exception as e:
+        logging.error(f"Telegram send error: {e}")
+
+def main_loop():
+    load_dotenv('/root/.openclaw/workspace/.env.telegram')
+    token = os.getenv('TELEGRAM_BOT_TOKEN')
+    sergio_id = os.getenv('TELEGRAM_CHAT_ID')
+    last_update_id = 0
+    
+    # Menù completo per Sergio
+    admin_keyboard = {
+        "keyboard": [
+            [{"text": "📊 Stato Denaro"}, {"text": "💰 Bilancio Reale"}],
+            [{"text": "📈 Solana PnL"}, {"text": "💵 Quanto Incassato"}],
+            [{"text": "🐋 Whale Alerts"}, {"text": "📡 Sentinel Log"}],
+            [{"text": "🧠 Neural State"}, {"text": "🔗 Dashboard"}]
+        ],
+        "resize_keyboard": True
+    }
+    
+    # Comandi menu persistente (BotFather style)
+    menu_commands = [
+        {"command": "stato", "description": "📊 Stato Finanziario Squadra"},
+        {"command": "bilancio", "description": "💰 Bilancio Reale Binance"},
+        {"command": "solana", "description": "📈 Analisi Solana PnL"},
+        {"command": "incassato", "description": "💵 Quanto Incassato Oggi"},
+        {"command": "balene", "description": "🐋 Whale Alerts"},
+        {"command": "sentinel", "description": "📡 Sentinel Spike Log"},
+        {"command": "neural", "description": "🧠 Stato Neural Commander"},
+        {"command": "dashboard", "description": "🔗 Link Dashboard Web"}
     ]
-    reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
     
-    welcome_text = (
-        "👋 *Ciao Sergio! Benvenuto nella plancia di comando.*\n\n"
-        "Sono *Stella*, la tua assistente per il trading quantitativo. "
-        "Usa i pulsanti qui sotto per monitorare i tuoi bot in tempo reale.\n\n"
-        "🔗 *Dashboard Web:* https://sgrivett.ddns.net:8443/"
-    )
-    await update.message.reply_text(welcome_text, reply_markup=reply_markup, parse_mode='Markdown')
+    try:
+        requests.post(f"https://api.telegram.org/bot{token}/setMyCommands", json={"commands": menu_commands})
+        logging.info("Menu commands updated successfully.")
+    except Exception as e:
+        logging.error(f"Failed to set menu commands: {e}")
 
-async def main_menu_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = update.message.text
-    
-    if text == '📊 Stato Generale':
-        await send_general_status(update)
-    elif text == '💰 Bilancio':
-        await update.message.reply_text(get_formatted_balance(), parse_mode='Markdown')
-    elif text == '🎯 Segnali Quant':
-        await send_quant_details(update)
-    elif text == '🌐 Grid Engine':
-        await send_grid_details(update)
-    elif text == '📈 Web Dashboard':
-        msg = (
-            "🚀 *DASHBOARD ONLINE*\n\n"
-            "Puoi monitorare le metriche avanzate e i grafici live qui:\n"
-            "🔗 https://sgrivett.ddns.net:8443/"
-        )
-        await update.message.reply_text(msg, parse_mode='Markdown')
-    elif text == '🔄 Refresh':
-        await update.message.reply_text("🔄 *Aggiornamento dati in corso...*", parse_mode='Markdown')
-        await update.message.reply_text(get_formatted_balance(), parse_mode='Markdown')
-    else:
-        await update.message.reply_text("Seleziona un'opzione dal menù qui sotto. 👇")
+    logging.info("Starting Enhanced Telegram Loop...")
+    while True:
+        try:
+            # Check for alerts or strikes first
+            if os.path.exists('/root/.openclaw/workspace/strike_alert.flag'):
+                logging.info("Processing strike flag...")
+                try:
+                    with open('/root/.openclaw/workspace/strike_alert.flag', 'r') as f:
+                        strike_data = f.read().strip()
+                    
+                    if strike_data:
+                        msg = f"🔔 *STRIKE! PROFITTO INCASSATO!* 💰\n✅ Guadagno: *€{strike_data}*"
+                    else:
+                        msg = "🔔 *STRIKE! PROFITTO INCASSATO!* 💰"
+                        
+                    send_telegram_message(token, sergio_id, msg)
+                except Exception as e:
+                    logging.error(f"Error reading strike flag: {e}")
+                    send_telegram_message(token, sergio_id, "🔔 *STRIKE! PROFITTO INCASSATO!* 💰")
+                
+                os.remove('/root/.openclaw/workspace/strike_alert.flag')
 
-async def send_general_status(update: Update):
-    quant = get_status_data('quant_status.json')
-    grid = get_status_data('grid_status.json')
-    
-    q_status = "✅ RUNNING" if quant and quant.get('status') == 'running' else "❌ OFFLINE"
-    g_status = "✅ RUNNING" if grid and grid.get('status') == 'RUNNING' else "❌ OFFLINE"
-    
-    msg = (
-        "🖥 *STATO SISTEMI* 🖥\n"
-        "⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n"
-        f"🤖 *Quant Scalper:* {q_status}\n"
-        f"⛓ *Grid Engine:* {g_status}\n"
-        "📡 *Gateway:* ✅ ONLINE\n"
-        "⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n"
-        "Tutti i sistemi sono monitorati e pronti all'azione."
-    )
-    await update.message.reply_text(msg, parse_mode='Markdown')
+            url = f"https://api.telegram.org/bot{token}/getUpdates?offset={last_update_id + 1}&timeout=30"
+            r = requests.get(url, timeout=35)
+            if r.status_code != 200:
+                time.sleep(5); continue
+            updates = r.json()
+            if "result" in updates:
+                for update in updates["result"]:
+                    last_update_id = update["update_id"]
+                    if "message" in update and "text" in update["message"]:
+                        text = update["message"]["text"].lower()
+                        incoming_id = str(update["message"]["chat"]["id"])
+                        is_admin = (incoming_id == sergio_id)
+                        
+                        if text == "/start":
+                            send_telegram_message(token, incoming_id, "🤖 *Console di Comando Attiva*\nUsa i pulsanti sotto o il tasto 'Menu' in basso a sinistra:", admin_keyboard)
+                        
+                        elif text in ["📊 stato denaro", "/stato"]:
+                            send_telegram_message(token, incoming_id, get_money_status())
+                        
+                        elif text in ["💰 bilancio reale", "/bilancio"]:
+                            send_telegram_message(token, incoming_id, get_full_status(is_admin))
+                        
+                        elif text in ["💵 quanto incassato", "/incassato"]:
+                            status_msg = get_full_status(True)
+                            try:
+                                total_val = float(status_msg.split("VALORE TOTALE: €")[1].split("*")[0])
+                                profit = total_val - 682.50
+                                msg = "💵 *REPORT INCASSI TRADING* 💵\n"
+                                msg += "------------------------------------\n"
+                                msg += f"💰 *Capitale Investito:* €682.50\n"
+                                msg += f"📊 *Valore Attuale:* €{total_val:.2f}\n"
+                                msg += "------------------------------------\n"
+                                msg += f"📈 *PROFITTO NETTO:* {profit:+.2f} €\n"
+                                msg += f"🎯 *Rendimento:* {(profit/682.50)*100:+.2f}%\n"
+                                send_telegram_message(token, incoming_id, msg)
+                            except:
+                                send_telegram_message(token, incoming_id, "⚠️ Impossibile calcolare l'incasso al momento.")
+                        
+                        elif text in ["📈 solana pnl", "/solana"]:
+                            send_telegram_message(token, incoming_id, get_performance())
+                            
+                        elif text in ["🐋 whale alerts", "/balene"]:
+                            send_telegram_message(token, incoming_id, get_whale_alerts())
+                        
+                        elif text in ["📡 sentinel log", "/sentinel"]:
+                            try:
+                                with open('/root/.openclaw/workspace/dashboard/sentinel_data.json') as f:
+                                    data = json.load(f)
+                                msg = "📡 *SENTINEL: SPIKE RILEVATI*\n\n" + "\n".join([f"• {s['time']} - {s['symbol']} {s['direction']}" for s in data[-5:]])
+                                send_telegram_message(token, incoming_id, msg)
+                            except:
+                                send_telegram_message(token, incoming_id, "📡 Nessun segnale attivo.")
+                                
+                        elif text in ["🧠 neural state", "/neural"]:
+                            try:
+                                with open('/root/.openclaw/workspace/dashboard/commander_data.json') as f:
+                                    data = json.load(f)
+                                msg = "🧠 *STATO CERVELLO NEURALE*\n\n"
+                                msg += f"• *Mercato:* {data['market_regime']}\n"
+                                msg += f"• *Stato:* {data['commander_status']}\n"
+                                msg += f"• *Ultima Azione:* {data['last_action']}"
+                                send_telegram_message(token, incoming_id, msg)
+                            except:
+                                send_telegram_message(token, incoming_id, "🧠 In fase di apprendimento...")
+                        
+                        elif text in ["🔗 dashboard", "/dashboard"]:
+                            send_telegram_message(token, incoming_id, "🌐 *Dashboard Web:* [https://sgrivett.ddns.net:8443](https://sgrivett.ddns.net:8443)")
 
-async def send_quant_details(update: Update):
-    multi = get_status_data('multi_status.json')
-    if not multi or 'summary' not in multi:
-        await update.message.reply_text("❌ Dati Quant non disponibili al momento.")
-        return
-        
-    summary = multi['summary']
-    msg = (
-        "🎯 *DETTAGLI QUANT SCALPER* 🎯\n"
-        "⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n"
-        f"📈 *Coppie Monitorate:* `{summary.get('total_coins', 0)}`\n"
-        f"💰 *PnL Totale:* `€{summary.get('total_pnl', 0.0):.2f}`\n"
-        f"🔥 *Best Trade:* `+{summary.get('best_trade', 0.0):.2f}%`\n"
-        "⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n"
-        "Il bot sta operando con strategia Momentum/Mean Reversion."
-    )
-    await update.message.reply_text(msg, parse_mode='Markdown')
-
-async def send_grid_details(update: Update):
-    grid = get_status_data('grid_status.json')
-    if not grid:
-        await update.message.reply_text("❌ Dati Grid non disponibili.")
-        return
-        
-    msg = (
-        "🌐 *GRID ENGINE STATUS* 🌐\n"
-        "⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n"
-        f"💱 *Coppia:* `{grid.get('symbol', 'SOLEUR')}`\n"
-        f"💵 *Prezzo:* `{grid.get('current_price', 0.0)} €`\n"
-        f"📊 *Profitto Netto:* `€{grid.get('net_profit', 0.0):.4f}`\n"
-        f"📦 *Ordini Eseguiti:* `{grid.get('total_trades', 0)}`\n"
-        "⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯\n"
-        f"📍 *Range:* `{grid.get('grid', {}).get('lower_bound')} - {grid.get('grid', {}).get('upper_bound')} €`"
-    )
-    await update.message.reply_text(msg, parse_mode='Markdown')
-
-# --- Main ---
+            time.sleep(0.5)
+        except Exception as e:
+            time.sleep(5)
 
 if __name__ == '__main__':
-    if not TELEGRAM_BOT_TOKEN:
-        print("Errore: TELEGRAM_BOT_TOKEN non trovato nel file .env.telegram")
-    else:
-        print("Avvio Stella Bot Interactive...")
-        app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
-        
-        app.add_handler(CommandHandler("start", start))
-        app.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), main_menu_handler))
-        
-        app.run_polling()
+    main_loop()

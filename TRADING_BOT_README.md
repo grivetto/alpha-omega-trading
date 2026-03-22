@@ -1,78 +1,25 @@
-# Trading Bot Binance - Guida Rapida
+# 🚀 ALPHA-FLEET: Aggressive Trading Squad (Sergio Grivetto Edition)
 
-## 📁 File di Configurazione
-**Percorso file chiavi API:**
-```
-/root/.openclaw/workspace/.env
-```
+Benvenuto nella console di comando della flotta di trading di Sergio. Questa infrastruttura gestisce una squadra di **8 Bot specializzati** che operano H24 su Binance e Crypto.com con una strategia **Extreme Aggressive**.
 
-## ✏️ Come Inserire le Chiavi
-1. Apri il file `.env`
-2. Sostituisci `INSERISCI_QUI_LA_TUA_API_KEY` con la tua API Key
-3. Sostituisci `INSERISCI_QUI_LA_TUA_SECRET_KEY` con la tua Secret Key
+## 📊 Stato della Flotta (Aggiornato 22 Marzo 2026)
+*   **Capitale Attivo:** ~€700.00
+*   **Stato:** 🟢 OPERATIVO (Aggressive Mode)
+*   **Exchange:** Binance (Main), Crypto.com (Secondary)
 
-## 🚀 Come Avviare il Bot
-```bash
-# Modalità 1: Usando lo script
-cd /root/.openclaw/workspace
-./run_bot.sh
+## 🤖 Membri della Squadra
+1.  **🚀 Volatility Hunter:** Scansiona breakout di volume su Altcoin (ETH, SOL, AVAX, DOGE). Risk: 50€/trade. Target: +2.2%.
+2.  **🎯 Rebound Sniper:** Cecchino per acquisti in iper-venduto (RSI < 32). Risk: 60€/trade. Target: +2.5%.
+3.  **₿ Smart Grid Engine:** Gestione BTC/EUR e SOL/EUR in accumulo e vendita automatica.
+4.  **🟢 Multi-Coin Bot:** Scansione 100 coppie crypto con segnale "Score 3/7" rapido.
+5.  **👩‍💻 Stella (Controller):** Gestione Telegram, notifiche Strike e coordinamento flotta.
 
-# Modalità 2: Manualmente
-cd /root/.openclaw/workspace
-source trading_bot_env/bin/activate
-python binance_trading_bot.py
-```
+## 📈 Dashboard & Controllo
+*   **Telegram:** [@Sergiotrdxbot](https://t.me/Sergiotrdxbot) - Pulsanti real-time per bilancio, incassi e stato.
+*   **Web Dashboard:** [https://sgrivett.ddns.net:8443](https://sgrivett.ddns.net:8443)
 
-## 📊 Modalità Default
-- **PAPER_TRADING = True** (test con soldi virtuali)
-- **Symbol:** BTCUSDT
-- **Timeframe:** 15 minuti
-
-## ⚙️ Per Trading Reale
-Modifica nel file `binance_trading_bot.py`:
-```python
-PAPER_TRADING = False  # Cambia da True a False
-```
-
-## 📝 Log
-I log vengono salvati in:
-```
-/root/.openclaw/workspace/trading_bot.log
-```
+## 🛠️ Tecnologie
+Python 3.12, Pandas-TA, Binance API, Systemd (Persistence), Telegram Interactive API.
 
 ---
-
-## 🔧 Daemon Systemd (Avvio Automatico)
-
-Il bot è configurato come servizio che parte automaticamente al riavvio del server.
-
-### Gestione Rapida:
-```bash
-cd /root/.openclaw/workspace
-
-# Avvia il bot
-./bot_ctl.sh start
-
-# Ferma il bot
-./bot_ctl.sh stop
-
-# Riavvia il bot
-./bot_ctl.sh restart
-
-# Controlla lo stato
-./bot_ctl.sh status
-
-# Visualizza log in tempo reale
-./bot_ctl.sh logs
-```
-
-### Comandi Systemd Diretti:
-```bash
-systemctl start binance-bot      # Avvia
-systemctl stop binance-bot       # Ferma
-systemctl restart binance-bot    # Riavvia
-systemctl status binance-bot     # Stato
-journalctl -u binance-bot -f     # Log live
-```
-
-> **Nota:** Il servizio è già abilitato e partirà automaticamente dopo ogni riavvio del server.
+*Developed with ❤️ by Stella for Sergio Grivetto.*

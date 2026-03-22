@@ -60,8 +60,8 @@ SLEEP_TIME = 45
 
 # Indicatori
 RSI_PERIOD = 14
-RSI_BUY_THRESHOLD = 40
-RSI_SELL_THRESHOLD = 65
+RSI_BUY_THRESHOLD = 48
+RSI_SELL_THRESHOLD = 58
 MACD_FAST = 12
 MACD_SLOW = 26
 MACD_SIGNAL = 9
@@ -72,11 +72,11 @@ STOCH_PERIOD = 14
 BB_PERIOD = 20
 ATR_PERIOD = 14
 
-RISK_PER_TRADE = 0.10
-STOP_LOSS_PCT = 0.02
-TAKE_PROFIT_PCT = 0.04
-TRAILING_STOP_PCT = 0.025
-VOLUME_SPIKE_MULT = 1.5
+RISK_PER_TRADE = 0.60
+STOP_LOSS_PCT = 0.04
+TAKE_PROFIT_PCT = 0.022
+TRAILING_STOP_PCT = 0.015
+VOLUME_SPIKE_MULT = 1.10
 
 PAPER_TRADING = False
 
@@ -231,6 +231,8 @@ def analyze_coin(symbol, df):
         signals['stoch_oversold'],
         signals['bb_lower_touch'],
         signals['volume_spike'],
+        signals['strong_trend'],
+        signals['high_volatility']
     ])
     
     sell_score = sum([
@@ -242,13 +244,13 @@ def analyze_coin(symbol, df):
     ])
     
     # Determina segnale
-    if buy_score >= 4 and not state.in_position:
+    if buy_score >= 3 and not state.in_position:
         signal = "STRONG_BUY"
-    elif buy_score >= 3 and not state.in_position:
+    elif buy_score >= 2 and not state.in_position:
         signal = "BUY"
-    elif sell_score >= 3 and state.in_position:
-        signal = "STRONG_SELL"
     elif sell_score >= 2 and state.in_position:
+        signal = "STRONG_SELL"
+    elif sell_score >= 1 and state.in_position:
         signal = "SELL"
     else:
         signal = "NEUTRAL"
