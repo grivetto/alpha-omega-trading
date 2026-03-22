@@ -38,68 +38,8 @@ def get_full_status():
         msg += f"📈 *PROFITTO NETTO:* {profit:+.2f} €\n"
         msg += "------------------------------------\n"
         msg += f"🕒 _Aggiornato: {time.strftime('%H:%M:%S')}_"
-        return msg, total_eur
-    except Exception as e: return f"⚠️ Errore bilancio: {str(e)}", 0
-
-def get_today_profit():
-    try:
-        load_dotenv('/root/.openclaw/workspace/.env')
-        client = Client(os.getenv('BINANCE_API_KEY'), os.getenv('BINANCE_API_SECRET'))
-        # Mezzanotte di oggi
-        start_time = int(datetime.now().replace(hour=0, minute=0, second=0, microsecond=0).timestamp() * 1000)
-        total_today = 0.0
-        
-        for s in TRADING_SYMBOLS:
-            try:
-                trades = client.get_my_trades(symbol=s, startTime=start_time)
-                for t in trades:
-                    if not t['isBuyer']:
-                        total_today += (float(t['qty']) * float(t['price'])) * 0.016 
-            except: continue
-
-        msg = "📅 *GUADAGNATO OGGI* 📅\n"
-        msg += "------------------------------------\n"
-        msg += f"💰 *Incasso Netto:* €{total_today:.2f}\n"
-        msg += "------------------------------------\n"
-        msg += "⚡ _Basato sui trade chiusi in attivo oggi._"
         return msg
-    except Exception as e:
-        return f"⚠️ Errore calcolo oggi: {str(e)}"
-
-def get_summary_financials():
-    try:
-        load_dotenv('/root/.openclaw/workspace/.env')
-        client = Client(os.getenv('BINANCE_API_KEY'), os.getenv('BINANCE_API_SECRET'))
-        total_worked_vol = 0.0
-        total_fees_eur = 0.0
-        realized_profit_eur = 0.0
-        btc_price = float(client.get_symbol_ticker(symbol="BTCEUR")['price'])
-        bnb_price = float(client.get_symbol_ticker(symbol="BNBEUR")['price'])
-        
-        for s in TRADING_SYMBOLS:
-            try:
-                trades = client.get_my_trades(symbol=s, limit=100)
-                for t in trades:
-                    val = float(t['qty']) * float(t['price'])
-                    if 'BTC' in s and s != 'BTCEUR': val = val * btc_price
-                    total_worked_vol += val
-                    fee_qty = float(t['commission'])
-                    fee_asset = t['commissionAsset']
-                    if fee_asset == 'EUR': total_fees_eur += fee_qty
-                    elif fee_asset == 'BNB': total_fees_eur += fee_qty * bnb_price
-                    elif fee_asset == 'BTC': total_fees_eur += fee_qty * btc_price
-                    if not t['isBuyer']: realized_profit_eur += val * 0.016
-            except: continue
-            
-        msg = "📊 *RESOCONTO FINANZIARIO* 📊\n"
-        msg += "------------------------------------\n"
-        msg += f"📥 *CAPITALE:* €{CAPITALE_VERSATO_TOTALE:.2f}\n"
-        msg += f"💸 *COSTI:* €{total_fees_eur:.2f}\n"
-        msg += f"🥇 *GUADAGNI:* €{realized_profit_eur:.2f}\n"
-        msg += f"🏗️ *MASSA:* €{total_worked_vol:.2f}\n"
-        msg += "------------------------------------\n"
-        return msg
-    except Exception as e: return f"⚠️ Errore calcolo: {str(e)}"
+    except Exception as e: return f"⚠️ Errore bilancio: {str(e)}"
 
 def get_squad_stats():
     try:
@@ -107,13 +47,16 @@ def get_squad_stats():
         alpha = ["smart_grid_engine.py", "binance_bot_multi.py", "volatility_hunter.py"]
         omega = ["contrarian_omega_squad.py", "omega_bottom_feeder.py"]
         sigma = ["sigma_chaos_engine.py", "shadow_trend_tracer.py", "flash_surge_unit.py"]
+        
         a_on = sum(1 for s in alpha if s in ps_output)
         o_on = sum(1 for s in omega if s in ps_output)
         s_on = sum(1 for s in sigma if s in ps_output)
+        
         msg = "🚀 *STATO OPERATIVO TRIADE*\n"
         msg += "------------------------------------\n"
-        msg += f"🔹 *ALPHA:* {a_on} ON | 🔸 *OMEGA:* {o_on} ON\n"
-        msg += f"🔮 *SIGMA:* {s_on} ON\n"
+        msg += f"🔹 *ALPHA:* {a_on} ONLINE\n"
+        msg += f"🔸 *OMEGA:* {o_on} ONLINE\n"
+        msg += f"🔮 *SIGMA:* {s_on} ONLINE\n"
         msg += "------------------------------------\n"
         msg += "💎 *MODE:* GOD_MODE"
         return msg
@@ -141,38 +84,19 @@ def get_trade_history():
         return msg
     except: return "⚠️ Errore storico."
 
-def main_loop():
-    load_dotenv('/root/.openclaw/workspace/.env.telegram')
-    token = os.getenv('TELEGRAM_BOT_TOKEN')
-    sergio_id = os.getenv('TELEGRAM_CHAT_ID')
-    last_update_id = 0
-    admin_keyboard = {"keyboard": [[{"text": "📊 CAPITALE-COSTI-GUADAGNI"}, {"text": "📅 GUADAGNATO OGGI"}], [{"text": "💰 BILANCIO LIVE"}, {"text": "📊 STATO SQUADRE"}], [{"text": "📜 STORICO TRADE"}, {"text": "🔗 DASHBOARD WEB"}]], "resize_keyboard": True}
-    logging.info("Starting Triad Bot...")
-    while True:
-        try:
-            if os.path.exists('/root/.openclaw/workspace/strike_alert.flag'):
-                send_telegram_message(token, sergio_id, "🔔 *STRIKE! PROFITTO INCASSATO!* 💰")
-                os.remove('/root/.openclaw/workspace/strike_alert.flag')
-            url = f"https://api.telegram.org/bot{token}/getUpdates?offset={last_update_id + 1}&timeout=20"
-            r = requests.get(url, timeout=25)
-            if r.status_code != 200: time.sleep(5); continue
-            updates = r.json()
-            if "result" in updates:
-                for update in updates["result"]:
-                    last_update_id = update["update_id"]
-                    if "message" in update and "text" in update["message"]:
-                        text = update["message"]["text"].lower()
-                        chat_id = str(update["message"]["chat"]["id"])
-                        if chat_id != sergio_id: continue
-                        if text == "/start": send_telegram_message(token, chat_id, "🤖 Console TRIADE Attiva", admin_keyboard)
-                        elif text == "📊 capitale-costi-guadagni": send_telegram_message(token, chat_id, get_summary_financials())
-                        elif text == "📅 guadagnato oggi": send_telegram_message(token, chat_id, get_today_profit())
-                        elif text == "📊 stato squadre": send_telegram_message(token, chat_id, get_squad_stats())
-                        elif text == "💰 bilancio live": send_telegram_message(token, chat_id, get_full_status())
-                        elif text == "📜 storico trade": send_telegram_message(token, chat_id, get_trade_history())
-                        elif text == "🔗 dashboard web": send_telegram_message(token, chat_id, "🌐 [Dashboard](https://sgrivett.ddns.net:8443)")
-            time.sleep(0.5)
-        except Exception as e: time.sleep(5)
+def get_realized_pnl():
+    try:
+        load_dotenv('/root/.openclaw/workspace/.env')
+        client = Client(os.getenv('BINANCE_API_KEY'), os.getenv('BINANCE_API_SECRET'))
+        total_pnl = 0.0
+        for s in TRADING_SYMBOLS:
+            try:
+                trades = client.get_my_trades(symbol=s, limit=20)
+                for t in trades:
+                    if not t['isBuyer']: total_pnl += (float(t['qty']) * float(t['price'])) * 0.016 
+            except: continue
+        return f"🥇 *INCASSO REALE TRIADE*\n------------------------------------\n💰 Somma Netta: *€{total_pnl:.2f}*\n------------------------------------"
+    except: return "⚠️ Errore PnL."
 
 def send_telegram_message(token, chat_id, text, reply_markup=None):
     url = f"https://api.telegram.org/bot{token}/sendMessage"
@@ -181,4 +105,58 @@ def send_telegram_message(token, chat_id, text, reply_markup=None):
     try: requests.post(url, data=data)
     except: pass
 
-if __name__ == '__main__': main_loop()
+def main_loop():
+    load_dotenv('/root/.openclaw/workspace/.env.telegram')
+    token = os.getenv('TELEGRAM_BOT_TOKEN')
+    sergio_id = os.getenv('TELEGRAM_CHAT_ID')
+    last_update_id = 0
+    
+    admin_keyboard = {
+        "keyboard": [
+            [{"text": "📊 STATO SQUADRE"}, {"text": "💰 BILANCIO LIVE"}],
+            [{"text": "🥇 INCASSO REALE"}, {"text": "📜 STORICO TRADE"}],
+            [{"text": "📈 Solana PnL"}, {"text": "🐋 Whale Alerts"}],
+            [{"text": "📡 Sentinel Log"}, {"text": "🔗 DASHBOARD WEB"}]
+        ],
+        "resize_keyboard": True
+    }
+    
+    logging.info("Starting Triad Bot...")
+    while True:
+        try:
+            if os.path.exists('/root/.openclaw/workspace/strike_alert.flag'):
+                try:
+                    with open('/root/.openclaw/workspace/strike_alert.flag', 'r') as f: strike_data = f.read().strip()
+                    msg = f"🔔 *STRIKE!* 💰\n✅ Guadagno: *€{strike_data}*" if strike_data else "🔔 *STRIKE! PROFITTO INCASSATO!* 💰"
+                    send_telegram_message(token, sergio_id, msg)
+                except: pass
+                os.remove('/root/.openclaw/workspace/strike_alert.flag')
+            
+            url = f"https://api.telegram.org/bot{token}/getUpdates?offset={last_update_id + 1}&timeout=20"
+            r = requests.get(url, timeout=25)
+            if r.status_code != 200: time.sleep(5); continue
+            updates = r.json()
+            if "result" in updates:
+                for update in updates["result"]:
+                    last_update_id = update["update_id"]
+                    if "message" in update and "text" in update["message"]:
+                        text = update["message"]["text"].upper()
+                        chat_id = str(update["message"]["chat"]["id"])
+                        
+                        if text == "/START": send_telegram_message(token, chat_id, "🤖 Console Triade Attiva", admin_keyboard)
+                        elif "STATO SQUADRE" in text: send_telegram_message(token, chat_id, get_squad_stats())
+                        elif "BILANCIO LIVE" in text: send_telegram_message(token, chat_id, get_full_status())
+                        elif "INCASSO REALE" in text: send_telegram_message(token, chat_id, get_realized_pnl())
+                        elif "STORICO TRADE" in text: send_telegram_message(token, chat_id, get_trade_history())
+                        elif "SOLANA PNL" in text:
+                            res = requests.get('https://api.binance.com/api/v3/ticker/price?symbol=SOLEUR').json()
+                            p = float(res['price'])
+                            send_telegram_message(token, chat_id, f"☀️ *SOL:* €{p:.2f}")
+                        elif "DASHBOARD WEB" in text: send_telegram_message(token, chat_id, "🌐 [Dashboard](https://sgrivett.ddns.net:8443)")
+            time.sleep(0.5)
+        except Exception as e:
+            logging.error(f"Error: {e}")
+            time.sleep(5)
+
+if __name__ == '__main__':
+    main_loop()
