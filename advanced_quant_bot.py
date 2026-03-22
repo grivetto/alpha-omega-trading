@@ -15,80 +15,75 @@ load_dotenv()
 API_KEY = os.getenv('BINANCE_API_KEY')
 API_SECRET = os.getenv('BINANCE_API_SECRET')
 
-# Symbols to trade
 SYMBOLS = ["BTCEUR", "ETHEUR", "SOLEUR", "BNBEUR"]
+TIMEFRAME = Client.KLINE_INTERVAL_1MINUTE  # ULTRA-FAST 1 MINUTE
 
-# Technical Parameters (AGGRESSIVE SCALPING)
-TIMEFRAME = Client.KLINE_INTERVAL_3MINUTE
-BB_PERIOD = 20
-BB_STD = 1.8
-
-# Risk Management
-POSITION_SIZE_EUR = 20.0  # UPDATED to 20.0 EUR per Sergey's capital allocation
+# Parametri Aggressivi
+RSI_PERIOD = 7
+RSI_BUY = 35
+RSI_SELL = 65
+POSITION_SIZE_EUR = 100.0  # Alzato a 100€ per colpo pesante
 
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('quant_bot.log'),
-        logging.StreamHandler()
-    ]
+    handlers=[logging.FileHandler('quant_bot.log'), logging.StreamHandler()]
 )
 logger = logging.getLogger(__name__)
 
 STATUS_FILE = '/root/.openclaw/workspace/quant_status.json'
 
-def update_status(data):
-    try:
-        with open(STATUS_FILE, 'w') as f:
-            json.dump(data, f, indent=2)
-    except Exception as e:
-        logger.error(f"Error updating status: {e}")
-
 def get_data(client, symbol):
     try:
         klines = client.get_klines(symbol=symbol, interval=TIMEFRAME, limit=100)
-        df = pd.DataFrame(klines, columns=['ts', 'open', 'high', 'low', 'close', 'volume', 'close_ts', 'qav', 'num_trades', 'taker_base', 'taker_quote', 'ignore'])
-        df['close'] = pd.to_numeric(df['close'])
-        df['volume'] = pd.to_numeric(df['volume'])
+        df = pd.DataFrame(klines, columns=['ts', 'o', 'h', 'l', 'c', 'v', 'ct', 'qv', 'nt', 'tb', 'tq', 'i'])
+        df['c'] = pd.to_numeric(df['c'])
         return df
     except Exception as e:
-        logger.error(f"Error fetching data for {symbol}: {e}")
+        logger.error(f"Error {symbol}: {e}")
         return None
 
-def get_eur_balance(client):
-    try:
-        balance = client.get_asset_balance(asset='EUR')
-        return float(balance['free']) if balance else 0.0
-    except Exception as e:
-        logger.error(f"Error getting EUR balance: {e}")
-        return 0.0
-
 def main():
-    if not API_KEY or not API_SECRET:
-        logger.error("API Keys missing")
-        sys.exit(1)
-        
     client = Client(API_KEY, API_SECRET)
-    logger.info("Quant Bot Started")
+    logger.info("🚀 ULTRA-QUANT OVERDRIVE STARTED")
     
+    active_positions = {}
+
     while True:
         try:
-            eur_bal = get_eur_balance(client)
             for symbol in SYMBOLS:
                 df = get_data(client, symbol)
-                if df is not None:
-                    price = df['close'].iloc[-1]
-                    logger.info(f"{symbol}: {price}")
+                if df is None: continue
+                
+                df['rsi'] = ta.rsi(df['c'], length=RSI_PERIOD)
+                rsi = df['rsi'].iloc[-1]
+                price = df['c'].iloc[-1]
+                
+                # Ingressi aggressivi
+                if rsi <= RSI_BUY and symbol not in active_positions:
+                    logger.info(f"🟢 QUANT BUY: {symbol} RSI: {rsi:.1f}")
+                    try:
+                        # Ordine reale Market su EUR pair
+                        order = client.create_order(symbol=symbol, side='BUY', type='MARKET', quoteOrderQty=POSITION_SIZE_EUR)
+                        active_positions[symbol] = {'entry': price, 'qty': float(order['executedQty'])}
+                    except Exception as e: logger.error(f"❌ QUANT FAILED BUY: {e}")
+
+                # Uscite veloci
+                if symbol in active_positions:
+                    entry = active_positions[symbol]['entry']
+                    pnl = (price - entry) / entry
+                    if pnl >= 0.015 or pnl <= -0.02: # 1.5% profit target
+                        try:
+                            client.create_order(symbol=symbol, side='SELL', type='MARKET', quantity=active_positions[symbol]['qty'])
+                            logger.info(f"🔴 QUANT SELL: {symbol} PnL: {pnl:.2%}")
+                            del active_positions[symbol]
+                            with open('/root/.openclaw/workspace/strike_alert.flag', 'w') as f:
+                                f.write(f"{(POSITION_SIZE_EUR * pnl):.2f}")
+                        except Exception as e: logger.error(f"❌ QUANT FAILED SELL: {e}")
             
-            update_status({
-                "last_run": datetime.now().isoformat(),
-                "status": "running",
-                "balance": eur_bal
-            })
-            time.sleep(60)
+            time.sleep(30)
         except Exception as e:
-            logger.error(f"Main loop error: {e}")
+            logger.error(f"Quant Loop Error: {e}")
             time.sleep(60)
 
 if __name__ == "__main__":

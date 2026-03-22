@@ -10,6 +10,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 def get_bot_status():
+    # Mappa completa dei bot in esecuzione
     bots = {
         "GRID ENGINE": "smart_grid_engine.py",
         "MULTI-COIN": "binance_bot_multi.py",
@@ -19,11 +20,11 @@ def get_bot_status():
         "GHOST-RID": "ghost_rider_swing.py",
         "OMEGA-REV": "contrarian_omega_squad.py",
         "OMEGA-FEED": "omega_bottom_feeder.py",
-        "TELEGRAM": "telegram_bot_interactive.py"
+        "TELEGRAM": "telegram_bot_interactive.py",
+        "QUANT-MAX": "advanced_quant_bot.py"
     }
     
     status_report = []
-    # Get process list once
     ps_output = os.popen("ps aux").read()
     
     for name, script in bots.items():
@@ -41,7 +42,7 @@ def get_live_metrics():
     client = Client(os.getenv('BINANCE_API_KEY'), os.getenv('BINANCE_API_SECRET'))
     
     try:
-        # Get portfolio value
+        # Calcolo portafoglio reale
         balances = client.get_account()['balances']
         assets = {b['asset']: float(b['free']) + float(b['locked']) for b in balances if float(b['free']) > 0 or float(b['locked']) > 0}
         
@@ -54,20 +55,27 @@ def get_live_metrics():
             if f"{asset}EUR" in prices: total_eur += qty * prices[f"{asset}EUR"]
             elif f"{asset}BTC" in prices and "BTCEUR" in prices: total_eur += qty * prices[f"{asset}BTC"] * prices["BTCEUR"]
         
-        # Get recent activity
-        trades = client.get_my_trades(symbol='BTCEUR', limit=5)
-        activity = []
-        for t in trades:
-            activity.append({
-                "time": datetime.fromtimestamp(t['time']/1000).strftime("%H:%M"),
-                "bot": "SQUAD",
-                "action": f"{'BUY' if t['isBuyer'] else 'SELL'} {t['symbol']} @ {float(t['price']):.2f}"
-            })
+        # Recupero ULTIMI 10 trade della flotta per feed dinamico
+        all_activity = []
+        symbols = ['BTCEUR', 'SOLEUR', 'AVAXBTC', 'DOGEBTC', 'ETHBTC', 'AVAXUSDT']
+        for s in symbols:
+            try:
+                trades = client.get_my_trades(symbol=s, limit=5)
+                for t in trades:
+                    all_activity.append({
+                        "timestamp": t['time'],
+                        "time": datetime.fromtimestamp(t['time']/1000).strftime("%H:%M"),
+                        "bot": "ALPHA" if s in ['AVAXBTC', 'DOGEBTC', 'ETHBTC', 'SOLEUR'] else "SQUAD",
+                        "action": f"{'BUY' if t['isBuyer'] else 'SELL'} {s} @ {float(t['price']):.6f}"
+                    })
+            except: continue
+        
+        all_activity.sort(key=lambda x: x['timestamp'], reverse=True)
             
         return {
             "total_val": round(total_eur, 2),
             "profit": round(total_eur - 722.00, 2),
-            "activity": activity
+            "activity": all_activity[:10]
         }
     except Exception as e:
         logger.error(f"Metrics Error: {e}")
@@ -84,17 +92,12 @@ def main():
             
             with open('/root/.openclaw/workspace/dashboard/fleet_stats.json', 'w') as f:
                 json.dump(report, f, indent=2)
-            
-            # Sync fleet activity for backward compat
-            if report['metrics']:
-                with open('/root/.openclaw/workspace/dashboard/fleet_activity.json', 'w') as f:
-                    json.dump(report['metrics']['activity'], f, indent=2)
                     
-            logger.info("Fleet metrics updated.")
-            time.sleep(15)
+            logger.info("Fleet metrics synchronized with Binance Live.")
+            time.sleep(10) # Frequenza aggiornamento aumentata
         except Exception as e:
             logger.error(f"Main loop error: {e}")
-            time.sleep(30)
+            time.sleep(20)
 
 if __name__ == "__main__":
     main()
