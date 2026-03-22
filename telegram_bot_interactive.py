@@ -6,24 +6,34 @@ import time
 import subprocess
 from binance.client import Client
 from dotenv import load_dotenv
+from datetime import datetime
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')
+
+# --- CONFIGURAZIONE COSTANTI ---
+# Somma totale di tutti i depositi crypto e fiat confermati su Binance ad oggi:
+# BTC deposits (valutati al carico): ~397 + 56 + 49 + 49 + 98 + 49 = 698€
+# SEPA deposits: 24€
+# TOTALE VERSATO: ~722€
+CAPITALE_VERSATO_TOTALE = 722.00 
 
 def get_full_status(is_admin=False):
     try:
         load_dotenv('/root/.openclaw/workspace/.env')
         b_client = Client(os.getenv('BINANCE_API_KEY'), os.getenv('BINANCE_API_SECRET'))
-        b_eur = float(b_client.get_asset_balance(asset='EUR')['free'])
-        b_btc = float(b_client.get_asset_balance(asset='BTC')['free'])
-        b_sol = float(b_client.get_asset_balance(asset='SOL')['free'])
+        balances = b_client.get_account()['balances']
+        
+        b_eur = float(next((a['free'] for a in balances if a['asset'] == 'EUR'), 0))
+        b_btc = float(next((a['free'] for a in balances if a['asset'] == 'BTC'), 0))
+        b_sol = float(next((a['free'] for a in balances if a['asset'] == 'SOL'), 0))
+        b_usdt = float(next((a['free'] for a in balances if a['asset'] == 'USDT'), 0))
         
         res = requests.get('https://api.binance.com/api/v3/ticker/price?symbol=SOLEUR').json()
         sol_price_eur = float(res['price'])
         res_btc = requests.get('https://api.binance.com/api/v3/ticker/price?symbol=BTCEUR').json()
         btc_price_eur = float(res_btc['price'])
         
-        b_total_eur = b_eur + (b_btc * btc_price_eur) + (b_sol * sol_price_eur)
-        total_global = b_total_eur
+        total_global = b_eur + b_usdt + (b_btc * btc_price_eur) + (b_sol * sol_price_eur)
         
         msg = "💰 *BILANCIO ALPHA-FLEET (BINANCE)* 💰\n"
         msg += "------------------------------------\n"
@@ -33,15 +43,16 @@ def get_full_status(is_admin=False):
             msg += f"🚢 *FLOTTA:* 8 Bot Operativi\n"
             msg += f" ├ ₿ BTC: {b_btc:.8f} (~€{b_btc*btc_price_eur:.2f})\n"
             msg += f" ├ ☀️ SOL: {b_sol:.2f} (~€{b_sol*sol_price_eur:.2f})\n"
-            msg += f" └ 💶 Liquido: €{b_eur:.2f}\n"
+            msg += f" ├ 💵 USDT: ${b_usdt:.2f}\n"
+            msg += f" └ 💶 Liquido EUR: €{b_eur:.2f}\n"
         else:
             msg += "📈 *STATO:* Flotta in navigazione h24.\n"
         
         msg += "------------------------------------\n"
         msg += f"🕒 _Aggiornato al: {time.strftime('%H:%M:%S')}_"
-        return msg
+        return msg, total_global
     except Exception as e:
-        return f"⚠️ Errore calcolo: {str(e)}"
+        return f"⚠️ Errore calcolo: {str(e)}", 0
 
 def get_performance():
     try:
@@ -74,17 +85,8 @@ def get_whale_alerts():
 
 def get_money_status():
     try:
-        # 1. Carica dati dai vari bot
         with open('/root/.openclaw/workspace/grid_status.json', 'r') as f:
             grid = json.load(f)
-        with open('/root/.openclaw/workspace/quant_status.json', 'r') as f:
-            quant = json.load(f)
-        with open('/root/.openclaw/workspace/multi_status.json', 'r') as f:
-            multi = json.load(f)
-        with open('/root/.openclaw/workspace/cryptocom_status.json', 'r') as f:
-            crypto = json.load(f)
-        
-        # Nuovi bot della squadra
         try:
             with open('/root/.openclaw/workspace/hunter_status.json', 'r') as f:
                 hunter = json.load(f)
@@ -94,44 +96,47 @@ def get_money_status():
                 sniper = json.load(f)
         except: sniper = {}
 
-        # 2. Calcola i totali
-        # Investito (Asset in lavorazione)
+        # Investito
         invested_btc = grid.get('balance', {}).get('btc_value_usdt', 0)
-        invested_multi = multi.get('summary', {}).get('active_positions', 0) * 20 
-        invested_hunter = hunter.get('active_hunters', 0) * 15
-        invested_sniper = sniper.get('active_snipes', 0) * 20
+        invested_hunter = hunter.get('active_hunters', 0) * 50
+        invested_sniper = sniper.get('active_snipes', 0) * 60
         
-        # In lavorazione (Liquidità pronta a entrare)
-        liquid_grid = grid.get('balance', {}).get('usdt', 0)
-        liquid_quant = quant.get('balance', 0)
-        liquid_crypto = crypto.get('balance', 0)
-        
-        total_invested = invested_btc + invested_multi + invested_hunter + invested_sniper
-        total_working = liquid_grid + liquid_quant + liquid_crypto
-        
-        # Profitto Realizzato (Incassato)
-        profit_grid = grid.get('total_profit', 0)
-        profit_multi = multi.get('summary', {}).get('total_pnl', 0)
-        
-        total_profit = profit_grid + profit_multi
+        total_invested = invested_btc + invested_hunter + invested_sniper
 
-        msg = "📊 *STATO FINANZIARIO SQUADRA* 📊\n"
+        msg = "📊 *DETTAGLIO ALLOCAZIONE* 📊\n"
         msg += "------------------------------------\n"
         msg += f"📥 *INVESTITO:* €{total_invested:.2f}\n"
-        msg += f" └ _Asset in mercato (8 Bot totali)_\n\n"
-        msg += f"⚙️ *IN LAVORAZIONE:* €{total_working:.2f}\n"
-        msg += f" └ _Liquidità pronta per segnali_\n\n"
-        msg += f"💰 *INCASSATO:* €{total_profit:.2f}\n"
-        msg += f" └ _Profitto netto già realizzato_\n"
-        msg += "------------------------------------\n"
+        msg += f" └ _Asset in mercato_\n\n"
         msg += f"🚀 *SQUADRA:* 8 Bot Operativi\n"
         msg += f" 🔥 _Hunter attiva su:_ {len(hunter.get('watchlist', []))} crypto\n"
         msg += f" 🎯 _Sniper attiva su:_ {len(sniper.get('targets', []))} crypto\n"
-        msg += "------------------------------------\n"
-        msg += f"📈 *RENDIMENTO:* {((total_profit/682.50)*100):+.2f}%"
         return msg
     except Exception as e:
-        return f"⚠️ Errore calcolo finanziario: {str(e)}"
+        return f"⚠️ Errore stato denaro: {str(e)}"
+
+def get_profit_report(mode="today"):
+    _, total_val = get_full_status(True)
+    if total_val == 0: return "⚠️ Impossibile recuperare i dati di mercato."
+    
+    capitale = CAPITALE_VERSATO_TOTALE
+    if mode == "today":
+        label = "ATTUALE"
+    else:
+        label = "STORICO COMPLETO"
+        
+    profit = total_val - capitale
+    pct = (profit / capitale) * 100
+    
+    msg = f"💵 *REPORT PROFITTO {label}* 💵\n"
+    msg += "------------------------------------\n"
+    msg += f"💰 *Totale Versato:* €{capitale:.2f}\n"
+    msg += f"📊 *Valore Attuale:* €{total_val:.2f}\n"
+    msg += "------------------------------------\n"
+    msg += f"📈 *GUADAGNO NETTO:* {profit:+.2f} €\n"
+    msg += f"🎯 *Rendimento:* {pct:+.2f}%\n"
+    msg += "------------------------------------\n"
+    msg += "_Nota: Calcolato su tutti i depositi Fiat/Crypto._"
+    return msg
 
 def send_telegram_message(token, chat_id, text, reply_markup=None):
     url = f"https://api.telegram.org/bot{token}/sendMessage"
@@ -153,52 +158,36 @@ def main_loop():
     # Menù completo per Sergio
     admin_keyboard = {
         "keyboard": [
-            [{"text": "📊 Stato Denaro"}, {"text": "💰 Bilancio Reale"}],
-            [{"text": "📈 Solana PnL"}, {"text": "💵 Quanto Incassato"}],
-            [{"text": "🐋 Whale Alerts"}, {"text": "📡 Sentinel Log"}],
-            [{"text": "🧠 Neural State"}, {"text": "🔗 Dashboard"}]
+            [{"text": "📊 Stato Squadra"}, {"text": "💰 Bilancio Reale"}],
+            [{"text": "💸 Profitto Attuale"}, {"text": "🏛️ Profitto Storico"}],
+            [{"text": "📈 Solana PnL"}, {"text": "🐋 Whale Alerts"}],
+            [{"text": "📡 Sentinel Log"}, {"text": "🔗 Dashboard"}]
         ],
         "resize_keyboard": True
     }
     
-    # Comandi menu persistente (BotFather style)
     menu_commands = [
-        {"command": "stato", "description": "📊 Stato Finanziario Squadra"},
-        {"command": "bilancio", "description": "💰 Bilancio Reale Binance"},
-        {"command": "solana", "description": "📈 Analisi Solana PnL"},
-        {"command": "incassato", "description": "💵 Quanto Incassato Oggi"},
-        {"command": "balene", "description": "🐋 Whale Alerts"},
-        {"command": "sentinel", "description": "📡 Sentinel Spike Log"},
-        {"command": "neural", "description": "🧠 Stato Neural Commander"},
-        {"command": "dashboard", "description": "🔗 Link Dashboard Web"}
+        {"command": "oggi", "description": "💸 Profitto Netto Attuale"},
+        {"command": "storico", "description": "🏛️ Profitto Netto Storico"},
+        {"command": "stato", "description": "📊 Stato Squadra"},
+        {"command": "bilancio", "description": "💰 Bilancio Reale"},
+        {"command": "dashboard", "description": "🔗 Link Dashboard"}
     ]
     
     try:
         requests.post(f"https://api.telegram.org/bot{token}/setMyCommands", json={"commands": menu_commands})
-        logging.info("Menu commands updated successfully.")
-    except Exception as e:
-        logging.error(f"Failed to set menu commands: {e}")
+    except: pass
 
     logging.info("Starting Enhanced Telegram Loop...")
     while True:
         try:
-            # Check for alerts or strikes first
             if os.path.exists('/root/.openclaw/workspace/strike_alert.flag'):
-                logging.info("Processing strike flag...")
                 try:
                     with open('/root/.openclaw/workspace/strike_alert.flag', 'r') as f:
                         strike_data = f.read().strip()
-                    
-                    if strike_data:
-                        msg = f"🔔 *STRIKE! PROFITTO INCASSATO!* 💰\n✅ Guadagno: *€{strike_data}*"
-                    else:
-                        msg = "🔔 *STRIKE! PROFITTO INCASSATO!* 💰"
-                        
+                    msg = f"🔔 *STRIKE! PROFITTO INCASSATO!* 💰\n✅ Guadagno: *€{strike_data}*" if strike_data else "🔔 *STRIKE! PROFITTO INCASSATO!* 💰"
                     send_telegram_message(token, sergio_id, msg)
-                except Exception as e:
-                    logging.error(f"Error reading strike flag: {e}")
-                    send_telegram_message(token, sergio_id, "🔔 *STRIKE! PROFITTO INCASSATO!* 💰")
-                
+                except: pass
                 os.remove('/root/.openclaw/workspace/strike_alert.flag')
 
             url = f"https://api.telegram.org/bot{token}/getUpdates?offset={last_update_id + 1}&timeout=30"
@@ -215,30 +204,20 @@ def main_loop():
                         is_admin = (incoming_id == sergio_id)
                         
                         if text == "/start":
-                            send_telegram_message(token, incoming_id, "🤖 *Console di Comando Attiva*\nUsa i pulsanti sotto o il tasto 'Menu' in basso a sinistra:", admin_keyboard)
+                            send_telegram_message(token, incoming_id, "🤖 *Console di Comando Attiva*", admin_keyboard)
                         
-                        elif text in ["📊 stato denaro", "/stato"]:
+                        elif text in ["📊 stato squadra", "/stato"]:
                             send_telegram_message(token, incoming_id, get_money_status())
                         
                         elif text in ["💰 bilancio reale", "/bilancio"]:
-                            send_telegram_message(token, incoming_id, get_full_status(is_admin))
+                            msg, _ = get_full_status(is_admin)
+                            send_telegram_message(token, incoming_id, msg)
                         
-                        elif text in ["💵 quanto incassato", "/incassato"]:
-                            status_msg = get_full_status(True)
-                            try:
-                                total_val = float(status_msg.split("VALORE TOTALE: €")[1].split("*")[0])
-                                # Baseline investimento totale calcolato oggi (22 Marzo - Capitale base + Iniezione BTC): €700.00
-                                profit = total_val - 700.00
-                                msg = "💵 *REPORT INCASSI TRADING* 💵\n"
-                                msg += "------------------------------------\n"
-                                msg += f"💰 *Capitale Investito:* €700.00\n"
-                                msg += f"📊 *Valore Attuale:* €{total_val:.2f}\n"
-                                msg += "------------------------------------\n"
-                                msg += f"📈 *PROFITTO NETTO:* {profit:+.2f} €\n"
-                                msg += f"🎯 *Rendimento:* {(profit/700.00)*100:+.2f}%\n"
-                                send_telegram_message(token, incoming_id, msg)
-                            except:
-                                send_telegram_message(token, incoming_id, "⚠️ Impossibile calcolare l'incasso al momento.")
+                        elif text in ["💸 profitto attuale", "/oggi", "💵 quanto incassato"]:
+                            send_telegram_message(token, incoming_id, get_profit_report("today"))
+
+                        elif text in ["🏛️ profitto storico", "/storico"]:
+                            send_telegram_message(token, incoming_id, get_profit_report("history"))
                         
                         elif text in ["📈 solana pnl", "/solana"]:
                             send_telegram_message(token, incoming_id, get_performance())
@@ -252,21 +231,8 @@ def main_loop():
                                     data = json.load(f)
                                 msg = "📡 *SENTINEL: SPIKE RILEVATI*\n\n" + "\n".join([f"• {s['time']} - {s['symbol']} {s['direction']}" for s in data[-5:]])
                                 send_telegram_message(token, incoming_id, msg)
-                            except:
-                                send_telegram_message(token, incoming_id, "📡 Nessun segnale attivo.")
+                            except: send_telegram_message(token, incoming_id, "📡 Nessun segnale attivo.")
                                 
-                        elif text in ["🧠 neural state", "/neural"]:
-                            try:
-                                with open('/root/.openclaw/workspace/dashboard/commander_data.json') as f:
-                                    data = json.load(f)
-                                msg = "🧠 *STATO CERVELLO NEURALE*\n\n"
-                                msg += f"• *Mercato:* {data['market_regime']}\n"
-                                msg += f"• *Stato:* {data['commander_status']}\n"
-                                msg += f"• *Ultima Azione:* {data['last_action']}"
-                                send_telegram_message(token, incoming_id, msg)
-                            except:
-                                send_telegram_message(token, incoming_id, "🧠 In fase di apprendimento...")
-                        
                         elif text in ["🔗 dashboard", "/dashboard"]:
                             send_telegram_message(token, incoming_id, "🌐 *Dashboard Web:* [https://sgrivett.ddns.net:8443](https://sgrivett.ddns.net:8443)")
 
