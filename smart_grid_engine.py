@@ -56,10 +56,10 @@ def main():
             
             # Logica Strike con cooldown
             current_time = time.time()
-            baseline = 282.50  # Capitale iniziale totale aggiornato
+            baseline = 722.00  # Capitale iniziale totale aggiornato (Fiat + Crypto)
             profit_today = total_val - baseline
             
-            if total_val >= baseline + 1.00: # Strike ogni volta che guadagniamo almeno 1€
+            if total_val >= baseline + 0.50: # Strike ogni volta che guadagniamo almeno 0.50€
                 if current_time - last_strike_time > cooldown_period:
                     with open('/root/.openclaw/workspace/strike_alert.flag', 'w') as f:
                         f.write(f"{profit_today:.2f}")
