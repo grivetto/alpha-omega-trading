@@ -3,95 +3,99 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ALPHA-OMEGA TWIN CORE | v12.0</title>
+    <title>TRIAD MATRIX | OVERDRIVE v13.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=JetBrains+Mono:wght@200;400;800&display=swap');
-        body { background-color: #000; color: #fff; font-family: 'JetBrains Mono', monospace; overflow-x: hidden; }
-        .alpha-panel { border: 1px solid #3b82f6; background: rgba(59, 130, 246, 0.05); }
-        .omega-panel { border: 1px solid #ef4444; background: rgba(239, 68, 68, 0.05); }
-        .system-stat { font-family: 'Syncopate', sans-serif; font-size: 1.2rem; }
-        .glow-blue { color: #3b82f6; text-shadow: 0 0 10px #3b82f6; }
-        .glow-red { color: #ef4444; text-shadow: 0 0 10px #ef4444; }
-        .glow-green { color: #10b981; text-shadow: 0 0 10px #10b981; }
-        ::-webkit-scrollbar { width: 2px; }
-        ::-webkit-scrollbar-thumb { background: #3b82f6; }
+        @import url('https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=JetBrains+Mono:wght@200;400;700&display=swap');
+        body { background-color: #000; color: #fff; font-family: 'JetBrains Mono', monospace; overflow: hidden; }
+        .bg-matrix { background: radial-gradient(circle at 50% 50%, #001a1a 0%, #000 100%); }
+        .cyber-panel { background: rgba(0, 15, 15, 0.9); border: 1px solid #004444; border-radius: 4px; box-shadow: 0 0 30px rgba(0, 255, 204, 0.05); position: relative; }
+        .cyber-panel::before { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 1px; background: linear-gradient(90deg, transparent, #00ffcc, transparent); }
+        .stat-value { font-family: 'Syncopate', sans-serif; letter-spacing: -2px; }
+        .glow-cyan { color: #00ffcc; text-shadow: 0 0 15px #00ffcc; }
+        .glow-red { color: #ff3131; text-shadow: 0 0 15px #ff3131; }
+        .glow-blue { color: #3b82f6; text-shadow: 0 0 15px #3b82f6; }
+        .bot-tag { font-size: 0.6rem; font-weight: 800; padding: 2px 6px; border-radius: 2px; text-transform: uppercase; }
+        .scanline { width: 100%; height: 100px; z-index: 100; background: linear-gradient(0deg, transparent 0%, rgba(0,255,204,0.03) 50%, transparent 100%); position: absolute; animation: scan 6s linear infinite; pointer-events: none; }
+        @keyframes scan { from { top: -100px; } to { top: 100%; } }
+        .pulse-border { animation: pulse-b 2s infinite; }
+        @keyframes pulse-b { 0% { border-color: #004444; } 50% { border-color: #00ffcc; } 100% { border-color: #004444; } }
     </style>
 </head>
-<body class="min-h-screen p-4">
-    <div class="max-w-[2200px] mx-auto">
-        
-        <!-- DUAL CORE HEADER -->
-        <div class="flex flex-col xl:flex-row justify-between items-center gap-10 mb-12 border-b border-white/10 pb-10">
-            <div class="flex items-center gap-8">
-                <div class="text-right">
-                    <h2 class="text-4xl font-bold glow-blue italic" style="font-family: 'Syncopate';">ALPHA</h2>
-                    <p class="text-[8px] text-blue-500 uppercase tracking-widest">Trend Following</p>
-                </div>
-                <div class="h-16 w-[1px] bg-white/20"></div>
-                <div class="text-left">
-                    <h2 class="text-4xl font-bold glow-red italic" style="font-family: 'Syncopate';">OMEGA</h2>
-                    <p class="text-[8px] text-red-500 uppercase tracking-widest">Anti-Trend Reversal</p>
-                </div>
+<body class="bg-matrix min-h-screen p-4">
+    <div class="scanline"></div>
+    
+    <!-- TOP HUD -->
+    <div class="max-w-[2400px] mx-auto">
+        <div class="flex flex-col xl:flex-row justify-between items-center gap-6 mb-8 border-b border-[#004444] pb-8">
+            <div class="text-center xl:text-left">
+                <h1 class="text-6xl font-black stat-value glow-cyan italic">TRIAD_OVERDRIVE</h1>
+                <p class="text-[9px] text-[#008888] uppercase tracking-[1em] mt-2">Autonomous War Machine Matrix / Sergio Grivetto</p>
             </div>
 
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
-                <div class="alpha-panel p-5 rounded-lg border-l-4">
-                    <p class="text-[8px] text-slate-500 mb-1 uppercase font-black">Net_Profit_Live</p>
-                    <p class="system-stat glow-green" id="profit-val">+0.00€</p>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 w-full xl:w-auto">
+                <div class="cyber-panel p-5 min-w-[200px] border-l-4 border-[#00ffcc]">
+                    <p class="text-[8px] text-[#008888] font-black mb-1 uppercase">Net_Profit_Extraction</p>
+                    <p class="stat-value text-2xl glow-cyan" id="profit-val">+0.00€</p>
                 </div>
-                <div class="omega-panel p-5 rounded-lg border-l-4">
-                    <p class="text-[8px] text-slate-500 mb-1 uppercase font-black">Total_Portfolio</p>
-                    <p class="system-stat text-white">€<span id="global-total">0.00</span></p>
+                <div class="cyber-panel p-5 min-w-[200px] border-l-4 border-white">
+                    <p class="text-[8px] text-slate-500 font-black mb-1 uppercase">Fleet_Asset_Value</p>
+                    <p class="stat-value text-2xl text-white">€<span id="global-total">0.00</span></p>
                 </div>
-                <div class="alpha-panel p-5 rounded-lg">
-                    <p class="text-[8px] text-slate-500 mb-1 uppercase font-black">DNA_Gen</p>
-                    <p class="system-stat text-blue-400" id="dna-gen">1</p>
+                <div class="cyber-panel p-5 min-w-[150px] border-l-4 border-blue-500">
+                    <p class="text-[8px] text-blue-900 font-black mb-1 uppercase">DNA_Generation</p>
+                    <p class="stat-value text-2xl text-blue-500" id="dna-gen">18</p>
                 </div>
-                <div class="omega-panel p-5 rounded-lg">
-                    <p class="text-[8px] text-slate-500 mb-1 uppercase font-black">Active_Nodes</p>
-                    <p class="system-stat text-red-400" id="active-count">0/10</p>
+                <div class="cyber-panel p-5 min-w-[150px] border-l-4 border-red-500">
+                    <p class="text-[8px] text-red-900 font-black mb-1 uppercase">Market_Regime</p>
+                    <p class="stat-value text-xl text-red-500 uppercase text-[10px]" id="btc-price">Live Syncing...</p>
                 </div>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 xl:grid-cols-12 gap-8">
+        <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
             
-            <!-- ALPHA SYSTEMS -->
+            <!-- ALPHA SQUAD MONITOR -->
             <div class="xl:col-span-3 space-y-6">
-                <h3 class="text-xs font-black text-blue-500 uppercase tracking-[0.3em] mb-4">Alpha Fleet Nodes</h3>
-                <div id="alpha-list" class="grid grid-cols-1 gap-2"></div>
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="h-[1px] flex-grow bg-blue-500/30"></div>
+                    <h2 class="stat-value text-blue-500 text-xs italic">ALPHA_SQUAD [TREND]</h2>
+                </div>
+                <div id="alpha-bots" class="grid grid-cols-1 gap-2"></div>
+                <div class="cyber-panel p-4 bg-blue-500/5 border-blue-900/30">
+                    <h3 class="text-[8px] font-black text-blue-400 mb-3 uppercase tracking-widest">Active Asset Split</h3>
+                    <div id="asset-list" class="space-y-2 text-[10px]"></div>
+                </div>
             </div>
 
-            <!-- PERFORMANCE TRAJECTORY -->
-            <div class="xl:col-span-6 space-y-8">
-                <div class="alpha-panel p-8 rounded-xl bg-black/50">
-                    <div class="h-[500px]">
+            <!-- CENTRAL BATTLEFIELD -->
+            <div class="xl:col-span-6 space-y-6">
+                <div class="cyber-panel p-8 min-h-[550px] bg-black/50 pulse-border">
+                    <div class="flex justify-between items-center mb-10">
+                        <span class="bot-tag bg-[#00ffcc]/20 text-[#00ffcc] border border-[#00ffcc]/30">Global Neural Trajectory</span>
+                        <div id="status-automa" class="text-[9px] font-bold text-[#008888] animate-pulse uppercase">Automa: Monitoring...</div>
+                    </div>
+                    <div class="h-[450px]">
                         <canvas id="mainChart"></canvas>
                     </div>
                 </div>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="alpha-panel p-4 rounded-lg">
-                        <h4 class="text-[10px] font-black text-blue-400 uppercase mb-4 tracking-widest italic">Asset Matrix</h4>
-                        <div id="asset-list" class="text-[10px] space-y-2"></div>
-                    </div>
-                    <div class="omega-panel p-4 rounded-lg">
-                        <h4 class="text-[10px] font-black text-red-400 uppercase mb-4 tracking-widest italic">Architect Intel</h4>
-                        <div class="text-[9px] text-slate-500 space-y-2">
-                            <div>> Dual-Engine Sync: OK</div>
-                            <div>> OMEGA Protocol: Active</div>
-                            <div>> Competitive Logic: Active</div>
-                        </div>
-                    </div>
-                </div>
             </div>
 
-            <!-- OMEGA SYSTEMS -->
+            <!-- OMEGA SQUAD MONITOR -->
             <div class="xl:col-span-3 space-y-6">
-                <h3 class="text-xs font-black text-red-500 uppercase tracking-[0.3em] mb-4 text-right">Omega Fleet Nodes</h3>
-                <div id="omega-list" class="grid grid-cols-1 gap-2 text-right"></div>
+                <div class="flex items-center gap-3 mb-2">
+                    <h2 class="stat-value text-red-500 text-xs italic">OMEGA_SQUAD [ANTI-TREND]</h2>
+                    <div class="h-[1px] flex-grow bg-red-500/30"></div>
+                </div>
+                <div id="omega-bots" class="grid grid-cols-1 gap-2"></div>
+                
+                <div class="cyber-panel p-6 border-[#00ffcc]/20 bg-[#00ffcc]/5">
+                    <h3 class="text-[9px] font-black text-[#00ffcc] uppercase tracking-widest mb-4">Autonomous Matrix Log</h3>
+                    <div id="activity-feed" class="text-[8px] font-mono space-y-3 max-h-64 overflow-y-auto pr-2">
+                        <div class="text-[#008888]">> Establishing neural link...</div>
+                    </div>
+                </div>
             </div>
 
         </div>
@@ -101,59 +105,55 @@
         const ctx = document.getElementById('mainChart').getContext('2d');
         const chart = new Chart(ctx, {
             type: 'line',
-            data: { labels: [], datasets: [{ label: 'VALUE', data: [], borderColor: '#3b82f6', borderWidth: 1, fill: true, backgroundColor: 'rgba(59, 130, 246, 0.05)', tension: 0.2, pointRadius: 0 }] },
-            options: { responsive: true, maintainAspectRatio: false, scales: { y: { grid: { color: 'rgba(255,255,255,0.02)' }, ticks: { color: '#334', font: { size: 9 } } }, x: { display: false } }, plugins: { legend: { display: false } } }
+            data: { labels: [], datasets: [{ label: 'CAPITAL', data: [], borderColor: '#00ffcc', borderWidth: 1, fill: true, backgroundColor: 'rgba(0, 255, 204, 0.05)', tension: 0.1, pointRadius: 0 }] },
+            options: { responsive: true, maintainAspectRatio: false, scales: { y: { grid: { color: 'rgba(0,255,204,0.02)' }, ticks: { color: '#004444', font: { size: 9 } } }, x: { display: false } }, plugins: { legend: { display: false } } }
         });
 
-        async function updatev12() {
+        async function syncMatrix() {
             try {
                 const res = await fetch('/fleet_stats.json?' + Date.now());
                 const data = await res.json();
                 
-                if (data.metrics) {
-                    document.getElementById('global-total').textContent = data.metrics.total_val.toFixed(2);
-                    const profit = data.metrics.profit;
+                if (data.vitals) {
+                    document.getElementById('global-total').textContent = data.vitals.total_val.toFixed(2);
+                    const profit = data.vitals.profit;
                     const pEl = document.getElementById('profit-val');
                     pEl.textContent = (profit >= 0 ? "+" : "") + profit.toFixed(2) + "€";
-                    pEl.className = "system-stat " + (profit >= 0 ? "glow-green" : "glow-red");
-                    document.getElementById('dna-gen').textContent = data.metrics.dna_gen;
+                    pEl.className = "stat-value text-2xl " + (profit >= 0 ? "glow-cyan" : "glow-red");
+                    document.getElementById('btc-price').textContent = "BTC: €" + data.vitals.btc_price.toFixed(0);
 
-                    document.getElementById('asset-list').innerHTML = data.metrics.assets.map(a => `
+                    document.getElementById('asset-list').innerHTML = data.vitals.assets.map(a => `
                         <div class="flex justify-between border-b border-white/5 pb-1">
-                            <span class="text-white font-bold">${a.name}</span>
+                            <span class="text-slate-400 font-bold">${a.asset}</span>
                             <span class="text-blue-400 font-mono">€${a.val}</span>
                         </div>
                     `).join('');
                 }
 
-                const alphaNames = ["ALPHA-CORE", "ALPHA-SURGE", "ALPHA-HUNTER", "GRID-ENGINE", "MULTI-BOT", "VOL-HUNTER"];
-                const omegaNames = ["OMEGA-CORE", "OMEGA-SHIELD", "OMEGA-FEEDER", "REB-SNIPER", "SIGMA-CHAOS", "BAIT-TRAP"];
-
-                document.getElementById('alpha-list').innerHTML = data.bots.filter(b => alphaNames.includes(b.name)).map(b => `
-                    <div class="alpha-panel p-2 rounded flex justify-between items-center border-l-2 border-blue-500">
-                        <span class="text-[9px] font-black text-slate-400">${b.name}</span>
-                        <span class="text-blue-400 font-bold text-[8px]">${b.status}</span>
-                    </div>
-                `).join('');
-
-                document.getElementById('omega-list').innerHTML = data.bots.filter(b => omegaNames.includes(b.name)).map(b => `
-                    <div class="omega-panel p-2 rounded flex justify-between items-center border-r-2 border-red-500 text-right">
-                        <span class="text-red-400 font-bold text-[8px]">${b.status}</span>
-                        <span class="text-[9px] font-black text-slate-400">${b.name}</span>
-                    </div>
-                `).join('');
-                
-                document.getElementById('active-count').textContent = data.bots.filter(b => b.status === 'ONLINE').length + "/10";
-
-                if (data.history) {
-                    chart.data.labels = data.history.map(h => h.time);
-                    chart.data.datasets[0].data = data.history.map(h => h.val);
-                    chart.update('none');
+                if (data.squads) {
+                    const renderBots = (squad, targetId, colorClass) => {
+                        document.getElementById(targetId).innerHTML = Object.entries(data.squads[squad]).map(([name, status]) => `
+                            <div class="cyber-panel p-3 flex justify-between items-center bg-black/40">
+                                <span class="text-[9px] font-black text-slate-500 uppercase">${name}</span>
+                                <span class="stat-value text-[9px] ${status === 'ONLINE' ? colorClass : 'text-slate-700'}">${status}</span>
+                            </div>
+                        `).join('');
+                    };
+                    renderBots("ALPHA", "alpha-bots", "glow-blue");
+                    renderBots("OMEGA", "omega-bots", "glow-red");
                 }
-            } catch (e) { }
+
+                const now = new Date().toLocaleTimeString();
+                chart.data.labels.push(now);
+                chart.data.datasets[0].data.push(data.vitals.total_val);
+                if (chart.data.labels.length > 60) { chart.data.labels.shift(); chart.data.datasets[0].data.shift(); }
+                chart.update('none');
+
+            } catch (e) { console.log(e); }
         }
-        setInterval(updatev12, 2500);
-        updatev12();
+
+        setInterval(syncMatrix, 4000);
+        syncMatrix();
     </script>
 </body>
 </html>
