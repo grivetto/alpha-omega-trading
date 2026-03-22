@@ -24,21 +24,15 @@ QUOTE_ASSET = 'BTC'
 INTERVAL = '5m'
 SLEEP_TIME = 45
 
-# Indicatori (GOD MODE)
+# Indicatori (GOD MODE MAX)
 RSI_PERIOD = 14
-RSI_BUY_THRESHOLD = 52
-RSI_SELL_THRESHOLD = 55
-MACD_FAST = 12
-MACD_SLOW = 26
-MACD_SIGNAL = 9
-EMA_FAST = 9
-EMA_MID = 21
-EMA_SLOW = 50
+RSI_BUY_THRESHOLD = 58
+RSI_SELL_THRESHOLD = 45
 
-RISK_PER_TRADE = 0.15 # 15% del BTC libero per ogni trade (per permettere più trade)
-STOP_LOSS_PCT = 0.05
-TAKE_PROFIT_PCT = 0.025
-TRAILING_STOP_PCT = 0.010
+RISK_PER_TRADE = 0.95
+STOP_LOSS_PCT = 0.08
+TAKE_PROFIT_PCT = 0.045
+TRAILING_STOP_PCT = 0.005
 
 STATUS_FILE = '/root/.openclaw/workspace/multi_status.json'
 
@@ -73,7 +67,7 @@ def get_data(symbol):
     except: return None
 
 def main():
-    logger.info("🚀 GOD MODE MULTI-COIN (BTC PAIRS) STARTED")
+    logger.info("🚀 GOD MODE MAX - ALPHA SQUAD OVERDRIVE")
     while True:
         try:
             btc_balance = float(client.get_asset_balance(asset='BTC')['free'])
@@ -86,38 +80,35 @@ def main():
                 rsi = df['rsi'].iloc[-1]
                 state = coin_states[symbol]
 
-                # Logica Buy semplificata per velocità
                 if rsi < RSI_BUY_THRESHOLD and not state.in_position:
-                    qty_to_buy_btc = btc_balance * RISK_PER_TRADE
-                    if qty_to_buy_btc > 0.0001: # Minimo 6€ circa
+                    qty_to_buy_btc = btc_balance * 0.3 # Usa il 30% per permettere più trade pesanti
+                    if qty_to_buy_btc > 0.0001:
                         try:
                             order = client.create_order(symbol=symbol, side='BUY', type='MARKET', quoteOrderQty=round(qty_to_buy_btc, 6))
                             state.in_position = True
                             state.entry_price = price
                             state.position_quantity = float(order['executedQty'])
                             state.highest_price = price
-                            logger.info(f"🟢 BUY {symbol} @ {price} BTC")
+                            logger.info(f"🟢 OVERDRIVE BUY {symbol} @ {price} BTC")
                         except Exception as e: logger.error(f"❌ BUY ERROR {symbol}: {e}")
 
                 elif state.in_position:
                     if price > state.highest_price: state.highest_price = price
-                    
                     pnl = (price - state.entry_price) / state.entry_price
                     trail = (state.highest_price - price) / state.highest_price
                     
                     should_sell = False
                     if pnl >= TAKE_PROFIT_PCT: should_sell = True
                     elif pnl <= -STOP_LOSS_PCT: should_sell = True
-                    elif trail >= TRAILING_STOP_PCT and pnl > 0.01: should_sell = True
+                    elif trail >= TRAILING_STOP_PCT and pnl > 0.005: should_sell = True
                     
                     if should_sell:
                         try:
                             client.create_order(symbol=symbol, side='SELL', type='MARKET', quantity=state.position_quantity)
-                            logger.info(f"🔴 SELL {symbol} | PnL: {pnl:.2%}")
+                            logger.info(f"🔴 OVERDRIVE SELL {symbol} | PnL: {pnl:.2%}")
                             state.in_position = False
-                            # Log Strike
                             with open('/root/.openclaw/workspace/strike_alert.flag', 'w') as f:
-                                f.write(f"{(qty_to_buy_btc * pnl * 59500):.2f}")
+                                f.write(f"{(state.position_quantity * price * pnl * 59500):.2f}")
                         except Exception as e: logger.error(f"❌ SELL ERROR {symbol}: {e}")
             
             time.sleep(SLEEP_TIME)

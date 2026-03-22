@@ -3,96 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ALPHA-OMEGA COMMAND CENTER</title>
+    <title>ALPHA-OMEGA OVERDRIVE</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
-        body { background-color: #020203; color: #f8fafc; font-family: 'Space Grotesk', sans-serif; overflow-x: hidden; }
-        .glass-card {
-            background: linear-gradient(145deg, rgba(15, 15, 15, 0.9) 0%, rgba(5, 5, 5, 0.95) 100%);
-            border: 1px solid rgba(255, 255, 255, 0.03);
-            border-radius: 1.25rem;
-            transition: all 0.4s ease;
-        }
-        .alpha-card { border-top: 4px solid #3b82f6; }
-        .omega-card { border-top: 4px solid #ef4444; }
-        .cyber-header { background: linear-gradient(90deg, #3b82f6, #6366f1, #ef4444); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .status-badge { font-size: 0.6rem; font-weight: 800; padding: 1px 6px; border-radius: 4px; text-transform: uppercase; }
-        .bg-grid { background-image: linear-gradient(to right, #111 1px, transparent 1px), linear-gradient(to bottom, #111 1px, transparent 1px); background-size: 40px 40px; }
+        @import url('https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=JetBrains+Mono:wght@300;400;700&display=swap');
+        body { background-color: #010101; color: #fff; font-family: 'JetBrains Mono', monospace; }
+        .panel { background: rgba(10, 10, 15, 0.95); border: 1px solid #1e293b; position: relative; overflow: hidden; }
+        .panel::before { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: linear-gradient(90deg, transparent, #3b82f6, transparent); }
+        .alpha-border { border-color: #3b82f6; box-shadow: 0 0 15px rgba(59, 130, 246, 0.1); }
+        .omega-border { border-color: #ef4444; box-shadow: 0 0 15px rgba(239, 68, 68, 0.1); }
+        .stat-value { font-family: 'Syncopate', sans-serif; }
+        .scanline { width: 100%; height: 100px; z-index: 10; background: linear-gradient(0deg, rgba(0,0,0,0) 0%, rgba(59,130,246,0.05) 50%, rgba(0,0,0,0) 100%); position: absolute; animation: scan 4s linear infinite; pointer-events: none; }
+        @keyframes scan { from { top: -100px; } to { top: 100%; } }
     </style>
 </head>
-<body class="bg-grid p-4 md:p-8">
-    <div class="max-w-[1600px] mx-auto">
-        <!-- Header -->
-        <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-10 gap-6">
-            <div>
-                <h1 class="text-5xl font-black cyber-header italic tracking-tighter">ALPHA-OMEGA <span class="text-white/20 text-3xl not-italic">JOINT OPERATIONS</span></h1>
-                <p class="text-slate-500 font-mono text-xs mt-2 uppercase tracking-[0.3em]">Two Worlds. One Goal. <span class="text-blue-500">Trend</span> vs <span class="text-red-500">Reverse</span></p>
+<body class="p-4 md:p-10">
+    <div class="scanline"></div>
+    
+    <!-- Top HUD -->
+    <div class="flex flex-col xl:flex-row justify-between gap-6 mb-10">
+        <div>
+            <h1 class="text-4xl font-bold tracking-tighter stat-value text-blue-500 italic">SYSTEM OVERDRIVE</h1>
+            <p class="text-xs text-slate-500 mt-2 uppercase tracking-[0.5em] font-black">Joint Fleet Command / v3.0 / Sergio Grivetto</p>
+        </div>
+        
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <div class="panel alpha-border p-5 rounded-sm">
+                <p class="text-[8px] text-blue-400 font-bold mb-1">TOTAL PORTFOLIO VALUE</p>
+                <p class="text-3xl stat-value text-white">€<span id="global-total">0.00</span></p>
             </div>
-            
-            <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                <div class="glass-card px-8 py-4 bg-emerald-500/5 border-emerald-500/20">
-                    <p class="text-[9px] text-slate-500 uppercase font-bold mb-1">PROFITTO NETTO</p>
-                    <p class="text-4xl font-mono font-bold text-emerald-400" id="profit-val">+0.00€</p>
-                </div>
-                <div class="glass-card px-8 py-4 bg-white/5 border-white/10">
-                    <p class="text-[9px] text-slate-500 uppercase font-bold mb-1">VALORE TOTALE FLEET</p>
-                    <p class="text-4xl font-mono font-bold text-white">€<span id="global-total">0.00</span></p>
-                </div>
+            <div class="panel omega-border p-5 rounded-sm">
+                <p class="text-[8px] text-red-400 font-bold mb-1">NET PROFIT (BASE 722)</p>
+                <p class="text-3xl stat-value" id="profit-val">+0.00€</p>
+            </div>
+            <div class="panel p-5 rounded-sm border-slate-800">
+                <p class="text-[8px] text-slate-500 font-bold mb-1">ACTIVE BOTS</p>
+                <p class="text-3xl stat-value text-slate-300">10/10</p>
             </div>
         </div>
+    </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            
-            <!-- Left: ALPHA SQUAD (Trend Following) -->
-            <div class="lg:col-span-4 space-y-6">
-                <div class="flex items-center gap-3 mb-2">
-                    <div class="w-8 h-[2px] bg-blue-500"></div>
-                    <h2 class="text-xl font-bold text-blue-500 uppercase tracking-widest italic">Alpha Squad</h2>
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- Tactical Systems -->
+        <div class="lg:col-span-8 space-y-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="panel alpha-border p-6 rounded-lg bg-blue-500/5">
+                    <h2 class="text-blue-500 font-bold text-sm mb-4 flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 bg-blue-500 rounded-full animate-ping"></span> ALPHA SQUAD (TREND)
+                    </h2>
+                    <div class="space-y-3" id="alpha-list"></div>
                 </div>
-                <div class="grid grid-cols-2 gap-4" id="alpha-grid">
-                    <!-- Alpha bots injected here -->
-                </div>
-                <div class="glass-card p-6 border-blue-500/10 text-[10px] text-slate-400 font-mono">
-                    METHOD: Momentum, Breakouts, Trend Riders.<br>
-                    BIAS: Long Strength.
+                <div class="panel omega-border p-6 rounded-lg bg-red-500/5">
+                    <h2 class="text-red-500 font-bold text-sm mb-4 flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 bg-red-500 rounded-full animate-ping"></span> OMEGA SQUAD (REVERSE)
+                    </h2>
+                    <div class="space-y-3" id="omega-list"></div>
                 </div>
             </div>
 
-            <!-- Middle: Market Center -->
-            <div class="lg:col-span-4 space-y-6">
-                <div class="glass-card p-6 h-full border-indigo-500/20">
-                    <h3 class="font-bold text-indigo-400 uppercase tracking-widest text-sm mb-6 flex justify-between">
-                        Tactical Execution Log
-                        <span class="text-[9px] text-slate-600 animate-pulse">Syncing...</span>
-                    </h3>
-                    <div id="activity-feed" class="font-mono text-[10px] space-y-3 max-h-[500px] overflow-y-auto pr-2">
-                        <!-- Activity feed -->
-                    </div>
+            <div class="panel p-8 rounded-lg border-slate-800 min-h-[400px]">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xs font-bold text-slate-500 uppercase">Real-Time Market Trajectory (BTC/EUR)</h3>
+                    <div id="price-ticker" class="text-blue-400 stat-value text-xs">...</div>
                 </div>
-            </div>
-
-            <!-- Right: OMEGA SQUAD (Contrarian) -->
-            <div class="lg:col-span-4 space-y-6">
-                <div class="flex items-center gap-3 mb-2 justify-end">
-                    <h2 class="text-xl font-bold text-red-500 uppercase tracking-widest italic text-right">Omega Squad</h2>
-                    <div class="w-8 h-[2px] bg-red-500"></div>
-                </div>
-                <div class="grid grid-cols-2 gap-4" id="omega-grid">
-                    <!-- Omega bots injected here -->
-                </div>
-                <div class="glass-card p-6 border-red-500/10 text-[10px] text-slate-400 font-mono text-right">
-                    METHOD: Reversals, Bottom Feeding, Contrarian.<br>
-                    BIAS: Fade the Hype.
-                </div>
-            </div>
-
-            <!-- Full Width Chart -->
-            <div class="lg:col-span-12 glass-card p-8 min-h-[350px]">
                 <canvas id="performanceChart"></canvas>
             </div>
         </div>
+
+        <!-- Intelligence Feed -->
+        <div class="lg:col-span-4 space-y-8">
+            <div class="panel p-6 rounded-lg border-slate-800 flex flex-col h-full bg-black/40">
+                <h3 class="text-slate-400 font-bold text-xs mb-6 uppercase border-b border-slate-800 pb-4">Tactical Intelligence Log</h3>
+                <div id="activity-feed" class="text-[9px] font-mono space-y-4 overflow-y-auto pr-2 max-h-[700px]">
+                    <div class="text-slate-800">CONNECTING TO SQUAD ENCRYPTED CHANNEL...</div>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <script>
@@ -104,10 +93,10 @@
                 datasets: [{
                     label: 'BTC/EUR',
                     data: [],
-                    borderColor: '#6366f1',
-                    borderWidth: 1,
+                    borderColor: '#3b82f6',
+                    borderWidth: 2,
                     fill: false,
-                    tension: 0.4,
+                    tension: 0.2,
                     pointRadius: 0
                 }]
             },
@@ -115,14 +104,14 @@
                 responsive: true,
                 maintainAspectRatio: false,
                 scales: {
-                    y: { grid: { color: 'rgba(255,255,255,0.02)' }, ticks: { color: '#334155', font: { size: 9 } } },
+                    y: { grid: { color: '#111' }, ticks: { color: '#444', font: { size: 9 } } },
                     x: { display: false }
                 },
                 plugins: { legend: { display: false } }
             }
         });
 
-        async function updateDashboard() {
+        async function updateHUD() {
             try {
                 const res = await fetch('/fleet_stats.json?' + Date.now());
                 const data = await res.json();
@@ -132,56 +121,51 @@
                     const profit = data.metrics.profit;
                     const pEl = document.getElementById('profit-val');
                     pEl.textContent = (profit >= 0 ? "+" : "") + profit.toFixed(2) + "€";
-                    pEl.className = "text-4xl font-mono font-bold " + (profit >= 0 ? "text-emerald-400" : "text-rose-400");
+                    pEl.className = "text-3xl stat-value " + (profit >= 0 ? "text-emerald-400" : "text-rose-400");
                 }
 
                 const alphaBots = ["GRID ENGINE", "MULTI-COIN", "VOL-HUNTER", "REB-SNIPER", "SHADOW-TR", "GHOST-RID"];
                 const omegaBots = ["OMEGA-REV", "OMEGA-FEED"];
 
-                const alphaGrid = document.getElementById('alpha-grid');
-                const omegaGrid = document.getElementById('omega-grid');
-
-                alphaGrid.innerHTML = data.bots.filter(b => alphaBots.includes(b.name)).map(bot => `
-                    <div class="glass-card p-4 alpha-card">
-                        <div class="flex justify-between items-center">
-                            <span class="text-[8px] font-bold text-slate-500">${bot.name}</span>
-                            <span class="status-badge ${bot.status === 'ONLINE' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}">${bot.status}</span>
-                        </div>
+                document.getElementById('alpha-list').innerHTML = data.bots.filter(b => alphaBots.includes(b.name)).map(b => `
+                    <div class="flex justify-between items-center text-[10px] border-b border-white/5 pb-1">
+                        <span class="text-slate-400">${b.name}</span>
+                        <span class="${b.status === 'ONLINE' ? 'text-blue-400' : 'text-red-500'} font-bold">${b.status}</span>
                     </div>
                 `).join('');
 
-                omegaGrid.innerHTML = data.bots.filter(b => omegaBots.includes(b.name)).map(bot => `
-                    <div class="glass-card p-4 omega-card">
-                        <div class="flex justify-between items-center">
-                            <span class="status-badge ${bot.status === 'ONLINE' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}">${bot.status}</span>
-                            <span class="text-[8px] font-bold text-slate-500 text-right">${bot.name}</span>
-                        </div>
+                document.getElementById('omega-list').innerHTML = data.bots.filter(b => omegaBots.includes(b.name)).map(b => `
+                    <div class="flex justify-between items-center text-[10px] border-b border-white/5 pb-1">
+                        <span class="text-slate-400">${b.name}</span>
+                        <span class="${b.status === 'ONLINE' ? 'text-red-400' : 'text-slate-600'} font-bold">${b.status}</span>
                     </div>
                 `).join('');
 
                 if (data.metrics && data.metrics.activity) {
                     document.getElementById('activity-feed').innerHTML = data.metrics.activity.map(a => `
-                        <div class="flex gap-2 border-b border-white/5 pb-2">
-                            <span class="text-slate-600">[${a.time}]</span>
-                            <span class="text-blue-500 font-bold">${a.bot}</span>
-                            <span class="text-slate-300">${a.action}</span>
+                        <div class="border-l-2 border-blue-500/20 pl-3 py-1">
+                            <span class="text-slate-700">[${a.time}]</span> <span class="text-blue-400 font-bold">${a.bot}</span><br>
+                            <span class="text-white">${a.action}</span>
                         </div>
                     `).join('');
                 }
 
                 const p_res = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCEUR');
                 const p_data = await p_res.json();
+                const price = parseFloat(p_data.price);
+                document.getElementById('price-ticker').textContent = 'LIVE_BTC: ' + price.toFixed(2);
+                
                 const now = new Date().toLocaleTimeString();
                 chart.data.labels.push(now);
-                chart.data.datasets[0].data.push(parseFloat(p_data.price));
-                if (chart.data.labels.length > 50) { chart.data.labels.shift(); chart.data.datasets[0].data.shift(); }
+                chart.data.datasets[0].data.push(price);
+                if (chart.data.labels.length > 40) { chart.data.labels.shift(); chart.data.datasets[0].data.shift(); }
                 chart.update('none');
 
             } catch (e) { console.log(e); }
         }
 
-        setInterval(updateDashboard, 5000);
-        updateDashboard();
+        setInterval(updateHUD, 4000);
+        updateHUD();
     </script>
 </body>
 </html>
