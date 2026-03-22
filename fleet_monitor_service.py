@@ -11,18 +11,14 @@ logger = logging.getLogger(__name__)
 
 def get_bot_status():
     bots = {
-        "GRID-ENGINE": "smart_grid_engine.py",
-        "MULTI-BOT": "binance_bot_multi.py",
-        "VOL-HUNTER": "volatility_hunter.py",
-        "REB-SNIPER": "rebound_sniper.py",
-        "SHADOW-TR": "shadow_trend_tracer.py",
-        "GHOST-RID": "ghost_rider_swing.py",
-        "OMEGA-REV": "contrarian_omega_squad.py",
-        "OMEGA-FEED": "omega_bottom_feeder.py",
+        "ALPHA-CORE": "binance_bot_multi.py",
+        "ALPHA-SURGE": "flash_surge_unit.py",
+        "ALPHA-HUNTER": "volatility_hunter.py",
+        "OMEGA-CORE": "omega_war_machine.py",
+        "OMEGA-SHIELD": "centurion_reversion_squad.py",
+        "OMEGA-FEEDER": "omega_bottom_feeder.py",
         "SIGMA-CHAOS": "sigma_chaos_engine.py",
-        "FLASH-UNIT": "flash_surge_unit.py",
-        "LIQUID-HARV": "liquidity_harvester.py",
-        "NEURAL-PLS": "neural_pulse_v2.py",
+        "BAIT-TRAP": "bait_and_trap_engine.py",
         "ARCHITECT": "architect_ai.py",
         "EVOLUTION": "evolution_engine.py"
     }
@@ -42,7 +38,7 @@ def get_detailed_metrics():
     client = Client(os.getenv('BINANCE_API_KEY'), os.getenv('BINANCE_API_SECRET'))
     try:
         balances = client.get_account()['balances']
-        assets = {b['asset']: float(b['free']) + float(b['locked']) for b in balances if float(b['free']) > 0 or float(b['locked']) > 0}
+        assets = {b['asset']: float(b['free']) + float(b['locked']) for b in balances if float(b['free']) > 0.0001 or float(b['locked']) > 0.0001}
         tickers = client.get_all_tickers()
         prices = {t['symbol']: float(t['price']) for t in tickers}
         
@@ -66,21 +62,19 @@ def get_detailed_metrics():
             "total_val": round(total_eur, 2),
             "profit": round(total_eur - 722.00, 2),
             "btc_price": prices.get("BTCEUR", 0),
-            "sol_price": prices.get("SOLEUR", 0),
             "assets": sorted(asset_list, key=lambda x: x['val'], reverse=True),
             "dna_gen": dna.get("generation", 0)
         }
     except: return None
 
 def main():
-    history = []
     while True:
         try:
-            metrics = get_detailed_metrics()
-            if metrics:
-                history.append({"time": datetime.now().strftime("%H:%M"), "val": metrics['total_val']})
-                if len(history) > 100: history.pop(0)
-            report = {"timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "bots": get_bot_status(), "metrics": metrics, "history": history}
+            report = {
+                "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "bots": get_bot_status(),
+                "metrics": get_detailed_metrics()
+            }
             with open('/root/.openclaw/workspace/dashboard/fleet_stats.json', 'w') as f:
                 json.dump(report, f, indent=2)
             time.sleep(5)
