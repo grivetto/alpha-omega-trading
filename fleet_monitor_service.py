@@ -17,8 +17,9 @@ def get_bot_status():
         "REB-SNIPER": "rebound_sniper.py",
         "SHADOW-TR": "shadow_trend_tracer.py",
         "GHOST-RID": "ghost_rider_swing.py",
-        "TELEGRAM": "telegram_bot_interactive.py",
-        "WHALE-MON": "whale_monitor.py"
+        "OMEGA-REV": "contrarian_omega_squad.py",
+        "OMEGA-FEED": "omega_bottom_feeder.py",
+        "TELEGRAM": "telegram_bot_interactive.py"
     }
     
     status_report = []

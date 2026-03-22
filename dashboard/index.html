@@ -3,161 +3,164 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ALPHA-FLEET COMMAND v2</title>
+    <title>ALPHA-OMEGA COMMAND CENTER</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
-        body { background-color: #030303; color: #f8fafc; font-family: 'Space Grotesk', sans-serif; overflow-x: hidden; }
+        body { background-color: #020203; color: #f8fafc; font-family: 'Space Grotesk', sans-serif; overflow-x: hidden; }
         .glass-card {
-            background: linear-gradient(145deg, rgba(20, 20, 20, 0.9) 0%, rgba(10, 10, 10, 0.95) 100%);
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            background: linear-gradient(145deg, rgba(15, 15, 15, 0.9) 0%, rgba(5, 5, 5, 0.95) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.03);
             border-radius: 1.25rem;
-            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5);
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: all 0.4s ease;
         }
-        .glass-card:hover { border-color: #3b82f6; transform: translateY(-4px); box-shadow: 0 20px 40px -10px rgba(59, 130, 246, 0.2); }
-        .cyber-header { background: linear-gradient(90deg, #1e3a8a, #3b82f6, #0ea5e9); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .status-badge { font-size: 0.65rem; font-weight: 800; padding: 2px 8px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
-        .glow-text { text-shadow: 0 0 20px rgba(59, 130, 246, 0.5); }
-        .bg-grid { background-image: radial-gradient(circle, #1e293b 1px, transparent 1px); background-size: 30px 30px; }
-        .pulse-emerald { animation: pulse-green 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
-        @keyframes pulse-green { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
+        .alpha-card { border-top: 4px solid #3b82f6; }
+        .omega-card { border-top: 4px solid #ef4444; }
+        .cyber-header { background: linear-gradient(90deg, #3b82f6, #6366f1, #ef4444); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .status-badge { font-size: 0.6rem; font-weight: 800; padding: 1px 6px; border-radius: 4px; text-transform: uppercase; }
+        .bg-grid { background-image: linear-gradient(to right, #111 1px, transparent 1px), linear-gradient(to bottom, #111 1px, transparent 1px); background-size: 40px 40px; }
     </style>
 </head>
 <body class="bg-grid p-4 md:p-8">
-    <div class="max-w-[1400px] mx-auto">
-        <!-- Top Stats Bar -->
+    <div class="max-w-[1600px] mx-auto">
+        <!-- Header -->
         <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-10 gap-6">
             <div>
-                <h1 class="text-4xl font-black cyber-header italic tracking-tight">ALPHA-FLEET : COMMAND CENTER</h1>
-                <p class="text-slate-500 font-mono text-xs mt-2 uppercase tracking-widest">Global Status: <span class="text-blue-400 font-bold glow-text">GOD_MODE v2.0</span></p>
+                <h1 class="text-5xl font-black cyber-header italic tracking-tighter">ALPHA-OMEGA <span class="text-white/20 text-3xl not-italic">JOINT OPERATIONS</span></h1>
+                <p class="text-slate-500 font-mono text-xs mt-2 uppercase tracking-[0.3em]">Two Worlds. One Goal. <span class="text-blue-500">Trend</span> vs <span class="text-red-500">Reverse</span></p>
             </div>
             
-            <div class="grid grid-cols-2 md:grid-cols-3 gap-4 w-full lg:w-auto">
-                <div class="glass-card px-6 py-4 border-l-4 border-emerald-500">
-                    <p class="text-[10px] text-slate-500 uppercase font-bold mb-1">PROFITTO NETTO (TOT)</p>
-                    <p class="text-3xl font-mono font-bold text-emerald-400" id="profit-val">+0.00€</p>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div class="glass-card px-8 py-4 bg-emerald-500/5 border-emerald-500/20">
+                    <p class="text-[9px] text-slate-500 uppercase font-bold mb-1">PROFITTO NETTO</p>
+                    <p class="text-4xl font-mono font-bold text-emerald-400" id="profit-val">+0.00€</p>
                 </div>
-                <div class="glass-card px-6 py-4 border-l-4 border-blue-500">
-                    <p class="text-[10px] text-slate-500 uppercase font-bold mb-1">VALORE TOTALE FLOTTA</p>
-                    <p class="text-3xl font-mono font-bold text-white">€<span id="global-total">0.00</span></p>
-                </div>
-                <div class="glass-card px-6 py-4 border-l-4 border-slate-700 hidden md:block">
-                    <p class="text-[10px] text-slate-500 uppercase font-bold mb-1">CAPITALE VERSATO</p>
-                    <p class="text-3xl font-mono font-bold text-slate-400">€722.00</p>
+                <div class="glass-card px-8 py-4 bg-white/5 border-white/10">
+                    <p class="text-[9px] text-slate-500 uppercase font-bold mb-1">VALORE TOTALE FLEET</p>
+                    <p class="text-4xl font-mono font-bold text-white">€<span id="global-total">0.00</span></p>
                 </div>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            <!-- Main Systems Monitor -->
-            <div class="lg:col-span-3 space-y-6">
-                <!-- Bot Status Row -->
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4" id="bot-grid">
-                    <!-- Bots will be injected here -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- Left: ALPHA SQUAD (Trend Following) -->
+            <div class="lg:col-span-4 space-y-6">
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="w-8 h-[2px] bg-blue-500"></div>
+                    <h2 class="text-xl font-bold text-blue-500 uppercase tracking-widest italic">Alpha Squad</h2>
                 </div>
+                <div class="grid grid-cols-2 gap-4" id="alpha-grid">
+                    <!-- Alpha bots injected here -->
+                </div>
+                <div class="glass-card p-6 border-blue-500/10 text-[10px] text-slate-400 font-mono">
+                    METHOD: Momentum, Breakouts, Trend Riders.<br>
+                    BIAS: Long Strength.
+                </div>
+            </div>
 
-                <!-- Main Chart -->
-                <div class="glass-card p-6 min-h-[400px]">
-                    <div class="flex justify-between items-center mb-6">
-                        <h3 class="font-bold text-blue-400 uppercase tracking-widest text-sm flex items-center gap-2">
-                            <span class="w-2 h-2 rounded-full bg-blue-500 pulse-emerald"></span>
-                            Bitcoin Performance Analytics (1m)
-                        </h3>
-                        <div class="text-[10px] font-mono text-slate-600 uppercase" id="last-update">Syncing...</div>
-                    </div>
-                    <div class="h-80">
-                        <canvas id="performanceChart"></canvas>
+            <!-- Middle: Market Center -->
+            <div class="lg:col-span-4 space-y-6">
+                <div class="glass-card p-6 h-full border-indigo-500/20">
+                    <h3 class="font-bold text-indigo-400 uppercase tracking-widest text-sm mb-6 flex justify-between">
+                        Tactical Execution Log
+                        <span class="text-[9px] text-slate-600 animate-pulse">Syncing...</span>
+                    </h3>
+                    <div id="activity-feed" class="font-mono text-[10px] space-y-3 max-h-[500px] overflow-y-auto pr-2">
+                        <!-- Activity feed -->
                     </div>
                 </div>
             </div>
 
-            <!-- Right Sidebar: Activity & Alerts -->
-            <div class="space-y-6">
-                <!-- Live Activity Feed -->
-                <div class="glass-card p-6 h-full flex flex-col">
-                    <h3 class="font-bold text-slate-400 uppercase tracking-widest text-sm mb-4">Tactical Log</h3>
-                    <div id="activity-feed" class="font-mono text-[10px] space-y-3 overflow-y-auto flex-grow max-h-[600px] pr-2">
-                        <div class="text-slate-700 italic">Initializing encrypted feed...</div>
-                    </div>
-                    <div class="mt-4 pt-4 border-t border-white/5 text-[10px] text-blue-500 font-mono">
-                        >> SCANNING 100 CRYPTO PAIRS...
-                    </div>
+            <!-- Right: OMEGA SQUAD (Contrarian) -->
+            <div class="lg:col-span-4 space-y-6">
+                <div class="flex items-center gap-3 mb-2 justify-end">
+                    <h2 class="text-xl font-bold text-red-500 uppercase tracking-widest italic text-right">Omega Squad</h2>
+                    <div class="w-8 h-[2px] bg-red-500"></div>
                 </div>
+                <div class="grid grid-cols-2 gap-4" id="omega-grid">
+                    <!-- Omega bots injected here -->
+                </div>
+                <div class="glass-card p-6 border-red-500/10 text-[10px] text-slate-400 font-mono text-right">
+                    METHOD: Reversals, Bottom Feeding, Contrarian.<br>
+                    BIAS: Fade the Hype.
+                </div>
+            </div>
+
+            <!-- Full Width Chart -->
+            <div class="lg:col-span-12 glass-card p-8 min-h-[350px]">
+                <canvas id="performanceChart"></canvas>
             </div>
         </div>
     </div>
 
     <script>
-        // Init Chart with high-res styling
         const ctx = document.getElementById('performanceChart').getContext('2d');
-        const gradient = ctx.createLinearGradient(0, 0, 0, 400);
-        gradient.addColorStop(0, 'rgba(59, 130, 246, 0.2)');
-        gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
-
         const chart = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: [],
                 datasets: [{
-                    label: 'BTCEUR',
+                    label: 'BTC/EUR',
                     data: [],
-                    borderColor: '#3b82f6',
-                    borderWidth: 2,
-                    fill: true,
-                    backgroundColor: gradient,
-                    tension: 0.3,
-                    pointRadius: 0,
-                    pointHoverRadius: 5
+                    borderColor: '#6366f1',
+                    borderWidth: 1,
+                    fill: false,
+                    tension: 0.4,
+                    pointRadius: 0
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 scales: {
-                    y: { grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { color: '#475569', font: { family: 'JetBrains Mono', size: 10 } } },
-                    x: { grid: { display: false }, ticks: { color: '#475569', font: { family: 'JetBrains Mono', size: 10 } } }
+                    y: { grid: { color: 'rgba(255,255,255,0.02)' }, ticks: { color: '#334155', font: { size: 9 } } },
+                    x: { display: false }
                 },
                 plugins: { legend: { display: false } }
             }
         });
 
-        async function refreshDashboard() {
+        async function updateDashboard() {
             try {
-                // Fetch internal status
                 const res = await fetch('/fleet_stats.json?' + Date.now());
                 const data = await res.json();
                 
-                // Update Top Stats
                 if (data.metrics) {
-                    const total = data.metrics.total_val;
+                    document.getElementById('global-total').textContent = data.metrics.total_val.toFixed(2);
                     const profit = data.metrics.profit;
-                    document.getElementById('global-total').textContent = total.toFixed(2);
-                    const profitEl = document.getElementById('profit-val');
-                    profitEl.textContent = (profit >= 0 ? "+" : "") + profit.toFixed(2) + "€";
-                    profitEl.className = "text-3xl font-mono font-bold " + (profit >= 0 ? "text-emerald-400" : "text-rose-400");
+                    const pEl = document.getElementById('profit-val');
+                    pEl.textContent = (profit >= 0 ? "+" : "") + profit.toFixed(2) + "€";
+                    pEl.className = "text-4xl font-mono font-bold " + (profit >= 0 ? "text-emerald-400" : "text-rose-400");
                 }
 
-                // Update Bot Grid
-                const botGrid = document.getElementById('bot-grid');
-                botGrid.innerHTML = data.bots.map(bot => `
-                    <div class="glass-card p-4 border-t-2 ${bot.status === 'ONLINE' ? 'border-blue-500' : 'border-rose-500'}">
-                        <div class="flex justify-between items-center mb-2">
-                            <span class="text-[9px] font-black text-slate-500 uppercase">${bot.name}</span>
-                            <span class="status-badge ${bot.status === 'ONLINE' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}">
-                                ${bot.status}
-                            </span>
+                const alphaBots = ["GRID ENGINE", "MULTI-COIN", "VOL-HUNTER", "REB-SNIPER", "SHADOW-TR", "GHOST-RID"];
+                const omegaBots = ["OMEGA-REV", "OMEGA-FEED"];
+
+                const alphaGrid = document.getElementById('alpha-grid');
+                const omegaGrid = document.getElementById('omega-grid');
+
+                alphaGrid.innerHTML = data.bots.filter(b => alphaBots.includes(b.name)).map(bot => `
+                    <div class="glass-card p-4 alpha-card">
+                        <div class="flex justify-between items-center">
+                            <span class="text-[8px] font-bold text-slate-500">${bot.name}</span>
+                            <span class="status-badge ${bot.status === 'ONLINE' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}">${bot.status}</span>
                         </div>
-                        <div class="font-mono text-xs text-slate-300">Uptime: ${bot.uptime}</div>
-                        <div class="text-[8px] text-slate-600 mt-2 italic">Last: ${bot.last_ping}</div>
                     </div>
                 `).join('');
 
-                // Update Feed
+                omegaGrid.innerHTML = data.bots.filter(b => omegaBots.includes(b.name)).map(bot => `
+                    <div class="glass-card p-4 omega-card">
+                        <div class="flex justify-between items-center">
+                            <span class="status-badge ${bot.status === 'ONLINE' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}">${bot.status}</span>
+                            <span class="text-[8px] font-bold text-slate-500 text-right">${bot.name}</span>
+                        </div>
+                    </div>
+                `).join('');
+
                 if (data.metrics && data.metrics.activity) {
-                    const feed = document.getElementById('activity-feed');
-                    feed.innerHTML = data.metrics.activity.map(a => `
+                    document.getElementById('activity-feed').innerHTML = data.metrics.activity.map(a => `
                         <div class="flex gap-2 border-b border-white/5 pb-2">
                             <span class="text-slate-600">[${a.time}]</span>
                             <span class="text-blue-500 font-bold">${a.bot}</span>
@@ -166,26 +169,19 @@
                     `).join('');
                 }
 
-                // Chart Sync (Fetch price separately for faster updates)
                 const p_res = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCEUR');
                 const p_data = await p_res.json();
-                const btc_price = parseFloat(p_data.price);
-                
                 const now = new Date().toLocaleTimeString();
                 chart.data.labels.push(now);
-                chart.data.datasets[0].data.push(btc_price);
-                if (chart.data.labels.length > 50) {
-                    chart.data.labels.shift();
-                    chart.data.datasets[0].data.shift();
-                }
-                chart.update('none'); // Update without animation for performance
-                document.getElementById('last-update').textContent = 'Live: ' + btc_price.toFixed(2) + ' EUR';
+                chart.data.datasets[0].data.push(parseFloat(p_data.price));
+                if (chart.data.labels.length > 50) { chart.data.labels.shift(); chart.data.datasets[0].data.shift(); }
+                chart.update('none');
 
-            } catch (e) { console.error("Monitor Sync Error:", e); }
+            } catch (e) { console.log(e); }
         }
 
-        setInterval(refreshDashboard, 5000);
-        refreshDashboard();
+        setInterval(updateDashboard, 5000);
+        updateDashboard();
     </script>
 </body>
 </html>
