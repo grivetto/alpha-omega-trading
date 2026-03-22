@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>THE NEURAL CORE | ALPHA-OMEGA-SIGMA v10.0</title>
+    <title>THE NEURAL CORE | ALPHA-OMEGA-SIGMA v11.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -15,83 +15,69 @@
         .glow-red { color: #ff0044; text-shadow: 0 0 10px #ff0044; }
         .stat-value { font-family: 'Syncopate', sans-serif; font-size: 1.5rem; }
         .dna-badge { background: linear-gradient(90deg, #00ffcc, #0088ff); color: #000; padding: 2px 10px; font-weight: 900; font-size: 0.6rem; border-radius: 2px; }
-        .grid-line { border-bottom: 1px solid rgba(0, 255, 204, 0.05); }
+        .bait-active { border: 1px solid #ffaa00; background: rgba(255, 170, 0, 0.1); color: #ffaa00; }
         ::-webkit-scrollbar { width: 2px; }
         ::-webkit-scrollbar-thumb { background: #00ffcc; }
     </style>
 </head>
 <body class="neural-bg min-h-screen p-4">
     <div class="max-w-[2000px] mx-auto">
-        
         <!-- NEURAL HEADER -->
         <div class="flex flex-col lg:flex-row justify-between items-start gap-8 mb-12 border-b border-[#004444] pb-10">
             <div>
-                <h1 class="text-6xl font-black italic tracking-tighter glow-text uppercase" style="font-family: 'Syncopate';">Neural Core v10.0</h1>
+                <h1 class="text-6xl font-black italic tracking-tighter glow-text uppercase" style="font-family: 'Syncopate';">System Global v11</h1>
                 <div class="flex items-center gap-4 mt-4">
-                    <span class="dna-badge uppercase">Evolutionary Engine Active</span>
-                    <p class="text-[9px] text-[#008888] uppercase tracking-[0.8em]">Autonomous System Architecture / Sergio Grivetto</p>
+                    <span class="dna-badge uppercase">Bait & Trap Protocol Active</span>
+                    <p class="text-[9px] text-[#008888] uppercase tracking-[0.8em]">Autonomous Multi-Agent Matrix / Sergio Grivetto</p>
                 </div>
             </div>
             
             <div class="grid grid-cols-2 md:grid-cols-4 gap-6 w-full lg:w-auto">
                 <div class="glass-panel p-5 border-l-4 border-[#00ffcc]">
-                    <p class="text-[8px] text-[#008888] mb-1 font-black">NET_PROFIT_REALTIME</p>
+                    <p class="text-[8px] text-[#008888] mb-1 font-black uppercase">Net_Profit_Realtime</p>
                     <p class="stat-value glow-text" id="profit-val">+0.00€</p>
                 </div>
-                <div class="glass-panel p-5">
-                    <p class="text-[8px] text-[#008888] mb-1 font-black">FLEET_DNA_GENERATION</p>
-                    <p class="stat-value text-blue-500" id="dna-gen">GEN 1</p>
+                <div class="glass-panel p-5 border-l-4 border-[#ffaa00]">
+                    <p class="text-[8px] text-[#ffaa00] mb-1 font-black uppercase">Market_Provocation</p>
+                    <p class="text-sm font-bold text-[#ffaa00] uppercase animate-pulse">Baiting Active</p>
                 </div>
                 <div class="glass-panel p-5">
-                    <p class="text-[8px] text-[#008888] mb-1 font-black">TOTAL_CAPITAL</p>
+                    <p class="text-[8px] text-[#008888] mb-1 font-black uppercase">Total_Capital</p>
                     <p class="stat-value text-white" id="global-total">0.00</p>
                 </div>
                 <div class="glass-panel p-5 border-[#00ffcc]/20">
-                    <p class="text-[8px] text-[#008888] mb-1 font-black">SYSTEM_NODES</p>
-                    <p class="stat-value" id="active-count">15/15</p>
+                    <p class="text-[8px] text-[#008888] mb-1 font-black uppercase">Active_Nodes</p>
+                    <p class="stat-value text-white" id="active-count">16/16</p>
                 </div>
             </div>
         </div>
 
         <div class="grid grid-cols-1 xl:grid-cols-12 gap-8">
-            
-            <!-- LEFT: DNA & ASSETS -->
             <div class="xl:col-span-3 space-y-8">
-                <div class="glass-panel p-6 border-[#00ffcc]/30 bg-[#00ffcc]/5">
-                    <h3 class="text-[10px] font-black uppercase tracking-widest mb-6 border-b border-[#004444] pb-4 italic">Evolution Log</h3>
-                    <div class="text-[9px] font-mono space-y-3" id="architect-log">
-                        <div class="text-[#00ffcc]">> Analyzing trade efficiency... DONE</div>
-                        <div class="text-blue-400">> Mutating Trading Concept: Gen 14</div>
-                        <div class="text-white">> Optimizing Entry Vectors... OK</div>
-                        <div class="animate-pulse text-blue-300">> Auto-learning from Market Noise...</div>
+                <div class="glass-panel p-6 border-[#ffaa00]/30 bg-[#ffaa00]/5">
+                    <h3 class="text-[10px] font-black uppercase tracking-widest mb-6 border-b border-[#ffaa00]/20 pb-4 italic text-[#ffaa00]">Bait & Trap Log</h3>
+                    <div class="text-[9px] font-mono space-y-3" id="bait-log">
+                        <div class="text-[#ffaa00]">> Deploying bait on PEPE...</div>
+                        <div class="text-slate-500">> Waiting for bot reaction...</div>
+                        <div class="text-slate-500">> Closing trap...</div>
                     </div>
                 </div>
-
                 <div class="glass-panel p-6">
-                    <h3 class="text-[10px] font-black uppercase tracking-widest mb-6">Asset Distribution Matrix</h3>
+                    <h3 class="text-[10px] font-black uppercase tracking-widest mb-6 uppercase">Asset Split Matrix</h3>
                     <div id="asset-list" class="space-y-4"></div>
                 </div>
             </div>
-
-            <!-- CENTER: TRAJECTORY -->
             <div class="xl:col-span-6 glass-panel p-8">
-                <div class="flex justify-between items-center mb-10">
-                    <h3 class="text-[10px] font-black uppercase text-[#00ffcc]/50 tracking-[0.5em]">Global Capital Trajectory Analytics</h3>
-                    <div id="btc-live" class="text-[10px] glow-text italic">BTC: 00000.00</div>
-                </div>
-                <div class="h-[500px]">
+                <div class="h-[550px]">
                     <canvas id="mainChart"></canvas>
                 </div>
             </div>
-
-            <!-- RIGHT: BOT STATUS MATRIX -->
             <div class="xl:col-span-3">
                 <div class="glass-panel p-6 h-full border-l border-[#004444]">
-                    <h3 class="text-[10px] font-black uppercase tracking-widest mb-8 text-[#008888]">Autonomous Agent Connectivity</h3>
+                    <h3 class="text-[10px] font-black uppercase tracking-widest mb-8 text-[#008888]">Agent Connectivity</h3>
                     <div id="bot-list" class="grid grid-cols-1 gap-2"></div>
                 </div>
             </div>
-
         </div>
     </div>
 
@@ -103,37 +89,30 @@
             options: { responsive: true, maintainAspectRatio: false, scales: { y: { grid: { color: '#001a1a' }, ticks: { color: '#004444', font: { size: 9 } } }, x: { display: false } }, plugins: { legend: { display: false } } }
         });
 
-        async function updatev10() {
+        async function updatev11() {
             try {
                 const res = await fetch('/fleet_stats.json?' + Date.now());
                 const data = await res.json();
-                
                 if (data.metrics) {
                     document.getElementById('global-total').textContent = '€' + data.metrics.total_val.toFixed(2);
                     const profit = data.metrics.profit;
                     const pEl = document.getElementById('profit-val');
                     pEl.textContent = (profit >= 0 ? "+" : "") + profit.toFixed(2) + "€";
                     pEl.className = "stat-value " + (profit >= 0 ? "glow-text" : "glow-red");
-                    document.getElementById('dna-gen').textContent = "GEN " + data.metrics.dna_gen;
-                    document.getElementById('btc-live').textContent = "LIVE_BTC: €" + data.metrics.btc_price.toFixed(2);
-
                     document.getElementById('asset-list').innerHTML = data.metrics.assets.map(a => `
-                        <div class="grid-line py-2 flex justify-between items-center">
+                        <div class="py-2 flex justify-between items-center border-b border-[#004444]/20">
                             <span class="text-[11px] font-bold text-white">${a.name}</span>
                             <span class="text-[11px] text-[#00ffcc] font-mono">€${a.val}</span>
                         </div>
                     `).join('');
                 }
-
                 document.getElementById('bot-list').innerHTML = data.bots.map(b => `
                     <div class="flex justify-between items-center py-1 border-b border-[#004444]/20">
                         <span class="text-[9px] font-black text-[#008888] uppercase">${b.name}</span>
                         <span class="${b.status === 'ONLINE' ? 'text-[#00ffcc]' : 'text-red-500'} font-black text-[9px] italic">${b.status}</span>
                     </div>
                 `).join('');
-                
-                document.getElementById('active-count').textContent = data.bots.filter(b => b.status === 'ONLINE').length + "/" + data.bots.length;
-
+                document.getElementById('active-count').textContent = data.bots.filter(b => b.status === 'ONLINE').length + "/" + data.bots.length + " ON";
                 if (data.history) {
                     chart.data.labels = data.history.map(h => h.time);
                     chart.data.datasets[0].data = data.history.map(h => h.val);
@@ -141,8 +120,8 @@
                 }
             } catch (e) { }
         }
-        setInterval(updatev10, 2000);
-        updatev10();
+        setInterval(updatev11, 2000);
+        updatev11();
     </script>
 </body>
 </html>
