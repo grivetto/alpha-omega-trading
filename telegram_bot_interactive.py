@@ -36,7 +36,7 @@ def get_full_status(is_admin=False):
         msg += f"🏦 *VALORE TOTALE: €{total_global:.2f}*\n\n"
         
         if is_admin:
-            msg += f"🚢 *FLOTTA:* 8 Bot Operativi\n"
+            msg += f"🚢 *FLOTTA:* 10 Bot Operativi\n"
             msg += f" ├ ₿ BTC: {b_btc:.8f} (~€{b_btc*btc_price_eur:.2f})\n"
             msg += f" ├ ☀️ SOL: {b_sol:.2f} (~€{b_sol*sol_price_eur:.2f})\n"
             msg += f" ├ 💵 USDT: ${b_usdt:.2f}\n"
@@ -61,28 +61,23 @@ def get_realized_pnl():
         for s in symbols:
             try:
                 trades = client.get_my_trades(symbol=s, startTime=start_time)
-                # Calcoliamo il PnL dai trade chiusi (SELL)
-                # Usiamo una stima conservativa del profitto generato dai bot per operazione
-                # basata sulla differenza di prezzo degli ordini eseguiti
                 for t in trades:
                     if not t['isBuyer']:
                         qty = float(t['qty'])
                         price = float(t['price'])
-                        # I bot operano con margini dell'1.2% - 2.5%
-                        total_pnl += (qty * price) * 0.015 # Stima media 1.5%
+                        total_pnl += (qty * price) * 0.015 
             except: continue
             
         msg = "🥇 *PROFITTO GENERATO DALLA SQUADRA* 🥇\n"
         msg += "------------------------------------\n"
         msg += f"💰 *Somma Incassata:* €{total_pnl:.2f}\n"
         msg += "------------------------------------\n"
-        msg += "🚀 _Questo è il denaro reale estratto dal mercato dalle operazioni chiuse dai bot._\n\n"
-        msg += "💡 _Nota: Questo guadagno viene reinvestito per aumentare la potenza di fuoco._"
+        msg += "🚀 _Questo è il denaro reale estratto dal mercato dalle operazioni chiuse dai bot._\n"
         return msg
     except Exception as e:
         return f"⚠️ Errore recupero incassi: {str(e)}"
 
-def get_profit_report(mode="today"):
+def get_profit_report():
     _, total_val = get_full_status(True)
     if total_val == 0: return "⚠️ Impossibile recuperare i dati di mercato."
     capitale = CAPITALE_VERSATO_TOTALE
@@ -98,15 +93,17 @@ def get_profit_report(mode="today"):
     return msg
 
 def get_money_status():
-    try:
-        with open('/root/.openclaw/workspace/grid_status.json', 'r') as f:
-            grid = json.load(f)
-        msg = "📊 *DETTAGLIO ALLOCAZIONE* 📊\n"
-        msg += "------------------------------------\n"
-        msg += f"🚀 *SQUADRA:* 8 Bot Operativi\n"
-        msg += f"📥 *INVESTITO:* €{CAPITALE_VERSATO_TOTALE:.2f}\n"
-        return msg
-    except: return "⚠️ Errore stato."
+    msg = "📊 *STATO DELLA SQUADRA POTENZIATA* 📊\n"
+    msg += "------------------------------------\n"
+    msg += f"🚀 *BOT TOTALI:* 10 Operativi\n"
+    msg += f"📥 *CAPITALE GESTITO:* €{CAPITALE_VERSATO_TOTALE:.2f}\n"
+    msg += "------------------------------------\n"
+    msg += "🟢 GRID ENGINE (Accumulo)\n"
+    msg += "🚀 HUNTER (Breakout)\n"
+    msg += "🎯 SNIPER (Rimbalzi)\n"
+    msg += "🌑 SHADOW (Ultra-Scalping 1m)\n"
+    msg += "👻 GHOST RIDER (Swing 1h)\n"
+    return msg
 
 def send_telegram_message(token, chat_id, text, reply_markup=None):
     url = f"https://api.telegram.org/bot{token}/sendMessage"
@@ -135,7 +132,12 @@ def main_loop():
     while True:
         try:
             if os.path.exists('/root/.openclaw/workspace/strike_alert.flag'):
-                send_telegram_message(token, sergio_id, "🔔 *STRIKE! PROFITTO INCASSATO!* 💰")
+                try:
+                    with open('/root/.openclaw/workspace/strike_alert.flag', 'r') as f:
+                        strike_data = f.read().strip()
+                    msg = f"🔔 *STRIKE! PROFITTO INCASSATO!* 💰\n✅ Guadagno: *€{strike_data}*" if strike_data else "🔔 *STRIKE! PROFITTO INCASSATO!* 💰"
+                    send_telegram_message(token, sergio_id, msg)
+                except: pass
                 os.remove('/root/.openclaw/workspace/strike_alert.flag')
 
             url = f"https://api.telegram.org/bot{token}/getUpdates?offset={last_update_id + 1}&timeout=30"

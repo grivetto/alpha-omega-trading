@@ -13,14 +13,14 @@ load_dotenv()
 API_KEY = os.getenv('BINANCE_API_KEY')
 API_SECRET = os.getenv('BINANCE_API_SECRET')
 
-# Monete solide in iper-venduto (Oversold)
-SNIPE_LIST = ["BTCEUR", "ETHEUR", "SOLEUR", "BNBEUR"]
+# Monete solide (Coppie BTC per usare i fondi appena arrivati)
+SNIPE_LIST = ["ETHBTC", "SOLBTC", "BNBBTC", "LINKBTC", "AVAXBTC"]
 TIMEFRAME = '5m'
-RSI_BUY = 32.0          # Iper-venduto
+RSI_BUY = 28.0          # Iper-venduto estremo
 RSI_PERIOD = 14
 TARGET_REBOUND = 0.025  # 2.5% rimbalzo
-STOP_LOSS = 0.035      # 3.5% sicurezza
-RISK_EUR = 60.0        # Alzato da 20.0 a 60.0 per trade
+STOP_LOSS = 0.04       # 4% sicurezza
+RISK_BTC = 0.0015       # Circa 90€ per trade
 
 STATUS_FILE = '/root/.openclaw/workspace/sniper_status.json'
 
@@ -40,28 +40,34 @@ def update_status(data):
 
 def main():
     client = Client(API_KEY, API_SECRET)
-    logger.info("🎯 REBOUND SNIPER ACTIVATED - OVERSOLD SNIPING")
+    logger.info("🎯 REBOUND SNIPER LIVE - BTC PAIRS MODE")
     
     positions = {}
 
     while True:
         try:
             for symbol in SNIPE_LIST:
-                # Recupero dati
                 klines = client.get_klines(symbol=symbol, interval=TIMEFRAME, limit=100)
                 df = pd.DataFrame(klines, columns=['ts', 'o', 'h', 'l', 'c', 'v', 'ct', 'qv', 'nt', 'tb', 'tq', 'i'])
                 df['c'] = pd.to_numeric(df['c'])
                 
-                # Calcolo RSI con pandas_ta
                 rsi = ta.rsi(df['c'], length=RSI_PERIOD).iloc[-1]
                 price = df['c'].iloc[-1]
                 
-                # SNIPE DETECTION
+                # SNIPE DETECTION (LIVE ORDERS ENABLED)
                 if rsi <= RSI_BUY and symbol not in positions:
                     logger.info(f"🎯 SNIPE! {symbol} RSI: {rsi:.1f} (Iper-venduto)")
-                    # Esecuzione finta per ora, logga come live se Sergio conferma fondi
-                    logger.info(f"🛒 BUY {symbol} @ {price} (Fondi permettendo - Risk {RISK_EUR}€)")
-                    positions[symbol] = {'entry': price, 'qty': RISK_EUR / price}
+                    try:
+                        order = client.create_order(
+                            symbol=symbol,
+                            side='BUY',
+                            type='MARKET',
+                            quoteOrderQty=round(RISK_BTC, 6)
+                        )
+                        logger.info(f"🟢 LIVE SNIPE BUY: {symbol} @ {price} BTC")
+                        positions[symbol] = {'entry': price, 'qty': RISK_BTC / price}
+                    except Exception as e:
+                        logger.error(f"❌ FAILED SNIPE {symbol}: {e}")
 
                 # GESTIONE POSIZIONI ESISTENTI
                 if symbol in positions:
@@ -69,16 +75,24 @@ def main():
                     pnl = (price - entry) / entry
                     if pnl >= TARGET_REBOUND or pnl <= -STOP_LOSS:
                         reason = "TAKE PROFIT" if pnl >= TARGET_REBOUND else "STOP LOSS"
-                        logger.info(f"✅ {reason} {symbol} @ {price} | PnL: {pnl:.2%}")
-                        del positions[symbol]
+                        try:
+                            asset_name = symbol.replace('BTC', '')
+                            bal = float(client.get_asset_balance(asset=asset_name)['free'])
+                            client.create_order(symbol=symbol, side='SELL', type='MARKET', quantity=bal)
+                            logger.info(f"✅ {reason} {symbol} @ {price} | PnL: {pnl:.2%}")
+                            del positions[symbol]
+                            with open('/root/.openclaw/workspace/strike_alert.flag', 'w') as f:
+                                f.write(f"{(RISK_BTC * pnl * 59500):.2f}")
+                        except Exception as e:
+                            logger.error(f"❌ FAILED SNIPE SELL {symbol}: {e}")
             
             update_status({
                 "time": datetime.now().isoformat(),
                 "active_snipes": len(positions),
                 "targets": SNIPE_LIST,
-                "status": "Waiting for dip..."
+                "status": "LIVE SNIPING (BTC PAIRS)"
             })
-            time.sleep(30)
+            time.sleep(20)
         except Exception as e:
             logger.error(f"Sniper Loop Error: {e}")
             time.sleep(60)
