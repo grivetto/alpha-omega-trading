@@ -227,14 +227,15 @@ def main_loop():
                             status_msg = get_full_status(True)
                             try:
                                 total_val = float(status_msg.split("VALORE TOTALE: €")[1].split("*")[0])
-                                profit = total_val - 682.50
+                                # Baseline investimento totale calcolato oggi (22 Marzo - Capitale base + Iniezione BTC): €700.00
+                                profit = total_val - 700.00
                                 msg = "💵 *REPORT INCASSI TRADING* 💵\n"
                                 msg += "------------------------------------\n"
-                                msg += f"💰 *Capitale Investito:* €682.50\n"
+                                msg += f"💰 *Capitale Investito:* €700.00\n"
                                 msg += f"📊 *Valore Attuale:* €{total_val:.2f}\n"
                                 msg += "------------------------------------\n"
                                 msg += f"📈 *PROFITTO NETTO:* {profit:+.2f} €\n"
-                                msg += f"🎯 *Rendimento:* {(profit/682.50)*100:+.2f}%\n"
+                                msg += f"🎯 *Rendimento:* {(profit/700.00)*100:+.2f}%\n"
                                 send_telegram_message(token, incoming_id, msg)
                             except:
                                 send_telegram_message(token, incoming_id, "⚠️ Impossibile calcolare l'incasso al momento.")
