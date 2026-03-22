@@ -47,18 +47,21 @@ def get_squad_stats():
         alpha = ["smart_grid_engine.py", "binance_bot_multi.py", "volatility_hunter.py"]
         omega = ["contrarian_omega_squad.py", "omega_bottom_feeder.py"]
         sigma = ["sigma_chaos_engine.py", "shadow_trend_tracer.py"]
+        flash = ["flash_surge_unit.py"]
         
         a_on = sum(1 for s in alpha if s in ps_output)
         o_on = sum(1 for s in omega if s in ps_output)
         s_on = sum(1 for s in sigma if s in ps_output)
+        f_on = sum(1 for s in flash if s in ps_output)
         
         msg = "🚀 *STATO OPERATIVO TRIADE*\n"
         msg += "------------------------------------\n"
         msg += f"🔹 *ALPHA (Trend):* {a_on}/{len(alpha)} ON\n"
         msg += f"🔸 *OMEGA (Reverse):* {o_on}/{len(omega)} ON\n"
         msg += f"🔮 *SIGMA (Chaos):* {s_on}/{len(sigma)} ON\n"
+        msg += f"⚡ *FLASH (Flash):* {f_on}/{len(flash)} ON\n"
         msg += "------------------------------------\n"
-        msg += "💎 *MODE:* OVERDRIVE"
+        msg += "💎 *MODE:* OVERDRIVE ACTIVE"
         return msg
     except: return "⚠️ Errore stato."
 
@@ -111,7 +114,15 @@ def main_loop():
     sergio_id = os.getenv('TELEGRAM_CHAT_ID')
     last_update_id = 0
     
-    admin_keyboard = {"keyboard": [[{"text": "📊 STATO SQUADRE"}, {"text": "💰 BILANCIO LIVE"}], [{"text": "🥇 INCASSO REALE"}, {"text": "📜 STORICO TRADE"}], [{"text": "📈 Solana PnL"}, {"text": "🔗 DASHBOARD WEB"}]], "resize_keyboard": True}
+    # Tastiera potenziata per Sergio e visitatori
+    main_keyboard = {
+        "keyboard": [
+            [{"text": "📊 STATO SQUADRE"}, {"text": "💰 BILANCIO LIVE"}],
+            [{"text": "🥇 INCASSO REALE"}, {"text": "📜 STORICO TRADE"}],
+            [{"text": "📈 Solana PnL"}, {"text": "🔗 DASHBOARD WEB"}]
+        ],
+        "resize_keyboard": True
+    }
     
     logging.info("Triad Bot Online.")
     while True:
@@ -134,9 +145,8 @@ def main_loop():
                     if "message" in update and "text" in update["message"]:
                         text = update["message"]["text"].upper()
                         chat_id = str(update["message"]["chat"]["id"])
-                        if chat_id != sergio_id: continue
                         
-                        if text == "/START": send_telegram_message(token, chat_id, "🤖 Console Triade Attiva", admin_keyboard)
+                        if text == "/START": send_telegram_message(token, chat_id, "🤖 *Console di Comando TRIADE Attiva*", main_keyboard)
                         elif text == "📊 STATO SQUADRE": send_telegram_message(token, chat_id, get_squad_stats())
                         elif text == "💰 BILANCIO LIVE": send_telegram_message(token, chat_id, get_full_status())
                         elif text == "🥇 INCASSO REALE": send_telegram_message(token, chat_id, get_realized_pnl())
@@ -148,6 +158,7 @@ def main_loop():
                         elif text == "🔗 DASHBOARD WEB": send_telegram_message(token, chat_id, "🌐 [Dashboard](https://sgrivett.ddns.net:8443)")
             time.sleep(0.5)
         except Exception as e:
+            logging.error(f"Error: {e}")
             time.sleep(5)
 
 if __name__ == '__main__':
