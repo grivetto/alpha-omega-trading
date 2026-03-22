@@ -7,51 +7,63 @@ from dotenv import load_dotenv
 load_dotenv()
 client = Client(os.getenv('BINANCE_API_KEY'), os.getenv('BINANCE_API_SECRET'))
 
-# CONFIGURAZIONE SURGICAL SCALPER (ULTRA-FREQUENTE)
-# Obiettivo: Entra ed esce in 2 minuti per micro-profitti
-SYMBOLS = ["AVAXBTC", "ETHBTC", "SOLBTC", "LINKBTC", "ADABTC", "DOGEBTC"]
-RISK_BTC = 0.0015 # ~90€ per operazione
+# CONFIGURAZIONE SURGICAL SCALPER v1.1 - ULTRA AGGRESSIVE
+SYMBOLS = ["SOLBTC", "ETHBTC", "AVAXBTC", "LINKBTC", "ADABTC", "DOGEBTC"]
+RISK_BTC = 0.003 # ~180€ per operazione per sentire il profitto
 
 def main():
-    print("🚀 SURGICAL SCALPER v1.0 - CASH-OUT PRIORITIZED")
+    print("🚀 SURGICAL SCALPER v1.1 - ULTRA-FAST ACTIVATED")
     while True:
         try:
             btc_bal = float(client.get_asset_balance(asset='BTC')['free'])
             for s in SYMBOLS:
-                if btc_bal < RISK_BTC: break # Fine benzina
+                if btc_bal < RISK_BTC: break # Liquido finito
                 
-                klines = client.get_klines(symbol=s, interval='1m', limit=5)
-                df = pd.DataFrame(klines, columns=['ts', 'o', 'h', 'l', 'c', 'v', 'ct', 'qv', 'nt', 'tb', 'tq', 'i'])
-                df['c'] = pd.to_numeric(df['c'])
+                # Prendi dati 1 minuto
+                klines = client.get_klines(symbol=s, interval='1m', limit=3)
+                if len(klines) < 3: continue
                 
-                price = df['c'].iloc[-1]
-                prev_price = df['c'].iloc[-2]
+                c2 = float(klines[-1][4]) # Chiusura attuale
+                c1 = float(klines[-2][4]) # Chiusura precedente
                 
-                # Segnale d'attacco: 2 candele verdi consecutive sul minuto
-                if price > prev_price and df['c'].iloc[-2] > df['c'].iloc[-3]:
-                    print(f"🎯 ATTACCO CHIRURGICO su {s}")
+                # SEGNALE FLASH: Appena la candela da 1m è verde, entra.
+                if c2 > c1:
+                    print(f"🎯 ATTACCO FLASH su {s}")
                     try:
                         order = client.create_order(symbol=s, side='BUY', type='MARKET', quoteOrderQty=round(RISK_BTC, 6))
                         qty = float(order['executedQty'])
-                        entry = price
+                        entry = float(order['fills'][0]['price']) if order['fills'] else c2
                         
-                        # Monitoraggio ossessivo per uscita a +0.25%
-                        target = entry * 1.0025
+                        # TARGET DI USCITA RIDICOLO: 0.15% (Vogliamo lo strike veloce!)
+                        target = entry * 1.0015
+                        print(f"🛒 In attesa target {target:.8f}...")
+                        
                         start_wait = time.time()
-                        
-                        while time.time() - start_wait < 300: # Timeout 5 minuti
+                        while time.time() - start_wait < 120: # Timeout 2 minuti per non restare incastrati
                             now = float(client.get_symbol_ticker(symbol=s)['price'])
                             if now >= target:
                                 client.create_order(symbol=s, side='SELL', type='MARKET', quantity=qty)
-                                print(f"✅ INCASSATO {s} (+0.25%)")
+                                profit_eur = (RISK_BTC * 0.0015 * 59000)
+                                print(f"✅ INCASSATO {s} (+0.15%) -> €{profit_eur:.2f}")
                                 with open('/root/.openclaw/workspace/strike_alert.flag', 'w') as f:
-                                    f.write(f"VENDUTA {s.replace('BTC','')} (+0.25%)")
+                                    f.write(f"{profit_eur:.2f}")
                                 break
-                            time.sleep(2)
-                    except: pass
+                            time.sleep(1)
+                        
+                        # Se dopo 2 minuti non ha venduto, esci comunque in pari o leggero loss per riprovare
+                        if s in client.get_asset_balance(asset=s.replace('BTC',''))['free']:
+                            # Controllo se ho ancora la posizione
+                            bal_now = float(client.get_asset_balance(asset=s.replace('BTC',''))['free'])
+                            if bal_now >= qty:
+                                client.create_order(symbol=s, side='SELL', type='MARKET', quantity=qty)
+                                print(f"⏱️ TIMEOUT {s} - Posizione chiusa forzatamente.")
+                    except Exception as e:
+                        print(f"❌ Error in trade {s}: {e}")
             
+            time.sleep(5)
+        except Exception as e:
+            print(f"Main Loop Error: {e}")
             time.sleep(10)
-        except: time.sleep(30)
 
 if __name__ == "__main__":
     main()
