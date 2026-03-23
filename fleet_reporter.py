@@ -33,8 +33,8 @@ BOTS = {
     "CASH-OUT": "rapid_cash_out.py",
     "BTC-SNIPER": "btc_volatility_sniper.py",
     "ALPHA-WAVE": "sergio_wave_rider.py",
-    "SYS-AUTOMA": "triad_sentinel_automa.py"
-,    "BTC-ARB": "btc_arbitrage_simple.py",
+    "SYS-AUTOMA": "triad_sentinel_automa.py",
+    "BTC-ARB": "btc_arbitrage_simple.py",
     "ETH-MM": "eth_market_maker.py",
     "BNB-REVERSION": "bnb_mean_reversion.py",
     "SOL-MOMENTUM": "sol_momentum_hunter.py",
