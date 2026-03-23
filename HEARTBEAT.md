@@ -9,7 +9,3 @@
 - Report serale "buona notte" (23:00).
 - Review settimanale performance (Domenica sera).
 
-# Strategia di Espansione Proattiva (Sergio) 📈
-- Ogni 15 min: Se profitto < 5€, crea nuovo bot complementare.
-- Aggiorna Git, Fleet Guardian e Dashboard per ogni nuovo bot.
-- Notifica Sergio su Telegram ad ogni espansione.
