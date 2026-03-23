@@ -43,6 +43,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         elif self.path == '/cryptocom_status.json' or self.path.startswith('/cryptocom_status.json?'):
             self.send_json_file(CRYPTOCOM_STATUS_FILE)
             return
+        elif self.path == '/fleet_stats.json' or self.path.startswith('/fleet_stats.json?'):
+            self.send_json_file(os.path.join(DASHBOARD_DIR, 'fleet_stats.json'))
+            return
         return super().do_GET()
     
     def send_json_file(self, filepath):

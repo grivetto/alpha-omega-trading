@@ -37,4 +37,18 @@ Skills are shared. Your setup is yours. Keeping them apart means you can update 
 
 ---
 
-Add whatever helps you do your job. This is your cheat sheet.
+## Binance Accounts
+
+### main
+- API Key: KD7rh...G7P3bVRnunfdQ2CUGDHXS4
+- Secret: ***...i2z5
+- Testnet: false
+- Description: Primary trading account
+
+## Crypto.com Accounts
+
+### main
+- API Key: VPnkH...NDD
+- Secret: ***...ypf
+- Exchange: true
+

@@ -1,47 +1,105 @@
 import os
 import json
 import time
-import logging
+import subprocess
 from datetime import datetime
 
-# Aggregatore di log per la Dashboard Web
-# Scopo: analizzare i file .log di tutti i bot e creare un file JSON cronologico delle azioni
+STATUS_PATH = "/root/.openclaw/workspace/dashboard/fleet_stats.json"
+WORKSPACE = "/root/.openclaw/workspace"
 
-LOG_FILES = {
-    "Binance SOL": "sol_scalper.log",
-    "Crypto SOL": "cryptocom_scalper.log",
-    "BTC Grid": "smart_grid.log",
-    "Whale": "whale_monitor.log",
-    "Sentinel": "sentinel_trend.log",
-    "Commander": "neural_commander.log"
+# Elenco bot da monitorare (Nome -> Script)
+BOTS = {
+    "FLASH-UNIT": "flash_surge_unit.py",
+    "LIQUID-HARV": "liquidity_harvester.py",
+    "NEURAL-PLS": "neural_pulse_v2.py",
+    "CENTURION-REV": "centurion_reversion_squad.py",
+    "LIQUIDATOR": "liquidator_prime.py",
+    "OSCILLATOR": "oscillator_counter_unit.py",
+    "FORCED-PROFIT": "forced_profit_unit.py",
+    "GRID-ENGINE": "smart_grid_engine.py",
+    "MULTI-BOT": "binance_bot_multi.py",
+    "VOL-HUNTER": "volatility_hunter.py",
+    "REB-SNIPER": "rebound_sniper.py",
+    "SHADOW-TR": "shadow_trend_tracer.py",
+    "GHOST-RID": "ghost_rider_swing.py",
+    "OMEGA-REV": "contrarian_omega_squad.py",
+    "OMEGA-FEED": "omega_bottom_feeder.py",
+    "SIGMA-CHAOS": "sigma_chaos_engine.py",
+    "ARCHITECT": "architect_ai.py",
+    "EVOLUTION": "evolution_engine.py",
+    "WAR-MACHINE": "war_machine.py",
+    "OMEGA-WAR": "omega_war_machine.py",
+    "BAIT-TRAP": "bait_and_trap_engine.py",
+    "CASH-OUT": "rapid_cash_out.py",
+    "BTC-SNIPER": "btc_volatility_sniper.py",
+    "ALPHA-WAVE": "sergio_wave_rider.py",
+    "SYS-AUTOMA": "triad_sentinel_automa.py"
+,    "BTC-ARB": "btc_arbitrage_simple.py",
+    "ETH-MM": "eth_market_maker.py",
+    "BNB-REVERSION": "bnb_mean_reversion.py",
+    "SOL-MOMENTUM": "sol_momentum_hunter.py",
+    "WHALE-TRACK": "whale_order_tracker.py",
+    "SENTIMENT": "sentiment_analyzer_bot.py",
+    "REBALANCER": "multi_coin_rebalancer.py",
+    "FLASH-BUYER": "flash_crash_buyer.py",
+    "BREAKOUT": "breakout_volatility_unit.py",
+    "GAS-TRADER": "eth_gas_price_trader.py"
 }
 
-def build_fleet_report():
-    report = []
-    for bot_name, filename in LOG_FILES.items():
-        if os.path.exists(filename):
-            try:
-                with open(filename, 'r') as f:
-                    # Prendi le ultime 5 righe significative
-                    lines = f.readlines()
-                    for line in lines[-10:]:
-                        if " - INFO - " in line:
-                            parts = line.split(" - INFO - ")
-                            report.append({
-                                "time": parts[0].split(",")[0],
-                                "bot": bot_name,
-                                "action": parts[1].strip()
-                            })
-            except:
-                continue
-    
-    # Ordina per tempo decrescente
-    report.sort(key=lambda x: x['time'], reverse=True)
-    
-    with open('/root/.openclaw/workspace/dashboard/fleet_activity.json', 'w') as f:
-        json.dump(report[:30], f, indent=2)
+def get_process_status():
+    status = {,    "BTC-ARB": "btc_arbitrage_simple.py",
+    "ETH-MM": "eth_market_maker.py",
+    "BNB-REVERSION": "bnb_mean_reversion.py",
+    "SOL-MOMENTUM": "sol_momentum_hunter.py",
+    "WHALE-TRACK": "whale_order_tracker.py",
+    "SENTIMENT": "sentiment_analyzer_bot.py",
+    "REBALANCER": "multi_coin_rebalancer.py",
+    "FLASH-BUYER": "flash_crash_buyer.py",
+    "BREAKOUT": "breakout_volatility_unit.py",
+    "GAS-TRADER": "eth_gas_price_trader.py"
+}
+    try:
+        ps_output = subprocess.check_output(["ps", "aux"]).decode()
+        for name, script in BOTS.items():
+            is_on = script in ps_output
+            status[name] = {
+                "status": "ONLINE" if is_on else "OFFLINE",
+                "script": script,
+                "last_seen": datetime.now().strftime("%H:%M:%S") if is_on else "N/A"
+            ,    "BTC-ARB": "btc_arbitrage_simple.py",
+    "ETH-MM": "eth_market_maker.py",
+    "BNB-REVERSION": "bnb_mean_reversion.py",
+    "SOL-MOMENTUM": "sol_momentum_hunter.py",
+    "WHALE-TRACK": "whale_order_tracker.py",
+    "SENTIMENT": "sentiment_analyzer_bot.py",
+    "REBALANCER": "multi_coin_rebalancer.py",
+    "FLASH-BUYER": "flash_crash_buyer.py",
+    "BREAKOUT": "breakout_volatility_unit.py",
+    "GAS-TRADER": "eth_gas_price_trader.py"
+}
+    except Exception as e:
+        status["error"] = str(e)
+    return status
+
+def main():
+    while True:
+        data = {
+            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "fleet": get_process_status()
+        ,    "BTC-ARB": "btc_arbitrage_simple.py",
+    "ETH-MM": "eth_market_maker.py",
+    "BNB-REVERSION": "bnb_mean_reversion.py",
+    "SOL-MOMENTUM": "sol_momentum_hunter.py",
+    "WHALE-TRACK": "whale_order_tracker.py",
+    "SENTIMENT": "sentiment_analyzer_bot.py",
+    "REBALANCER": "multi_coin_rebalancer.py",
+    "FLASH-BUYER": "flash_crash_buyer.py",
+    "BREAKOUT": "breakout_volatility_unit.py",
+    "GAS-TRADER": "eth_gas_price_trader.py"
+}
+        with open(STATUS_PATH, "w") as f:
+            json.dump(data, f, indent=2)
+        time.sleep(15)
 
 if __name__ == "__main__":
-    while True:
-        build_fleet_report()
-        time.sleep(30)
+    main()

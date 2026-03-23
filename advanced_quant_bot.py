@@ -22,7 +22,7 @@ TIMEFRAME = Client.KLINE_INTERVAL_1MINUTE  # ULTRA-FAST 1 MINUTE
 RSI_PERIOD = 7
 RSI_BUY = 35
 RSI_SELL = 65
-POSITION_SIZE_EUR = 100.0  # Alzato a 100€ per colpo pesante
+POSITION_SIZE_EUR = 30.0  # Alzata dopo ricarica di emergenza (abbiamo ~64€ liberi)
 
 logging.basicConfig(
     level=logging.INFO,
@@ -53,7 +53,7 @@ def main():
         try:
             for symbol in SYMBOLS:
                 df = get_data(client, symbol)
-                if df is None: continue
+                if df is None or len(df) < RSI_PERIOD: continue
                 
                 df['rsi'] = ta.rsi(df['c'], length=RSI_PERIOD)
                 rsi = df['rsi'].iloc[-1]
