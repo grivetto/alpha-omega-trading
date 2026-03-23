@@ -1,3 +1,4 @@
+import gc
 import os
 import ccxt
 from dotenv import load_dotenv
@@ -30,7 +31,8 @@ try:
             else:
                 print(f"Market {symbol} not found")
                 
-    time.sleep(2)
+    gc.collect()
+            time.sleep(2)
     balance_after = exchange.fetch_balance()
     free_balances_after = {k: v for k, v in balance_after['free'].items() if v > 0}
     print("Free balances after:", free_balances_after)

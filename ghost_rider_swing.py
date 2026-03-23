@@ -1,3 +1,4 @@
+import gc
 import os
 import time
 import json
@@ -46,9 +47,11 @@ def main():
                             logger.info(f"🟢 GHOST BUY: {symbol} (Ride the trend)")
                         except Exception as e: logger.error(f"❌ GHOST FAILED BUY: {e}")
             
+            gc.collect()
             time.sleep(300) # Check ogni 5 minuti
         except Exception as e:
             logger.error(f"Ghost Loop Error: {e}")
+            gc.collect()
             time.sleep(60)
 
 if __name__ == "__main__":

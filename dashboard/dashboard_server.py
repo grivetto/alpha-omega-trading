@@ -46,6 +46,11 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         elif self.path == '/fleet_stats.json' or self.path.startswith('/fleet_stats.json?'):
             self.send_json_file(os.path.join(DASHBOARD_DIR, 'fleet_stats.json'))
             return
+        elif self.path == '/trades_6h.json' or self.path.startswith('/trades_6h.json?'):
+            self.send_json_file(os.path.join(DASHBOARD_DIR, 'trades_6h.json'))
+            return
+        elif self.path == '/trades' or self.path == '/trades.html':
+            self.path = '/trades.html'
         return super().do_GET()
     
     def send_json_file(self, filepath):

@@ -1,3 +1,4 @@
+import gc
 #!/usr/bin/env python3
 import os
 import time
@@ -112,9 +113,11 @@ def main():
                                 f.write(f"{(state.position_quantity * price * pnl * 1.0):.2f}")
                         except Exception as e: logger.error(f"❌ SELL ERROR {symbol}: {e}")
             
+            gc.collect()
             time.sleep(SLEEP_TIME)
         except Exception as e:
             logger.error(f"Loop Error: {e}")
+            gc.collect()
             time.sleep(30)
 
 if __name__ == "__main__":

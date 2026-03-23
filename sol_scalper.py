@@ -1,3 +1,4 @@
+import gc
 import os
 import time
 import json
@@ -65,18 +66,22 @@ def main():
                     client.create_order(symbol=SYMBOL, side=SIDE_SELL, type=ORDER_TYPE_MARKET, quantity=QUANTITY)
                     logger.info(f"🔴 SELL {QUANTITY} SOL @ {current_price} | PROFIT: {pnl_pct:.2%}")
                     in_position = False
-                    time.sleep(300) # Pausa dopo profitto
+                    gc.collect()
+            time.sleep(300) # Pausa dopo profitto
                 
                 elif pnl_pct <= -STOP_LOSS_PCT:
                     client.create_order(symbol=SYMBOL, side=SIDE_SELL, type=ORDER_TYPE_MARKET, quantity=QUANTITY)
                     logger.info(f"💀 STOP LOSS @ {current_price} | LOSS: {pnl_pct:.2%}")
                     in_position = False
-                    time.sleep(600) # Pausa dopo loss
+                    gc.collect()
+            time.sleep(600) # Pausa dopo loss
             
+            gc.collect()
             time.sleep(10)
             
         except Exception as e:
             logger.error(f"Errore: {e}")
+            gc.collect()
             time.sleep(30)
 
 if __name__ == "__main__":

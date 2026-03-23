@@ -1,3 +1,4 @@
+import gc
 #!/usr/bin/env python3
 """Scraper resiliente per centri estetici / cura persona a Torino."""
 import re, json, time, random, sys
@@ -104,7 +105,8 @@ def fetch_with_playwright(url: str, timeout_ms=30000) -> tuple:
             browser.close()
 
 def polite_sleep():
-    time.sleep(random.uniform(0.8, 2.0))
+    gc.collect()
+            time.sleep(random.uniform(0.8, 2.0))
 
 def fetch_url(url: str) -> dict:
     polite_sleep()

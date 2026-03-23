@@ -1,3 +1,4 @@
+import gc
 import os
 import time
 import pandas as pd
@@ -57,8 +58,10 @@ def main():
                             del active_hunts[s]
                         except: pass
             
+            gc.collect()
             time.sleep(5)
-        except: time.sleep(10)
+        except: gc.collect()
+            time.sleep(10)
 
 if __name__ == "__main__":
     main()

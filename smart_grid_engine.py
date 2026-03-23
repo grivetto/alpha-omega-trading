@@ -1,3 +1,4 @@
+import gc
 import os
 import time
 import json
@@ -68,9 +69,11 @@ def main():
                 else:
                     logger.info(f"🎯 Threshold reached (+{profit_today:.2f}€) but cooldown is active.")
             
+            gc.collect()
             time.sleep(30)
         except Exception as e:
             logger.error(f"Errore: {e}")
+            gc.collect()
             time.sleep(60)
 
 if __name__ == "__main__":

@@ -1,3 +1,4 @@
+import gc
 import os
 import json
 import time
@@ -97,9 +98,11 @@ def main():
                 json.dump(payload, f, indent=2)
             
             logger.info(f"Matrix Status Synced. Portfolio: {vitals['total_val'] if vitals else '??'} EUR")
+            gc.collect()
             time.sleep(5)
         except Exception as e:
             logger.error(f"Automa Error: {e}")
+            gc.collect()
             time.sleep(10)
 
 if __name__ == "__main__":

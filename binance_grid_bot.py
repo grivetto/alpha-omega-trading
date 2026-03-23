@@ -1,3 +1,4 @@
+import gc
 #!/usr/bin/env python3
 """
 Binance Spot Grid Trading Bot
@@ -490,14 +491,16 @@ class GridTradingBot:
                             f"SOL: {btc:.6f} | EUR: {usdt:,.2f}"
                         )
                 
-                time.sleep(15)  # Check ogni 15 secondi
+                gc.collect()
+            time.sleep(15)  # Check ogni 15 secondi
                 
             except KeyboardInterrupt:
                 logger.info("\n🛑 Bot fermato dall'utente")
                 break
             except Exception as e:
                 logger.error(f"Errore: {e}")
-                time.sleep(30)
+                gc.collect()
+            time.sleep(30)
         
         self.update_status()
         logger.info("👋 Bot terminated")

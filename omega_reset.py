@@ -1,3 +1,4 @@
+import gc
 import os
 import time
 from binance.client import Client

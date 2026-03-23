@@ -1,3 +1,4 @@
+import gc
 import os
 import hmac
 import hashlib
@@ -53,15 +54,19 @@ def main():
                 logger.info(f"🎯 TARGET RAGGIUNTO! PnL: {pnl_pct:.2%}. Prezzo: {current_price}")
                 # Qui andrebbe l'ordine di vendita, ma iniziamo con il monitoraggio
                 # dato che Sergio ha appena spostato i fondi.
-                time.sleep(300)
+                gc.collect()
+            time.sleep(300)
             
             elif pnl_pct <= -stop_loss:
                 logger.info(f"⚠️ STOP LOSS! PnL: {pnl_pct:.2%}. Prezzo: {current_price}")
-                time.sleep(600)
+                gc.collect()
+            time.sleep(600)
                 
+            gc.collect()
             time.sleep(15)
         except Exception as e:
             logger.error(f"Errore: {e}")
+            gc.collect()
             time.sleep(30)
 
 if __name__ == "__main__":

@@ -1,3 +1,4 @@
+import gc
 import qrcode
 from PIL import Image
 import smtplib

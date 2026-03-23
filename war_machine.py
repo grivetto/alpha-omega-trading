@@ -1,3 +1,4 @@
+import gc
 import os
 import time
 import json
@@ -83,9 +84,11 @@ def main():
                         logger.info(f"🚀 STRIKE BUY {symbol} @ {positions[symbol]['price']} EUR")
                     except Exception as e: logger.error(f"❌ BUY ERR {symbol}: {e}")
 
+            gc.collect()
             time.sleep(SLEEP_TIME)
         except Exception as e:
             logger.error(f"War Loop Error: {e}")
+            gc.collect()
             time.sleep(10)
 
 if __name__ == "__main__":

@@ -1,5 +1,6 @@
-prices = {'ETH': 1868.26, 'BNB': 557.32, 'ADA': 0.2261, 'DOGE': 0.0809, 'SOL': 78.27, 'DOT': 1.271, 'AVAX': 8.23, 'BTC': 61299.59}
-balances = {'BTC': 0.00081649, 'ETH': 4.01e-05, 'BNB': 0.44100934, 'ADA': 0.8, 'DOGE': 464.508, 'EUR': 74.8187, 'SOL': 2.60819, 'DOT': 38.32, 'AVAX': 0.00246}
+import gc
+prices = {'ETH': 1868.22, 'BNB': 553.8, 'ADA': 0.2279, 'DOGE': 0.08184, 'SOL': 78.66, 'DOT': 1.253, 'AVAX': 8.27, 'BTC': 61165.15}
+balances = {'BTC': 0.00026304, 'ETH': 0.0183401, 'BNB': 0.47040181, 'ADA': 0.8, 'DOGE': 464.508, 'EUR': 41.9486, 'SOL': 2.80819, 'DOT': 38.32, 'AVAX': 0.00246}
 total = balances['EUR']
 for a, b in balances.items():
     if a in prices: total += b * prices[a]

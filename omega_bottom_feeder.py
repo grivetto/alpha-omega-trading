@@ -1,3 +1,4 @@
+import gc
 import os
 import time
 import json
@@ -41,9 +42,11 @@ def main():
                     logger.info(f"🦈 [OMEGA] {symbol} in forte svalutazione (-{drawdown:.1%}). Inizio Buy for long term recovery.")
                     # Logica buy spot reale omessa per brevità ma pronta
             
+            gc.collect()
             time.sleep(600)
         except Exception as e:
             logger.error(f"Feeder Error: {e}")
+            gc.collect()
             time.sleep(60)
 
 if __name__ == "__main__":

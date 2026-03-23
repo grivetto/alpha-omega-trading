@@ -1,3 +1,4 @@
+import gc
 import os
 import time
 import json
@@ -92,9 +93,11 @@ def main():
                 "targets": SNIPE_LIST,
                 "status": "LIVE SNIPING (BTC PAIRS)"
             })
+            gc.collect()
             time.sleep(20)
         except Exception as e:
             logger.error(f"Sniper Loop Error: {e}")
+            gc.collect()
             time.sleep(60)
 
 if __name__ == "__main__":

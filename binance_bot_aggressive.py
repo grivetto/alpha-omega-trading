@@ -16,6 +16,7 @@ from binance.exceptions import BinanceAPIException, BinanceOrderException
 from dotenv import load_dotenv
 from datetime import datetime
 import sys
+import gc
 
 # --- CONFIGURAZIONE AGGRESSIVA ---
 load_dotenv()
@@ -386,12 +387,14 @@ def main():
         try:
             df = get_data(SYMBOL, INTERVAL, 100)
             if df is None:
+                gc.collect()
                 time.sleep(SLEEP_TIME)
                 continue
             
             df = calc_indicators(df)
             price = get_price(SYMBOL)
             if price is None:
+                gc.collect()
                 time.sleep(SLEEP_TIME)
                 continue
             
@@ -447,6 +450,7 @@ def main():
             update_dashboard(df, price, signal)
             
             time.sleep(SLEEP_TIME)
+            gc.collect()
             
         except KeyboardInterrupt:
             logger.info("🛑 Fermato")

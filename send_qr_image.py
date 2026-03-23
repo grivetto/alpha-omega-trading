@@ -1,3 +1,4 @@
+import gc
 import json
 import qrcode
 import smtplib

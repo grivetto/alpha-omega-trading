@@ -1,3 +1,4 @@
+import gc
 import os
 import json
 import time
@@ -94,9 +95,11 @@ def main():
                 json.dump(report, f, indent=2)
             
             logger.info(f"Full Fleet Monitor Synced. Online: {sum(1 for b in status if b['status'] == 'ONLINE')}/{len(status)}")
+            gc.collect()
             time.sleep(5)
         except Exception as e:
             logger.error(f"Monitor Error: {e}")
+            gc.collect()
             time.sleep(10)
 
 if __name__ == "__main__":

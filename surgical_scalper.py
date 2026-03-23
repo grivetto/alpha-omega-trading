@@ -1,3 +1,4 @@
+import gc
 import os
 import time
 import pandas as pd
@@ -48,7 +49,8 @@ def main():
                                 with open('/root/.openclaw/workspace/strike_alert.flag', 'w') as f:
                                     f.write(f"{profit_eur:.2f}")
                                 break
-                            time.sleep(1)
+                            gc.collect()
+            time.sleep(1)
                         
                         # Se dopo 2 minuti non ha venduto, esci comunque in pari o leggero loss per riprovare
                         if s in client.get_asset_balance(asset=s.replace('BTC',''))['free']:
@@ -60,9 +62,11 @@ def main():
                     except Exception as e:
                         print(f"❌ Error in trade {s}: {e}")
             
+            gc.collect()
             time.sleep(5)
         except Exception as e:
             print(f"Main Loop Error: {e}")
+            gc.collect()
             time.sleep(10)
 
 if __name__ == "__main__":

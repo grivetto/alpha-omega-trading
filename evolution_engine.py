@@ -1,3 +1,4 @@
+import gc
 import os
 import time
 import json
@@ -59,10 +60,12 @@ class EvolutionEngine:
                 self.learn_from_history()
                 self.spawn_new_concept()
                 self.save_dna()
-                time.sleep(3600) # Una mutazione ogni ora
+                gc.collect()
+            time.sleep(3600) # Una mutazione ogni ora
             except Exception as e:
                 logger.error(f"Evolution Error: {e}")
-                time.sleep(300)
+                gc.collect()
+            time.sleep(300)
 
 if __name__ == "__main__":
     if not os.path.exists(STRATEGY_DIR): os.makedirs(STRATEGY_DIR)

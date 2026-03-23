@@ -1,3 +1,4 @@
+import gc
 import os, time, logging
 from binance.client import Client
 from dotenv import load_dotenv
@@ -19,10 +20,12 @@ def run_scalping():
                 price = float(ticker['price'])
                 logging.info(f"Monitoring {symbol} at {price}. High-speed analysis active.")
                 # Esecuzione ordini market simulata per la struttura
-                time.sleep(1)
+                gc.collect()
+            time.sleep(1)
             except Exception as e:
                 logging.error(f"Error: {e}")
-        time.sleep(10)
+        gc.collect()
+            time.sleep(10)
 
 if __name__ == "__main__":
     run_scalping()

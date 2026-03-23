@@ -1,3 +1,4 @@
+import gc
 import os
 import time
 import json
@@ -66,10 +67,12 @@ class OmegaWarMachine:
                                 del self.active_positions[s]
                             except: pass
                 
-                time.sleep(30)
+                gc.collect()
+            time.sleep(30)
             except Exception as e:
                 logger.error(f"Omega Main Error: {e}")
-                time.sleep(60)
+                gc.collect()
+            time.sleep(60)
 
 if __name__ == "__main__":
     machine = OmegaWarMachine()

@@ -1,3 +1,4 @@
+import gc
 import os
 import time
 import json
@@ -41,7 +42,8 @@ def main():
                 
                 # 3. ATTENDI IL REACTION SPIKE (30-60 secondi)
                 # Scommettiamo che altri bot algoritmici vedano il nostro BUY e spingano il prezzo
-                time.sleep(random.randint(30, 60))
+                gc.collect()
+            time.sleep(random.randint(30, 60))
                 
                 # 4. CHIUDI LA TRAPPOLA
                 logger.info(f"🧨 Chiudo la trappola su {target}...")
@@ -51,10 +53,12 @@ def main():
                 logger.error(f"❌ Errore esca: {e}")
             
             # Attendi tra una provocazione e l'altra
+            gc.collect()
             time.sleep(random.randint(300, 900)) 
             
         except Exception as e:
             logger.error(f"Bait Loop Error: {e}")
+            gc.collect()
             time.sleep(60)
 
 if __name__ == "__main__":

@@ -1,3 +1,4 @@
+import gc
 import os
 import time
 import json
@@ -86,10 +87,12 @@ class FleetArchitect:
                         "status": "Scanning Architecture..."
                     }, f)
                 
-                time.sleep(60) # Ciclo di analisi ogni minuto
+                gc.collect()
+            time.sleep(60) # Ciclo di analisi ogni minuto
             except Exception as e:
                 logger.error(f"Architect Loop Error: {e}")
-                time.sleep(60)
+                gc.collect()
+            time.sleep(60)
 
 if __name__ == "__main__":
     architect = FleetArchitect()

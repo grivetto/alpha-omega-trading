@@ -1,3 +1,4 @@
+import gc
 import os
 import time
 import json
@@ -35,10 +36,12 @@ class AttackSquad:
                 price = float(ticker['price'])
                 # Logica di monitoraggio e attacco coordinato
                 # Qui il bot agisce in parallelo agli altri
-                time.sleep(30)
+                gc.collect()
+            time.sleep(30)
             except Exception as e:
                 logger.error(f"Errore Squadra {self.name}: {e}")
-                time.sleep(60)
+                gc.collect()
+            time.sleep(60)
 
 if __name__ == "__main__":
     # Questo script gestirà la sincronizzazione delle squadre

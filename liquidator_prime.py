@@ -1,3 +1,4 @@
+import gc
 import os
 import time
 import pandas as pd
@@ -47,9 +48,11 @@ def main():
                     except Exception as e:
                         print(f"❌ ERRORE SELL {symbol}: {e}")
             
+            gc.collect()
             time.sleep(5) # Ciclo velocissimo
         except Exception as e:
             print(f"Loop Error: {e}")
+            gc.collect()
             time.sleep(10)
 
 if __name__ == "__main__":

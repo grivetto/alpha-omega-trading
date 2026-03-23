@@ -1,3 +1,4 @@
+import gc
 import os
 import time
 import json
@@ -84,9 +85,11 @@ def main():
                                 f.write(f"{(RISK_BTC * pnl * 1.0):.2f}")
                         except Exception as e: logger.error(f"❌ SHADOW FAILED SELL {symbol}: {e}")
             
+            gc.collect()
             time.sleep(30)
         except Exception as e:
             logger.error(f"Shadow Loop Error: {e}")
+            gc.collect()
             time.sleep(60)
 
 if __name__ == "__main__":

@@ -1,3 +1,4 @@
+import gc
 import sys
 
 def ascii_to_binary(filename):

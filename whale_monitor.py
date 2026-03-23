@@ -1,3 +1,4 @@
+import gc
 import os
 import time
 import requests
@@ -51,9 +52,11 @@ def main():
                         }
                         f.write(json.dumps(event) + "\n")
             
+            gc.collect()
             time.sleep(30)
         except Exception as e:
             logger.error(f"Errore monitoraggio: {e}")
+            gc.collect()
             time.sleep(60)
 
 if __name__ == "__main__":

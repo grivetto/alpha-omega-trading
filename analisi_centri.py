@@ -1,3 +1,4 @@
+import gc
 #!/usr/bin/env python3
 """Estrai nomi centri estetici / cura persona dalle pagine Treatwell e dai siti singoli."""
 import json, csv, re

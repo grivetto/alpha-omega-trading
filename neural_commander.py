@@ -1,3 +1,4 @@
+import gc
 import os
 import time
 import json
@@ -79,10 +80,12 @@ class NeuralCommander:
                 with open('/root/.openclaw/workspace/dashboard/commander_data.json', 'w') as f:
                     json.dump(status, f)
                 
-                time.sleep(300) # Ogni 5 minuti rivaluta la strategia
+                gc.collect()
+            time.sleep(300) # Ogni 5 minuti rivaluta la strategia
             except Exception as e:
                 logger.error(f"Errore Commander: {e}")
-                time.sleep(60)
+                gc.collect()
+            time.sleep(60)
 
 if __name__ == "__main__":
     commander = NeuralCommander()

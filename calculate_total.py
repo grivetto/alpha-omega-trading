@@ -1,3 +1,4 @@
+import gc
 prices = {
     'ETH': 1871.46,
     'BNB': 557.81,

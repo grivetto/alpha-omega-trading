@@ -1,3 +1,4 @@
+import gc
 import os
 from dotenv import load_dotenv
 import time, hmac, hashlib, requests, json

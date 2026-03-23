@@ -1,3 +1,4 @@
+import gc
 import os
 import time
 import json
@@ -68,8 +69,10 @@ def main():
                                 f.write(f"{(RISK_BTC * pnl * 1.0):.2f}")
                         except: pass
             
+            gc.collect()
             time.sleep(10)
         except Exception as e:
+            gc.collect()
             time.sleep(30)
 
 if __name__ == "__main__":

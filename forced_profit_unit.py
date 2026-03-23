@@ -1,3 +1,4 @@
+import gc
 import os
 import time
 import pandas as pd
@@ -39,10 +40,13 @@ def main():
                                 print(f"✅ INCASSATO: {s}")
                                 with open('/root/.openclaw/workspace/strike_alert.flag', 'w') as f: f.write("PROFITTO REALE")
                                 break
-                            time.sleep(2)
+                            gc.collect()
+            time.sleep(2)
                     except: pass
+            gc.collect()
             time.sleep(5)
-        except: time.sleep(10)
+        except: gc.collect()
+            time.sleep(10)
 
 if __name__ == "__main__":
     main()

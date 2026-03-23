@@ -1,6 +1,12 @@
 import os, time, subprocess, logging
-logging.basicConfig(level=logging.INFO, filename="fleet_guardian.log", format='%(asctime)s [%(levelname)s] %(message)s')
+
+LOG_FILE = "/root/.openclaw/workspace/fleet_guardian.log"
+logging.basicConfig(level=logging.INFO, format='%(asctime)s %(message)s', handlers=[logging.FileHandler(LOG_FILE)])
 logger = logging.getLogger("Guardian")
+
+WORKSPACE = "/root/.openclaw/workspace"
+VENV_PYTHON = f"{WORKSPACE}/trading_bot_env/bin/python3"
+SYSTEM_PYTHON = "/usr/bin/python3"
 
 BOT_REGISTRY = {
     "FLASH-UNIT": "flash_surge_unit.py", "LIQUID-HARV": "liquidity_harvester.py",
@@ -28,29 +34,34 @@ BOT_REGISTRY = {
     "SC-BNB": "strategies/concept_gen_22.py", "SC-SOL": "strategies/concept_gen_23.py",
     "VOL-DOGE": "strategies/concept_gen_24.py", "VOL-ADA": "strategies/concept_gen_25.py",
     "VOL-AVAX": "strategies/concept_gen_26.py", "VOL-DOT": "strategies/concept_gen_27.py",
-    "QUANT-MAX": "advanced_quant_bot.py", "ARB-PRO": "arbitrage_sentinel.py"
+    "QUANT-MAX": "advanced_quant_bot.py", "ARB-PRO": "arbitrage_sentinel.py",
+    "DASHBOARD": "dashboard/dashboard_server.py"
 }
 
-WORKSPACE = "/root/.openclaw/workspace"
-VENV_PYTHON = f"{WORKSPACE}/trading_bot_env/bin/python3"
-SYSTEM_PYTHON = "/usr/bin/python3"
-
 def is_running(script):
-    try: return len(subprocess.check_output(["pgrep", "-f", script])) > 0
+    try:
+        base_name = os.path.basename(script)
+        subprocess.check_output(f"pgrep -f {base_name}", shell=True)
+        return True
     except: return False
 
 def start_bot(name, script):
     py = VENV_PYTHON if os.path.exists(VENV_PYTHON) else SYSTEM_PYTHON
-    if not os.path.exists(os.path.join(WORKSPACE, script)): return
-    try: subprocess.Popen([py, script], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, cwd=WORKSPACE)
+    path = os.path.join(WORKSPACE, script)
+    if not os.path.exists(path): return
+    try:
+        subprocess.Popen([py, path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, cwd=WORKSPACE)
+        logger.info(f"Started {name}")
     except: pass
 
 def main():
-    logger.info(f"🛡️ ULTRA-FLEET GUARDIAN ACTIVE: {len(BOT_REGISTRY)} BOTS")
+    logger.info("🛡️ GUARDIAN 4.1: Memory Optimized Boot")
     while True:
         for name, script in BOT_REGISTRY.items():
-            if not is_running(script): start_bot(name, script)
-        time.sleep(20)
+            if not is_running(script):
+                start_bot(name, script)
+                time.sleep(2) 
+        time.sleep(30)
 
 if __name__ == "__main__":
     main()

@@ -1,3 +1,4 @@
+import gc
 import os
 import time
 import pandas as pd
@@ -62,8 +63,10 @@ def main():
                     price = float(client.get_symbol_ticker(symbol=f"{a}BTC")['price'])
                     active_waves[f"{a}BTC"] = {'entry': price, 'qty': bal, 'highest': price}
 
+            gc.collect()
             time.sleep(5)
-        except: time.sleep(10)
+        except: gc.collect()
+            time.sleep(10)
 
 if __name__ == "__main__":
     main()

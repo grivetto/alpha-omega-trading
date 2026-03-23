@@ -1,3 +1,4 @@
+import gc
 import os
 import time
 import requests
@@ -53,9 +54,11 @@ def main():
                 with open('/root/.openclaw/workspace/dashboard/arbitrage_data.json', 'w') as f:
                     json.dump({"time": time.strftime('%H:%M:%S'), "spread": f"{spread_pct:.2f}%", "b_price": f"${binance_sol_usd:.2f}", "c_price": f"${crypto_sol_usdt:.2f}"}, f)
             
+            gc.collect()
             time.sleep(60)
         except Exception as e:
             logger.error(f"Errore Monitor: {e}")
+            gc.collect()
             time.sleep(60)
 
 if __name__ == "__main__":

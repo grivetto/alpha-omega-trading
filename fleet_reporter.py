@@ -2,6 +2,8 @@ import os, json, time, subprocess
 from datetime import datetime
 
 STATUS_PATH = "/root/.openclaw/workspace/dashboard/fleet_stats.json"
+WORKSPACE = "/root/.openclaw/workspace"
+
 BOTS = {
     "FLASH-UNIT": "flash_surge_unit.py", "LIQUID-HARV": "liquidity_harvester.py",
     "NEURAL-PLS": "neural_pulse_v2.py", "CENTURION-REV": "centurion_reversion_squad.py",

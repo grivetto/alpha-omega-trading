@@ -1,3 +1,4 @@
+import gc
 # -*- coding: utf-8 -*-
 """
 Binance Trading Bot - RSI + EMA Strategy
@@ -295,17 +296,20 @@ def main():
             # 1. Get latest data
             df = get_historical_data(SYMBOL, INTERVAL, limit=100)
             if df is None:
-                time.sleep(SLEEP_TIME)
+                gc.collect()
+            time.sleep(SLEEP_TIME)
                 continue
             
             df = calculate_indicators(df)
             if df is None:
-                time.sleep(SLEEP_TIME)
+                gc.collect()
+            time.sleep(SLEEP_TIME)
                 continue
             
             current_price = get_current_price(SYMBOL)
             if current_price is None:
-                time.sleep(SLEEP_TIME)
+                gc.collect()
+            time.sleep(SLEEP_TIME)
                 continue
             
             latest = df.iloc[-1]
@@ -321,7 +325,8 @@ def main():
                     available_usdt = get_available_balance(QUOTE_ASSET)
                     if available_usdt <= 10:  # Minimum $10
                         logger.warning(f"Insufficient balance: {available_usdt} USDT")
-                        time.sleep(SLEEP_TIME)
+                        gc.collect()
+            time.sleep(SLEEP_TIME)
                         continue
                     
                     position_qty = calculate_position_size(current_price, available_usdt)
@@ -361,6 +366,7 @@ def main():
                         position_quantity = 0.0
                         last_order_id = None
             
+            gc.collect()
             time.sleep(SLEEP_TIME)
             
         except KeyboardInterrupt:
@@ -368,6 +374,7 @@ def main():
             sys.exit(0)
         except Exception as e:
             logger.error(f"Unexpected error in main loop: {e}")
+            gc.collect()
             time.sleep(SLEEP_TIME)
 
 if __name__ == "__main__":

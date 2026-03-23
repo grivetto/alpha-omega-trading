@@ -1,3 +1,4 @@
+import gc
 import os
 import time
 import json
@@ -42,9 +43,11 @@ def main():
             with open('/root/.openclaw/workspace/dashboard/squad_bravo_data.json', 'w') as f:
                 json.dump(status, f)
                 
+            gc.collect()
             time.sleep(30)
         except Exception as e:
             logger.error(f"Errore Bravo: {e}")
+            gc.collect()
             time.sleep(60)
 
 if __name__ == "__main__":

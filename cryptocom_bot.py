@@ -1,3 +1,4 @@
+import gc
 #!/usr/bin/env python3
 """
 Crypto.com Quant Bot - Advanced Scalper via CCXT
@@ -175,7 +176,8 @@ def main():
             check_signals()
         except Exception as e:
             logging.error(f"Main loop error: {e}")
-        time.sleep(60)
+        gc.collect()
+            time.sleep(60)
 
 if __name__ == "__main__":
     main()

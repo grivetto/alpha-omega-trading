@@ -1,3 +1,4 @@
+import gc
 import os
 import json
 import logging
@@ -126,8 +127,10 @@ def main_loop():
                         if resp_text:
                             requests.post(f"https://api.telegram.org/bot{token}/sendMessage", 
                                          json={"chat_id": chat_id, "text": resp_text, "reply_markup": kb, "parse_mode": "Markdown"})
+            gc.collect()
             time.sleep(0.1)
         except Exception as e:
+            gc.collect()
             time.sleep(5)
 
 if __name__ == '__main__':

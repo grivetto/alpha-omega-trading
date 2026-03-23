@@ -1,3 +1,4 @@
+import gc
 import os
 import time
 import json
@@ -55,8 +56,10 @@ def main():
                                 with open('/root/.openclaw/workspace/strike_alert.flag', 'w') as f:
                                     f.write(f"{(RISK_BTC * pnl * 59000):.2f}")
                         except: pass
+            gc.collect()
             time.sleep(10)
-        except: time.sleep(20)
+        except: gc.collect()
+            time.sleep(20)
 
 if __name__ == "__main__":
     main()

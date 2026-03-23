@@ -1,3 +1,4 @@
+import gc
 import os
 import time
 import logging
@@ -72,7 +73,8 @@ def main():
         try:
             df = get_data()
             if df is None:
-                time.sleep(60)
+                gc.collect()
+            time.sleep(60)
                 continue
                 
             ticker = client.get_symbol_ticker(symbol=SYMBOL)
@@ -93,9 +95,11 @@ def main():
                     logger.info(f"🛑 STOP LOSS! SELL @ {current_price} (Entry: {entry_price})")
                     in_position = False
             
+            gc.collect()
             time.sleep(30) # Più reattivo per scalping
         except Exception as e:
             logger.error(f"Errore loop: {e}")
+            gc.collect()
             time.sleep(30)
 
 if __name__ == "__main__":
