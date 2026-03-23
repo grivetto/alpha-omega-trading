@@ -1,12 +1,7 @@
-import os
-import json
-import time
-import subprocess
+import os, json, time, subprocess
 from datetime import datetime
 
 STATUS_PATH = "/root/.openclaw/workspace/dashboard/fleet_stats.json"
-WORKSPACE = "/root/.openclaw/workspace"
-
 BOTS = {
     "FLASH-UNIT": "flash_surge_unit.py", "LIQUID-HARV": "liquidity_harvester.py",
     "NEURAL-PLS": "neural_pulse_v2.py", "CENTURION-REV": "centurion_reversion_squad.py",
@@ -25,7 +20,15 @@ BOTS = {
     "SOL-MOMENTUM": "sol_momentum_hunter.py", "WHALE-TRACK": "whale_order_tracker.py",
     "SENTIMENT": "sentiment_analyzer_bot.py", "REBALANCER": "multi_coin_rebalancer.py",
     "FLASH-BUYER": "flash_crash_buyer.py", "BREAKOUT": "breakout_volatility_unit.py",
-    "GAS-TRADER": "eth_gas_price_trader.py"
+    "GAS-TRADER": "eth_gas_price_trader.py", "SCALPER-AGG": "aggressive_scalper_aggregator.py",
+    "GOAL-TRACKER": "profit_accelerator_goal.py", "TRI-ARB": "triangle_arbitrage_v1.py",
+    "HYPER-MM": "hyper_mm_sol.py", "WHALE-PR": "whale_pressure_scaler.py",
+    "INV-CORR": "inverse_corr_bot.py", "EMA-CROSS": "ema_cross_scalper.py",
+    "MM-BTC": "strategies/concept_gen_20.py", "MM-ETH": "strategies/concept_gen_21.py",
+    "SC-BNB": "strategies/concept_gen_22.py", "SC-SOL": "strategies/concept_gen_23.py",
+    "VOL-DOGE": "strategies/concept_gen_24.py", "VOL-ADA": "strategies/concept_gen_25.py",
+    "VOL-AVAX": "strategies/concept_gen_26.py", "VOL-DOT": "strategies/concept_gen_27.py",
+    "QUANT-MAX": "advanced_quant_bot.py", "ARB-PRO": "arbitrage_sentinel.py"
 }
 
 def main():

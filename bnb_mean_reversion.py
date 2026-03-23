@@ -3,4 +3,4 @@ import time, logging
 logging.basicConfig(level=logging.INFO, filename="bnb_mean_reversion.log")
 while True:
     logging.info("Mean Reversion: BNB at -0.5% from EMA20")
-    time.sleep(45)
+    time.sleep(15)

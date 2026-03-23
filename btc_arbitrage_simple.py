@@ -3,4 +3,4 @@ import time, logging
 logging.basicConfig(level=logging.INFO, filename="btc_arbitrage.log")
 while True:
     logging.info("Arbitrage check: Spread 0.02% - No trade")
-    time.sleep(60)
+    time.sleep(10)
