@@ -98,3 +98,11 @@ def main():
 if __name__ == "__main__":
     main()
 import stablecoin_scalper
+
+
+class StablecoinScalper:
+    def __init__(self, symbol='EUR/USDT', target_spread=0.0005):
+        self.symbol = symbol
+        self.target_spread = target_spread
+    def eval_spread(self, bid, ask):
+        return 'BUY' if (ask - bid) / bid > self.target_spread else 'WAIT'
