@@ -58,8 +58,7 @@ def main():
                 time.sleep(2) 
         time.sleep(15)
 
-if __name__ == "__main__":
-    main()
+
     
     # Aggiungi il Gariban Beggar alla flotta Lite Guardian
     BOT_REGISTRY["GARIBAN"] = "gariban_beggar.py"
@@ -93,3 +92,6 @@ if __name__ == "__main__":
     BOT_REGISTRY["LEGION_MKR"] = "legion_26_mkr.py"
     BOT_REGISTRY["LEGION_NEAR"] = "legion_27_near.py"
     BOT_REGISTRY["LEGION_FTM"] = "legion_28_ftm.py"
+
+if __name__ == "__main__":
+    main()
