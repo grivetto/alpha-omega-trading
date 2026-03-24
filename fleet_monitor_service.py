@@ -29,7 +29,10 @@ BOT_INVENTORY = {
     "SYSTEM_EVOLVE": "evolution_engine.py",
     "SYSTEM_AUTOMA": "triad_sentinel_automa.py",
     "SYSTEM_CASH_OUT": "rapid_cash_out.py",
-    "TELEGRAM_LINK": "telegram_bot_interactive.py"
+    "TELEGRAM_LINK": "telegram_bot_interactive.py",
+    "FUNDING_SNIFFER": "funding_rate_sniffer.py",
+    "FLASH_CRASH_ARB": "flash_crash_arbitrageur.py",
+    "BOLLINGER": "bollinger_bands_sniper.py"
 }
 
 def get_detailed_bot_status():

@@ -96,6 +96,7 @@ def get_squad_stats():
         fundingsniffer = "funding_rate_sniffer.py" in ps_output
         flashcrash = "flash_crash_arbitrageur.py" in ps_output
         microtrend = "micro_trend_tracker.py" in ps_output
+        bollinger = "bollinger_bands_sniper.py" in ps_output
         
         status = "🚀 *STATO SQUADRE (Lite Guardian 2.1)*\n------------------------------------\n"
         status += f"🎯 SNIPER SQUAD: {'ONLINE' if sniper else 'OFFLINE'} (Assalto)\n"
@@ -116,6 +117,7 @@ def get_squad_stats():
         status += f"💸 FUNDING: {'ONLINE' if fundingsniffer else 'OFFLINE'} (Sniffer tassi futures)\n"
         status += f"💥 FLASHCRASH: {'ONLINE' if flashcrash else 'OFFLINE'} (Arbitraggio Crolli)\n"
         status += f"📈 MICROTREND: {'ONLINE' if microtrend else 'OFFLINE'} (Scalper su 1m)\n"
+        status += f"🎯 BOLLINGER: {'ONLINE' if bollinger else 'OFFLINE'} (Bande di Bollinger 1m)\n"
         status += "🔐 CASSAFORTE 33%: ONLINE E BLINDATA\n------------------------------------"
         return status
     except: return "⚠️ Errore lettura processi."
