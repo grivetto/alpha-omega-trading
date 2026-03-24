@@ -118,6 +118,8 @@ def get_squad_stats():
         status += f"💸 FUNDING: {'ONLINE' if fundingsniffer else 'OFFLINE'} (Sniffer tassi futures)\n"
         status += f"💥 FLASHCRASH: {'ONLINE' if flashcrash else 'OFFLINE'} (Arbitraggio Crolli)\n"
         status += f"📈 MICROTREND: {'ONLINE' if microtrend else 'OFFLINE'} (Scalper su 1m)\n"
+        status += f"🧱 DCA: {'ONLINE' if 'dca_accumulator.py' in ps_output else 'OFFLINE'} (Accumulo BTC/ETH)\n"
+        status += f"🌾 YIELD FARM: {'ONLINE' if 'yield_farmer.py' in ps_output else 'OFFLINE'} (Interessi Flessibili)\n"
         status += f"🕳️ VACUUM: {'ONLINE' if liquidityvacuum else 'OFFLINE'} (Vuoti Book)\n"
         status += f"🎯 BOLLINGER: {'ONLINE' if bollinger else 'OFFLINE'} (Bande di Bollinger 1m)\n"
         status += "🔐 CASSAFORTE 33%: ONLINE E BLINDATA\n------------------------------------"
