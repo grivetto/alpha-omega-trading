@@ -30,8 +30,6 @@ BOT_REGISTRY = {
     "LIQUIDITY_VACUUM": "liquidity_vacuum.py",
     "ZABBIX": "zabbix_watchdog.py",
     "MICRO_TREND": "micro_trend_tracker.py",
-    "DCA_ACCUMULATOR": "dca_accumulator.py",
-    "YIELD_FARMER": "yield_farmer.py",
 }
 
 def is_running(script):
