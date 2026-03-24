@@ -63,14 +63,7 @@ def main():
     if daily_profit > 0:
         logger.info(f"💰 PROFITTO DEL GIORNO RILEVATO: +{daily_profit:.2f}€. Spostamento in cassaforte.")
         add_to_vault(daily_profit)
-        # Notifichiamo l'utente
-        import requests
-        token = os.getenv("TELEGRAM_BOT_TOKEN")
-        try:
-            msg = f"🧹 *CHIUSURA GIORNALIERA (MIDNIGHT SWEEPER)*\n------------------------------------\nIl mercato ha generato un incasso netto oggi di *+{daily_profit:.2f}€*.\nCome richiesto, gli ordini in corso non sono stati alterati (mi sono adeguato).\nL'incasso è stato 100% sigillato nella Cassaforte."
-            requests.post(f"https://api.telegram.org/bot{token}/sendMessage", json={"chat_id": "277954993", "text": msg, "parse_mode": "Markdown"})
-        except: pass
-    else:
+        else:
         logger.info(f"📉 Nessun profitto netto oggi ({daily_profit:.2f}€). Nessun versamento aggiuntivo in cassaforte.")
 
     # 3. Salva lo snapshot per domani
