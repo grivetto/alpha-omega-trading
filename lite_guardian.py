@@ -18,6 +18,7 @@ BOT_REGISTRY = {
     "TSUNAMI": "tsunami_rider.py",
     "SCIAME": "hunter_swarm.py",
     "DARKPOOL": "dark_pool_arb.py",
+    "STABLE_SCALPER": "stable_scalper.py",
     "BLACKHOLE": "black_hole_absorber.py",
     "STABLESCALPER": "stable_scalper.py",
     "RSI_HUNTER": "rsi_divergence_hunter.py",
