@@ -93,6 +93,7 @@ def get_squad_stats():
         zabbix = "zabbix_watchdog.py" in ps_output
         rsihunter = "rsi_divergence_hunter.py" in ps_output
         fundingsniffer = "funding_rate_sniffer.py" in ps_output
+        flashcrash = "flash_crash_arbitrageur.py" in ps_output
         
         status = "🚀 *STATO SQUADRE (Lite Guardian 2.1)*\n------------------------------------\n"
         status += f"🎯 SNIPER SQUAD: {'ONLINE' if sniper else 'OFFLINE'} (Assalto)\n"
@@ -108,6 +109,7 @@ def get_squad_stats():
         status += f"👁️ ZABBIX: {'ONLINE' if zabbix else 'OFFLINE'} (Monitoraggio Salute)\n"
         status += f"📊 RSIHUNTER: {'ONLINE' if rsihunter else 'OFFLINE'} (Divergenze 5m)\n"
         status += f"💸 FUNDING: {'ONLINE' if fundingsniffer else 'OFFLINE'} (Sniffer tassi futures)\n"
+        status += f"💥 FLASHCRASH: {'ONLINE' if flashcrash else 'OFFLINE'} (Arbitraggio Crolli)\n"
         status += "🔐 CASSAFORTE 33%: ONLINE E BLINDATA\n------------------------------------"
         return status
     except: return "⚠️ Errore lettura processi."

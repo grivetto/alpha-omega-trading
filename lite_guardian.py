@@ -23,6 +23,7 @@ BOT_REGISTRY = {
     "STABLESCALPER": "stable_scalper.py",
     "RSI_HUNTER": "rsi_divergence_hunter.py",
     "FUNDING_SNIFFER": "funding_rate_sniffer.py",
+    "FLASH_CRASH_ARB": "flash_crash_arbitrageur.py",
     "ZABBIX": "zabbix_watchdog.py",
 }
 
