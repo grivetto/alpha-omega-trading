@@ -66,6 +66,7 @@ def main():
                         except: pass
             
             time.sleep(60) # 1 request per min
+            logger.info("💗 Heartbeat OK.")
             gc.collect()
         except Exception as e:
             time.sleep(60)

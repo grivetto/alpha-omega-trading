@@ -81,6 +81,7 @@ def main():
                 time.sleep(65)
             
             time.sleep(10)
+            logger.info("💗 Heartbeat OK. Memoria pulita.")
             gc.collect()
             
         except Exception as e:

@@ -28,6 +28,7 @@ def main():
             with open("/home/sergio/.openclaw/workspace/denaro/flash_crash_status.json", "w") as f:
                 f.write(json.dumps({"total_profit_eur": total_profit, "status": "sniping", "last_check": time.time()}))
                 
+            logger.info("💗 Heartbeat OK.")
             time.sleep(15) # Check often for flash crashes
         except Exception as e:
             logger.error(f"Error in main loop: {e}")

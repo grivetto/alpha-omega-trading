@@ -37,6 +37,7 @@ def main():
             with open("/home/sergio/.openclaw/workspace/denaro/funding_status.json", "w") as f:
                 f.write(f'{{"total_profit_eur": {total_profit}, "status": "running", "last_check": {time.time()}}}')
                 
+            logger.info("💗 Heartbeat OK.")
             time.sleep(30) # Check every 30 seconds
         except Exception as e:
             logger.error(f"Error in main loop: {e}")

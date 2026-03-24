@@ -65,6 +65,7 @@ def main():
     try:
         while True:
             time.sleep(60)
+            logger.info("💗 Heartbeat OK. Memoria pulita.")
             gc.collect()
     except KeyboardInterrupt:
         twm.stop()

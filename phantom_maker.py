@@ -97,6 +97,7 @@ def main():
                                 
             # Riposa 2 minuti (consumo zero)
             time.sleep(120)
+            logger.info("💗 Heartbeat OK. Memoria pulita.")
             gc.collect()
         except Exception as e:
             time.sleep(60)

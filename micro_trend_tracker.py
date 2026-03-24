@@ -25,6 +25,7 @@ def main():
             time.sleep(20)
         except Exception as e:
             logger.error(f"Errore: {e}")
+            logger.info("💗 Heartbeat OK.")
             time.sleep(60)
 
 if __name__ == "__main__":

@@ -142,6 +142,7 @@ def main():
                             pass
                             
             time.sleep(20) # Aumentata la frequenza a 20s per cercare le trappole più in fretta
+            logger.info("💗 Heartbeat OK. Memoria pulita.")
             gc.collect()
             
         except Exception as e:

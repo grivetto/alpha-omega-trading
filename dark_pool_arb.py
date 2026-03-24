@@ -86,6 +86,7 @@ def main():
                         pass
                         
             time.sleep(5) # Ciclo velocissimo ma leggero (1 sola API call)
+            logger.info("💗 Heartbeat OK. Memoria pulita.")
             gc.collect()
         except Exception as e:
             time.sleep(30)
