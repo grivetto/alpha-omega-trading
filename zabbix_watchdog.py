@@ -23,7 +23,35 @@ BOTS = {
     "FLASH_CATCHER": "flash_catcher.py",
     "RSI_HUNTER": "rsi_divergence_hunter.py",
     "TG_BOT": "telegram_bot_interactive.py",
-    "DASHBOARD": "dashboard_server.py"
+    "DASHBOARD": "dashboard_server.py",
+    "LEGION_ADA": "legion_01_ada.py",
+    "LEGION_AVAX": "legion_02_avax.py",
+    "LEGION_LINK": "legion_03_link.py",
+    "LEGION_MATIC": "legion_04_matic.py",
+    "LEGION_DOT": "legion_05_dot.py",
+    "LEGION_UNI": "legion_06_uni.py",
+    "LEGION_LTC": "legion_07_ltc.py",
+    "LEGION_ATOM": "legion_08_atom.py",
+    "LEGION_ETC": "legion_09_etc.py",
+    "LEGION_XLM": "legion_10_xlm.py",
+    "LEGION_BCH": "legion_11_bch.py",
+    "LEGION_ALGO": "legion_12_algo.py",
+    "LEGION_VET": "legion_13_vet.py",
+    "LEGION_FIL": "legion_14_fil.py",
+    "LEGION_AAVE": "legion_15_aave.py",
+    "LEGION_EOS": "legion_16_eos.py",
+    "LEGION_XTZ": "legion_17_xtz.py",
+    "LEGION_MANA": "legion_18_mana.py",
+    "LEGION_SAND": "legion_19_sand.py",
+    "LEGION_AXS": "legion_20_axs.py",
+    "LEGION_GALA": "legion_21_gala.py",
+    "LEGION_ENJ": "legion_22_enj.py",
+    "LEGION_CHZ": "legion_23_chz.py",
+    "LEGION_ZIL": "legion_24_zil.py",
+    "LEGION_BAT": "legion_25_bat.py",
+    "LEGION_MKR": "legion_26_mkr.py",
+    "LEGION_NEAR": "legion_27_near.py",
+    "LEGION_FTM": "legion_28_ftm.py"
 }
 
 def get_process_info(script_name):
@@ -81,6 +109,7 @@ def main():
                 elif name == "RSI_HUNTER": log_name = "RSI_HUNTER.log"
                 elif name == "TG_BOT": log_name = "TG-BOT.log"
                 elif name == "DASHBOARD": log_name = "DASHBOARD.log"
+                elif name.startswith('LEGION_'): log_name = f"{name}.log"
                 else: log_name = f"{name}.log"
                 
                 log_path = os.path.join(WORKSPACE, log_name)
@@ -96,7 +125,7 @@ def main():
                     if os.path.exists(log_path):
                         last_log_sec = time.time() - os.path.getmtime(log_path)
                         # Zombie if no log update in 15 minutes (900 seconds) AND log exists
-                        if last_log_sec > 900 and name not in ["BLACKHOLE", "PHANTOM", "DARKPOOL", "STABLESCALP", "SCIACALLO", "TG_BOT", "DASHBOARD"]:
+                        if last_log_sec > 900 and name not in ["BLACKHOLE", "PHANTOM", "DARKPOOL", "STABLESCALP", "SCIACALLO", "TG_BOT", "DASHBOARD"] and not name.startswith('LEGION_'):
                             status = "ZOMBIE"
                             logger.warning(f"🧟 {name} IN STATO ZOMBIE! Log bloccato da {last_log_sec:.0f}s. UCCISIONE IN CORSO PID {info['pid']}!")
                             os.system(f"kill -9 {info['pid']}")
