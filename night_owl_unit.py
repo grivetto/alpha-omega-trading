@@ -53,7 +53,7 @@ def main():
                         print(f"💰 INCASSO NOTTURNO su {s} (+{pnl:.2%})")
                         try:
                             client.create_order(symbol=s, side='SELL', type='MARKET', quantity=active_hunts[s]['qty'])
-                            with open('/root/.openclaw/workspace/strike_alert.flag', 'w') as f:
+                            with open('/home/sergio/.openclaw/workspace/denaro/strike_alert.flag', 'w') as f:
                                 f.write(f"NOTTE {s.replace('BTC','')}: +{pnl:.2%}")
                             del active_hunts[s]
                         except: pass

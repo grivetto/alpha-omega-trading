@@ -40,7 +40,7 @@ def main():
                 "balance": eth_bal,
                 "status": "PATROLLING"
             }
-            with open('/root/.openclaw/workspace/dashboard/squad_bravo_data.json', 'w') as f:
+            with open('/home/sergio/.openclaw/workspace/denaro/dashboard/squad_bravo_data.json', 'w') as f:
                 json.dump(status, f)
                 
             gc.collect()

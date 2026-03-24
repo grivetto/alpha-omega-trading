@@ -46,7 +46,7 @@ def main():
                                 client.create_order(symbol=s, side='SELL', type='MARKET', quantity=qty)
                                 profit_eur = (RISK_BTC * 0.0015 * 59000)
                                 print(f"✅ INCASSATO {s} (+0.15%) -> €{profit_eur:.2f}")
-                                with open('/root/.openclaw/workspace/strike_alert.flag', 'w') as f:
+                                with open('/home/sergio/.openclaw/workspace/denaro/strike_alert.flag', 'w') as f:
                                     f.write(f"{profit_eur:.2f}")
                                 break
                             gc.collect()

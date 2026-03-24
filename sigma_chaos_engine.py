@@ -66,7 +66,7 @@ def main():
                         logger.info(f"✅ SIGMA EXIT: {symbol} | PnL: {pnl:.2%}")
                         del positions[symbol]
                         if pnl > 0:
-                            with open('/root/.openclaw/workspace/strike_alert.flag', 'w') as f:
+                            with open('/home/sergio/.openclaw/workspace/denaro/strike_alert.flag', 'w') as f:
                                 f.write(f"{(RISK_BTC * pnl * 1.0):.2f}")
 
             gc.collect()

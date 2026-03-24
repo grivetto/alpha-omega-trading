@@ -15,14 +15,14 @@ API_KEY = os.getenv('BINANCE_API_KEY')
 API_SECRET = os.getenv('BINANCE_API_SECRET')
 
 # Altcoin ad alta volatilità (Coppie BTC per usare il capitale appena arrivato)
-WATCHLIST = ["ETHBTC", "SOLBTC", "BNBBTC", "ADABTC", "DOGEBTC", "LINKBTC", "AVAXBTC"]
+WATCHLIST = ["ETHEUR", "SOLEUR", "BNBEUR", "ADAEUR", "DOGEEUR", "LINKEUR", "DOTEUR"]
 TIMEFRAME = '5m'
-VOL_SPIKE_THRESHOLD = 2.5  # Sensibilità aumentata
-PROFIT_TARGET = 0.022      # 2.2% rapido
-STOP_LOSS = 0.04          # 4% sicurezza
-RISK_BTC = 0.001           # Circa 60€ per trade
+VOL_SPIKE_THRESHOLD = 2.0  # Sensibilità aumentata
+PROFIT_TARGET = 0.015      # 2.2% rapido
+STOP_LOSS = 0.03          # 4% sicurezza
+RISK_BTC = 60.0           # 60€ per trade
 
-STATUS_FILE = '/root/.openclaw/workspace/hunter_status.json'
+STATUS_FILE = '/home/sergio/.openclaw/workspace/denaro/hunter_status.json'
 
 logging.basicConfig(
     level=logging.INFO,
@@ -62,6 +62,15 @@ def main():
                     try:
                         # Calcolo quantità in base alla moneta base (BTC)
                         # qty = 0.001 BTC / prezzo moneta (es. ETHBTC)
+                        try:
+                            eur_bal = float(client.get_asset_balance(asset="EUR")["free"])
+                            with open("/home/sergio/.openclaw/workspace/denaro/vault.json", "r") as f:
+                                locked = float(__import__("json").load(f).get("LOCKED_EUR", 0))
+                            eur_bal = max(0, eur_bal - locked)
+                            if eur_bal < RISK_BTC:
+                                logger.warning(f"⚠️ Fondo insufficiente (Bloccato: {locked}€). Skipping {symbol}")
+                                continue
+                        except: pass
                         qty_to_buy = RISK_BTC / price
                         # Arrotondamento prudente (Binance richiede precisione specifica)
                         order = client.create_order(
@@ -90,7 +99,7 @@ def main():
                             logger.info(f"✅ {reason} {symbol} @ {price} | PnL: {pnl:.2%}")
                             del positions[symbol]
                             # Creiamo il flag per lo strike su Telegram
-                            with open('/root/.openclaw/workspace/strike_alert.flag', 'w') as f:
+                            with open('/home/sergio/.openclaw/workspace/denaro/strike_alert.flag', 'w') as f:
                                 f.write(f"{(RISK_BTC * pnl * 1.0):.2f}")
                         except Exception as e:
                             logger.error(f"❌ FAILED SELL {symbol}: {e}")

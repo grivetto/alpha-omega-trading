@@ -62,7 +62,7 @@ all_profits = []
 all_opps = []
 
 for log in logs:
-    path = os.path.join('/root/.openclaw/workspace', log)
+    path = os.path.join('/home/sergio/.openclaw/workspace/denaro', log)
     if os.path.exists(path):
         all_profits.extend(scan_log_for_profit(path))
         all_opps.extend(scan_log_for_opportunity(path))

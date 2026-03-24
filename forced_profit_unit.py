@@ -38,7 +38,7 @@ def main():
                             if now >= target:
                                 client.create_order(symbol=s, side='SELL', type='MARKET', quantity=qty)
                                 print(f"✅ INCASSATO: {s}")
-                                with open('/root/.openclaw/workspace/strike_alert.flag', 'w') as f: f.write("PROFITTO REALE")
+                                with open('/home/sergio/.openclaw/workspace/denaro/strike_alert.flag', 'w') as f: f.write("PROFITTO REALE")
                                 break
                             gc.collect()
             time.sleep(2)

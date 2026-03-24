@@ -23,7 +23,7 @@ TARGET_REBOUND = 0.0025
 STOP_LOSS = 0.04       # 4% sicurezza
 RISK_BTC = 0.0015       # Circa 90€ per trade
 
-STATUS_FILE = '/root/.openclaw/workspace/sniper_status.json'
+STATUS_FILE = '/home/sergio/.openclaw/workspace/denaro/sniper_status.json'
 
 logging.basicConfig(
     level=logging.INFO,
@@ -82,7 +82,7 @@ def main():
                             client.create_order(symbol=symbol, side='SELL', type='MARKET', quantity=bal)
                             logger.info(f"✅ {reason} {symbol} @ {price} | PnL: {pnl:.2%}")
                             del positions[symbol]
-                            with open('/root/.openclaw/workspace/strike_alert.flag', 'w') as f:
+                            with open('/home/sergio/.openclaw/workspace/denaro/strike_alert.flag', 'w') as f:
                                 f.write(f"{(RISK_BTC * pnl * 1.0):.2f}")
                         except Exception as e:
                             logger.error(f"❌ FAILED SNIPE SELL {symbol}: {e}")

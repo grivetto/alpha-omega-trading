@@ -41,7 +41,7 @@ def main():
                 print(f"✅ VENDUTA {asset}. Capitale riportato in BTC.")
                 
                 # Messaggio su Telegram
-                with open('/root/.openclaw/workspace/strike_alert.flag', 'w') as f:
+                with open('/home/sergio/.openclaw/workspace/denaro/strike_alert.flag', 'w') as f:
                     f.write(f"VENDUTA {asset} (Reset Capitale)")
             else:
                 print(f"⏩ {asset} troppo piccola per la vendita ({notional:.6f} BTC)")

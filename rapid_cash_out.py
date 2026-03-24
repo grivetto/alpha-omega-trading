@@ -47,7 +47,7 @@ def main():
                         profit_eur = val_buy * pnl
                         
                         # CREAZIONE FLAG PER TELEGRAM CON CIFRA REALE
-                        with open('/root/.openclaw/workspace/strike_alert.flag', 'w') as f:
+                        with open('/home/sergio/.openclaw/workspace/denaro/strike_alert.flag', 'w') as f:
                             f.write(f"{profit_eur:.2f}")
                             
                         print(f"✅ VENDUTA {asset} | Profitto: €{profit_eur:.2f}")

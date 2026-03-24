@@ -68,7 +68,7 @@ def main():
                             logger.info(f"💰 PROFIT/EXIT {symbol} | PnL: {pnl:.2%} | Price: {current_price}")
                             del positions[symbol]
                             # Segnala il guadagno per il monitor
-                            with open('/root/.openclaw/workspace/strike_alert.flag', 'w') as f:
+                            with open('/home/sergio/.openclaw/workspace/denaro/strike_alert.flag', 'w') as f:
                                 f.write(f"{pnl * RISK_PER_TRADE_EUR:.2f}")
                         except Exception as e: logger.error(f"❌ SELL ERR {symbol}: {e}")
 

@@ -32,7 +32,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-STATUS_FILE = '/root/.openclaw/workspace/quant_status.json'
+STATUS_FILE = '/home/sergio/.openclaw/workspace/denaro/quant_status.json'
 
 def get_data(client, symbol):
     try:
@@ -78,7 +78,7 @@ def main():
                             client.create_order(symbol=symbol, side='SELL', type='MARKET', quantity=active_positions[symbol]['qty'])
                             logger.info(f"🔴 QUANT SELL: {symbol} PnL: {pnl:.2%}")
                             del active_positions[symbol]
-                            with open('/root/.openclaw/workspace/strike_alert.flag', 'w') as f:
+                            with open('/home/sergio/.openclaw/workspace/denaro/strike_alert.flag', 'w') as f:
                                 f.write(f"{(POSITION_SIZE_EUR * pnl):.2f}")
                         except Exception as e: logger.error(f"❌ QUANT FAILED SELL: {e}")
             

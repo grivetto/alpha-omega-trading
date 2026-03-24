@@ -3,7 +3,7 @@ import os
 from dotenv import load_dotenv
 import time, hmac, hashlib, requests, json
 
-load_dotenv('/root/.openclaw/workspace/.env')
+load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env')
 
 API_KEY = os.getenv('BINANCE_API_KEY')
 API_SECRET = os.getenv('BINANCE_API_SECRET')

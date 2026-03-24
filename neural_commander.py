@@ -51,7 +51,7 @@ class NeuralCommander:
             self.update_config('grid_range', 0.01)
 
     def update_config(self, key, value):
-        config_path = '/root/.openclaw/workspace/neural_config.json'
+        config_path = '/home/sergio/.openclaw/workspace/denaro/neural_config.json'
         config = {}
         if os.path.exists(config_path):
             with open(config_path, 'r') as f: config = json.load(f)
@@ -77,7 +77,7 @@ class NeuralCommander:
                     "last_action": "Tuning grid thresholds",
                     "time": time.strftime('%H:%M:%S')
                 }
-                with open('/root/.openclaw/workspace/dashboard/commander_data.json', 'w') as f:
+                with open('/home/sergio/.openclaw/workspace/denaro/dashboard/commander_data.json', 'w') as f:
                     json.dump(status, f)
                 
                 gc.collect()

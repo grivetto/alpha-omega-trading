@@ -46,7 +46,7 @@ def main():
                     })
             
             # Scrivi sempre il file (anche se vuoto) per evitare 404 sulla dashboard
-            with open('/root/.openclaw/workspace/dashboard/sentinel_data.json', 'w') as f:
+            with open('/home/sergio/.openclaw/workspace/denaro/dashboard/sentinel_data.json', 'w') as f:
                 json.dump(signals, f)
             
             gc.collect()

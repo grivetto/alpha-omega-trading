@@ -16,7 +16,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger("Sniper")
 
-load_dotenv('/root/.openclaw/workspace/.env')
+load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env')
 API_KEY = os.getenv('BINANCE_API_KEY')
 SECRET_KEY = os.getenv('BINANCE_API_SECRET')
 

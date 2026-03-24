@@ -7,7 +7,7 @@ import subprocess
 from datetime import datetime
 
 # --- CONFIGURAZIONE ARCHITETTO ---
-LOG_DIR = "/root/.openclaw/workspace/"
+LOG_DIR = "/home/sergio/.openclaw/workspace/denaro/"
 SCRIPTS = [
     "smart_grid_engine.py", "binance_bot_multi.py", "volatility_hunter.py",
     "rebound_sniper.py", "shadow_trend_tracer.py", "ghost_rider_swing.py",
@@ -42,7 +42,7 @@ class FleetArchitect:
         try:
             path = os.path.join(LOG_DIR, script_name)
             # Determina l'interprete (molti usano l'env dedicato)
-            cmd = f"nohup /root/.openclaw/workspace/trading_bot_env/bin/python3 {path} > {path.replace('.py', '.log')} 2>&1 &"
+            cmd = f"nohup /home/sergio/.openclaw/workspace/denaro/trading_bot_env/bin/python3 {path} > {path.replace('.py', '.log')} 2>&1 &"
             os.system(cmd)
             logger.info(f"✅ Bot {script_name} riavviato con successo.")
         except Exception as e:
@@ -79,7 +79,7 @@ class FleetArchitect:
                 self.analyze_logs()
                 
                 # Auto-aggiornamento stato per la Dashboard
-                with open('/root/.openclaw/workspace/dashboard/architect_state.json', 'w') as f:
+                with open('/home/sergio/.openclaw/workspace/denaro/dashboard/architect_state.json', 'w') as f:
                     json.dump({
                         "time": datetime.now().isoformat(),
                         "health": self.health_status,

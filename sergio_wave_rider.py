@@ -50,7 +50,7 @@ def main():
                         try:
                             client.create_order(symbol=s, side='SELL', type='MARKET', quantity=active_waves[s]['qty'])
                             pnl = (current - active_waves[s]['entry']) / active_waves[s]['entry']
-                            with open('/root/.openclaw/workspace/strike_alert.flag', 'w') as f:
+                            with open('/home/sergio/.openclaw/workspace/denaro/strike_alert.flag', 'w') as f:
                                 f.write(f"SERGIO WAVE {s.replace('BTC','')}: {pnl:+.2%}")
                             del active_waves[s]
                         except: pass

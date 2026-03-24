@@ -8,7 +8,7 @@ import os, time, subprocess, gc, threading, signal
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import psutil
 
-WORKSPACE = "/root/.openclaw/workspace"
+WORKSPACE = "/home/sergio/.openclaw/workspace/denaro"
 VENV_PY = f"{WORKSPACE}/trading_bot_env/bin/python3"
 if not os.path.exists(VENV_PY):
     VENV_PY = "/usr/bin/python3"

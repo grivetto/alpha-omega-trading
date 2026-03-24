@@ -94,7 +94,7 @@ def main():
                 "dna_gen": 15 # Placeholder per Evolution Engine integration
             }
             
-            with open('/root/.openclaw/workspace/dashboard/fleet_stats.json', 'w') as f:
+            with open('/home/sergio/.openclaw/workspace/denaro/dashboard/fleet_stats.json', 'w') as f:
                 json.dump(payload, f, indent=2)
             
             logger.info(f"Matrix Status Synced. Portfolio: {vitals['total_val'] if vitals else '??'} EUR")

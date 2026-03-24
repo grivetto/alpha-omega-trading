@@ -1,10 +1,10 @@
 import os, time, subprocess, logging
 
-LOG_FILE = "/root/.openclaw/workspace/fleet_guardian.log"
+LOG_FILE = "/home/sergio/.openclaw/workspace/denaro/fleet_guardian.log"
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(message)s', handlers=[logging.FileHandler(LOG_FILE)])
 logger = logging.getLogger("Guardian")
 
-WORKSPACE = "/root/.openclaw/workspace"
+WORKSPACE = "/home/sergio/.openclaw/workspace/denaro"
 VENV_PYTHON = f"{WORKSPACE}/trading_bot_env/bin/python3"
 SYSTEM_PYTHON = "/usr/bin/python3"
 

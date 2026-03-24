@@ -4,7 +4,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from dotenv import load_dotenv
 
-load_dotenv('/root/.openclaw/workspace/.env.telegram')
+load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env.telegram')
 
 sender_email = "sergio@grivetto.eu"
 receiver_email = "sergio.grivetto@gmail.com" 

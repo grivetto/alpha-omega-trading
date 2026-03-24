@@ -6,7 +6,7 @@ import requests
 import time
 from dotenv import load_dotenv
 
-load_dotenv('/root/.openclaw/workspace/.env.telegram')
+load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env.telegram')
 
 TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN', '')
 TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID', '')
@@ -16,7 +16,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')
 # Helper function to fetch balances from status files
 def get_binance_balance():
     try:
-        with open('/root/.openclaw/workspace/quant_status.json') as f:
+        with open('/home/sergio/.openclaw/workspace/denaro/quant_status.json') as f:
             data = json.load(f)
         return data['balance']
     except Exception as e:
@@ -25,7 +25,7 @@ def get_binance_balance():
 
 def get_crypto_balance():
     try:
-        with open('/root/.openclaw/workspace/cryptocom_status.json') as f:
+        with open('/home/sergio/.openclaw/workspace/denaro/cryptocom_status.json') as f:
             data = json.load(f)
         return data['balance']
     except Exception as e:

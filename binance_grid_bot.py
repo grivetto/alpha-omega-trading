@@ -45,7 +45,7 @@ PAPER_TRADING = False
 PAPER_BALANCE_EUR = 1000.0  # Balance test paper trading
 
 # File di stato
-STATUS_FILE = '/root/.openclaw/workspace/grid_status.json'
+STATUS_FILE = '/home/sergio/.openclaw/workspace/denaro/grid_status.json'
 
 logging.basicConfig(
     level=logging.INFO,

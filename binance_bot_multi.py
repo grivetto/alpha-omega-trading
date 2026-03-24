@@ -34,7 +34,7 @@ STOP_LOSS_PCT = 0.015
 TAKE_PROFIT_PCT = 0.0025
 TRAILING_STOP_PCT = 0.001
 
-STATUS_FILE = '/root/.openclaw/workspace/multi_status.json'
+STATUS_FILE = '/home/sergio/.openclaw/workspace/denaro/multi_status.json'
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s',
                    handlers=[logging.FileHandler('trading_bot.log'), logging.StreamHandler()])
@@ -109,7 +109,7 @@ def main():
                             client.create_order(symbol=symbol, side='SELL', type='MARKET', quantity=state.position_quantity)
                             logger.info(f"🔴 OVERDRIVE SELL {symbol} | PnL: {pnl:.2%}")
                             state.in_position = False
-                            with open('/root/.openclaw/workspace/strike_alert.flag', 'w') as f:
+                            with open('/home/sergio/.openclaw/workspace/denaro/strike_alert.flag', 'w') as f:
                                 f.write(f"{(state.position_quantity * price * pnl * 1.0):.2f}")
                         except Exception as e: logger.error(f"❌ SELL ERROR {symbol}: {e}")
             

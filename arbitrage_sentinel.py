@@ -51,7 +51,7 @@ def main():
                     logger.info(f"💎 OPPORTUNITÀ ARBITRAGGIO: Spread {spread_pct:.2f}% | B: ${binance_sol_usd:.2f} vs C: ${crypto_sol_usdt:.2f}")
                 
                 # Salva sempre per la dashboard
-                with open('/root/.openclaw/workspace/dashboard/arbitrage_data.json', 'w') as f:
+                with open('/home/sergio/.openclaw/workspace/denaro/dashboard/arbitrage_data.json', 'w') as f:
                     json.dump({"time": time.strftime('%H:%M:%S'), "spread": f"{spread_pct:.2f}%", "b_price": f"${binance_sol_usd:.2f}", "c_price": f"${crypto_sol_usdt:.2f}"}, f)
             
             gc.collect()

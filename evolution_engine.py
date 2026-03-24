@@ -11,7 +11,7 @@ from datetime import datetime
 # --- CONFIGURAZIONE CORE ---
 LOG_FILE = "evolution_engine.log"
 MEMORY_FILE = "fleet_dna.json"
-STRATEGY_DIR = "/root/.openclaw/workspace/strategies/"
+STRATEGY_DIR = "/home/sergio/.openclaw/workspace/denaro/strategies/"
 
 logging.basicConfig(
     level=logging.INFO,

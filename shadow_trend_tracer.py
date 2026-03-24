@@ -20,7 +20,7 @@ TIMEFRAME = '1m' # Precisione estrema (1 minuto)
 TREND_PERIOD = 20
 RISK_BTC = 0.0012 # Circa 70€ per colpo
 
-STATUS_FILE = '/root/.openclaw/workspace/shadow_status.json'
+STATUS_FILE = '/home/sergio/.openclaw/workspace/denaro/shadow_status.json'
 
 logging.basicConfig(
     level=logging.INFO,
@@ -81,7 +81,7 @@ def main():
                             client.create_order(symbol=symbol, side='SELL', type='MARKET', quantity=bal)
                             logger.info(f"✅ SHADOW PROFIT: {symbol} | PnL: {pnl:.2%}")
                             del positions[symbol]
-                            with open('/root/.openclaw/workspace/strike_alert.flag', 'w') as f:
+                            with open('/home/sergio/.openclaw/workspace/denaro/strike_alert.flag', 'w') as f:
                                 f.write(f"{(RISK_BTC * pnl * 1.0):.2f}")
                         except Exception as e: logger.error(f"❌ SHADOW FAILED SELL {symbol}: {e}")
             

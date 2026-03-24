@@ -24,8 +24,8 @@ load_dotenv()
 API_KEY = os.getenv('BINANCE_API_KEY')
 API_SECRET = os.getenv('BINANCE_API_SECRET')
 
-SYMBOL = 'BTCUSDT'
-QUOTE_ASSET = 'USDT'
+SYMBOL = 'SOLEUR'
+QUOTE_ASSET = 'EUR'
 INTERVAL = '5m'
 SLEEP_TIME = 30
 
@@ -38,16 +38,16 @@ MACD_SLOW = 26
 MACD_SIGNAL = 9
 EMA_SHORT = 9
 EMA_LONG = 21
-RISK_PER_TRADE = 0.20
+RISK_PER_TRADE = 0.60
 STOP_LOSS_PCT = 0.015
-TAKE_PROFIT_PCT = 0.03
+TAKE_PROFIT_PCT = 0.015
 TRAILING_STOP_PCT = 0.02
 VOLUME_SPIKE_MULT = 1.5
 
 PAPER_TRADING = False
 
-STATUS_FILE = '/root/.openclaw/workspace/bot_status.json'
-HISTORY_FILE = '/root/.openclaw/workspace/trade_history.json'
+STATUS_FILE = '/home/sergio/.openclaw/workspace/denaro/bot_status.json'
+HISTORY_FILE = '/home/sergio/.openclaw/workspace/denaro/trade_history.json'
 
 logging.basicConfig(
     level=logging.INFO,
@@ -404,7 +404,14 @@ def main():
             if not in_position:
                 if check_buy_signal(df):
                     balance = get_balance(QUOTE_ASSET)
-                    qty = (balance * RISK_PER_TRADE) / price
+                    try:
+                        with open("/home/sergio/.openclaw/workspace/denaro/vault.json", "r") as f:
+                            vault = __import__("json").load(f)
+                            locked = float(vault.get("LOCKED_EUR", 0))
+                            balance = max(0, balance - locked)
+                    except: pass
+
+                    qty = round((balance * RISK_PER_TRADE) / price, 2)
                     if qty * price > 5:
                         order = place_order(SYMBOL, SIDE_BUY, qty, price)
                         if order:

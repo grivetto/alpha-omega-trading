@@ -4,7 +4,7 @@ import os
 import requests
 from dotenv import load_dotenv
 
-load_dotenv('/root/.openclaw/workspace/.env.telegram')
+load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env.telegram')
 TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN', '')
 TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID', '')
 

@@ -16,8 +16,8 @@ API_SECRET = os.getenv('BINANCE_API_SECRET')
 
 # Strategia OMEGA: ANTI-TREND & LIQUIDITY ABSORPTION
 # Invece di seguire il volume, Omega compra il panico e vende l'euforia.
-SYMBOLS = ["ETHBTC", "SOLBTC", "AVAXBTC", "BNBBTC", "LINKBTC", "DOTBTC"]
-RISK_BTC = 0.002 # ~120€ per colpo
+SYMBOLS = ["ETHEUR", "SOLEUR", "DOGEEUR", "BNBEUR", "LINKEUR", "DOTEUR"]
+RISK_BTC = 45.0 # 45€ per trade
 
 logging.basicConfig(
     level=logging.INFO,
@@ -48,6 +48,15 @@ class OmegaWarMachine:
                     if rsi < 25 and s not in self.active_positions:
                         logger.info(f"🛡️ OMEGA SHIELD: {s} in panico (RSI {rsi:.1f}). Assorbo liquidità.")
                         try:
+                            eur_bal = float(self.client.get_asset_balance(asset="EUR")["free"])
+                            try:
+                                with open("/home/sergio/.openclaw/workspace/denaro/vault.json", "r") as f:
+                                    locked = float(__import__("json").load(f).get("LOCKED_EUR", 0))
+                            except: locked = 0
+                            eur_bal = max(0, eur_bal - locked)
+                            if eur_bal < RISK_BTC:
+                                logger.warning(f"⚠️ Fondo insufficiente (Bloccato: {locked}€). Skipping {s}")
+                                continue
                             order = self.client.create_order(symbol=s, side='BUY', type='MARKET', quoteOrderQty=round(RISK_BTC, 6))
                             self.active_positions[s] = {'entry': price, 'qty': float(order['executedQty'])}
                             logger.info(f"🔴 OMEGA BUY: {s} @ {price}")
@@ -62,13 +71,13 @@ class OmegaWarMachine:
                             try:
                                 self.client.create_order(symbol=s, side='SELL', type='MARKET', quantity=self.active_positions[s]['qty'])
                                 logger.info(f"✅ OMEGA STRIKE: {s} | PnL: {pnl:.2%}")
-                                with open('/root/.openclaw/workspace/strike_alert.flag', 'w') as f:
+                                with open('/home/sergio/.openclaw/workspace/denaro/strike_alert.flag', 'w') as f:
                                     f.write(f"OMEGA {s.replace('BTC','')}: {pnl:+.2%}")
                                 del self.active_positions[s]
                             except: pass
                 
                 gc.collect()
-            time.sleep(30)
+                time.sleep(30)
             except Exception as e:
                 logger.error(f"Omega Main Error: {e}")
                 gc.collect()

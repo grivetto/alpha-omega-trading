@@ -1,6 +1,6 @@
 import os, time, subprocess
 
-WORKSPACE = "/root/.openclaw/workspace"
+WORKSPACE = "/home/sergio/.openclaw/workspace/denaro"
 VENV_PYTHON = f"{WORKSPACE}/trading_bot_env/bin/python3"
 
 BOTS = [

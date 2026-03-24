@@ -47,7 +47,7 @@ def get_detailed_bot_status():
 
 def get_market_vitals():
     try:
-        load_dotenv('/root/.openclaw/workspace/.env')
+        load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env')
         client = Client(os.getenv('BINANCE_API_KEY'), os.getenv('BINANCE_API_SECRET'))
         prices = client.get_all_tickers()
         btc_price = next(float(p['price']) for p in prices if p['symbol'] == 'BTCEUR')
@@ -91,7 +91,7 @@ def main():
                 "vitals": vitals
             }
             
-            with open('/root/.openclaw/workspace/dashboard/fleet_stats.json', 'w') as f:
+            with open('/home/sergio/.openclaw/workspace/denaro/dashboard/fleet_stats.json', 'w') as f:
                 json.dump(report, f, indent=2)
             
             logger.info(f"Full Fleet Monitor Synced. Online: {sum(1 for b in status if b['status'] == 'ONLINE')}/{len(status)}")

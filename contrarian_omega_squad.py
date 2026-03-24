@@ -61,7 +61,7 @@ def main():
                     if change <= -PROFIT_TARGET:
                         logger.info(f"✅ OMEGA OVERDRIVE PROFIT: {symbol} @ {price}")
                         del positions[symbol]
-                        with open('/root/.openclaw/workspace/strike_alert.flag', 'w') as f:
+                        with open('/home/sergio/.openclaw/workspace/denaro/strike_alert.flag', 'w') as f:
                             f.write(f"{(RISK_BTC * 0.035 * 59500):.2f}")
                     elif change >= STOP_LOSS:
                         del positions[symbol]

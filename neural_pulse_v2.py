@@ -67,7 +67,7 @@ def main():
                             client.create_order(symbol=s, side='SELL', type='MARKET', quantity=positions[s]['qty'])
                             logger.info(f"✅ NEURAL PROFIT: {s} PnL: {pnl:.2%}")
                             del positions[s]
-                            with open('/root/.openclaw/workspace/strike_alert.flag', 'w') as f:
+                            with open('/home/sergio/.openclaw/workspace/denaro/strike_alert.flag', 'w') as f:
                                 f.write(f"{(RISK_BTC * pnl * 1.0):.2f}")
                         except: pass
             

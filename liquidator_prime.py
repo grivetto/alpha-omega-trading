@@ -43,7 +43,7 @@ def main():
                     try:
                         client.create_order(symbol=symbol, side='SELL', type='MARKET', quantity=bal)
                         print(f"✅ VENDITA ESEGUITA: {symbol}")
-                        with open('/root/.openclaw/workspace/strike_alert.flag', 'w') as f:
+                        with open('/home/sergio/.openclaw/workspace/denaro/strike_alert.flag', 'w') as f:
                             f.write(f"VENDITA {asset} OK")
                     except Exception as e:
                         print(f"❌ ERRORE SELL {symbol}: {e}")
