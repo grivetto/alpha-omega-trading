@@ -20,6 +20,7 @@ BOTS = {
     "DARKPOOL": "dark_pool_arb.py",
     "BLACKHOLE": "black_hole_absorber.py",
     "STABLESCALP": "stable_scalper.py",
+    "FLASH_CATCHER": "flash_catcher.py",
     "RSI_HUNTER": "rsi_divergence_hunter.py",
     "TG_BOT": "telegram_bot_interactive.py",
     "DASHBOARD": "dashboard_server.py"

@@ -91,6 +91,7 @@ def get_squad_stats():
         blackhole = "black_hole_absorber.py" in ps_output
         stablescalper = "stable_scalper.py" in ps_output
         zabbix = "zabbix_watchdog.py" in ps_output
+        flashcatcher = "flash_catcher.py" in ps_output
         rsihunter = "rsi_divergence_hunter.py" in ps_output
         fundingsniffer = "funding_rate_sniffer.py" in ps_output
         flashcrash = "flash_crash_arbitrageur.py" in ps_output
@@ -107,6 +108,7 @@ def get_squad_stats():
         status += f"🌌 BLACKHOLE: {'ONLINE' if blackhole else 'OFFLINE'} (Timing Globale)\n"
         status += f"⚖️ STABLESCALP: {'ONLINE' if stablescalper else 'OFFLINE'} (Spread EUR/USDT)\n"
         status += f"👁️ ZABBIX: {'ONLINE' if zabbix else 'OFFLINE'} (Monitoraggio Salute)\n"
+        status += f"🎣 FLASHCATCHER: {'ONLINE' if flashcatcher else 'OFFLINE'} (Reti Limite -4%)\n"
         status += f"📊 RSIHUNTER: {'ONLINE' if rsihunter else 'OFFLINE'} (Divergenze 5m)\n"
         status += f"💸 FUNDING: {'ONLINE' if fundingsniffer else 'OFFLINE'} (Sniffer tassi futures)\n"
         status += f"💥 FLASHCRASH: {'ONLINE' if flashcrash else 'OFFLINE'} (Arbitraggio Crolli)\n"

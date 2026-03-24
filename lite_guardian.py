@@ -21,6 +21,7 @@ BOT_REGISTRY = {
     "STABLE_SCALPER": "stable_scalper.py",
     "BLACKHOLE": "black_hole_absorber.py",
     "STABLESCALPER": "stable_scalper.py",
+    "FLASH_CATCHER": "flash_catcher.py",
     "RSI_HUNTER": "rsi_divergence_hunter.py",
     "FUNDING_SNIFFER": "funding_rate_sniffer.py",
     "FLASH_CRASH_ARB": "flash_crash_arbitrageur.py",
