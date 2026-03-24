@@ -1,7 +1,10 @@
+import os
+from dotenv import load_dotenv
+load_dotenv("/home/sergio/.openclaw/workspace/denaro/.env.telegram")
 import requests
 import json
 
-TOKEN = "8183973303:AAFwVUK0LUlyyTby_V0O3U_uMt4V7fXgW8I"
+TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 CHAT_ID = "277954993"
 URL = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
 
