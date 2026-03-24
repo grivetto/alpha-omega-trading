@@ -1,4 +1,6 @@
-# 🚀 ORBITAL COMMAND: NEON SQUAD (Zero-OOM Trading Architecture)
+# 🚀 ORBITAL COMMAND: NEON SQUAD
+**Versione Attuale:** Alpha 0.99 (Pre-Beta)
+*La release Beta 1.0 verrà rilasciata solo ed esclusivamente al raggiungimento e mantenimento stabile dell'obiettivo di 100€ di profitto netto giornaliero.*
 
 ## 👨‍💻 Visione Strategica
 Benvenuti nella nuova era del trading algoritmico. Il progetto è stato completamente rivoluzionato per risolvere i problemi di Out-Of-Memory (OOM) e i limiti delle API (Rate Limiting) che affliggevano le vecchie architetture basate su dataframes pesanti e polling continui.
