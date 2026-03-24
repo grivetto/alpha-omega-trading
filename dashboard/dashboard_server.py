@@ -103,6 +103,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(data.encode())
             return
+        elif self.path == '/zabbix_metrics.json' or self.path.startswith('/zabbix_metrics.json?'):
+            self.send_json_file(os.path.join(DASHBOARD_DIR, 'zabbix_metrics.json'))
+            return
         elif self.path.startswith('/profit_chart.png'):
             # Generiamo il chart al volo
             os.system("/home/sergio/.openclaw/workspace/denaro/trading_bot_env/bin/python3 /home/sergio/.openclaw/workspace/denaro/generate_profit_chart.py")

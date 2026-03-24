@@ -22,6 +22,7 @@ BOT_REGISTRY = {
     "BLACKHOLE": "black_hole_absorber.py",
     "STABLESCALPER": "stable_scalper.py",
     "RSI_HUNTER": "rsi_divergence_hunter.py",
+    "ZABBIX": "zabbix_watchdog.py",
 }
 
 def is_running(script):

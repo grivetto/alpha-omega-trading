@@ -259,6 +259,7 @@ def main():
             # Periodicamente, controlla se è cambiata la mezzanotte (cambiando giorno)
             get_daily_mission()
             time.sleep(60)
+            logger.info("💗 Heartbeat OK. Memoria pulita.")
             gc.collect()
     except KeyboardInterrupt:
         twm.stop()

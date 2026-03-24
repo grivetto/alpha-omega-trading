@@ -167,7 +167,32 @@
         .status-dot.online { background: var(--green); box-shadow: 0 0 8px var(--green); animation: blink 2s infinite; }
 
         /* Middle Column: Market Radar & Chart */
+        
         .market-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .zabbix-table {
+            width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 20px;
+            background: rgba(0,0,0,0.5); border: 1px solid var(--panel-border);
+        }
+        .zabbix-table th, .zabbix-table td {
+            border: 1px solid var(--panel-border); padding: 8px; text-align: left;
+        }
+        .zabbix-table th { background: rgba(0, 243, 255, 0.1); color: var(--cyan); }
+        .zabbix-table tr:hover { background: rgba(255,255,255,0.05); }
+        .alert-red { color: var(--red); font-weight: bold; }
+        .alert-yellow { color: var(--yellow); }
+        .alert-green { color: var(--green); }
+        
+        .zabbix-chart-container {
+            width: 100%; height: 150px; background: #000; border: 1px solid var(--panel-border);
+            margin-bottom: 20px; display: flex; align-items: flex-end; padding: 10px; gap: 2px;
+        }
+        .bar-col { flex: 1; background: var(--cyan); opacity: 0.8; transition: height 0.5s; position: relative; }
+        .bar-col:hover { opacity: 1; background: var(--pink); }
+
             display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px;
             margin-bottom: 20px;
         }
@@ -245,6 +270,32 @@
 
     <div class="layout">
         <!-- TOP STATS -->
+        
+        <!-- ZABBIX MONITOR -->
+        <div class="panel" style="grid-column: 1 / -1;">
+            <div class="panel-title">ZABBIX.INFRASTRUCTURE_MONITOR_ [PID/CPU/RAM]</div>
+            
+            <div class="zabbix-chart-container" id="zabbix-chart" title="Total CPU/RAM Usage History">
+                <!-- Bars injected here -->
+            </div>
+            
+            <table class="zabbix-table" id="zabbix-table">
+                <thead>
+                    <tr>
+                        <th>BOT NODE</th>
+                        <th>STATUS</th>
+                        <th>PID</th>
+                        <th>CPU %</th>
+                        <th>RAM %</th>
+                        <th>LAST LOG PING</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Rows injected here -->
+                </tbody>
+            </table>
+        </div>
+
         <div class="top-stats">
             <div class="panel stat-box">
                 <div class="stat-val cyan" id="stat-target">10.00€</div>
@@ -425,8 +476,51 @@
             if(img) img.src = '/profit_chart.png?t=' + new Date().getTime();
         }
 
+        
+        async function fetchZabbix() {
+            try {
+                const response = await fetch('/zabbix_metrics.json');
+                const data = await response.json();
+                
+                const tbody = document.querySelector('#zabbix-table tbody');
+                tbody.innerHTML = '';
+                
+                let htmlRows = '';
+                for(let bot in data.bots) {
+                    const info = data.bots[bot];
+                    let statusClass = 'alert-red';
+                    if(info.status === 'ONLINE') statusClass = 'alert-green';
+                    else if(info.status.includes('ZOMBIE')) statusClass = 'alert-yellow';
+                    
+                    htmlRows += `<tr>
+                        <td>${bot}</td>
+                        <td class="${statusClass}">${info.status}</td>
+                        <td>${info.pid}</td>
+                        <td class="${info.cpu > 10 ? 'alert-yellow' : ''}">${info.cpu.toFixed(1)}%</td>
+                        <td class="${info.mem > 5 ? 'alert-yellow' : ''}">${info.mem.toFixed(1)}%</td>
+                        <td class="${info.log_age_s > 600 ? 'alert-yellow' : ''}">${info.log_age_s}s ago</td>
+                    </tr>`;
+                }
+                tbody.innerHTML = htmlRows;
+                
+                const chart = document.getElementById('zabbix-chart');
+                chart.innerHTML = '';
+                
+                // Max 100% per colonna (scalato sul max cpu storico)
+                let maxCpu = 1;
+                data.history.forEach(h => { if(h.cpu > maxCpu) maxCpu = h.cpu; });
+                
+                data.history.forEach(h => {
+                    const pct = (h.cpu / maxCpu) * 100;
+                    chart.innerHTML += `<div class="bar-col" style="height: ${Math.max(2, pct)}%" title="${h.time} | CPU: ${h.cpu}% | MEM: ${h.mem}%"></div>`;
+                });
+                
+            } catch(e) {}
+        }
+
         function updateAll() {
             fetchMarketData();
+            fetchZabbix();
             fetchFleetStatus();
             fetchBalances();
             fetchLogs();
