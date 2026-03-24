@@ -19,6 +19,7 @@ BOT_REGISTRY = {
     "SCIAME": "hunter_swarm.py",
     "DARKPOOL": "dark_pool_arb.py",
     "BLACKHOLE": "black_hole_absorber.py",
+    "STABLESCALPER": "stable_scalper.py",
 }
 
 def is_running(script):

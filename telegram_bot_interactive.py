@@ -89,6 +89,7 @@ def get_squad_stats():
         swarm = "hunter_swarm.py" in ps_output
         darkpool = "dark_pool_arb.py" in ps_output
         blackhole = "black_hole_absorber.py" in ps_output
+        stablescalper = "stable_scalper.py" in ps_output
         
         status = "🚀 *STATO SQUADRE (Lite Guardian 2.1)*\n------------------------------------\n🔹 VECCHIA FLOTTA: DISATTIVATA (No OOM)\n"
         status += f"🎯 SNIPER SQUAD: {'ONLINE' if sniper else 'OFFLINE'} (Assalto)\n"
@@ -100,6 +101,7 @@ def get_squad_stats():
         status += f"🐝 SCIAME: {'ONLINE' if swarm else 'OFFLINE'} (Micro-Dips)\n"
         status += f"🌑 DARKPOOL: {'ONLINE' if darkpool else 'OFFLINE'} (Radar Triangolare)\n"
         status += f"🌌 BLACKHOLE: {'ONLINE' if blackhole else 'OFFLINE'} (Timing Globale)\n"
+        status += f"⚖️ STABLESCALP: {'ONLINE' if stablescalper else 'OFFLINE'} (Spread EUR/USDT)\n"
         status += "🔐 CASSAFORTE 33%: ONLINE E BLINDATA\n------------------------------------"
         return status
     except: return "⚠️ Errore lettura processi."
