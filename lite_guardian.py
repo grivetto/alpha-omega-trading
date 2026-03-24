@@ -33,6 +33,7 @@ BOT_REGISTRY = {
     "MICRO_TREND": "micro_trend_tracker.py",
     "DCA_ACCUMULATOR": "dca_accumulator.py",
     "YIELD_FARMER": "yield_farmer.py",
+    "SOL_PULSE_SNIPER": "sol_pulse_sniper.py",
 }
 
 def is_running(script):
@@ -56,6 +57,35 @@ def main():
     # Kill i vecchi processi che occupano memoria e fanno schizzare il server in OOM
     os.system("pkill -f 'binance_bot_aggressive|omega_war_machine|volatility_hunter|fleet_reporter|vault_manager|flash_surge_unit'")
     
+    BOT_REGISTRY["GARIBAN"] = "gariban_beggar.py"
+    BOT_REGISTRY["LEGION_ADA"] = "legion_01_ada.py"
+    BOT_REGISTRY["LEGION_AVAX"] = "legion_02_avax.py"
+    BOT_REGISTRY["LEGION_LINK"] = "legion_03_link.py"
+    BOT_REGISTRY["LEGION_MATIC"] = "legion_04_matic.py"
+    BOT_REGISTRY["LEGION_DOT"] = "legion_05_dot.py"
+    BOT_REGISTRY["LEGION_UNI"] = "legion_06_uni.py"
+    BOT_REGISTRY["LEGION_LTC"] = "legion_07_ltc.py"
+    BOT_REGISTRY["LEGION_ATOM"] = "legion_08_atom.py"
+    BOT_REGISTRY["LEGION_ETC"] = "legion_09_etc.py"
+    BOT_REGISTRY["LEGION_XLM"] = "legion_10_xlm.py"
+    BOT_REGISTRY["LEGION_BCH"] = "legion_11_bch.py"
+    BOT_REGISTRY["LEGION_ALGO"] = "legion_12_algo.py"
+    BOT_REGISTRY["LEGION_VET"] = "legion_13_vet.py"
+    BOT_REGISTRY["LEGION_FIL"] = "legion_14_fil.py"
+    BOT_REGISTRY["LEGION_AAVE"] = "legion_15_aave.py"
+    BOT_REGISTRY["LEGION_EOS"] = "legion_16_eos.py"
+    BOT_REGISTRY["LEGION_XTZ"] = "legion_17_xtz.py"
+    BOT_REGISTRY["LEGION_MANA"] = "legion_18_mana.py"
+    BOT_REGISTRY["LEGION_SAND"] = "legion_19_sand.py"
+    BOT_REGISTRY["LEGION_AXS"] = "legion_20_axs.py"
+    BOT_REGISTRY["LEGION_GALA"] = "legion_21_gala.py"
+    BOT_REGISTRY["LEGION_ENJ"] = "legion_22_enj.py"
+    BOT_REGISTRY["LEGION_CHZ"] = "legion_23_chz.py"
+    BOT_REGISTRY["LEGION_ZIL"] = "legion_24_zil.py"
+    BOT_REGISTRY["LEGION_BAT"] = "legion_25_bat.py"
+    BOT_REGISTRY["LEGION_MKR"] = "legion_26_mkr.py"
+    BOT_REGISTRY["LEGION_NEAR"] = "legion_27_near.py"
+    BOT_REGISTRY["LEGION_FTM"] = "legion_28_ftm.py"
     while True:
         for name, script in BOT_REGISTRY.items():
             if not is_running(script):
