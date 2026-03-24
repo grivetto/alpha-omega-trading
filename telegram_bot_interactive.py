@@ -115,6 +115,7 @@ def get_squad_stats():
         status += f"📊 RSIHUNTER: {'ONLINE' if rsihunter else 'OFFLINE'} (Divergenze 5m)\n"
         status += f"💸 FUNDING: {'ONLINE' if fundingsniffer else 'OFFLINE'} (Sniffer tassi futures)\n"
         status += f"💥 FLASHCRASH: {'ONLINE' if flashcrash else 'OFFLINE'} (Arbitraggio Crolli)\n"
+        status += f"📈 MICROTREND: {'ONLINE' if microtrend else 'OFFLINE'} (Scalper su 1m)\n"
         status += "🔐 CASSAFORTE 33%: ONLINE E BLINDATA\n------------------------------------"
         return status
     except: return "⚠️ Errore lettura processi."
