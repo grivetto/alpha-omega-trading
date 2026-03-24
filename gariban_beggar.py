@@ -22,11 +22,20 @@ def get_vault_locked():
     return 0.0
 
 def add_to_vault(amount):
-    locked = get_vault_locked() + amount
     try:
+        data = {}
+        with open(VAULT_FILE, 'r') as f:
+            data = json.load(f)
+            
+        locked = data.get("LOCKED_EUR", 0.0) + amount
+        gariban_tracker = data.get("GARIBAN_TRACKER", 0.0) + amount
+        
+        data["LOCKED_EUR"] = locked
+        data["GARIBAN_TRACKER"] = gariban_tracker
+        
         with open(VAULT_FILE, 'w') as f:
-            json.dump({"LOCKED_EUR": locked}, f)
-        logger.info(f"🤲 ELEMOSINA ACQUISITA! {amount:.2f}€ portati in Cassaforte! [Tot. Sicurezza: {locked:.2f}€]")
+            json.dump(data, f)
+        logger.info(f"🤲 ELEMOSINA ACQUISITA! {amount:.2f}€ portati in Cassaforte! [Tot. Sicurezza: {locked:.2f}€ | Di cui Elemosina: {gariban_tracker:.2f}€]")
     except Exception as e:
         logger.error(f"Errore vault gariban: {e}")
 

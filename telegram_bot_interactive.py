@@ -38,7 +38,7 @@ def get_full_status():
             f"🏦 Valore Attuale: €{total_eur:.2f}\n"
             f"📥 Cifra Investita: €{CAPITALE_VERSATO_TOTALE:.2f}\n"
             f"📈 Profitto Totale: {profit:+.2f} €\n"
-            f"------------------------------------"
+            f"------------------------------------"""
         )
         return msg
     except Exception as e: return f"⚠️ Errore bilancio: {str(e)}"
@@ -49,11 +49,24 @@ def get_daily_profit():
         client = Client(os.getenv('BINANCE_API_KEY'), os.getenv('BINANCE_API_SECRET'))
         balances = client.get_account()['balances']
         eur = float([b['free'] for b in balances if b['asset'] == 'EUR'][0])
+        
+        locked = 0.0
+        gariban_tracker = 0.0
         try:
             with open("/home/sergio/.openclaw/workspace/denaro/vault.json", "r") as f:
-                locked = float(__import__("json").load(f).get("LOCKED_EUR", 0))
-        except: locked = 0
-        return f"📅 *RICAVO GIORNALIERO*\n------------------------------------\n💸 Liquidità Libera: €{eur:.2f}\n🔐 *Fondo di Sicurezza (33% intoccabile)*: €{locked:.2f}\n------------------------------------"
+                data = __import__("json").load(f)
+                locked = float(data.get("LOCKED_EUR", 0))
+                gariban_tracker = float(data.get("GARIBAN_TRACKER", 0))
+        except: pass
+        
+        main_vault = locked - gariban_tracker
+        
+        return f"""📅 *RICAVO GIORNALIERO*
+------------------------------------
+💸 Liquidità Libera: €{eur:.2f}
+🔐 *Fondo di Sicurezza Principale (33%)*: €{main_vault:.2f}
+🤲 *Elemosina Gariban*: €{gariban_tracker:.2f}
+------------------------------------"""
     except:
         return "⚠️ Errore calcolo giornaliero."
 
@@ -73,7 +86,7 @@ def get_gariban_stats():
                             amount = float(parts.split("€")[0])
                             total_elemosina += amount
                         except: pass
-        return f"🤲 *CASSA DEL GARIBAN*\n------------------------------------\n🪙 Totale Elemosina Raccolta: *€{total_elemosina:.2f}*\n(Questo importo è stato interamente donato al Vault di Sicurezza)\n------------------------------------"
+        return f"🤲 *CASSA DEL GARIBAN*\n------------------------------------\n🪙 Totale Elemosina Raccolta: *€{total_elemosina:.2f}*\n(Questo importo è stato interamente donato al Vault di Sicurezza)\n------------------------------------"""
     except Exception as e:
         return "⚠️ Errore lettura cassa Gariban."
 
@@ -126,7 +139,7 @@ def get_squad_stats():
         status += f"🎯 BOLLINGER: {'ONLINE' if bollinger else 'OFFLINE'} (Bande di Bollinger 1m)\n"
         status += f"⚡ SOL PULSE: {'ONLINE' if solpulse else 'OFFLINE'} (Accelerazione SOL)\n"
         status += f"💶 EURSCALPER: {'ONLINE' if eurusdtscalper else 'OFFLINE'} (Micro-Spread EUR)\n"
-        status += "🔐 CASSAFORTE 33%: ONLINE E BLINDATA\n------------------------------------"
+        status += "🔐 CASSAFORTE 33%: ONLINE E BLINDATA\n------------------------------------"""
         return status
     except: return "⚠️ Errore lettura processi."
 
