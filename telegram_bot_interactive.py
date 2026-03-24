@@ -98,6 +98,7 @@ def get_squad_stats():
         microtrend = "micro_trend_tracker.py" in ps_output
         bollinger = "bollinger_bands_sniper.py" in ps_output
         liquidityvacuum = "liquidity_vacuum.py" in ps_output
+        eurusdtscalper = "eur_usdt_scalper_pro.py" in ps_output
         
         status = "🚀 *STATO SQUADRE (Lite Guardian 2.1)*\n------------------------------------\n"
         status += f"🎯 SNIPER SQUAD: {'ONLINE' if sniper else 'OFFLINE'} (Assalto)\n"
@@ -122,6 +123,7 @@ def get_squad_stats():
         status += f"🌾 YIELD FARM: {'ONLINE' if 'yield_farmer.py' in ps_output else 'OFFLINE'} (Interessi Flessibili)\n"
         status += f"🕳️ VACUUM: {'ONLINE' if liquidityvacuum else 'OFFLINE'} (Vuoti Book)\n"
         status += f"🎯 BOLLINGER: {'ONLINE' if bollinger else 'OFFLINE'} (Bande di Bollinger 1m)\n"
+        status += f"💶 EURSCALPER: {'ONLINE' if eurusdtscalper else 'OFFLINE'} (Micro-Spread EUR)\n"
         status += "🔐 CASSAFORTE 33%: ONLINE E BLINDATA\n------------------------------------"
         return status
     except: return "⚠️ Errore lettura processi."
