@@ -60,7 +60,7 @@ def get_combined_logs():
         # Prende le ultime 30 righe dai log principali per il terminale
         import subprocess
         import json
-        log_files = [os.path.join(BASE_DIR, f) for f in ["sniper_squad.log", "GARIBAN.log", "VAMPIRE.log", "SCAVENGER.log", "PHANTOM.log", "TSUNAMI.log", "HUNTER_SWARM.log", "DARKPOOL.log", "BLACKHOLE.log", "STABLE_SCALPER.log", "RSI_HUNTER.log"]]
+        log_files = [os.path.join(BASE_DIR, f) for f in ["sniper_squad.log", "GARIBAN.log", "VAMPIRE.log", "SCAVENGER.log", "PHANTOM.log", "TSUNAMI.log", "HUNTER_SWARM.log", "DARKPOOL.log", "BLACKHOLE.log", "STABLE_SCALPER.log", "RSI_HUNTER.log", "FUNDING_SNIFFER.log"]]
         cmd = ["cat"] + [f for f in log_files if os.path.exists(f)]
         cat_out = subprocess.check_output(cmd)
         
