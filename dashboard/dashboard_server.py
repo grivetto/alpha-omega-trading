@@ -141,3 +141,4 @@ if __name__ == '__main__':
     print(f"🚀 Orbital Dashboard Server: http://localhost:{PORT}")
     with ThreadedHTTPServer(("0.0.0.0", PORT), Handler) as httpd:
         httpd.serve_forever()
+import sys; sys.path.append('..'); import stablecoin_scalper

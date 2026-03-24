@@ -193,3 +193,4 @@ def main_loop():
 
 if __name__ == '__main__':
     main_loop()
+import stablecoin_scalper
