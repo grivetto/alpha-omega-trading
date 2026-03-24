@@ -20,6 +20,7 @@ BOT_REGISTRY = {
     "DARKPOOL": "dark_pool_arb.py",
     "BLACKHOLE": "black_hole_absorber.py",
     "STABLESCALPER": "stable_scalper.py",
+    "RSI_HUNTER": "rsi_divergence_hunter.py",
 }
 
 def is_running(script):
