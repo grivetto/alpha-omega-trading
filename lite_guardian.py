@@ -26,6 +26,7 @@ BOT_REGISTRY = {
     "FUNDING_SNIFFER": "funding_rate_sniffer.py",
     "FLASH_CRASH_ARB": "flash_crash_arbitrageur.py",
     "BOLLINGER": "bollinger_bands_sniper.py",
+    "LIQUIDITY_VACUUM": "liquidity_vacuum.py",
     "ZABBIX": "zabbix_watchdog.py",
     "MICRO_TREND": "micro_trend_tracker.py",
 }
