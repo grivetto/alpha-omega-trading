@@ -147,3 +147,6 @@ import sys; sys.path.append('..'); import stablecoin_scalper
 import roc_momentum_sniper
 print("ROC Momentum Sniper integrated.")
 import eur_usdt_aether_scalper; eur_usdt_aether_scalper.run_aether_scalper()
+
+import sys; sys.path.append(".."); import atr_volatility_trader
+print("ATR Volatility Trader integrated.")
