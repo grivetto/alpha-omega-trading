@@ -15,8 +15,8 @@ VAULT_FILE = "/home/sergio/.openclaw/workspace/denaro/vault.json"
 
 # Compriamo 6 EUR di BTC e 6 EUR di ETH ogni 24 ore (il minimo su Binance è 5 EUR per ordine)
 ASSETS_TO_BUY = {
-    "BTCUSDT": 6.0,
-    "ETHUSDT": 6.0
+    "BTCEUR": 6.0,
+    "ETHEUR": 6.0
 }
 
 def get_vault_locked():
@@ -60,16 +60,7 @@ def main():
                 
                 # Assicuriamoci di avere USDT (vendendo un po' di EUR se necessario, visto che il pair è USDT)
                 total_usdt_needed = sum(ASSETS_TO_BUY.values())
-                try:
-                    usdt_bal = float(client.get_asset_balance(asset='USDT')['free'])
-                    if usdt_bal < total_usdt_needed:
-                        eur_bal = float(client.get_asset_balance(asset='EUR')['free']) - get_vault_locked()
-                        if eur_bal > total_usdt_needed:
-                            logger.info(f"🔄 Converto {total_usdt_needed} EUR in USDT per il DCA.")
-                            client.create_order(symbol="EURUSDT", side='SELL', type='MARKET', quantity=int(total_usdt_needed + 1))
-                            time.sleep(2)
-                except Exception as e:
-                    logger.error(f"Errore conversione fondi per DCA: {e}")
+                # Non serve convertire, compriamo in EUR
 
                 # Compra gli asset
                 all_success = True
@@ -81,8 +72,9 @@ def main():
                         qty = round_step(amount_usdt / price, step)
                         
                         if qty > 0:
-                            order = client.create_order(symbol=symbol, side='BUY', type='MARKET', quantity=qty)
-                            logger.info(f"✅ DCA ESEGUITO: Comprati {qty} {symbol.replace('USDT','')} a ~{price} USDT.")
+                            qty_str = f"{qty:.8f}".rstrip('0').rstrip('.')
+                            order = client.create_order(symbol=symbol, side='BUY', type='MARKET', quantity=qty_str)
+                            logger.info(f"✅ DCA ESEGUITO: Comprati {qty_str} {symbol.replace('USDT','')} a ~{price} USDT.")
                     except Exception as e:
                         logger.error(f"Errore acquisto DCA {symbol}: {e}")
                         all_success = False

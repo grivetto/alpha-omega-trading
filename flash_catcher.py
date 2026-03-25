@@ -28,7 +28,7 @@ def add_to_vault(amount):
     except: pass
 
 # SIMBOLI AD ALTA VOLATILITA' / FLASH CRASH
-SYMBOLS = ["SOLUSDT", "WIFUSDT", "PEPEUSDT", "DOGEUSDT", "XRPUSDT"]
+SYMBOLS = ["SOLEUR", "PEPEEUR", "DOGEEUR", "XRPEUR"]
 TRADE_EUR_AMOUNT = 15.0
 
 def round_step(quantity, step_size):
@@ -59,16 +59,8 @@ def main():
     
     while True:
         try:
-            # 1. Recupera USDT disponibili (visto che trada in USDT)
-            usdt_bal = float(client.get_asset_balance(asset='USDT')['free'])
-            # Se abbiamo meno di 15 USDT, convertiamo 15 EUR in USDT per pescare
-            if usdt_bal < TRADE_EUR_AMOUNT:
-                eur_bal = float(client.get_asset_balance(asset='EUR')['free']) - get_vault_locked()
-                if eur_bal > TRADE_EUR_AMOUNT:
-                    client.create_order(symbol="EURUSDT", side='SELL', type='MARKET', quantity=int(TRADE_EUR_AMOUNT))
-                    logger.info(f"🔄 Convertiti {TRADE_EUR_AMOUNT} EUR in USDT per la pesca a strascico.")
-                    time.sleep(2)
-                    usdt_bal = float(client.get_asset_balance(asset='USDT')['free'])
+            # 1. Recupera EUR disponibili (visto che trada in EUR)
+            eur_bal = float(client.get_asset_balance(asset='EUR')['free']) - get_vault_locked()
 
             # 2. Cancella vecchi ordini che non sono stati presi
             for sym, order_id in list(active_orders.items()):
@@ -100,7 +92,7 @@ def main():
                     pass
 
             # 3. Piazza nuovi ordini esca (-4% sotto il prezzo attuale)
-            if usdt_bal > 10.0:
+            if eur_bal > 10.0:
                 for sym in SYMBOLS:
                     if sym in active_orders: continue
                     try:
@@ -109,13 +101,13 @@ def main():
                         
                         step, tick = get_filters(sym)
                         target_price = round_price(current_price * 0.96, tick) # -4%
-                        qty = round_step(10.0 / target_price, step) # order di 10 USDT
+                        qty = round_step(10.0 / target_price, step) # order di 10 EUR
                         
-                        if qty > 0 and usdt_bal >= 10.0:
+                        if qty > 0 and eur_bal >= 10.0:
                             order = client.create_order(symbol=sym, side='BUY', type='LIMIT', timeInForce='GTC', quantity=qty, price=str(target_price))
                             active_orders[sym] = order['orderId']
-                            usdt_bal -= 10.0
-                            logger.info(f"🎣 Pescata impostata su {sym} a {target_price} USDT (-4%).")
+                            eur_bal -= 10.0
+                            logger.info(f"🎣 Pescata impostata su {sym} a {target_price} EUR (-4%).")
                     except Exception as e:
                         pass
             
