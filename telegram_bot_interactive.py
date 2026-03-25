@@ -103,6 +103,7 @@ def get_squad_stats():
         darkpool = "dark_pool_arb.py" in ps_output
         blackhole = "black_hole_absorber.py" in ps_output
         stablescalper = "stable_scalper.py" in ps_output
+        orderbook_sniper = "orderbook_imbalance_sniper.py" in ps_output
         zabbix = "zabbix_watchdog.py" in ps_output
         flashcatcher = "flash_catcher.py" in ps_output
         rsihunter = "rsi_divergence_hunter.py" in ps_output
@@ -127,6 +128,7 @@ def get_squad_stats():
         status += f"🌑 DARKPOOL: {'ONLINE' if darkpool else 'OFFLINE'} (Radar Triangolare)\n"
         status += f"🌌 BLACKHOLE: {'ONLINE' if blackhole else 'OFFLINE'} (Timing Globale)\n"
         status += f"⚖️ STABLESCALP: {'ONLINE' if stablescalper else 'OFFLINE'} (Spread EUR/USDT)\n"
+        status += f"🎯 ORDERBOOK: {\"ONLINE\" if orderbook_sniper else \"OFFLINE\"} (Orderbook Imbalance Hunter)\n"
         status += f"👁️ ZABBIX: {'ONLINE' if zabbix else 'OFFLINE'} (Monitoraggio Salute)\n"
         status += f"🎣 FLASHCATCHER: {'ONLINE' if flashcatcher else 'OFFLINE'} (Reti Limite -4%)\n"
         legion_count = sum(1 for line in ps_output if "legion_" in line and "python" in line)

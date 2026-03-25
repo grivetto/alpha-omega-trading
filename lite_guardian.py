@@ -26,6 +26,7 @@ BOT_REGISTRY = {
     "FLASH_CATCHER": "flash_catcher.py",
     "RSI_HUNTER": "rsi_divergence_hunter.py",
     "FUNDING_SNIFFER": "funding_rate_sniffer.py",
+    "ORDERBOOK_SNIPER": "orderbook_imbalance_sniper.py",
     "FLASH_CRASH_ARB": "flash_crash_arbitrageur.py",
     "BOLLINGER": "bollinger_bands_sniper.py",
     "LIQUIDITY_VACUUM": "liquidity_vacuum.py",
