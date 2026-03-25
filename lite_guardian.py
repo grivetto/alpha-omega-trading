@@ -37,6 +37,7 @@ BOT_REGISTRY = {
     "SOL_PULSE_SNIPER": "sol_pulse_sniper.py",
     "EUR_USDT_MICRO": "eur_usdt_micro_scalper.py",
     "VWAP_SNIPER": "vwap_reversion_sniper.py",
+    "ZERO_OOM": "zero_oom_scalper.py",
 }
 
 def is_running(script):

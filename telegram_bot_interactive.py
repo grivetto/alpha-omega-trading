@@ -115,6 +115,7 @@ def get_squad_stats():
         eurusdtscalper = "eur_usdt_scalper_pro.py" in ps_output
         solpulse = "sol_pulse_sniper.py" in ps_output
         vwapsniper = "vwap_reversion_sniper.py" in ps_output
+        zero_oom = "zero_oom_scalper.py" in ps_output
         
         status = "🚀 *STATO SQUADRE (Lite Guardian 2.1)*\n------------------------------------\n"
         status += f"🎯 SNIPER SQUAD: {'ONLINE' if sniper else 'OFFLINE'} (Assalto)\n"
