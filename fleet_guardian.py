@@ -9,59 +9,76 @@ VENV_PYTHON = f"{WORKSPACE}/trading_bot_env/bin/python3"
 SYSTEM_PYTHON = "/usr/bin/python3"
 
 BOT_REGISTRY = {
-    "FLASH-UNIT": "flash_surge_unit.py", "LIQUID-HARV": "liquidity_harvester.py",
-    "NEURAL-PLS": "neural_pulse_v2.py", "CENTURION-REV": "centurion_reversion_squad.py",
-    "LIQUIDATOR": "liquidator_prime.py", "OSCILLATOR": "oscillator_counter_unit.py",
-    "FORCED-PROFIT": "forced_profit_unit.py", "GRID-ENGINE": "smart_grid_engine.py",
-    "MULTI-BOT": "binance_bot_multi.py", "VOL-HUNTER": "volatility_hunter.py",
-    "REB-SNIPER": "rebound_sniper.py", "SHADOW-TR": "shadow_trend_tracer.py",
-    "GHOST-RID": "ghost_rider_swing.py", "OMEGA-REV": "contrarian_omega_squad.py",
-    "OMEGA-FEED": "omega_bottom_feeder.py", "SIGMA-CHAOS": "sigma_chaos_engine.py",
-    "ARCHITECT": "architect_ai.py", "EVOLUTION": "evolution_engine.py",
-    "WAR-MACHINE": "war_machine.py", "OMEGA-WAR": "omega_war_machine.py",
-    "BAIT-TRAP": "bait_and_trap_engine.py", "CASH-OUT": "rapid_cash_out.py",
-    "BTC-SNIPER": "btc_volatility_sniper.py", "ALPHA-WAVE": "sergio_wave_rider.py",
-    "SYS-AUTOMA": "triad_sentinel_automa.py", "BTC-ARB": "btc_arbitrage_simple.py",
-    "ETH-MM": "eth_market_maker.py", "BNB-REVERSION": "bnb_mean_reversion.py",
-    "SOL-MOMENTUM": "sol_momentum_hunter.py", "WHALE-TRACK": "whale_order_tracker.py",
-    "SENTIMENT": "sentiment_analyzer_bot.py", "REBALANCER": "multi_coin_rebalancer.py",
-    "FLASH-BUYER": "flash_crash_buyer.py", "BREAKOUT": "breakout_volatility_unit.py",
-    "GAS-TRADER": "eth_gas_price_trader.py", "SCALPER-AGG": "aggressive_scalper_aggregator.py",
-    "GOAL-TRACKER": "profit_accelerator_goal.py", "TRI-ARB": "triangle_arbitrage_v1.py",
-    "HYPER-MM": "hyper_mm_sol.py", "WHALE-PR": "whale_pressure_scaler.py",
-    "INV-CORR": "inverse_corr_bot.py", "EMA-CROSS": "ema_cross_scalper.py",
-    "MM-BTC": "strategies/concept_gen_20.py", "MM-ETH": "strategies/concept_gen_21.py",
-    "SC-BNB": "strategies/concept_gen_22.py", "SC-SOL": "strategies/concept_gen_23.py",
-    "VOL-DOGE": "strategies/concept_gen_24.py", "VOL-ADA": "strategies/concept_gen_25.py",
-    "VOL-AVAX": "strategies/concept_gen_26.py", "VOL-DOT": "strategies/concept_gen_27.py",
-    "QUANT-MAX": "advanced_quant_bot.py", "ARB-PRO": "arbitrage_sentinel.py",
-    "DASHBOARD": "dashboard/dashboard_server.py"
+    "SNIPER-SQUAD": "sniper_squad.py",
+    "TG-BOT": "telegram_bot_interactive.py",
+    "DASHBOARD": "dashboard_server.py",
+    "GARIBAN-BEGGAR": "gariban_beggar.py",
+    "VAMPIRE-GRID": "vampire_grid.py",
+    "SCAVENGER": "scavenger_doge.py",
+    "PHANTOM-MAKER": "phantom_maker.py",
+    "TSUNAMI-RIDER": "tsunami_rider.py",
+    "HUNTER-SWARM": "hunter_swarm.py",
+    "DARKPOOL-ARB": "dark_pool_arb.py",
+    "BLACKHOLE-ABS": "black_hole_absorber.py",
+    "STABLE-SCALPER": "stable_scalper.py",
+    "ORDERBOOK-SNIPER": "orderbook_imbalance_sniper.py",
+    "ZABBIX-WATCHDOG": "zabbix_watchdog.py",
+    "FLASH-CATCHER": "flash_catcher.py",
+    "RSI-HUNTER": "rsi_divergence_hunter.py",
+    "FUNDING-SNIFFER": "funding_rate_sniffer.py",
+    "FLASH-CRASH-ARB": "flash_crash_arbitrageur.py",
+    "VWAP-SNIPER": "vwap_reversion_sniper.py",
+    "ZERO-OOM-SCALPER": "zero_oom_scalper.py",
+    "MICRO-FLASH-CRASH": "micro_flash_crash_scalper.py",
+    "NEON-ZERO": "neon_sniper_zero.py",
+    "MICRO-TREND": "micro_trend_tracker.py",
+    "FLEET-REPORTER": "fleet_reporter.py"
 }
 
 def is_running(script):
     try:
         base_name = os.path.basename(script)
-        subprocess.check_output(f"pgrep -f {base_name}", shell=True)
-        return True
+        out = subprocess.check_output("ps aux", shell=True).decode()
+        for line in out.splitlines():
+            if base_name in line and "python" in line and "fleet_guardian" not in line and "fleet_reporter" not in line:
+                return True
+        return False
     except: return False
 
 def start_bot(name, script):
     py = VENV_PYTHON if os.path.exists(VENV_PYTHON) else SYSTEM_PYTHON
-    path = os.path.join(WORKSPACE, script)
-    if not os.path.exists(path): return
+    
+    # Handle dashboard server parameters specially
+    if script == "dashboard_server.py":
+        path = os.path.join(WORKSPACE, "dashboard", script)
+        cmd = [py, path, "8080"]
+    else:
+        path = os.path.join(WORKSPACE, script)
+        cmd = [py, path]
+        
+    if not os.path.exists(path): 
+        logger.error(f"Path non trovato: {path}")
+        return
+        
     try:
-        subprocess.Popen([py, path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, cwd=WORKSPACE)
-        logger.info(f"Started {name}")
-    except: pass
+        subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, cwd=WORKSPACE)
+        logger.info(f"Started {name} ({script})")
+    except Exception as e: 
+        logger.error(f"Failed to start {name}: {e}")
 
 def main():
-    logger.info("🛡️ GUARDIAN 4.1: Memory Optimized Boot")
+    logger.info("🛡️ GUARDIAN 5.0: Fleet 5 Min Auto-Check Booted")
     while True:
-        for name, script in BOT_REGISTRY.items():
-            if not is_running(script):
-                start_bot(name, script)
-                time.sleep(2) 
-        time.sleep(30)
+        try:
+            for name, script in BOT_REGISTRY.items():
+                if not is_running(script):
+                    start_bot(name, script)
+                    time.sleep(2) 
+        except Exception as e:
+            logger.error(f"Guardian error: {e}")
+        
+        # Dorme 5 minuti
+        time.sleep(300)
 
 if __name__ == "__main__":
     main()

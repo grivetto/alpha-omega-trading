@@ -13,7 +13,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')
 
 # --- CONFIGURAZIONE COSTANTI ---
 CAPITALE_VERSATO_TOTALE = 722.00 
-TRADING_SYMBOLS = ['BTCEUR', 'SOLEUR', 'BNBEUR', 'ETHEUR', 'AVAXBTC', 'DOGEBTC', 'ETHBTC', 'SOLBTC']
+TRADING_SYMBOLS = ['EURUSDT', 'BTCEUR', 'SOLEUR', 'BNBEUR', 'ETHEUR', 'AVAXBTC', 'DOGEBTC', 'ETHBTC', 'SOLBTC']
 
 def get_full_status():
     try:

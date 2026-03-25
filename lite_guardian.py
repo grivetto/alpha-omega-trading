@@ -18,6 +18,7 @@ BOT_REGISTRY = {
     "PHANTOM": "phantom_maker.py",
     "TSUNAMI": "tsunami_rider.py",
     "SCIAME": "hunter_swarm.py",
+    "STABLECOIN_SCALPER": "stablecoin_scalper.py",
     "OB_WALL_SNIPER": "ob_wall_sniper.py",
     "MICRO_SPREAD": "micro_spread_sniper.py",
     "DARKPOOL": "dark_pool_arb.py",

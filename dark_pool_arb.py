@@ -49,6 +49,7 @@ def main():
         try:
             available_eur = float(client.get_asset_balance(asset='EUR')['free'])
             if available_eur < TRADE_AMOUNT + get_vault_locked():
+                logger.info("💗 Heartbeat OK. Memoria pulita. (Attesa liquidità)")
                 time.sleep(10)
                 continue
                 
@@ -89,6 +90,7 @@ def main():
             logger.info("💗 Heartbeat OK. Memoria pulita.")
             gc.collect()
         except Exception as e:
+            logger.error(f"Errore: {e}")
             time.sleep(30)
 
 if __name__ == "__main__":

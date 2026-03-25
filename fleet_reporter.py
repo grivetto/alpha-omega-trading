@@ -18,7 +18,7 @@ BOTS = {
     "BLACKHOLE-ABS": "black_hole_absorber.py",
     "STABLE-SCALPER": "stable_scalper.py",
     "ORDERBOOK-SNIPER": "orderbook_imbalance_sniper.py",
-    "MICRO-FLASH-CRASH": "micro_flash_crash",
+    "MICRO-FLASH-CRASH": "micro_flash_crash_scalper.py",
     "ZABBIX-WATCHDOG": "zabbix_watchdog.py",
     "FLASH-CATCHER": "flash_catcher.py",
     "RSI-HUNTER": "rsi_divergence_hunter.py",
@@ -40,7 +40,8 @@ def main():
             sniper_running = "sniper_squad.py" in ps
             
             for n, s in BOTS.items():
-                on = s in ps
+                base_name = os.path.basename(s)
+                on = base_name in ps
                 
                 # Se sniper squad è in esecuzione, il vault 33% è in esecuzione (integrato nel codice)
                 if n == "VAULT-MANAGER" and sniper_running:

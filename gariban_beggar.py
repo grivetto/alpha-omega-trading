@@ -54,7 +54,7 @@ def get_step_size(symbol):
     return 1.0
 
 # Ampliamo le monete "povere" (meme coins, monetine ultra-volatili)
-SYMBOLS = ["SHIBEUR", "DOGEEUR", "PEPEEUR", "FLOKIEUR", "BOMEUR", "WIFEUR", "BONKEUR", "NOTEUR"]
+SYMBOLS = ["SHIBEUR", "DOGEEUR", "PEPEEUR", "WIFEUR", "NOTEUR"]
 
 def recover_gariban_positions():
     positions = {}
@@ -155,6 +155,7 @@ def main():
             gc.collect()
             
         except Exception as e:
+            logger.error(f"Errore loop principale: {e}")
             time.sleep(60)
 
 if __name__ == "__main__":
