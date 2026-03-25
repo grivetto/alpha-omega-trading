@@ -111,6 +111,7 @@ def get_squad_stats():
         flashcrash = "flash_crash_arbitrageur.py" in ps_output
         microtrend = "micro_trend_tracker.py" in ps_output
         bollinger = "bollinger_bands_sniper.py" in ps_output
+        eur_usdc_nano = "stablecoin_nano_scalper_eur_usdc.py" in ps_output
         liquidityvacuum = "liquidity_vacuum.py" in ps_output
         eurusdtscalper = "eur_usdt_scalper_pro.py" in ps_output
         whaletracker = "whale_tracker_nano.py" in ps_output
@@ -124,6 +125,7 @@ def get_squad_stats():
         status += f"🤲 GARIBAN: {'ONLINE' if gariban else 'OFFLINE'} (Elemosina)\n"
         status += f"🧛 VAMPIRO: {'ONLINE' if vampire else 'OFFLINE'} (Griglia BTC)\n"
         micro = pgrep("eur_usdt_micro_scalper")
+        status += f"🪙 EUR_USDC_NANO: {\"ONLINE\" if eur_usdc_nano else \"OFFLINE\"} (Micro Spread EUR/USDC)\n"
         status += f"💶 EUR_USDT_MICRO: {'ONLINE' if micro else 'OFFLINE'} (Micro spread scalper)\n"
         status += f"🦴 SCIACALLO: {'ONLINE' if scavenger else 'OFFLINE'} (Meme Crash)\n"
         status += f"👻 PHANTOM: {'ONLINE' if phantom else 'OFFLINE'} (Book Maker)\n"
