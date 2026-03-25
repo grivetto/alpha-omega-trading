@@ -38,6 +38,8 @@ BOT_REGISTRY = {
     "EUR_USDT_MICRO": "eur_usdt_micro_scalper.py",
     "VWAP_SNIPER": "vwap_reversion_sniper.py",
     "ZERO_OOM": "zero_oom_scalper.py",
+    "EUR_USDT_NANO": "eur_usdt_scalper_nano.py",
+    "FUNDING_NANO": "funding_rate_sniffer.py",
 }
 
 def is_running(script):
