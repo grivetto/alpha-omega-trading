@@ -114,13 +114,14 @@ def get_squad_stats():
         liquidityvacuum = "liquidity_vacuum.py" in ps_output
         eurusdtscalper = "eur_usdt_scalper_pro.py" in ps_output
         solpulse = "sol_pulse_sniper.py" in ps_output
+        vwapsniper = "vwap_reversion_sniper.py" in ps_output
         
         status = "🚀 *STATO SQUADRE (Lite Guardian 2.1)*\n------------------------------------\n"
         status += f"🎯 SNIPER SQUAD: {'ONLINE' if sniper else 'OFFLINE'} (Assalto)\n"
         status += f"🤲 GARIBAN: {'ONLINE' if gariban else 'OFFLINE'} (Elemosina)\n"
         status += f"🧛 VAMPIRO: {'ONLINE' if vampire else 'OFFLINE'} (Griglia BTC)\n"
         micro = pgrep("eur_usdt_micro_scalper")
-        status += f"💶 EUR_USDT_MICRO: {\"ONLINE\" if micro else \"OFFLINE\"} (Micro spread scalper)\n"
+        status += f"💶 EUR_USDT_MICRO: {'ONLINE' if micro else 'OFFLINE'} (Micro spread scalper)\n"
         status += f"🦴 SCIACALLO: {'ONLINE' if scavenger else 'OFFLINE'} (Meme Crash)\n"
         status += f"👻 PHANTOM: {'ONLINE' if phantom else 'OFFLINE'} (Book Maker)\n"
         status += f"🌊 TSUNAMI: {'ONLINE' if tsunami else 'OFFLINE'} (Pump Rider)\n"
@@ -128,7 +129,7 @@ def get_squad_stats():
         status += f"🌑 DARKPOOL: {'ONLINE' if darkpool else 'OFFLINE'} (Radar Triangolare)\n"
         status += f"🌌 BLACKHOLE: {'ONLINE' if blackhole else 'OFFLINE'} (Timing Globale)\n"
         status += f"⚖️ STABLESCALP: {'ONLINE' if stablescalper else 'OFFLINE'} (Spread EUR/USDT)\n"
-        status += f"🎯 ORDERBOOK: {\"ONLINE\" if orderbook_sniper else \"OFFLINE\"} (Orderbook Imbalance Hunter)\n"
+        status += f"🎯 ORDERBOOK: {'ONLINE' if orderbook_sniper else 'OFFLINE'} (Orderbook Imbalance Hunter)\n"
         status += f"👁️ ZABBIX: {'ONLINE' if zabbix else 'OFFLINE'} (Monitoraggio Salute)\n"
         status += f"🎣 FLASHCATCHER: {'ONLINE' if flashcatcher else 'OFFLINE'} (Reti Limite -4%)\n"
         legion_count = sum(1 for line in ps_output if "legion_" in line and "python" in line)
@@ -136,6 +137,7 @@ def get_squad_stats():
         status += f"📊 RSIHUNTER: {'ONLINE' if rsihunter else 'OFFLINE'} (Divergenze 5m)\n"
         status += f"💸 FUNDING: {'ONLINE' if fundingsniffer else 'OFFLINE'} (Sniffer tassi futures)\n"
         status += f"💥 FLASHCRASH: {'ONLINE' if flashcrash else 'OFFLINE'} (Arbitraggio Crolli)\n"
+        status += f"🎯 VWAPSNIPER: {'ONLINE' if vwapsniper else 'OFFLINE'} (Deviazione Intraday)\n"
         status += f"📈 MICROTREND: {'ONLINE' if microtrend else 'OFFLINE'} (Scalper su 1m)\n"
         status += f"🧱 DCA: {'ONLINE' if 'dca_accumulator.py' in ps_output else 'OFFLINE'} (Accumulo BTC/ETH)\n"
         status += f"🌾 YIELD FARM: {'ONLINE' if 'yield_farmer.py' in ps_output else 'OFFLINE'} (Interessi Flessibili)\n"
