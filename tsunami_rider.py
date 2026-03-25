@@ -67,7 +67,7 @@ def process_socket_msg(msg):
             pnl = (price - entry) / entry
             
             # Esce veloce: Take Profit dinamico o Stop Loss stretto
-            take_profit = pnl > 0.005 or (pnl > 0.003 and price < highest * 0.998)
+            take_profit = pnl > 0.003 or (pnl > 0.0015 and price < highest * 0.998)
             stop_loss = pnl <= -0.01  # Massimo -1% sullo tsunami
             
             if take_profit or stop_loss:
