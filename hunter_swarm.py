@@ -88,7 +88,7 @@ def process_socket_msg(msg):
             pnl = (price - entry) / entry
             
             # Lo sciame prende morsi veloci e scappa (+0.3%)
-            take_profit = pnl > 0.003 
+            take_profit = pnl > 0.001 
             stop_loss = pnl <= -0.05 # Se perde il 5% taglia
             
             if take_profit or stop_loss:

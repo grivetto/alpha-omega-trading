@@ -178,7 +178,7 @@ def process_socket_msg(msg):
             positions[symbol]['highest'] = highest
             
             pnl = (price - entry) / entry
-            take_profit = pnl > 0.004 or (pnl > 0.002 and price < highest * 0.998)
+            take_profit = pnl > 0.0015 or (pnl > 0.0008 and price < highest * 0.999)
             stop_loss = pnl <= -0.10  # MAXIMUM DRAWDOWN 10%
             
             if take_profit or stop_loss:
@@ -213,7 +213,7 @@ def process_socket_msg(msg):
                 ema = calc_ema(klines[symbol], 9)
                 
                 momentum_buy = price > ema and 50 < rsi < 78
-                oversold_bounce = rsi < 35 and price > ema
+                oversold_bounce = rsi < 40 and price > ema
                 
                 # Se la missione è già raggiunta, non si entra più per oggi
                 if mission["achieved"]: return
