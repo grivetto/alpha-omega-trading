@@ -63,30 +63,33 @@ def main():
                         # Calcolo quantità in base alla moneta base (BTC)
                         # qty = 0.001 BTC / prezzo moneta (es. ETHBTC)
                         try:
-                            eur_bal = float(client.get_asset_balance(asset="EUR")["free"])
-                            with open("/home/sergio/.openclaw/workspace/denaro/vault.json", "r") as f:
-                                locked = float(__import__("json").load(f).get("LOCKED_EUR", 0))
-                            eur_bal = max(0, eur_bal - locked)
-                            if eur_bal < RISK_BTC:
-                                logger.warning(f"⚠️ Fondo insufficiente (Bloccato: {locked}€). Skipping {symbol}")
+                            try:
+                                eur_bal = float(client.get_asset_balance(asset="EUR")["free"])
+                            except Exception:
+                                eur_bal = 0.0
+                            
+                            try:
+                                with open("/home/sergio/.openclaw/workspace/denaro/vault.json", "r") as f:
+                                    locked = float(__import__("json").load(f).get("LOCKED_EUR", 0))
+                                eur_bal = max(0, eur_bal - locked)
+                            except Exception:
+                                pass
+                                
+                            if eur_bal < RISK_BTC + 1.0:
+                                logger.warning(f"⚠️ Fondo insufficiente ({eur_bal}€ disponibili netti, {RISK_BTC}€ richiesti). Skipping {symbol}")
                                 continue
-                        except: pass
-                        
-                        if eur_bal < RISK_BTC:
-                            logger.warning(f"⚠️ Fondo insufficiente ({eur_bal}€ disponibili, {RISK_BTC}€ richiesti). Skipping {symbol}")
-                            continue
-                        qty_to_buy = RISK_BTC / price
-                        # Arrotondamento prudente (Binance richiede precisione specifica)
-                        order = client.create_order(
-                            symbol=symbol,
-                            side='BUY',
-                            type='MARKET',
-                            quoteOrderQty=round(RISK_BTC, 6)
-                        )
-                        logger.info(f"🟢 LIVE BUY EXECUTED: {symbol} @ {price} BTC")
-                        positions[symbol] = {'entry': price, 'qty': RISK_BTC / price}
-                    except Exception as e:
-                        logger.error(f"❌ FAILED BUY {symbol}: {e}")
+                                
+                            qty_to_buy = RISK_BTC / price
+                            order = client.create_order(
+                                symbol=symbol,
+                                side='BUY',
+                                type='MARKET',
+                                quoteOrderQty=round(RISK_BTC, 2)
+                            )
+                            logger.info(f"🟢 LIVE BUY EXECUTED: {symbol} @ {price} BTC")
+                            positions[symbol] = {'entry': price, 'qty': RISK_BTC / price}
+                        except Exception as e:
+                            logger.error(f"❌ FAILED BUY {symbol}: {e}")
 
                 # GESTIONE POSIZIONI ESISTENTI
                 if symbol in positions:
