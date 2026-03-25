@@ -17,7 +17,7 @@ client = Client(API_KEY, API_SECRET)
 
 SYMBOLS = ["SOLEUR", "DOGEEUR", "BNBEUR", "AVAXEUR", "LINKEUR", "PEPEEUR", "ETHEUR", "DOTEUR"]
 MAX_TRADE_EUR = 1000.0  
-MAX_CONCURRENT_TRADES = 3
+MAX_CONCURRENT_TRADES = 6
 
 VAULT_FILE = "/home/sergio/.openclaw/workspace/denaro/vault.json"
 MISSION_FILE = "/home/sergio/.openclaw/workspace/denaro/daily_mission.json"
@@ -212,8 +212,8 @@ def process_socket_msg(msg):
                 rsi = calc_rsi(klines[symbol], 14)
                 ema = calc_ema(klines[symbol], 9)
                 
-                momentum_buy = price > ema and 50 < rsi < 78
-                oversold_bounce = rsi < 40 and price > ema
+                momentum_buy = price > ema * 0.999 and 45 < rsi < 85
+                oversold_bounce = rsi < 45
                 
                 # Se la missione è già raggiunta, non si entra più per oggi
                 if mission["achieved"]: return

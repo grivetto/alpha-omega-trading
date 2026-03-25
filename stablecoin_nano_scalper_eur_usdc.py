@@ -18,7 +18,7 @@ def main():
     while True:
         try:
             # Simulate a micro opportunity on EUR/USDC spread
-            spread = random.uniform(0.0001, 0.0010)
+            spread = random.uniform(0.0005, 0.0020)
             if spread > 0.0005:
                 profit = get_mock_profit()
                 total_profit += profit

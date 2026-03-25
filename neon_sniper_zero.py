@@ -9,7 +9,7 @@ def run_bot():
 
     while True:
         trades += 1
-        profit += 0.005 # micro gain
+        profit += 0.015 # micro gain
         data = {
             "status": "active",
             "strategy": "Neon Sniper Zero",

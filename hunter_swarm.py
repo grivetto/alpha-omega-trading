@@ -15,8 +15,8 @@ client = Client(os.getenv('BINANCE_API_KEY'), os.getenv('BINANCE_API_SECRET'))
 # Lo Swarm (Sciame) si divide in 5 mini-bot autonomi su socket, ognuno con 20€,
 # per colpire simultaneamente più monete quando il mercato scende a candela rossa piena.
 SYMBOLS = ["SOLEUR", "AVAXEUR", "DOTEUR", "BNBEUR", "ETHEUR", "LINKEUR", "PEPEEUR", "DOGEEUR", "ADAEUR", "XRPBTC"]
-TRADE_AMOUNT = 20.0  
-MAX_SWARM_SIZE = 5
+TRADE_AMOUNT = 50.0  
+MAX_SWARM_SIZE = 10
 
 VAULT_FILE = "/home/sergio/.openclaw/workspace/denaro/vault.json"
 MISSION_FILE = "/home/sergio/.openclaw/workspace/denaro/daily_mission.json"
@@ -119,7 +119,7 @@ def process_socket_msg(msg):
         if not is_closed and symbol not in positions and len(positions) < MAX_SWARM_SIZE:
             # Drop violento all'interno della stessa candela (-0.5% in un minuto)
             drop = (price - open_p) / open_p
-            if drop <= -0.005:
+            if drop <= -0.002:
                 try:
                     trade_amt = TRADE_AMOUNT
                     if "BTC" in symbol:
