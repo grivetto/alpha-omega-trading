@@ -61,7 +61,7 @@ class EvolutionEngine:
                 self.spawn_new_concept()
                 self.save_dna()
                 gc.collect()
-            time.sleep(3600) # Una mutazione ogni ora
+                time.sleep(3600) # Una mutazione ogni ora
             except Exception as e:
                 logger.error(f"Evolution Error: {e}")
                 gc.collect()

@@ -71,6 +71,10 @@ def main():
                                 logger.warning(f"⚠️ Fondo insufficiente (Bloccato: {locked}€). Skipping {symbol}")
                                 continue
                         except: pass
+                        
+                        if eur_bal < RISK_BTC:
+                            logger.warning(f"⚠️ Fondo insufficiente ({eur_bal}€ disponibili, {RISK_BTC}€ richiesti). Skipping {symbol}")
+                            continue
                         qty_to_buy = RISK_BTC / price
                         # Arrotondamento prudente (Binance richiede precisione specifica)
                         order = client.create_order(
