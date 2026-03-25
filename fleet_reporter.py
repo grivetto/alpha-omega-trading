@@ -7,7 +7,27 @@ BOTS = {
     "SNIPER-SQUAD": "sniper_squad.py",
     "VAULT-MANAGER": "vault_manager.py",
     "TG-BOT": "telegram_bot_interactive.py",
-    "DASHBOARD": "dashboard_server.py"
+    "DASHBOARD": "dashboard_server.py",
+    "GARIBAN-BEGGAR": "gariban_beggar.py",
+    "VAMPIRE-GRID": "vampire_grid.py",
+    "SCAVENGER": "scavenger_doge.py",
+    "PHANTOM-MAKER": "phantom_maker.py",
+    "TSUNAMI-RIDER": "tsunami_rider.py",
+    "HUNTER-SWARM": "hunter_swarm.py",
+    "DARKPOOL-ARB": "dark_pool_arb.py",
+    "BLACKHOLE-ABS": "black_hole_absorber.py",
+    "STABLE-SCALPER": "stable_scalper.py",
+    "ORDERBOOK-SNIPER": "orderbook_imbalance_sniper.py",
+    "MICRO-FLASH-CRASH": "micro_flash_crash",
+    "ZABBIX-WATCHDOG": "zabbix_watchdog.py",
+    "FLASH-CATCHER": "flash_catcher.py",
+    "RSI-HUNTER": "rsi_divergence_hunter.py",
+    "FUNDING-SNIFFER": "funding_rate_sniffer.py",
+    "FLASH-CRASH-ARB": "flash_crash_arbitrageur.py",
+    "VWAP-SNIPER": "vwap_reversion_sniper.py",
+    "ZERO-OOM-SCALPER": "zero_oom_scalper.py",
+    "NEON-ZERO": "neon_sniper_zero.py",
+    "MICRO-TREND": "micro_trend_tracker.py"
 }
 
 def main():

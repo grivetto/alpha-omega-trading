@@ -61,10 +61,21 @@ def get_daily_profit():
         
         main_vault = locked - gariban_tracker
         
+        # Leggi profitto giornaliero da daily_mission.json
+        profit_today = 0.0
+        target_eur = 100.0
+        try:
+            with open("/home/sergio/.openclaw/workspace/denaro/daily_mission.json", "r") as f:
+                mission_data = __import__("json").load(f)
+                profit_today = float(mission_data.get("profit_today", 0))
+                target_eur = float(mission_data.get("target_eur", 100.0))
+        except: pass
+        
         return f"""📅 *RICAVO GIORNALIERO*
 ------------------------------------
+🎯 Profitto di Oggi: €{profit_today:.2f} / €{target_eur:.2f}
 💸 Liquidità Libera: €{eur:.2f}
-🔐 *Fondo di Sicurezza Principale (33%)*: €{main_vault:.2f}
+🔐 *Fondo Sicurezza (33%)*: €{main_vault:.2f}
 🤲 *Elemosina Gariban*: €{gariban_tracker:.2f}
 ------------------------------------"""
     except:
@@ -124,8 +135,8 @@ def get_squad_stats():
         status += f"🎯 SNIPER SQUAD: {'ONLINE' if sniper else 'OFFLINE'} (Assalto)\n"
         status += f"🤲 GARIBAN: {'ONLINE' if gariban else 'OFFLINE'} (Elemosina)\n"
         status += f"🧛 VAMPIRO: {'ONLINE' if vampire else 'OFFLINE'} (Griglia BTC)\n"
-        micro = pgrep("eur_usdt_micro_scalper")
-        status += f"🪙 EUR_USDC_NANO: {\"ONLINE\" if eur_usdc_nano else \"OFFLINE\"} (Micro Spread EUR/USDC)\n"
+        micro = "eur_usdt_micro_scalper" in ps_output
+        status += f"🪙 EUR_USDC_NANO: {'ONLINE' if eur_usdc_nano else 'OFFLINE'} (Micro Spread EUR/USDC)\n"
         status += f"💶 EUR_USDT_MICRO: {'ONLINE' if micro else 'OFFLINE'} (Micro spread scalper)\n"
         status += f"🦴 SCIACALLO: {'ONLINE' if scavenger else 'OFFLINE'} (Meme Crash)\n"
         status += f"👻 PHANTOM: {'ONLINE' if phantom else 'OFFLINE'} (Book Maker)\n"
@@ -135,9 +146,9 @@ def get_squad_stats():
         status += f"🌌 BLACKHOLE: {'ONLINE' if blackhole else 'OFFLINE'} (Timing Globale)\n"
         status += f"⚖️ STABLESCALP: {'ONLINE' if stablescalper else 'OFFLINE'} (Spread EUR/USDT)\n"
         status += f"🎯 ORDERBOOK: {'ONLINE' if orderbook_sniper else 'OFFLINE'} (Orderbook Imbalance Hunter)\n"
-        micro_flash = check_process("micro_flash_crash")
-    status += f"⚡ FLASH CRASH: {\"ONLINE\" if micro_flash else \"OFFLINE\"} (Zero-OOM Arbitrageur)\n"
-    status += f"👁️ ZABBIX: {'ONLINE' if zabbix else 'OFFLINE'} (Monitoraggio Salute)\n"
+        micro_flash = "micro_flash_crash" in ps_output
+        status += f"⚡ FLASH CRASH: {'ONLINE' if micro_flash else 'OFFLINE'} (Zero-OOM Arbitrageur)\n"
+        status += f"👁️ ZABBIX: {'ONLINE' if zabbix else 'OFFLINE'} (Monitoraggio Salute)\n"
         status += f"🎣 FLASHCATCHER: {'ONLINE' if flashcatcher else 'OFFLINE'} (Reti Limite -4%)\n"
         legion_count = sum(1 for line in ps_output if "legion_" in line and "python" in line)
         status += f"⚔️ LEGION: {legion_count}/28 ONLINE (Micro-Sniper Altcoin)\n"
