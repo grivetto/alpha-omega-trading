@@ -63,7 +63,7 @@ def main():
     if daily_profit > 0:
         logger.info(f"💰 PROFITTO DEL GIORNO RILEVATO: +{daily_profit:.2f}€. Spostamento in cassaforte.")
         add_to_vault(daily_profit)
-        else:
+    else:
         logger.info(f"📉 Nessun profitto netto oggi ({daily_profit:.2f}€). Nessun versamento aggiuntivo in cassaforte.")
 
     # 3. Salva lo snapshot per domani

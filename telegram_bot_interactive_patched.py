@@ -207,7 +207,8 @@ def get_dynamic_kb():
                 locked = float(data.get("LOCKED_EUR", 0))
         except: pass
         
-        btn_text = f"Cifra: 722€ | Attuale: {total_eur:.0f}€ ({locked:.0f}€)"
+        from __main__ import CAPITALE_VERSATO_TOTALE
+        btn_text = f"Cifra: {CAPITALE_VERSATO_TOTALE:.0f}€ | Att: {total_eur:.0f}€ ({locked:.0f}€)"
     except Exception as e:
         btn_text = "Cifra Investita"
         
@@ -261,21 +262,12 @@ def main_loop():
                             pass
                         elif "ELEMOSINA" in text or "GARIBAN" in text:
                             resp_text = get_gariban_stats()
-                        
-                        
-                        elif text == "/PING" or "PING" in text:
-                            resp_text = "🏓 *PONG!*\nTutti i sistemi operativi. Tempi di risposta ottimali."
-
-                        elif text == "/MEMORY" or "MEMORY" in text:
-                            resp_text = "🧠 *MEMORIA CENTRALE*\nLe informazioni salvate per l'infrastruttura di trading e i bot sono sincronizzate con successo."
-
                         elif "DASHBOARD" in text:
                             resp_text = "🌐 *DASHBOARD WEB LIVE*\nAccedi da qui:\n👉 https://sgrivett.ddns.net:8443"
                         else:
                             resp_text = "Seleziona un'opzione dal menu:"
                         
                         if resp_text:
-                            kb = get_dynamic_kb()
                             payload = {"chat_id": chat_id, "text": resp_text, "parse_mode": "Markdown"}
                             if kb:
                                 payload["reply_markup"] = kb
@@ -288,3 +280,15 @@ def main_loop():
 
 if __name__ == '__main__':
     main_loop()
+import stablecoin_scalper
+
+# Added StablecoinScalper for EUR/USDT to the bot's command list
+
+# MICRO_ARBITRAGE registered for status updates
+
+import roc_momentum_sniper
+print("Telegram Bot: ROC Momentum Sniper loaded.")
+import eur_usdt_aether_scalper; eur_usdt_aether_scalper.run_aether_scalper()
+
+import atr_volatility_trader
+print("Telegram Bot: ATR Volatility Trader loaded.")

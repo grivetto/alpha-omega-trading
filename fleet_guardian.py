@@ -32,7 +32,8 @@ BOT_REGISTRY = {
     "MICRO-FLASH-CRASH": "micro_flash_crash_scalper.py",
     "NEON-ZERO": "neon_sniper_zero.py",
     "MICRO-TREND": "micro_trend_tracker.py",
-    "FLEET-REPORTER": "fleet_reporter.py"
+    "FLEET-REPORTER": "fleet_reporter.py",
+    "MICRO-FRACTOR": "micro_fractor_bot.py"
 }
 
 def is_running(script):
