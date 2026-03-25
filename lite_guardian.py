@@ -1,3 +1,4 @@
+import roc_momentum_sniper
 import os, time, subprocess, logging
 
 LOG_FILE = "/home/sergio/.openclaw/workspace/denaro/lite_guardian.log"

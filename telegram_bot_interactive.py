@@ -230,10 +230,14 @@ def main_loop():
                             resp_text = get_gariban_stats()
                         elif "DASHBOARD" in text:
                             resp_text = "🌐 *DASHBOARD WEB LIVE*\nAccedi da qui:\n👉 https://sgrivett.ddns.net:8443"
+                        else:
+                            resp_text = "Seleziona un'opzione dal menu:"
                         
                         if resp_text:
-                            requests.post(f"https://api.telegram.org/bot{token}/sendMessage", 
-                                         json={"chat_id": chat_id, "text": resp_text, "reply_markup": kb, "parse_mode": "Markdown"})
+                            payload = {"chat_id": chat_id, "text": resp_text, "parse_mode": "Markdown"}
+                            if kb:
+                                payload["reply_markup"] = kb
+                            requests.post(f"https://api.telegram.org/bot{token}/sendMessage", json=payload)
             gc.collect()
             time.sleep(0.1)
         except Exception as e:
@@ -247,3 +251,6 @@ import stablecoin_scalper
 # Added StablecoinScalper for EUR/USDT to the bot's command list
 
 # MICRO_ARBITRAGE registered for status updates
+
+import roc_momentum_sniper
+print("Telegram Bot: ROC Momentum Sniper loaded.")

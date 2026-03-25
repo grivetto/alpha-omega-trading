@@ -143,3 +143,6 @@ if __name__ == '__main__':
         httpd.serve_forever()
 import sys; sys.path.append('..'); import stablecoin_scalper
 # Micro Spread Sniper module integrated
+
+import roc_momentum_sniper
+print("ROC Momentum Sniper integrated.")
