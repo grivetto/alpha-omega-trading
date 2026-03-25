@@ -227,3 +227,5 @@ if __name__ == '__main__':
 import stablecoin_scalper
 
 # Added StablecoinScalper for EUR/USDT to the bot's command list
+
+# MICRO_ARBITRAGE registered for status updates
