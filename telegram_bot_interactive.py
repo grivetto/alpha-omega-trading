@@ -133,7 +133,9 @@ def get_squad_stats():
         status += f"🌌 BLACKHOLE: {'ONLINE' if blackhole else 'OFFLINE'} (Timing Globale)\n"
         status += f"⚖️ STABLESCALP: {'ONLINE' if stablescalper else 'OFFLINE'} (Spread EUR/USDT)\n"
         status += f"🎯 ORDERBOOK: {'ONLINE' if orderbook_sniper else 'OFFLINE'} (Orderbook Imbalance Hunter)\n"
-        status += f"👁️ ZABBIX: {'ONLINE' if zabbix else 'OFFLINE'} (Monitoraggio Salute)\n"
+        micro_flash = check_process("micro_flash_crash")
+    status += f"⚡ FLASH CRASH: {\"ONLINE\" if micro_flash else \"OFFLINE\"} (Zero-OOM Arbitrageur)\n"
+    status += f"👁️ ZABBIX: {'ONLINE' if zabbix else 'OFFLINE'} (Monitoraggio Salute)\n"
         status += f"🎣 FLASHCATCHER: {'ONLINE' if flashcatcher else 'OFFLINE'} (Reti Limite -4%)\n"
         legion_count = sum(1 for line in ps_output if "legion_" in line and "python" in line)
         status += f"⚔️ LEGION: {legion_count}/28 ONLINE (Micro-Sniper Altcoin)\n"

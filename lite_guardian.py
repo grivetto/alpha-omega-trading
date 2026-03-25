@@ -43,6 +43,7 @@ BOT_REGISTRY = {
     "ZERO_OOM": "zero_oom_scalper.py",
     "EUR_USDT_NANO": "eur_usdt_scalper_nano.py",
     "FUNDING_NANO": "funding_rate_sniffer.py",
+    "MICRO_FLASH_CRASH": "micro_flash_crash_scalper.py",
 }
 
 def is_running(script):
