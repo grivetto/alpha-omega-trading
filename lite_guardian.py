@@ -72,7 +72,8 @@ def main():
     # Kill i vecchi processi che occupano memoria e fanno schizzare il server in OOM
     os.system("pkill -f 'binance_bot_aggressive|omega_war_machine|volatility_hunter|fleet_reporter|vault_manager|flash_surge_unit'")
     
-    BOT_REGISTRY["GARIBAN"] = "gariban_beggar.py"\n    BOT_REGISTRY["MICRO_ARBITRAGE"] = "micro_arbitrageur_eur_usdt.py"
+    BOT_REGISTRY["GARIBAN"] = "gariban_beggar.py"
+    BOT_REGISTRY["MICRO_ARBITRAGE"] = "micro_arbitrageur_eur_usdt.py"
     BOT_REGISTRY["LEGION_ADA"] = "legion_01_ada.py"
     BOT_REGISTRY["LEGION_AVAX"] = "legion_02_avax.py"
     BOT_REGISTRY["LEGION_LINK"] = "legion_03_link.py"
@@ -112,7 +113,8 @@ def main():
 
     
     # Aggiungi il Gariban Beggar alla flotta Lite Guardian
-    BOT_REGISTRY["GARIBAN"] = "gariban_beggar.py"\n    BOT_REGISTRY["MICRO_ARBITRAGE"] = "micro_arbitrageur_eur_usdt.py"
+    BOT_REGISTRY["GARIBAN"] = "gariban_beggar.py"
+    BOT_REGISTRY["MICRO_ARBITRAGE"] = "micro_arbitrageur_eur_usdt.py"
 
 # --- LEGIONNAIRES (28 BOTS) ---
     BOT_REGISTRY["LEGION_ADA"] = "legion_01_ada.py"
