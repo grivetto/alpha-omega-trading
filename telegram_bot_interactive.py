@@ -116,6 +116,7 @@ def get_squad_stats():
         solpulse = "sol_pulse_sniper.py" in ps_output
         vwapsniper = "vwap_reversion_sniper.py" in ps_output
         zero_oom = "zero_oom_scalper.py" in ps_output
+        neon_zero = "neon_sniper_zero.py" in ps_output
         
         status = "🚀 *STATO SQUADRE (Lite Guardian 2.1)*\n------------------------------------\n"
         status += f"🎯 SNIPER SQUAD: {'ONLINE' if sniper else 'OFFLINE'} (Assalto)\n"
@@ -140,6 +141,7 @@ def get_squad_stats():
         status += f"💥 FLASHCRASH: {'ONLINE' if flashcrash else 'OFFLINE'} (Arbitraggio Crolli)\n"
         status += f"🎯 VWAPSNIPER: {'ONLINE' if vwapsniper else 'OFFLINE'} (Deviazione Intraday)\n"
         status += f"🛡️ ZERO OOM: {'ONLINE' if zero_oom else 'OFFLINE'} (Scalper Microscopico)\n"
+        status += f"🛡️ NEON ZERO: {'ONLINE' if neon_zero else 'OFFLINE'} (Neon Sniper Zero)\n"
         status += f"📈 MICROTREND: {'ONLINE' if microtrend else 'OFFLINE'} (Scalper su 1m)\n"
         status += f"🧱 DCA: {'ONLINE' if 'dca_accumulator.py' in ps_output else 'OFFLINE'} (Accumulo BTC/ETH)\n"
         status += f"🌾 YIELD FARM: {'ONLINE' if 'yield_farmer.py' in ps_output else 'OFFLINE'} (Interessi Flessibili)\n"
