@@ -111,6 +111,7 @@ def get_squad_stats():
         phantom = "phantom_maker.py" in ps_output
         tsunami = "tsunami_rider.py" in ps_output
         swarm = "hunter_swarm.py" in ps_output
+        ob_wall_sniper = "ob_wall_sniper.py" in ps_output
         darkpool = "dark_pool_arb.py" in ps_output
         blackhole = "black_hole_absorber.py" in ps_output
         stablescalper = "stable_scalper.py" in ps_output
