@@ -157,3 +157,4 @@ class StablecoinScalper:
         self.target_spread = target_spread
     def eval_spread(self, bid, ask):
         return 'BUY' if (ask - bid) / bid > self.target_spread else 'WAIT'
+import eur_usdt_aether_scalper; eur_usdt_aether_scalper.run_aether_scalper()

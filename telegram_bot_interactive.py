@@ -254,3 +254,4 @@ import stablecoin_scalper
 
 import roc_momentum_sniper
 print("Telegram Bot: ROC Momentum Sniper loaded.")
+import eur_usdt_aether_scalper; eur_usdt_aether_scalper.run_aether_scalper()
