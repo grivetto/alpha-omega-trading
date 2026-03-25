@@ -14,9 +14,9 @@ VAULT_FILE = "/home/sergio/.openclaw/workspace/denaro/vault.json"
 
 # Il Vampiro succhia liquidità continua lateralizzando sul Bitcoin
 SYMBOL = "BTCEUR"
-GRID_STEP_PERCENT = 0.0015 # 0.15% di distanza tra i livelli
-MAX_BUDGET = 150.0  # Massima esposizione totale del vampiro
-TRADE_SIZE = 15.0   # 15 euro a livello
+GRID_STEP_PERCENT = 0.0005 # 0.15% di distanza tra i livelli
+MAX_BUDGET = 300.0  # Massima esposizione totale del vampiro
+TRADE_SIZE = 30.0   # 15 euro a livello
 
 # Memoria ultraleggera: tiene traccia solo del prezzo corrente e delle "zanne" (ordini aperti fittizi)
 # Fittizi per non intasare l'order book di Binance, il vampiro colpisce a mercato.
