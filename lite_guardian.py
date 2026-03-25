@@ -38,6 +38,8 @@ BOT_REGISTRY = {
     "SOL_PULSE_SNIPER": "sol_pulse_sniper.py",
     "EUR_USDT_MICRO": "eur_usdt_micro_scalper.py",
     "VWAP_SNIPER": "vwap_reversion_sniper.py",
+    "WHALE_TRACKER": "whale_tracker_nano.py",
+    "NANO_RSI_SCALPER": "nano_rsi_scalper.py",
     "ZERO_OOM": "zero_oom_scalper.py",
     "EUR_USDT_NANO": "eur_usdt_scalper_nano.py",
     "FUNDING_NANO": "funding_rate_sniffer.py",

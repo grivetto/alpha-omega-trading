@@ -113,6 +113,7 @@ def get_squad_stats():
         bollinger = "bollinger_bands_sniper.py" in ps_output
         liquidityvacuum = "liquidity_vacuum.py" in ps_output
         eurusdtscalper = "eur_usdt_scalper_pro.py" in ps_output
+        whaletracker = "whale_tracker_nano.py" in ps_output
         solpulse = "sol_pulse_sniper.py" in ps_output
         vwapsniper = "vwap_reversion_sniper.py" in ps_output
         zero_oom = "zero_oom_scalper.py" in ps_output
@@ -149,6 +150,7 @@ def get_squad_stats():
         status += f"🎯 BOLLINGER: {'ONLINE' if bollinger else 'OFFLINE'} (Bande di Bollinger 1m)\n"
         status += f"⚡ SOL PULSE: {'ONLINE' if solpulse else 'OFFLINE'} (Accelerazione SOL)\n"
         status += f"💶 EURSCALPER: {'ONLINE' if eurusdtscalper else 'OFFLINE'} (Micro-Spread EUR)\n"
+        status += f"🐳 WHALETRACK: {'ONLINE' if whaletracker else 'OFFLINE'} (Radar Accumulo BTC)\n"
         status += "🔐 CASSAFORTE 33%: ONLINE E BLINDATA\n------------------------------------"""
         return status
     except: return "⚠️ Errore lettura processi."
