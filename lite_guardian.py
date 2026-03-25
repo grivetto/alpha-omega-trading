@@ -21,6 +21,7 @@ BOT_REGISTRY = {
     "STABLECOIN_SCALPER": "stablecoin_scalper.py",
     "OB_WALL_SNIPER": "ob_wall_sniper.py",
     "MICRO_SPREAD": "micro_spread_sniper.py",
+    "LIQUIDATION_CASCADE": "liquidation_cascade_hunter.py",
     "DARKPOOL": "dark_pool_arb.py",
     "STABLE_SCALPER": "stable_scalper.py",
     "BLACKHOLE": "black_hole_absorber.py",
