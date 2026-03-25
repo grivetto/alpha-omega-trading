@@ -34,6 +34,7 @@ BOT_REGISTRY = {
     "DCA_ACCUMULATOR": "dca_accumulator.py",
     "YIELD_FARMER": "yield_farmer.py",
     "SOL_PULSE_SNIPER": "sol_pulse_sniper.py",
+    "EUR_USDT_MICRO": "eur_usdt_micro_scalper.py",
 }
 
 def is_running(script):
