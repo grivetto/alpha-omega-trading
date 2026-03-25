@@ -1,7 +1,7 @@
 import time
 import json
 import logging
-from ccxt import binance
+import requests
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s', filename='MOMENTUM_IGNITER.log')
 
