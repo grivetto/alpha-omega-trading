@@ -76,6 +76,7 @@ def main():
     os.system("pkill -f 'binance_bot_aggressive|omega_war_machine|volatility_hunter|fleet_reporter|vault_manager|flash_surge_unit'")
     
     BOT_REGISTRY["GARIBAN"] = "gariban_beggar.py"
+    BOT_REGISTRY["SQUADRA_DELTA"] = "squadra_delta_orderflow.py"
     BOT_REGISTRY["MEXC_NANO"] = "mexc_nano_squad.py"
     BOT_REGISTRY["KAMIKAZE"] = "kamikaze_bitget_futures.py"
     BOT_REGISTRY["MICRO_ARBITRAGE"] = "micro_arbitrageur_eur_usdt.py"
@@ -110,6 +111,7 @@ def main():
     
     # Aggiungi il Gariban Beggar alla flotta Lite Guardian
     BOT_REGISTRY["GARIBAN"] = "gariban_beggar.py"
+    BOT_REGISTRY["SQUADRA_DELTA"] = "squadra_delta_orderflow.py"
     BOT_REGISTRY["MEXC_NANO"] = "mexc_nano_squad.py"
     BOT_REGISTRY["KAMIKAZE"] = "kamikaze_bitget_futures.py"
     BOT_REGISTRY["MICRO_ARBITRAGE"] = "micro_arbitrageur_eur_usdt.py"
