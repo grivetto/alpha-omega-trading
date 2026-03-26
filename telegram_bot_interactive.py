@@ -42,7 +42,16 @@ def get_full_status():
                 gariban = float(vdata.get("GARIBAN_TRACKER", 0))
         except: pass
         
-        main_vault = locked - gariban
+        # Fallback reading directly from GARIBAN.log
+        if gariban == 0.0 and os.path.exists("/home/sergio/.openclaw/workspace/denaro/GARIBAN.log"):
+            try:
+                with open("/home/sergio/.openclaw/workspace/denaro/GARIBAN.log", "r") as gf:
+                    for line in gf:
+                        if "ELEMOSINA ACQUISITA!" in line:
+                            gariban += float(line.split("ELEMOSINA ACQUISITA! ")[1].split("€")[0])
+            except: pass
+        
+        main_vault = locked - gariban if locked >= gariban else locked
         
         msg = (
             f"💰 *SITUAZIONE CAPITALE*\n"
@@ -75,7 +84,15 @@ def get_daily_profit():
                 gariban_tracker = float(data.get("GARIBAN_TRACKER", 0))
         except: pass
         
-        main_vault = locked - gariban_tracker
+        if gariban_tracker == 0.0 and os.path.exists("/home/sergio/.openclaw/workspace/denaro/GARIBAN.log"):
+            try:
+                with open("/home/sergio/.openclaw/workspace/denaro/GARIBAN.log", "r") as gf:
+                    for line in gf:
+                        if "ELEMOSINA ACQUISITA!" in line:
+                            gariban_tracker += float(line.split("ELEMOSINA ACQUISITA! ")[1].split("€")[0])
+            except: pass
+        
+        main_vault = locked - gariban_tracker if locked >= gariban_tracker else locked
         
         # Leggi profitto giornaliero da daily_mission.json
         profit_today = 0.0
