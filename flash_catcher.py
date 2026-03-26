@@ -28,7 +28,7 @@ def add_to_vault(amount):
     except: pass
 
 # SIMBOLI AD ALTA VOLATILITA' / FLASH CRASH
-SYMBOLS = ["SOLEUR", "PEPEEUR", "DOGEEUR", "XRPEUR"]
+SYMBOLS = ["SOLEUR", "ADAEUR", "DOGEEUR", "LINKEUR"]
 TRADE_EUR_AMOUNT = 15.0
 
 def round_step(quantity, step_size):

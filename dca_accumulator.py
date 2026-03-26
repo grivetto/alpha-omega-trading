@@ -72,7 +72,9 @@ def main():
                         qty = round_step(amount_usdt / price, step)
                         
                         if qty > 0:
-                            qty_str = f"{qty:.8f}".rstrip('0').rstrip('.')
+                            qty_str = f"{qty:.8f}".rstrip('0')
+                            if qty_str.endswith('.'): qty_str = qty_str[:-1]
+                            if qty_str == "": qty_str = "0"
                             order = client.create_order(symbol=symbol, side='BUY', type='MARKET', quantity=qty_str)
                             logger.info(f"✅ DCA ESEGUITO: Comprati {qty_str} {symbol.replace('USDT','')} a ~{price} USDT.")
                     except Exception as e:
