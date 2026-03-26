@@ -60,7 +60,10 @@ class OmegaWarMachine:
                             order = self.client.create_order(symbol=s, side='BUY', type='MARKET', quoteOrderQty=round(RISK_BTC, 6))
                             self.active_positions[s] = {'entry': price, 'qty': float(order['executedQty'])}
                             logger.info(f"🔴 OMEGA BUY: {s} @ {price}")
-                        except Exception as e: logger.error(f"❌ OMEGA FAIL: {e}")
+                        except Exception as e:
+            if "-2010" in str(e):
+                time.sleep(300)
+                continue logger.error(f"❌ OMEGA FAIL: {e}")
 
                     # Se il mercato è in iper-comprato (EUFORIA), Omega esce prima che Alpha veda il segnale
                     if s in self.active_positions:
@@ -79,6 +82,9 @@ class OmegaWarMachine:
                 gc.collect()
                 time.sleep(30)
             except Exception as e:
+            if "-2010" in str(e):
+                time.sleep(300)
+                continue
                 logger.error(f"Omega Main Error: {e}")
                 gc.collect()
             time.sleep(60)

@@ -44,6 +44,28 @@ def run_nano_squad():
     logger.info("📡 Connessione a MEXC in corso...")
     
     active_trades = {}
+    import re
+    try:
+        bal = mexc.fetch_balance()
+        tck = mexc.fetch_tickers()
+        for k, v in bal['total'].items():
+            if k == 'USDT': continue
+            pair = f"{k}/USDT"
+            if pair in tck and pair in PAIRS:
+                val = v * tck[pair]['last']
+                if val > 2.0:
+                    active_trades[pair] = {'qty': v, 'price': tck[pair]['last']}
+        
+        with open('MEXC_NANO.log', 'r') as f:
+            for line in f.readlines():
+                match = re.search(r'COMPRATO ([\d\.]+) (\w+/USDT) al prezzo di ([\d\.e\-]+)', line)
+                if match:
+                    q, p, pr = match.groups()
+                    if p in active_trades:
+                        active_trades[p]['price'] = float(pr)
+        logger.info(f"♻️ Ripristinato stato di {len(active_trades)} trade aperti dal saldo MEXC.")
+    except Exception as e:
+        logger.error(f"Errore recupero stato iniziale: {e}")
     
     while True:
         try:
@@ -62,11 +84,15 @@ def run_nano_squad():
                         logger.info(f"🎯 TAKE PROFIT SUI MICRO-MARGINI! {symbol} ha raggiunto {current_price}")
                         if LIVE_TRADING:
                             try:
-                                mexc.create_market_sell_order(symbol, qty)
-                                logger.info(f"✅ [LIVE] VENDUTO {symbol}. Profitto netto incassato in USDT!")
+                                base_asset = symbol.split('/')[0]
+                                actual_qty = float(mexc.fetch_balance().get(base_asset, {}).get('free', 0.0))
+                                safe_qty = min(qty, actual_qty)
+                                safe_qty = float(mexc.amount_to_precision(symbol, safe_qty))
+                                mexc.create_market_sell_order(symbol, safe_qty)
+                                logger.info(f"✅ [LIVE] VENDUTO {symbol} ({safe_qty}). Profitto netto incassato in USDT!")
                                 
                                 # Calcolo Elemosina
-                                profit = (current_price - entry_price) * qty
+                                profit = (current_price - entry_price) * safe_qty
                                 elemosina = profit * 0.33
                                 try:
                                     vault_file = '/home/sergio/.openclaw/workspace/denaro/vault.json'

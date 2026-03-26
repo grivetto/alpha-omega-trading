@@ -32,7 +32,7 @@ logging.basicConfig(level=logging.INFO, format='%(message)s')
 
 def get_vwap_and_price():
     try:
-        klines = client.get_klines(symbol=SYMBOL, interval=Client.KLINE_INTERVAL_1MINUTE, limit=500)
+        klines = client.get_klines(symbol=SYMBOL, interval=Client.KLINE_INTERVAL_1MINUTE, limit=100)
         if not klines: return None, None
         
         cumulative_vp = 0

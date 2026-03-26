@@ -32,7 +32,7 @@ def setup_kamikaze():
         if e.code == -4046:  # No need to change margin type
             pass
         else:
-            logger.error(f"Errore setup: {e}")
+            logger.error(f"Errore configurazione margine: {e}")
 
 def run_kamikaze():
     logger.info("☠️ KAMIKAZE BOT ONLINE - PRONTO ALLA LIQUIDAZIONE O AL 1000%")
@@ -55,9 +55,9 @@ def run_kamikaze():
         logger.info(f"Prezzo attuale {SYMBOL}: {current_price}")
         
         logger.info("ATTENZIONE: Il bot è in modalità STANDBY. Sposta i fondi su Futures tramite l'app Binance e dimmi 'GO' per fargli aprire il trade a leva 20x.")
-        
-    except Exception as e:
-        logger.error(f"Errore: {e}")
 
-if __name__ == "__main__":
+    except BinanceAPIException as e:
+        logger.error(f"Errore critico Binance API: {e}")
+
+if __name__ == '__main__':
     run_kamikaze()

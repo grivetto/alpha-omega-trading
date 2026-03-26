@@ -110,6 +110,8 @@ def run_kamikaze():
             
     except Exception as base_e:
         logger.error(f"Errore critico: {base_e}")
+        import time
+        time.sleep(60)
 
 if __name__ == "__main__":
     run_kamikaze()
