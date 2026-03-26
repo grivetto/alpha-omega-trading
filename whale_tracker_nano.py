@@ -14,7 +14,9 @@ def get_order_book(symbol="BTC/EUR"):
 
 def run():
     logging.info("Whale Tracker Nano started.")
-    while True:
+    import gc
+while True:
+        gc.collect()
         try:
             bids, asks = get_order_book("BTC/EUR")
             imbalance = bids / (asks + 0.001)

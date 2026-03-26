@@ -75,6 +75,8 @@ def main():
     os.system("pkill -f 'binance_bot_aggressive|omega_war_machine|volatility_hunter|fleet_reporter|vault_manager|flash_surge_unit'")
     
     BOT_REGISTRY["GARIBAN"] = "gariban_beggar.py"
+    BOT_REGISTRY["MEXC_NANO"] = "mexc_nano_squad.py"
+    BOT_REGISTRY["KAMIKAZE"] = "kamikaze_bitget_futures.py"
     BOT_REGISTRY["MICRO_ARBITRAGE"] = "micro_arbitrageur_eur_usdt.py"
     BOT_REGISTRY["LEGION_ADA"] = "legion_01_ada.py"
     BOT_REGISTRY["LEGION_AVAX"] = "legion_02_avax.py"
@@ -104,18 +106,11 @@ def main():
     BOT_REGISTRY["LEGION_MKR"] = "legion_26_mkr.py"
     BOT_REGISTRY["LEGION_NEAR"] = "legion_27_near.py"
     BOT_REGISTRY["LEGION_FTM"] = "legion_28_ftm.py"
-    while True:
-        for name, script in BOT_REGISTRY.items():
-            if not is_running(script):
-                logger.info(f"{name} is not running, starting...")
-                start_bot(name, script)
-                time.sleep(2) 
-        time.sleep(15)
-
-
     
     # Aggiungi il Gariban Beggar alla flotta Lite Guardian
     BOT_REGISTRY["GARIBAN"] = "gariban_beggar.py"
+    BOT_REGISTRY["MEXC_NANO"] = "mexc_nano_squad.py"
+    BOT_REGISTRY["KAMIKAZE"] = "kamikaze_bitget_futures.py"
     BOT_REGISTRY["MICRO_ARBITRAGE"] = "micro_arbitrageur_eur_usdt.py"
 
 # --- LEGIONNAIRES (28 BOTS) ---
@@ -147,6 +142,16 @@ def main():
     BOT_REGISTRY["LEGION_MKR"] = "legion_26_mkr.py"
     BOT_REGISTRY["LEGION_NEAR"] = "legion_27_near.py"
     BOT_REGISTRY["LEGION_FTM"] = "legion_28_ftm.py"
+
+    import gc
+while True:
+        gc.collect()
+        for name, script in BOT_REGISTRY.items():
+            if not is_running(script):
+                logger.info(f"{name} is not running, starting...")
+                start_bot(name, script)
+                time.sleep(2)
+        time.sleep(15)
 
 if __name__ == "__main__":
     main()

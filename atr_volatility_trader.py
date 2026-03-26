@@ -19,7 +19,9 @@ class ATRVolatilityTrader:
 
     def run(self):
         logger.info("ATR Volatility Trader started. Hunting for breakouts...")
-        while True:
+        import gc
+while True:
+        gc.collect()
             try:
                 atr = self.calculate_atr()
                 if atr > 400.0:

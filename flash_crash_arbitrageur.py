@@ -17,7 +17,9 @@ def execute_rebound_trade(coin, drop):
 def main():
     logger.info("🟢 Flash Crash Arbitrageur initialized. Waiting for sudden drops...")
     total_profit = 0.0
-    while True:
+    import gc
+while True:
+        gc.collect()
         try:
             drops = fetch_market_data()
             for coin, drop in drops.items():

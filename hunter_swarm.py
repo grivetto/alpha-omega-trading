@@ -15,7 +15,7 @@ client = Client(os.getenv('BINANCE_API_KEY'), os.getenv('BINANCE_API_SECRET'))
 # Lo Swarm (Sciame) si divide in 5 mini-bot autonomi su socket, ognuno con 20€,
 # per colpire simultaneamente più monete quando il mercato scende a candela rossa piena.
 SYMBOLS = ["SOLEUR", "AVAXEUR", "DOTEUR", "BNBEUR", "ETHEUR", "LINKEUR", "PEPEEUR", "DOGEEUR", "ADAEUR", "XRPBTC"]
-TRADE_AMOUNT = 50.0  
+TRADE_AMOUNT = 11.0  
 MAX_SWARM_SIZE = 10
 
 VAULT_FILE = "/home/sergio/.openclaw/workspace/denaro/vault.json"

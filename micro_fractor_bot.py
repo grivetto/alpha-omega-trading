@@ -13,7 +13,9 @@ def micro_fractor_strategy():
     Obiettivo: 50-100 micro-operazioni giornaliere per un totale cumulato di 10€-15€, avvicinando il target giornaliero dei 100€.
     """
     pairs = ['PEPE/USDT', 'WIF/USDT', 'FLOKI/USDT', 'BONK/USDT']
-    while True:
+    import gc
+while True:
+        gc.collect()
         pair = random.choice(pairs)
         volatility = random.uniform(0.1, 1.5)
         if volatility > 1.0:

@@ -25,7 +25,9 @@ def run_pulse_sniper():
 
     last_price = None
     
-    while True:
+    import gc
+while True:
+        gc.collect()
         try:
             if client:
                 ticker = client.get_symbol_ticker(symbol="SOLUSDT")

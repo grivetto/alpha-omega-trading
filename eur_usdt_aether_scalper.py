@@ -8,7 +8,9 @@ logger = logging.getLogger("AetherScalper")
 
 def _loop():
     logger.info("EUR/USDT Aether Scalper started. Zero-OOM mode.")
-    while True:
+    import gc
+while True:
+        gc.collect()
         try:
             spread = random.uniform(0.000001, 0.000005)
             if spread < 0.000002:

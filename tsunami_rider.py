@@ -42,7 +42,7 @@ def round_step(quantity, step_size):
     return round(quantity - (quantity % step_size), precision)
 
 SYMBOLS = ["SOLEUR", "DOGEEUR", "AVAXEUR", "BNBEUR", "PEPEEUR"]
-TRADE_AMOUNT = 50.0  # Carico pesante, cavalca solo tsunami certi
+TRADE_AMOUNT = 11.0  # Carico pesante, cavalca solo tsunami certi
 
 positions = {}
 

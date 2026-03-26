@@ -15,7 +15,9 @@ def main():
     print("Avvio EUR/USDC Nano Scalper.")
     total_profit = 0.0
     trades = 0
-    while True:
+    import gc
+while True:
+        gc.collect()
         try:
             # Simulate a micro opportunity on EUR/USDC spread
             spread = random.uniform(0.0005, 0.0020)

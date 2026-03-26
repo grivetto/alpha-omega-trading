@@ -7,7 +7,9 @@ def run_bot():
     trades = 0
     profit = 0.0
 
-    while True:
+    import gc
+while True:
+        gc.collect()
         trades += 1
         profit += 0.015 # micro gain
         data = {

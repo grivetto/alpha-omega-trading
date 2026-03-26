@@ -6,7 +6,9 @@ logger = logging.getLogger("StablecoinScalper")
 
 def run():
     logger.info("Avvio Stablecoin Scalper (EUR/USDT) - Spread microscopici.")
-    while True:
+    import gc
+while True:
+        gc.collect()
         # Simulated logic for scalping
         logger.info("Monitoraggio spread EUR/USDT... Nessuna divergenza rilevante per il momento.")
         time.sleep(300)

@@ -7,7 +7,9 @@ logging.basicConfig(filename="MICRO_SPREAD.log", level=logging.INFO, format="%(a
 
 def run():
     logging.info("Micro Spread Sniper starting... (0-OOM)")
-    while True:
+    import gc
+while True:
+        gc.collect()
         try:
             profit = round(random.uniform(0.001, 0.015), 4)
             with open("micro_spread_status.json", "w") as f:

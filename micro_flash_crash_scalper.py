@@ -16,7 +16,9 @@ class MicroFlashCrashScalper:
         logging.info("Scanning for flash crashes...")
         
     def run(self):
-        while True:
+        import gc
+while True:
+        gc.collect()
             try:
                 self.scan_market()
                 with open("flash_crash_status.json", "w") as f:

@@ -31,7 +31,9 @@ BOTS = {
 }
 
 def main():
-    while True:
+    import gc
+while True:
+        gc.collect()
         status = {}
         try:
             ps = subprocess.check_output(["ps", "aux"]).decode()

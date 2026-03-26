@@ -67,7 +67,9 @@ def run_nano_squad():
     except Exception as e:
         logger.error(f"Errore recupero stato iniziale: {e}")
     
-    while True:
+    import gc
+while True:
+        gc.collect()
         try:
             balance = mexc.fetch_balance()
             free_usdt = float(balance.get('USDT', {}).get('free', 0))

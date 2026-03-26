@@ -41,7 +41,7 @@ def round_step(quantity, step_size):
     return round(quantity - (quantity % step_size), precision)
 
 SYMBOLS = ["SOLEUR", "BNBEUR", "AVAXEUR", "DOTEUR", "ETHEUR", "ADAEUR", "LINKEUR", "DOGEEUR"]
-TRADE_AMOUNT = 20.0  # 20 euro per limit order
+TRADE_AMOUNT = 11.0  # 20 euro per limit order
 BUY_DROP = 0.02      # Compra se crolla del 2%
 SELL_PUMP = 0.02     # Vende con profitto del 2%
 

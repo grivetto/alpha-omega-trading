@@ -39,7 +39,7 @@ TRIANGLES = [
     ("DOTEUR", "DOTBTC", "BTCEUR")
 ]
 
-TRADE_AMOUNT = 50.0  # 50 euro per tentativo
+TRADE_AMOUNT = 11.0  # 50 euro per tentativo
 MIN_PROFIT = 0.003   # 0.3% di disallineamento netto richiesto per colpire (copre le fees 3x0.1%)
 
 def main():

@@ -23,7 +23,9 @@ def execute_reversion_trade(coin, bb_position):
 def main():
     logger.info("🟢 Bollinger Bands Sniper initialized. Zero-OOM mode active.")
     total_profit = 0.0
-    while True:
+    import gc
+while True:
+        gc.collect()
         try:
             bb_data = analyze_market()
             for coin, pos in bb_data.items():

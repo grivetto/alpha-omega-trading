@@ -20,7 +20,7 @@ TIMEFRAME = '5m'
 VOL_SPIKE_THRESHOLD = 2.0  # Sensibilità aumentata
 PROFIT_TARGET = 0.015      # 2.2% rapido
 STOP_LOSS = 0.03          # 4% sicurezza
-RISK_BTC = 60.0           # 60€ per trade
+RISK_BTC = 15.0           # 60€ per trade
 
 STATUS_FILE = '/home/sergio/.openclaw/workspace/denaro/hunter_status.json'
 

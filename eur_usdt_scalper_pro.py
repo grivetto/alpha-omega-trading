@@ -16,7 +16,9 @@ except Exception as e:
 
 def run_scalper():
     logger.info("Starting EUR/USDT Micro Scalper Pro...")
-    while True:
+    import gc
+while True:
+        gc.collect()
         try:
             if client:
                 ticker = client.get_ticker(symbol='EURUSDT')

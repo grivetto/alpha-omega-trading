@@ -69,7 +69,9 @@ def start_bot(name, script):
 
 def main():
     logger.info("🛡️ GUARDIAN 5.0: Fleet 5 Min Auto-Check Booted")
-    while True:
+    import gc
+while True:
+        gc.collect()
         try:
             for name, script in BOT_REGISTRY.items():
                 if not is_running(script):

@@ -22,7 +22,9 @@ def get_total_balance():
 
 def main():
     last_bal = get_total_balance()
-    while True:
+    import gc
+while True:
+        gc.collect()
         time.sleep(300) # 5 minuti
         current_bal = get_total_balance()
         if current_bal and last_bal:

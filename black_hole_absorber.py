@@ -42,7 +42,7 @@ def round_step(quantity, step_size):
     return round(quantity - (quantity % step_size), precision)
 
 SYMBOLS = ["BTCEUR", "ETHEUR"]
-TRADE_AMOUNT = 30.0
+TRADE_AMOUNT = 11.0
 
 def main():
     logger.info("🌌 BLACK HOLE ABSORBER AVVIATO. Agisce sui fusi orari dei grandi mercati globali.")

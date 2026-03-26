@@ -10,7 +10,9 @@ def get_mock_profit():
 def main():
     logging.info("Micro Funding Sniffer avviato - Zero OOM.")
     print("Micro Funding Sniffer avviato.")
-    while True:
+    import gc
+while True:
+        gc.collect()
         try:
             profit = get_mock_profit()
             trades = int((time.time() % 100) / 10)

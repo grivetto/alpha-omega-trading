@@ -9,6 +9,7 @@ import socketserver
 
 import sys
 import json
+import ccxt
 from dotenv import load_dotenv
 from binance.client import Client
 
@@ -16,11 +17,18 @@ PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8080
 BASE_DIR = '/home/sergio/.openclaw/workspace/denaro'
 DASHBOARD_DIR = os.path.join(BASE_DIR, 'dashboard')
 
+load_dotenv(os.path.join(BASE_DIR, '.env'))
+binance_client = Client(os.getenv('BINANCE_API_KEY'), os.getenv('BINANCE_API_SECRET'))
+
+mexc_client = None
+try:
+    load_dotenv(os.path.join(BASE_DIR, '.env.mexc'))
+    if os.getenv('MEXC_API_KEY'):
+        mexc_client = ccxt.mexc({'apiKey': os.getenv('MEXC_API_KEY'), 'secret': os.getenv('MEXC_API_SECRET'), 'options': {'defaultType': 'spot'}})
+except: pass
+
 def get_realtime_balances():
     try:
-        load_dotenv(os.path.join(BASE_DIR, '.env'))
-        client = Client(os.getenv('BINANCE_API_KEY'), os.getenv('BINANCE_API_SECRET'))
-        
         # Recupera vault
         vault_file = os.path.join(BASE_DIR, 'vault.json')
         vault = 0.0
@@ -39,25 +47,19 @@ def get_realtime_balances():
                 profit_today = m.get("profit_today", 0.0)
                 
         try:
-            eur = float(client.get_asset_balance(asset='EUR')['free'])
+            eur = float(binance_client.get_asset_balance(asset='EUR')['free'])
         except:
             eur = 0.0
             
         liquid = eur - vault
         if liquid < 0: liquid = 0.0
         
-        
-        try:
-            mexc_free = 0.0
-            import ccxt
-            load_dotenv(os.path.join(BASE_DIR, '.env.mexc'))
-            api_key = os.getenv('MEXC_API_KEY')
-            if api_key:
-                mexc = ccxt.mexc({'apiKey': api_key, 'secret': os.getenv('MEXC_API_SECRET'), 'options': {'defaultType': 'spot'}})
-                bal = mexc.fetch_balance()
+        mexc_free = 0.0
+        if mexc_client:
+            try:
+                bal = mexc_client.fetch_balance()
                 mexc_free = float(bal.get('USDT', {}).get('free', 0.0))
-        except:
-            mexc_free = 0.0
+            except: pass
 
         return {
             "vault": f"{vault:.2f}",
@@ -70,24 +72,25 @@ def get_realtime_balances():
     except Exception as e:
         return {"vault": "ERR", "liquid": "ERR", "target": "ERR", "profit_today": "ERR"}
 
-
 def get_combined_logs():
     try:
-        # Prende le ultime 30 righe dai log principali per il terminale
         import subprocess
         import json
         log_files = [os.path.join(BASE_DIR, f) for f in ["sniper_squad.log", "GARIBAN.log", "VAMPIRE.log", "SCAVENGER.log", "PHANTOM.log", "TSUNAMI.log", "HUNTER_SWARM.log", "DARKPOOL.log", "BLACKHOLE.log", "STABLE_SCALPER.log", "RSI_HUNTER.log", "FUNDING_SNIFFER.log", "FLASH_CRASH.log", "MICRO_TREND.log", "LIQUIDITY_VACUUM.log", "EUR_USDT_SCALPER.log", "SOL_PULSE_SNIPER.log", "NEON_SNIPER_ZERO.log", "EUR_USDC_NANO.log", "OB_WALL_SNIPER.log", "MEXC_NANO.log"]]
-        cmd = ["cat"] + [f for f in log_files if os.path.exists(f)]
-        cat_out = subprocess.check_output(cmd)
         
-        # Ordina per timestamp grezzo (le prime 19 char sono la data YYYY-MM-DD HH:MM:SS)
-        lines = cat_out.decode().splitlines()
-        lines = [l for l in lines if len(l) > 20 and l[0:4] == "2026"]
+        all_lines = []
+        for f in log_files:
+            if os.path.exists(f):
+                try:
+                    out = subprocess.check_output(["tail", "-n", "10", f]).decode()
+                    all_lines.extend(out.splitlines())
+                except: pass
+        
+        lines = [l for l in all_lines if len(l) > 20 and l.startswith("2026")]
         lines.sort(key=lambda x: x[0:19])
         
-        # Prende le ultime 50
         return json.dumps(lines[-50:])
-    except:
+    except Exception as e:
         return "[]"
 
 class Handler(http.server.SimpleHTTPRequestHandler):
@@ -115,20 +118,15 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         
         elif self.path == '/market.json' or self.path.startswith('/market.json?'):
             try:
-                import ccxt
-                
-                from dotenv import load_dotenv
-                load_dotenv(os.path.join(BASE_DIR, '.env.mexc'))
-                api_key = os.getenv('MEXC_API_KEY')
-                mexc = ccxt.mexc({'apiKey': api_key, 'secret': os.getenv('MEXC_API_SECRET')})
-                tickers = mexc.fetch_tickers(['SOL/USDT', 'DOGE/USDT', 'PEPE/USDT', 'XRP/USDT'])
                 market_data = []
-                for s, t in tickers.items():
-                    market_data.append({
-                        "symbol": s,
-                        "price": t.get('last', 0),
-                        "change": t.get('percentage', 0)
-                    })
+                if mexc_client:
+                    tickers = mexc_client.fetch_tickers(['SOL/USDT', 'DOGE/USDT', 'PEPE/USDT', 'XRP/USDT'])
+                    for s, t in tickers.items():
+                        market_data.append({
+                            "symbol": s,
+                            "price": t.get('last', 0),
+                            "change": t.get('percentage', 0)
+                        })
                 data = json.dumps(market_data)
             except Exception as e:
                 data = json.dumps([])

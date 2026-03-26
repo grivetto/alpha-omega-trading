@@ -26,7 +26,9 @@ def fetch_rsi():
 
 def run():
     logging.info("Nano RSI Scalper started.")
-    while True:
+    import gc
+while True:
+        gc.collect()
         try:
             rsi = fetch_rsi()
             status = "Waiting"

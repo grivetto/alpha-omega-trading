@@ -8,7 +8,9 @@ logging.basicConfig(filename='EUR_USDT_MICRO.log', level=logging.INFO, format='%
 
 def run_scalper():
     logging.info("Starting EUR/USDT Micro Scalper...")
-    while True:
+    import gc
+while True:
+        gc.collect()
         try:
             spread = random.uniform(0.0001, 0.0005)
             profit = random.uniform(0.01, 0.05)
