@@ -1,4 +1,5 @@
 import gc
+import gc
 #!/usr/bin/env python3
 """
 Crypto.com Quant Bot - Advanced Scalper via CCXT

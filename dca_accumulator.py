@@ -1,3 +1,4 @@
+import gc
 import os, time, logging, gc, json, math
 from datetime import datetime
 from dotenv import load_dotenv

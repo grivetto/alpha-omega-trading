@@ -1,4 +1,5 @@
 import gc
+import gc
 import time, logging
 logging.basicConfig(level=logging.INFO, filename="ema_scalper.log")
 while True:

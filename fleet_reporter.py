@@ -1,3 +1,4 @@
+import gc
 import os, json, time, subprocess
 from datetime import datetime
 

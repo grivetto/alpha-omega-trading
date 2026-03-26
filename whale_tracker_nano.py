@@ -1,3 +1,4 @@
+import gc
 import time, json, logging, ccxt
 
 logging.basicConfig(filename="WHALE_TRACKER.log", level=logging.INFO, format='%(asctime)s - %(message)s')

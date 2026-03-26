@@ -1,3 +1,4 @@
+import gc
 import os, time, logging, gc, json
 from collections import deque
 from dotenv import load_dotenv

@@ -1,3 +1,4 @@
+import gc
 import time
 import logging
 from binance.client import Client

@@ -1,4 +1,10 @@
 import gc
+import gc
+import gc
+import gc
+import gc
+import gc
+import gc
 # -*- coding: utf-8 -*-
 """
 Binance Trading Bot - RSI + EMA Strategy

@@ -1,3 +1,4 @@
+import gc
 import time
 import json
 import logging

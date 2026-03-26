@@ -1,3 +1,4 @@
+import gc
 import os, time, subprocess, logging
 
 LOG_FILE = "/home/sergio/.openclaw/workspace/denaro/fleet_guardian.log"

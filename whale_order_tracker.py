@@ -1,4 +1,5 @@
 import gc
+import gc
 # Logica: Monitora grandi ordini nel book e si posiziona a scia
 import time, logging
 logging.basicConfig(level=logging.INFO, filename="whale_tracker.log")

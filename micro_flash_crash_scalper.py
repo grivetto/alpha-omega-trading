@@ -1,3 +1,4 @@
+import gc
 import time, json, os, logging
 import random
 

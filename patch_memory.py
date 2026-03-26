@@ -1,3 +1,6 @@
+import gc
+import gc
+import gc
 import os
 
 def patch_file(path):

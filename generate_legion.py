@@ -1,3 +1,4 @@
+import gc
 import os
 
 WORKSPACE = "/home/sergio/.openclaw/workspace/denaro"

@@ -1,4 +1,5 @@
 import gc
+import gc
 # Logica: Piazza ordini limit buy/sell vicini al mid-price per catturare lo spread
 import time, logging
 logging.basicConfig(level=logging.INFO, filename="eth_market_maker.log")

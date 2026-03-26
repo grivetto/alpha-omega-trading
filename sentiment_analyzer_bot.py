@@ -1,4 +1,5 @@
 import gc
+import gc
 # Logica: Analisi simulata del sentiment social per anticipare spike
 import time, logging
 logging.basicConfig(level=logging.INFO, filename="sentiment.log")

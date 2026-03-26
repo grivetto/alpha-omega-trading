@@ -1,3 +1,4 @@
+import gc
 import time
 import random
 import logging

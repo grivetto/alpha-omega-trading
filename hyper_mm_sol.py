@@ -1,4 +1,5 @@
 import gc
+import gc
 import time, logging
 logging.basicConfig(level=logging.INFO, filename="hyper_mm.log")
 while True:

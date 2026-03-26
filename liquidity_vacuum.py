@@ -1,3 +1,4 @@
+import gc
 import os, time, logging, gc
 from dotenv import load_dotenv
 from binance.client import Client

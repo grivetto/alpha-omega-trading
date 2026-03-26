@@ -1,3 +1,4 @@
+import gc
 # RSI Divergence Hunter
 import pandas as pd
 import time

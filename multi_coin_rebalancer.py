@@ -1,4 +1,5 @@
 import gc
+import gc
 # Logica: Mantiene le percentuali di asset nel portafoglio fisse (es 25% ciascuno)
 import time, logging
 logging.basicConfig(level=logging.INFO, filename="rebalancer.log")

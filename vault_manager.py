@@ -1,3 +1,4 @@
+import gc
 import os, json, time, logging
 from binance.client import Client
 from dotenv import load_dotenv

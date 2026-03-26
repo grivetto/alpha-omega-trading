@@ -1,4 +1,5 @@
 import gc
+import gc
 # Logica: Piazza ordini limit "low-ball" al -10% per catturare flash crash
 import time, logging
 logging.basicConfig(level=logging.INFO, filename="flash_crash.log")

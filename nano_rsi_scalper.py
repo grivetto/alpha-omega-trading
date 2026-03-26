@@ -1,3 +1,4 @@
+import gc
 import time, json, logging, ccxt, os
 
 logging.basicConfig(filename="NANO_RSI.log", level=logging.INFO, format='%(asctime)s - %(message)s')

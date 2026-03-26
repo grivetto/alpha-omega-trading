@@ -1,4 +1,5 @@
 import gc
+import gc
 # Logica: Segue il trend di SOL quando il volume aumenta drasticamente
 import time, logging
 logging.basicConfig(level=logging.INFO, filename="sol_momentum.log")

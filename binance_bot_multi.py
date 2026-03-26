@@ -1,4 +1,6 @@
 import gc
+import gc
+import gc
 #!/usr/bin/env python3
 import os
 import time

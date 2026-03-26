@@ -1,3 +1,4 @@
+import gc
 import time, json, os
 
 STATUS_FILE = "neon_sniper_status.json"

@@ -1,3 +1,4 @@
+import gc
 import roc_momentum_sniper
 import os, time, subprocess, logging
 

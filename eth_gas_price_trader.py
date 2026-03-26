@@ -1,4 +1,5 @@
 import gc
+import gc
 # Logica: Correlazione inversa ETH vs Gas Price (simulata)
 import time, logging
 logging.basicConfig(level=logging.INFO, filename="eth_gas.log")

@@ -1,3 +1,4 @@
+import gc
 import ccxt
 import time
 import os

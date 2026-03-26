@@ -1,4 +1,5 @@
 import gc
+import gc
 #!/usr/bin/env python3
 """Scraper resiliente per centri estetici / cura persona a Torino."""
 import re, json, time, random, sys
