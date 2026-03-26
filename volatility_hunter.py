@@ -47,7 +47,14 @@ def main():
     while True:
         try:
             for symbol in WATCHLIST:
-                klines = client.get_klines(symbol=symbol, interval=TIMEFRAME, limit=50)
+                try:
+                    klines = client.get_klines(symbol=symbol, interval=TIMEFRAME, limit=50)
+                except Exception as e:
+                    if "-2010" in str(e) or "-1121" in str(e):
+                        logger.error(f"Skipping {symbol}: API Error {e}")
+                        continue
+                    raise e
+
                 df = pd.DataFrame(klines, columns=['ts', 'o', 'h', 'l', 'c', 'v', 'ct', 'qv', 'nt', 'tb', 'tq', 'i'])
                 df['c'] = pd.to_numeric(df['c'])
                 df['v'] = pd.to_numeric(df['v'])
@@ -60,36 +67,37 @@ def main():
                 if current_vol > avg_vol * VOL_SPIKE_THRESHOLD and symbol not in positions:
                     logger.info(f"🔥 BREAKOUT RILEVATO: {symbol} | Vol: {current_vol:.2f} (Avg: {avg_vol:.2f})")
                     try:
-                        # Calcolo quantità in base alla moneta base (BTC)
-                        # qty = 0.001 BTC / prezzo moneta (es. ETHBTC)
-                        try:
-                            try:
-                                eur_bal = float(client.get_asset_balance(asset="EUR")["free"])
-                            except Exception:
-                                eur_bal = 0.0
-                            
-                            try:
-                                with open("/home/sergio/.openclaw/workspace/denaro/vault.json", "r") as f:
-                                    locked = float(__import__("json").load(f).get("LOCKED_EUR", 0))
-                                eur_bal = max(0, eur_bal - locked)
-                            except Exception:
-                                pass
-                                
-                            if eur_bal < RISK_BTC + 1.0:
-                                logger.warning(f"⚠️ Fondo insufficiente ({eur_bal}€ disponibili netti, {RISK_BTC}€ richiesti). Skipping {symbol}")
-                                continue
-                                
-                            qty_to_buy = RISK_BTC / price
-                            order = client.create_order(
-                                symbol=symbol,
-                                side='BUY',
-                                type='MARKET',
-                                quoteOrderQty=round(RISK_BTC, 2)
-                            )
-                            logger.info(f"🟢 LIVE BUY EXECUTED: {symbol} @ {price} BTC")
-                            positions[symbol] = {'entry': price, 'qty': RISK_BTC / price}
-                        except Exception as e:
-                            logger.error(f"❌ FAILED BUY {symbol}: {e}")
+                        eur_bal = float(client.get_asset_balance(asset="EUR")["free"])
+                    except Exception:
+                        eur_bal = 0.0
+                    
+                    try:
+                        with open("/home/sergio/.openclaw/workspace/denaro/vault.json", "r") as f:
+                            locked = float(__import__("json").load(f).get("LOCKED_EUR", 0))
+                        eur_bal = max(0, eur_bal - locked)
+                    except Exception:
+                        pass
+                        
+                    if eur_bal < RISK_BTC + 1.0:
+                        logger.warning(f"⚠️ Fondo insufficiente ({eur_bal}€ disponibili netti, {RISK_BTC}€ richiesti). Skipping {symbol}")
+                        continue
+                        
+                    qty_to_buy = RISK_BTC / price
+                    try:
+                        order = client.create_order(
+                            symbol=symbol,
+                            side='BUY',
+                            type='MARKET',
+                            quoteOrderQty=round(RISK_BTC, 2)
+                        )
+                        logger.info(f"🟢 LIVE BUY EXECUTED: {symbol} @ {price} EUR")
+                        positions[symbol] = {'entry': price, 'qty': RISK_BTC / price}
+                    except Exception as e:
+                        if "-2010" in str(e):
+                            logger.warning(f"Fondi insufficienti su acquisto mercato per {symbol}. Salto.")
+                            time.sleep(10)
+                            continue
+                        logger.error(f"❌ FAILED BUY {symbol}: {e}")
 
                 # GESTIONE POSIZIONI ESISTENTI
                 if symbol in positions:
@@ -98,24 +106,26 @@ def main():
                     if pnl >= PROFIT_TARGET or pnl <= -STOP_LOSS:
                         reason = "TAKE PROFIT" if pnl >= PROFIT_TARGET else "STOP LOSS"
                         try:
-                            # Vendita al mercato
-                            # Recuperiamo il saldo reale per sicurezza
-                            asset_name = symbol.replace('BTC', '')
+                            asset_name = symbol.replace('EUR', '').replace('BTC', '')
                             bal = float(client.get_asset_balance(asset=asset_name)['free'])
-                            client.create_order(symbol=symbol, side='SELL', type='MARKET', quantity=bal)
+                            if bal > 0:
+                                client.create_order(symbol=symbol, side='SELL', type='MARKET', quantity=bal)
                             logger.info(f"✅ {reason} {symbol} @ {price} | PnL: {pnl:.2%}")
                             del positions[symbol]
-                            # Creiamo il flag per lo strike su Telegram
                             with open('/home/sergio/.openclaw/workspace/denaro/strike_alert.flag', 'w') as f:
                                 f.write(f"{(RISK_BTC * pnl * 1.0):.2f}")
                         except Exception as e:
+                            if "-2010" in str(e):
+                                logger.warning(f"Fondi insufficienti (bilancio < MIN_NOTIONAL) per {symbol} su VENDITA.")
+                                del positions[symbol]
+                                continue
                             logger.error(f"❌ FAILED SELL {symbol}: {e}")
             
             update_status({
                 "time": datetime.now().isoformat(),
                 "active_hunters": len(positions),
                 "watchlist": WATCHLIST,
-                "status": "LIVE SCANNING (BTC PAIRS)"
+                "status": "LIVE SCANNING"
             })
             gc.collect()
             time.sleep(30)
