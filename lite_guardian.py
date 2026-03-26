@@ -145,7 +145,7 @@ def main():
     BOT_REGISTRY["LEGION_FTM"] = "legion_28_ftm.py"
 
     import gc
-while True:
+    while True:
         gc.collect()
         for name, script in BOT_REGISTRY.items():
             if not is_running(script):

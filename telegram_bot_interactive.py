@@ -33,6 +33,24 @@ def get_full_status():
             if symbol in prices: total_eur += qty * prices[symbol]
             elif f"{asset}BTC" in prices and "BTCEUR" in prices: total_eur += qty * prices[f"{asset}BTC"] * prices["BTCEUR"]
         
+        try:
+            import ccxt
+            load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env.mexc')
+            if os.getenv('MEXC_API_KEY'):
+                mexc = ccxt.mexc({'apiKey': os.getenv('MEXC_API_KEY'), 'secret': os.getenv('MEXC_API_SECRET'), 'options': {'defaultType': 'spot'}})
+                m_bal = mexc.fetch_balance()
+                total_eur += float(m_bal.get('USDT', {}).get('total', 0.0)) * 0.92  # Approx EUR conversion
+        except: pass
+        
+        try:
+            import ccxt
+            load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env.bitget')
+            if os.getenv('BITGET_API_KEY'):
+                bitget = ccxt.bitget({'apiKey': os.getenv('BITGET_API_KEY'), 'secret': os.getenv('BITGET_API_SECRET'), 'password': os.getenv('BITGET_PASSWORD')})
+                b_bal = bitget.fetch_balance({'type': 'swap'})
+                total_eur += float(b_bal.get('USDT', {}).get('total', 0.0)) * 0.92  # Approx EUR conversion
+        except: pass
+        
         profit = total_eur - CAPITALE_VERSATO_TOTALE
         
         locked = 0.0

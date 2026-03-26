@@ -313,7 +313,12 @@
             
             <div class="panel stat-box profit">
                 <div class="stat-val green" id="stat-mexc">0.00$</div>
-                <div class="stat-label">MEXC LABORATORY [NANO]</div>
+                <div class="stat-label">BETA (MEXC SPOT)</div>
+            </div>
+            
+            <div class="panel stat-box profit">
+                <div class="stat-val cyan" id="stat-bitget">0.00$</div>
+                <div class="stat-label">GAMMA (BITGET FUTURES)</div>
             </div>
 
             <div class="panel stat-box vault">
@@ -441,9 +446,17 @@
                 document.getElementById('stat-liquid').innerText = data.liquid + '€';
                 
                 document.getElementById('stat-vault').innerText = data.vault + '€';
+                
                 if(data.mexc_liquid) {
                     document.getElementById('stat-mexc').innerText = data.mexc_liquid + '$';
                 }
+                if(data.bitget_liquid) {
+                    let pnl = parseFloat(data.bitget_pnl) || 0;
+                    let sign = pnl >= 0 ? '+' : '';
+                    let color = pnl >= 0 ? 'green' : 'red';
+                    document.getElementById('stat-bitget').innerHTML = `${data.bitget_liquid}$ <br><span style="font-size:12px; color:${color}">PNL: ${sign}${pnl.toFixed(2)}$</span>`;
+                }
+
 
                 document.getElementById('stat-profit').innerText = data.profit_today + '€';
                 document.getElementById('stat-target').innerText = data.target + '€';

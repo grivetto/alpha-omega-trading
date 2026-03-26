@@ -126,7 +126,7 @@ def main():
                     if os.path.exists(log_path):
                         last_log_sec = time.time() - os.path.getmtime(log_path)
                         # Zombie if no log update in 15 minutes (900 seconds) AND log exists
-                        if last_log_sec > 120 and not name.startswith("LEGION") and name not in ["TG_BOT", "DASHBOARD", "YIELD_FARMER", "LITE_GUARDIAN"]:
+                        if last_log_sec > 600 and not name.startswith("LEGION") and name not in ["TG_BOT", "DASHBOARD", "YIELD_FARMER", "LITE_GUARDIAN"]:
                             status = "ZOMBIE"
                             logger.warning(f"🧟 {name} IN STATO ZOMBIE! Log bloccato da {last_log_sec:.0f}s. UCCISIONE IN CORSO PID {info['pid']}!")
                             os.system(f"kill -9 {info['pid']}")

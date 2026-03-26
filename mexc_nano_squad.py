@@ -69,7 +69,8 @@ def run_nano_squad():
         logger.error(f"Errore recupero stato iniziale: {e}")
     
     import gc
-while True:
+    while True:
+        gc.collect()
         gc.collect()
         try:
             balance = mexc.fetch_balance()
