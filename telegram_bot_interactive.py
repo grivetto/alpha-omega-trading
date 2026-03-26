@@ -32,13 +32,29 @@ def get_full_status():
             elif f"{asset}BTC" in prices and "BTCEUR" in prices: total_eur += qty * prices[f"{asset}BTC"] * prices["BTCEUR"]
         
         profit = total_eur - CAPITALE_VERSATO_TOTALE
+        
+        locked = 0.0
+        gariban = 0.0
+        try:
+            with open("/home/sergio/.openclaw/workspace/denaro/vault.json", "r") as vf:
+                vdata = __import__("json").load(vf)
+                locked = float(vdata.get("LOCKED_EUR", 0))
+                gariban = float(vdata.get("GARIBAN_TRACKER", 0))
+        except: pass
+        
+        main_vault = locked - gariban
+        
         msg = (
             f"💰 *SITUAZIONE CAPITALE*\n"
             f"------------------------------------\n"
             f"🏦 Valore Attuale: €{total_eur:.2f}\n"
             f"📥 Cifra Investita: €{CAPITALE_VERSATO_TOTALE:.2f}\n"
             f"📈 Profitto Totale: {profit:+.2f} €\n"
-            f"------------------------------------"""
+            f"------------------------------------\n"
+            f"🔐 Cassaforte (33%): €{main_vault:.2f}\n"
+            f"🤲 Elemosina Gariban: €{gariban:.2f}\n"
+            f"🛡️ **TOTALE PROTETTO**: €{locked:.2f}\n"
+            f"------------------------------------"
         )
         return msg
     except Exception as e: return f"⚠️ Errore bilancio: {str(e)}"
@@ -181,6 +197,7 @@ def send_photo(chat_id, token, photo_path):
         logging.error(f"Errore invio foto: {e}")
 
 
+
 def get_dynamic_kb():
     try:
         from binance.client import Client
@@ -207,18 +224,57 @@ def get_dynamic_kb():
                 locked = float(data.get("LOCKED_EUR", 0))
         except: pass
         
-        btn_text = f"Cifra: 722€ | Attuale: {total_eur:.0f}€ ({locked:.0f}€)"
+        profit_today = 0.0
+        try:
+            with open("/home/sergio/.openclaw/workspace/denaro/daily_mission.json", "r") as f:
+                profit_today = float(json.load(f).get("profit_today", 0))
+        except: pass
+        
+        from __main__ import CAPITALE_VERSATO_TOTALE
+        profit_total = total_eur - CAPITALE_VERSATO_TOTALE
+        
+        btn_text = f"Oggi: {profit_today:.1f}€ | Inv: {CAPITALE_VERSATO_TOTALE:.0f}€"
     except Exception as e:
         btn_text = "Cifra Investita"
-        
     return {
         "keyboard": [
-            [{"text": btn_text}, {"text": "Ricavo Giornaliero"}],
-            [{"text": "Andamento Ricavi"}, {"text": "Stato Squadre"}],
-            [{"text": "Dashboard Web"}, {"text": "Elemosina Gariban"}]
+            [{"text": btn_text}, {"text": "Dashboard Web"}],
+            [{"text": "MEXC Laboratorio"}, {"text": "Stato Squadre"}],
+            [{"text": "Andamento Ricavi"}, {"text": "Elemosina Gariban"}]
         ],
         "resize_keyboard": True
     }
+
+def get_mexc_status():
+    try:
+        import ccxt
+        import os
+        from dotenv import load_dotenv
+        load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env.mexc')
+        api_key = os.getenv('MEXC_API_KEY')
+        if not api_key: return "⚠️ API MEXC non configurate."
+        
+        mexc = ccxt.mexc({'apiKey': api_key, 'secret': os.getenv('MEXC_API_SECRET'), 'options': {'defaultType': 'spot'}})
+        bal = mexc.fetch_balance()
+        free_usdt = float(bal.get('USDT', {}).get('free', 0.0))
+        total_usdt = float(bal.get('USDT', {}).get('total', 0.0))
+        
+        log_file = "/home/sergio/.openclaw/workspace/denaro/MEXC_NANO.log"
+        last_logs = ""
+        try:
+            import subprocess
+            last_logs = subprocess.check_output(["tail", "-n", "3", log_file]).decode()
+        except: pass
+        
+        msg = f"🧪 *LABORATORIO MEXC (0% FEE)*\n"
+        msg += f"------------------------------------\n"
+        msg += f"💰 *Capitale Libero:* {free_usdt:.2f} USDT\n"
+        msg += f"🏦 *Capitale Totale:* {total_usdt:.2f} USDT\n"
+        msg += f"------------------------------------\n"
+        msg += f"📜 *Ultimi 3 Log Operativi:*\n`{last_logs}`"
+        return msg
+    except Exception as e:
+        return f"⚠️ Errore lettura MEXC: {str(e)}"
 
 def main_loop():
     load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env.telegram')
@@ -246,7 +302,11 @@ def main_loop():
                             resp_text = "🤖 Console Operativa Aggiornata! Pronti a fare 100€."
                         elif "STATO SQUADRE" in text:
                             resp_text = get_squad_stats()
-                        elif "CIFRA" in text:
+                        
+                        elif "MEXC" in text:
+                            resp_text = get_mexc_status()
+
+                        elif "CIFRA" in text or "OGGI:" in text or "INV:" in text:
                             resp_text = f"📥 *CIFRA INVESTITA ALL'INIZIO*\n------------------------------------\nTotale versato storicamente: *€{CAPITALE_VERSATO_TOTALE:.2f}*\n(Questo è il tuo capitale di partenza usato come riferimento per i profitti globali)."
                         elif "RICAVO GIORNALIERO" in text:
                             resp_text = get_daily_profit()
@@ -263,6 +323,16 @@ def main_loop():
                             resp_text = get_gariban_stats()
                         
                         
+                        
+                        elif text == "/HISTORY" or "HISTORY" in text:
+                            try:
+                                import subprocess
+                                log_file = "/home/sergio/.openclaw/workspace/denaro/MEXC_NANO.log"
+                                last_logs = subprocess.check_output(["tail", "-n", "20", log_file]).decode()
+                                resp_text = f"📜 *STORICO RECENTE (MEXC NANO SQUAD)*\n`{last_logs[-3500:]}`"
+                            except Exception as e:
+                                resp_text = "Nessuno storico disponibile o errore di lettura."
+
                         elif text == "/PING" or "PING" in text:
                             resp_text = "🏓 *PONG!*\nTutti i sistemi operativi. Tempi di risposta ottimali."
 
@@ -279,10 +349,12 @@ def main_loop():
                             payload = {"chat_id": chat_id, "text": resp_text, "parse_mode": "Markdown"}
                             if kb:
                                 payload["reply_markup"] = kb
-                            requests.post(f"https://api.telegram.org/bot{token}/sendMessage", json=payload)
+                            r = requests.post(f"https://api.telegram.org/bot{token}/sendMessage", json=payload)
+                            logging.info(f"INVIATO: {r.status_code} - {r.text}")
             gc.collect()
             time.sleep(0.1)
         except Exception as e:
+            logging.error(f'ERRORE MAIN LOOP: {e}')
             gc.collect()
             time.sleep(5)
 

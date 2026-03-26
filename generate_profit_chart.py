@@ -54,7 +54,7 @@ def create_chart():
         profits.append(current_profit)
         
         plt.style.use('dark_background')
-        fig, ax = plt.subplots(figsize=(10, 6))
+        fig, ax = plt.subplots(figsize=(14, 5))
         
         # Crea il plot stile cyberpunk
         ax.plot(times, profits, color='#0ff', linewidth=3, marker='o', markersize=8, markerfacecolor='#f0f', markeredgecolor='#f0f')
@@ -90,3 +90,4 @@ def create_chart():
 
 if __name__ == "__main__":
     create_chart()
+plt.tight_layout(pad=1.0)
