@@ -64,8 +64,8 @@ def run_kamikaze():
         qty = 0.0
         
         import gc
-while True:
-        gc.collect()
+        while True:
+            gc.collect()
             try:
                 ticker = mexc.fetch_ticker(SYMBOL)
                 current_price = float(ticker['last'])

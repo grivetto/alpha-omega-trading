@@ -22,7 +22,7 @@ class RSIDivergenceHunter:
 def main():
     logger.info("RSI Hunter Avviato in modalità monitoraggio silenzioso.")
     import gc
-while True:
+    while True:
         gc.collect()
         try:
             logger.info("💗 Heartbeat OK. Memoria pulita.")

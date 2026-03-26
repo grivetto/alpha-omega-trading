@@ -12,7 +12,7 @@ def main():
     logging.info("Micro Funding Sniffer avviato - Zero OOM.")
     print("Micro Funding Sniffer avviato.")
     import gc
-while True:
+    while True:
         gc.collect()
         try:
             profit = get_mock_profit()

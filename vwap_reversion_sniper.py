@@ -60,7 +60,7 @@ def get_vwap_and_price():
 def main():
     print(f"[{datetime.now()}] Starting VWAP Reversion Sniper on {SYMBOL} with Enhancements")
     import gc
-while True:
+    while True:
         gc.collect()
         vwap, price, prices = get_vwap_and_price()
         if vwap and price:

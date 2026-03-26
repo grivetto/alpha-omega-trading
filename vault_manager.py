@@ -42,7 +42,7 @@ def update_vault():
 if __name__ == "__main__":
     logging.info("🏦 SISTEMA DI RISERVA FRAZIONARIA (33%) AVVIATO.")
     import gc
-while True:
+    while True:
         gc.collect()
         update_vault()
         time.sleep(30)

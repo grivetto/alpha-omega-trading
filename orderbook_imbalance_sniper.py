@@ -11,7 +11,7 @@ def main():
     logger.info("[INIT] Orderbook Imbalance Sniper started - Zero-OOM Edition")
     pairs = ["BTC/USDT", "ETH/USDT", "SOL/USDT", "DOGE/USDT"]
     import gc
-while True:
+    while True:
         gc.collect()
         try:
             pair = random.choice(pairs)

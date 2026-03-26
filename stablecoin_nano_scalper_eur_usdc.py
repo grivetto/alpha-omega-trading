@@ -17,7 +17,7 @@ def main():
     total_profit = 0.0
     trades = 0
     import gc
-while True:
+    while True:
         gc.collect()
         try:
             # Simulate a micro opportunity on EUR/USDC spread

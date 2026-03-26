@@ -19,7 +19,7 @@ def main():
     logger.info("🟢 Flash Crash Arbitrageur initialized. Waiting for sudden drops...")
     total_profit = 0.0
     import gc
-while True:
+    while True:
         gc.collect()
         try:
             drops = fetch_market_data()

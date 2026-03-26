@@ -66,7 +66,7 @@ def run_kamikaze():
         logger.warning(f"Nessuna posizione aperta recuperabile: {e}")
 
     import gc
-while True:
+    while True:
         gc.collect()
         try:
             # Check balance

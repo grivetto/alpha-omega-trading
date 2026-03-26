@@ -296,31 +296,29 @@
             </table>
         </div>
 
+        
         <div class="top-stats">
             <div class="panel stat-box">
                 <div class="stat-val cyan" id="stat-target">10.00€</div>
-                <div class="stat-label">DAILY TARGET [COMPOUND]</div>
+                <div class="stat-label">SQUADRA ALPHA (Binance Spot)</div>
                 <div class="progress-bar"><div class="progress-fill" id="target-progress"></div></div>
-            </div>
-            <div class="panel stat-box profit">
-                <div class="stat-val green" id="stat-profit">0.00€</div>
-                <div class="stat-label">CURRENT P/L (24H)</div>
-            </div>
-            <div class="panel stat-box">
-                <div class="stat-val pink" id="stat-liquid">--.--€</div>
-                <div class="stat-label">AVAILABLE LIQUIDITY</div>
             </div>
             
             <div class="panel stat-box profit">
                 <div class="stat-val green" id="stat-mexc">0.00$</div>
-                <div class="stat-label">BETA (MEXC SPOT)</div>
+                <div class="stat-label">SQUADRA BETA (MEXC Spot)</div>
             </div>
             
             <div class="panel stat-box profit">
                 <div class="stat-val cyan" id="stat-bitget">0.00$</div>
-                <div class="stat-label">GAMMA (BITGET FUTURES)</div>
+                <div class="stat-label">SQUADRA GAMMA (Bitget Futures)</div>
             </div>
 
+            <div class="panel stat-box">
+                <div class="stat-val pink" id="stat-delta">--.--</div>
+                <div class="stat-label">SQUADRA DELTA (Binance HFT)</div>
+            </div>
+            
             <div class="panel stat-box vault">
                 <div class="stat-val yellow" id="stat-vault">--.--€</div>
                 <div class="stat-label">SECURE VAULT [33% LOCK]</div>
@@ -443,9 +441,10 @@
                 const response = await fetch('/balances.json');
                 const data = await response.json();
                 
-                document.getElementById('stat-liquid').innerText = data.liquid + '€';
+                
                 
                 document.getElementById('stat-vault').innerText = data.vault + '€';
+                
                 
                 if(data.mexc_liquid) {
                     document.getElementById('stat-mexc').innerText = data.mexc_liquid + '$';
@@ -456,15 +455,17 @@
                     let color = pnl >= 0 ? 'green' : 'red';
                     document.getElementById('stat-bitget').innerHTML = `${data.bitget_liquid}$ <br><span style="font-size:12px; color:${color}">PNL: ${sign}${pnl.toFixed(2)}$</span>`;
                 }
+                if(data.delta_status) {
+                    document.getElementById('stat-delta').innerHTML = `${data.delta_status}<br><span style="font-size:12px; color:#aaa">Liquid: ${data.liquid}€</span>`;
+                }
 
-
-                document.getElementById('stat-profit').innerText = data.profit_today + '€';
-                document.getElementById('stat-target').innerText = data.target + '€';
+                document.getElementById('stat-target').innerHTML = `${data.profit_today}€ / ${data.target}€`;
                 
                 // Aggiorna progress bar
                 let p = (parseFloat(data.profit_today) / parseFloat(data.target)) * 100;
                 if(p < 0) p = 0; if(p > 100) p = 100;
                 document.getElementById('target-progress').style.width = p + '%';
+
                 
             } catch(e) {}
         }

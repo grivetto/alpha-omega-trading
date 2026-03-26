@@ -16,7 +16,7 @@ def get_order_book(symbol="BTC/EUR"):
 def run():
     logging.info("Whale Tracker Nano started.")
     import gc
-while True:
+    while True:
         gc.collect()
         try:
             bids, asks = get_order_book("BTC/EUR")

@@ -15,7 +15,7 @@ def micro_fractor_strategy():
     """
     pairs = ['PEPE/USDT', 'WIF/USDT', 'FLOKI/USDT', 'BONK/USDT']
     import gc
-while True:
+    while True:
         gc.collect()
         pair = random.choice(pairs)
         volatility = random.uniform(0.1, 1.5)

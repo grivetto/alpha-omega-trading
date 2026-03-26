@@ -25,7 +25,7 @@ def main():
     logger.info("🟢 Bollinger Bands Sniper initialized. Zero-OOM mode active.")
     total_profit = 0.0
     import gc
-while True:
+    while True:
         gc.collect()
         try:
             bb_data = analyze_market()

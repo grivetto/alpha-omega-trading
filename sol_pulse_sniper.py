@@ -27,7 +27,7 @@ def run_pulse_sniper():
     last_price = None
     
     import gc
-while True:
+    while True:
         gc.collect()
         try:
             if client:

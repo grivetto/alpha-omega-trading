@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 def main():
     logger.info("Avviato Stablecoin Scalper (EUR/USDT) - Target spread microscopici.")
     import gc
-while True:
+    while True:
         gc.collect()
         try:
             # Simulazione spread

@@ -33,7 +33,7 @@ BOTS = {
 
 def main():
     import gc
-while True:
+    while True:
         gc.collect()
         status = {}
         try:

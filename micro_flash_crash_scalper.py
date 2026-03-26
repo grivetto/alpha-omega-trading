@@ -18,8 +18,8 @@ class MicroFlashCrashScalper:
         
     def run(self):
         import gc
-while True:
-        gc.collect()
+        while True:
+            gc.collect()
             try:
                 self.scan_market()
                 with open("flash_crash_status.json", "w") as f:

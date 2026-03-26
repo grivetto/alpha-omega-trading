@@ -15,7 +15,7 @@ def get_funding_rates():
 def main():
     logger.info("Starting Funding Rate Sniffer (Zero-OOM) to capture interest spikes.")
     import gc
-while True:
+    while True:
         gc.collect()
         try:
             rates = get_funding_rates()

@@ -7,7 +7,7 @@ logger = logging.getLogger("EurUsdtNanoScalper")
 def main():
     logger.info("Starting EUR/USDT Nano Scalper...")
     import gc
-while True:
+    while True:
         gc.collect()
         try:
             bid = random.uniform(1.08, 1.09)

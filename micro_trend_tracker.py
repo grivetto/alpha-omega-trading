@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 def main():
     logger.info("Avviato Micro-Trend Tracker - Target mini-trend su timeframe 1m per scalping rapido (Zero-OOM).")
     import gc
-while True:
+    while True:
         gc.collect()
         try:
             # Simulazione rilevamento trend

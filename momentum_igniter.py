@@ -10,7 +10,7 @@ def run():
     logging.info("Momentum Igniter avviato. (Zero-OOM, zero risk mode)")
     status = {"status": "active", "profit_eur": 0.0, "last_trade": "none", "bot": "Momentum Igniter"}
     import gc
-while True:
+    while True:
         gc.collect()
         try:
             with open("momentum_igniter_status.json", "w") as f:

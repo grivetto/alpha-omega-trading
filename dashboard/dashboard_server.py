@@ -35,7 +35,21 @@ try:
 except: pass
 
 
+
+def get_delta_status():
+    try:
+        import subprocess
+        log_file = os.path.join(BASE_DIR, "SQUADRA_DELTA.log")
+        if not os.path.exists(log_file): return "OFFLINE"
+        out = subprocess.check_output(["tail", "-n", "1", log_file]).decode().strip()
+        if "WHALE ALERT" in out: return "WHALE DETECTED 🐋"
+        if "ENTRATA TATTICA" in out: return "FRONT-RUNNING 🚀"
+        if "TAKE PROFIT" in out: return "PROFIT SECURED 💰"
+        return "SCANNING L2 🌊"
+    except: return "OFFLINE"
+
 def get_realtime_balances():
+
     try:
         # Recupera vault
         vault_file = os.path.join(BASE_DIR, 'vault.json')
@@ -89,7 +103,8 @@ def get_realtime_balances():
             "profit_today": f"{profit_today:.2f}",
             "mexc_liquid": f"{mexc_free:.2f}",
             "bitget_liquid": f"{bitget_free:.2f}",
-            "bitget_pnl": f"{bitget_pnl:.2f}"
+                        "bitget_pnl": f"{bitget_pnl:.2f}",
+            "delta_status": get_delta_status()
         }
 
     except Exception as e:

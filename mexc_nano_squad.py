@@ -16,7 +16,7 @@ mexc = ccxt.mexc({
     'apiKey': os.getenv('MEXC_API_KEY'),
     'secret': os.getenv('MEXC_API_SECRET'),
     'enableRateLimit': True,
-    'options': {'defaultType': 'spot'}
+    'options': {'defaultType': 'spot', 'adjustForTimeDifference': True, 'recvWindow': 60000}
 })
 
 PAIRS = ['SOL/USDT', 'DOGE/USDT', 'PEPE/USDT', 'WIF/USDT', 'SUI/USDT', 'XRP/USDT']

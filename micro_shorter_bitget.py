@@ -64,7 +64,7 @@ def run_micro_shorter():
     except: pass
 
     import gc
-while True:
+    while True:
         gc.collect()
         try:
             bal = bitget.fetch_balance({'type': 'swap'})

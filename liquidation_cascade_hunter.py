@@ -9,7 +9,7 @@ logger = logging.getLogger("LiquidationCascadeHunter")
 def run():
     logger.info("Avvio Liquidation Cascade Hunter - Zero-OOM edition. Monitoraggio cascate...")
     import gc
-while True:
+    while True:
         gc.collect()
         # Simulated logic for hunting liquidations
         logger.info("Monitoraggio volumi anomali su scostamenti improvvisi... Nessuna cascata rilevata.")
