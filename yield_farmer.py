@@ -13,7 +13,7 @@ client = Client(os.getenv('BINANCE_API_KEY'), os.getenv('BINANCE_API_SECRET'))
 def get_simple_earn_product(asset):
     try:
         # Usa il nuovo endpoint Simple Earn
-        res = client._request('get', 'sapi/v1/simple-earn/flexible/list', signed=True, data={'asset': asset})
+        res = client.get_simple_earn_flexible_product_list(asset=asset)
         if res and 'rows' in res and len(res['rows']) > 0:
             return res['rows'][0]['productId']
     except Exception as e:
@@ -22,7 +22,7 @@ def get_simple_earn_product(asset):
 
 def subscribe_earn(product_id, amount):
     try:
-        res = client._request('post', 'sapi/v1/simple-earn/flexible/subscribe', signed=True, data={'productId': product_id, 'amount': amount})
+        res = client.subscribe_simple_earn_flexible_product(productId=product_id, amount=amount)
         return res
     except Exception as e:
         logger.error(f"Errore iscrizione Earn: {e}")

@@ -1,3 +1,4 @@
+import os
 #!/usr/bin/env python3
 """
 Dashboard Server - Orbital Command Edition
@@ -5,7 +6,7 @@ Dashboard Server - Orbital Command Edition
 
 import http.server
 import socketserver
-import os
+
 import sys
 import json
 from dotenv import load_dotenv
@@ -45,12 +46,27 @@ def get_realtime_balances():
         liquid = eur - vault
         if liquid < 0: liquid = 0.0
         
+        
+        try:
+            mexc_free = 0.0
+            import ccxt
+            load_dotenv(os.path.join(BASE_DIR, '.env.mexc'))
+            api_key = os.getenv('MEXC_API_KEY')
+            if api_key:
+                mexc = ccxt.mexc({'apiKey': api_key, 'secret': os.getenv('MEXC_API_SECRET'), 'options': {'defaultType': 'spot'}})
+                bal = mexc.fetch_balance()
+                mexc_free = float(bal.get('USDT', {}).get('free', 0.0))
+        except:
+            mexc_free = 0.0
+
         return {
             "vault": f"{vault:.2f}",
             "liquid": f"{liquid:.2f}",
             "target": f"{target:.2f}",
-            "profit_today": f"{profit_today:.2f}"
+            "profit_today": f"{profit_today:.2f}",
+            "mexc_liquid": f"{mexc_free:.2f}"
         }
+
     except Exception as e:
         return {"vault": "ERR", "liquid": "ERR", "target": "ERR", "profit_today": "ERR"}
 
@@ -60,7 +76,7 @@ def get_combined_logs():
         # Prende le ultime 30 righe dai log principali per il terminale
         import subprocess
         import json
-        log_files = [os.path.join(BASE_DIR, f) for f in ["sniper_squad.log", "GARIBAN.log", "VAMPIRE.log", "SCAVENGER.log", "PHANTOM.log", "TSUNAMI.log", "HUNTER_SWARM.log", "DARKPOOL.log", "BLACKHOLE.log", "STABLE_SCALPER.log", "RSI_HUNTER.log", "FUNDING_SNIFFER.log", "FLASH_CRASH.log", "MICRO_TREND.log", "LIQUIDITY_VACUUM.log", "EUR_USDT_SCALPER.log", "SOL_PULSE_SNIPER.log", "NEON_SNIPER_ZERO.log", "EUR_USDC_NANO.log", "OB_WALL_SNIPER.log"]]
+        log_files = [os.path.join(BASE_DIR, f) for f in ["sniper_squad.log", "GARIBAN.log", "VAMPIRE.log", "SCAVENGER.log", "PHANTOM.log", "TSUNAMI.log", "HUNTER_SWARM.log", "DARKPOOL.log", "BLACKHOLE.log", "STABLE_SCALPER.log", "RSI_HUNTER.log", "FUNDING_SNIFFER.log", "FLASH_CRASH.log", "MICRO_TREND.log", "LIQUIDITY_VACUUM.log", "EUR_USDT_SCALPER.log", "SOL_PULSE_SNIPER.log", "NEON_SNIPER_ZERO.log", "EUR_USDC_NANO.log", "OB_WALL_SNIPER.log", "MEXC_NANO.log"]]
         cmd = ["cat"] + [f for f in log_files if os.path.exists(f)]
         cat_out = subprocess.check_output(cmd)
         
@@ -96,6 +112,33 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(data.encode())
             return
+        
+        elif self.path == '/market.json' or self.path.startswith('/market.json?'):
+            try:
+                import ccxt
+                
+                from dotenv import load_dotenv
+                load_dotenv(os.path.join(BASE_DIR, '.env.mexc'))
+                api_key = os.getenv('MEXC_API_KEY')
+                mexc = ccxt.mexc({'apiKey': api_key, 'secret': os.getenv('MEXC_API_SECRET')})
+                tickers = mexc.fetch_tickers(['SOL/USDT', 'DOGE/USDT', 'PEPE/USDT', 'XRP/USDT'])
+                market_data = []
+                for s, t in tickers.items():
+                    market_data.append({
+                        "symbol": s,
+                        "price": t.get('last', 0),
+                        "change": t.get('percentage', 0)
+                    })
+                data = json.dumps(market_data)
+            except Exception as e:
+                data = json.dumps([])
+                
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(data.encode())
+            return
+
         elif self.path == '/syslogs.json' or self.path.startswith('/syslogs.json?'):
             data = get_combined_logs()
             self.send_response(200)
