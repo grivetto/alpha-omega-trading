@@ -40,7 +40,7 @@ def get_full_status():
                 mexc = ccxt.mexc({'apiKey': os.getenv('MEXC_API_KEY'), 'secret': os.getenv('MEXC_API_SECRET'), 'options': {'defaultType': 'spot'}})
                 m_bal = mexc.fetch_balance()
                 total_eur += float(m_bal.get('USDT', {}).get('total', 0.0)) * 0.92  # Approx EUR conversion
-        except: pass
+        except Exception as e: logging.error(f'ERRORE INCASSO MEDIO: {e}')
         
         try:
             import ccxt
@@ -49,7 +49,7 @@ def get_full_status():
                 bitget = ccxt.bitget({'apiKey': os.getenv('BITGET_API_KEY'), 'secret': os.getenv('BITGET_API_SECRET'), 'password': os.getenv('BITGET_PASSWORD')})
                 b_bal = bitget.fetch_balance({'type': 'swap'})
                 total_eur += float(b_bal.get('USDT', {}).get('total', 0.0)) * 0.92  # Approx EUR conversion
-        except: pass
+        except Exception as e: logging.error(f'ERRORE INCASSO MEDIO: {e}')
         
         profit = total_eur - CAPITALE_VERSATO_TOTALE
         
@@ -60,7 +60,7 @@ def get_full_status():
                 vdata = __import__("json").load(vf)
                 locked = float(vdata.get("LOCKED_EUR", 0))
                 gariban = float(vdata.get("GARIBAN_TRACKER", 0))
-        except: pass
+        except Exception as e: logging.error(f'ERRORE INCASSO MEDIO: {e}')
         
         # Fallback reading directly from GARIBAN.log
         if gariban == 0.0 and os.path.exists("/home/sergio/.openclaw/workspace/denaro/GARIBAN.log"):
@@ -69,7 +69,7 @@ def get_full_status():
                     for line in gf:
                         if "ELEMOSINA ACQUISITA!" in line:
                             gariban += float(line.split("ELEMOSINA ACQUISITA! ")[1].split("€")[0])
-            except: pass
+            except Exception as e: logging.error(f'ERRORE INCASSO MEDIO: {e}')
         
         main_vault = locked - gariban if locked >= gariban else locked
         
@@ -102,7 +102,7 @@ def get_daily_profit():
                 data = __import__("json").load(f)
                 locked = float(data.get("LOCKED_EUR", 0))
                 gariban_tracker = float(data.get("GARIBAN_TRACKER", 0))
-        except: pass
+        except Exception as e: logging.error(f'ERRORE INCASSO MEDIO: {e}')
         
         if gariban_tracker == 0.0 and os.path.exists("/home/sergio/.openclaw/workspace/denaro/GARIBAN.log"):
             try:
@@ -110,7 +110,7 @@ def get_daily_profit():
                     for line in gf:
                         if "ELEMOSINA ACQUISITA!" in line:
                             gariban_tracker += float(line.split("ELEMOSINA ACQUISITA! ")[1].split("€")[0])
-            except: pass
+            except Exception as e: logging.error(f'ERRORE INCASSO MEDIO: {e}')
         
         main_vault = locked - gariban_tracker if locked >= gariban_tracker else locked
         
@@ -122,7 +122,7 @@ def get_daily_profit():
                 mission_data = __import__("json").load(f)
                 profit_today = float(mission_data.get("profit_today", 0))
                 target_eur = float(mission_data.get("target_eur", 100.0))
-        except: pass
+        except Exception as e: logging.error(f'ERRORE INCASSO MEDIO: {e}')
         
         return f"""📅 *RICAVO GIORNALIERO*
 ------------------------------------
@@ -149,7 +149,7 @@ def get_gariban_stats():
                             parts = line.split("ELEMOSINA ACQUISITA! ")[1]
                             amount = float(parts.split("€")[0])
                             total_elemosina += amount
-                        except: pass
+                        except Exception as e: logging.error(f'ERRORE INCASSO MEDIO: {e}')
         return f"🤲 *CASSA DEL GARIBAN*\n------------------------------------\n🪙 Totale Elemosina Raccolta: *€{total_elemosina:.2f}*\n(Questo importo è stato interamente donato al Vault di Sicurezza)\n------------------------------------"""
     except Exception as e:
         return "⚠️ Errore lettura cassa Gariban."
@@ -190,15 +190,12 @@ def get_squad_stats():
 
         status += f"🧛 VAMPIRO: {'ONLINE' if vampire else 'OFFLINE'} (Griglia BTC)\n"
         micro = "eur_usdt_micro_scalper" in ps_output
-        status += f"🪙 EUR_USDC_NANO: {'ONLINE' if eur_usdc_nano else 'OFFLINE'} (Micro Spread EUR/USDC)\n"
-        status += f"💶 EUR_USDT_MICRO: {'ONLINE' if micro else 'OFFLINE'} (Micro spread scalper)\n"
         status += f"🦴 SCIACALLO: {'ONLINE' if scavenger else 'OFFLINE'} (Meme Crash)\n"
         status += f"👻 PHANTOM: {'ONLINE' if phantom else 'OFFLINE'} (Book Maker)\n"
         status += f"🌊 TSUNAMI: {'ONLINE' if tsunami else 'OFFLINE'} (Pump Rider)\n"
         status += f"🐝 SCIAME: {'ONLINE' if swarm else 'OFFLINE'} (Micro-Dips)\n"
         status += f"🌑 DARKPOOL: {'ONLINE' if darkpool else 'OFFLINE'} (Radar Triangolare)\n"
         status += f"🌌 BLACKHOLE: {'ONLINE' if blackhole else 'OFFLINE'} (Timing Globale)\n"
-        status += f"⚖️ STABLESCALP: {'ONLINE' if stablescalper else 'OFFLINE'} (Spread EUR/USDT)\n"
         status += f"🎯 ORDERBOOK: {'ONLINE' if orderbook_sniper else 'OFFLINE'} (Orderbook Imbalance Hunter)\n"
         micro_flash = "micro_flash_crash" in ps_output
         status += f"⚡ FLASH CRASH: {'ONLINE' if micro_flash else 'OFFLINE'} (Zero-OOM Arbitrageur)\n"
@@ -210,9 +207,7 @@ def get_squad_stats():
         status += f"💸 FUNDING: {'ONLINE' if fundingsniffer else 'OFFLINE'} (Sniffer tassi futures)\n"
         status += f"💥 FLASHCRASH: {'ONLINE' if flashcrash else 'OFFLINE'} (Arbitraggio Crolli)\n"
         status += f"🎯 VWAPSNIPER: {'ONLINE' if vwapsniper else 'OFFLINE'} (Deviazione Intraday)\n"
-        status += f"🛡️ ZERO OOM: {'ONLINE' if zero_oom else 'OFFLINE'} (Scalper Microscopico)\n"
         status += f"🛡️ NEON ZERO: {'ONLINE' if neon_zero else 'OFFLINE'} (Neon Sniper Zero)\n"
-        status += f"📈 MICROTREND: {'ONLINE' if microtrend else 'OFFLINE'} (Scalper su 1m)\n"
         status += f"🧱 DCA: {'ONLINE' if 'dca_accumulator.py' in ps_output else 'OFFLINE'} (Accumulo BTC/ETH)\n"
         status += f"🌾 YIELD FARM: {'ONLINE' if 'yield_farmer.py' in ps_output else 'OFFLINE'} (Interessi Flessibili)\n"
         status += f"🕳️ VACUUM: {'ONLINE' if liquidityvacuum else 'OFFLINE'} (Vuoti Book)\n"
@@ -220,6 +215,19 @@ def get_squad_stats():
         status += f"⚡ SOL PULSE: {'ONLINE' if solpulse else 'OFFLINE'} (Accelerazione SOL)\n"
         status += f"💶 EURSCALPER: {'ONLINE' if eurusdtscalper else 'OFFLINE'} (Micro-Spread EUR)\n"
         status += f"🐳 WHALETRACK: {'ONLINE' if whaletracker else 'OFFLINE'} (Radar Accumulo BTC)\n"
+
+        # Nuovi inserimenti
+        blade = "blade_runner_bitget.py" in ps_output
+        olympus = "olympus_grid_binance.py" in ps_output
+        compounder = "auto_compounder.py" in ps_output
+        spatial = "spatial_arbitrageur.py" in ps_output
+        crisis = "crisis_manager.py" in ps_output
+        
+        status += f"🗡️ BLADE RUNNER: {'ONLINE' if blade else 'OFFLINE'} (Scalper Momentum 10x)\n"
+        status += f"⚡ PROJECT OLYMPUS: {'ONLINE' if olympus else 'OFFLINE'} (Griglia HFT Override)\n"
+        status += f"📈 COMPOUNDER: {'ONLINE' if compounder else 'OFFLINE'} (Kelly Size Optimizer)\n"
+        status += f"🌌 SPATIAL ARB: {'ONLINE' if spatial else 'OFFLINE'} (Arbitraggio MEXC-Binance)\n"
+        status += f"🚨 CRISIS MGR: {'ONLINE' if crisis else 'OFFLINE'} (DEFCON Circuit Breaker)\n"
         status += f"🤲 GARIBAN: {'ONLINE' if gariban else 'OFFLINE'} (Elemosina)\n"
         status += "🔐 CASSAFORTE 33%: ONLINE E BLINDATA\n------------------------------------"""
         return status
@@ -259,13 +267,13 @@ def get_dynamic_kb():
             with open("/home/sergio/.openclaw/workspace/denaro/vault.json", "r") as f:
                 data = json.load(f)
                 locked = float(data.get("LOCKED_EUR", 0))
-        except: pass
+        except Exception as e: logging.error(f'ERRORE INCASSO MEDIO: {e}')
         
         profit_today = 0.0
         try:
             with open("/home/sergio/.openclaw/workspace/denaro/daily_mission.json", "r") as f:
                 profit_today = float(json.load(f).get("profit_today", 0))
-        except: pass
+        except Exception as e: logging.error(f'ERRORE INCASSO MEDIO: {e}')
         
         from __main__ import CAPITALE_VERSATO_TOTALE
         profit_total = total_eur - CAPITALE_VERSATO_TOTALE
@@ -302,7 +310,7 @@ def get_mexc_status():
         try:
             import subprocess
             last_logs = subprocess.check_output(["tail", "-n", "3", log_file]).decode()
-        except: pass
+        except Exception as e: logging.error(f'ERRORE INCASSO MEDIO: {e}')
         
         msg = f"🧪 *LABORATORIO MEXC (0% FEE)*\n"
         msg += f"------------------------------------\n"
@@ -338,26 +346,39 @@ def main_loop():
                             logging.info(f"GUEST USER: {chat_id}")
                             guest_kb = {
                                 "keyboard": [
-                                    [{"text": "Progetto Neon Squad"}, {"text": "Progetto MEXC"}],
-                                    [{"text": "Statistiche Bot"}, {"text": "Incasso Medio Giornaliero"}]
+                                    [{"text": "Andamento Capitale"}, {"text": "Incasso Giornaliero"}],
+                                    [{"text": "Squadre all'opera"}]
                                 ],
                                 "resize_keyboard": True
                             }
-                            if text == "/start":
+                            send_url = f"https://api.telegram.org/bot{token}/sendMessage"
+                            if text == "/START":
                                 msg = "Benvenuto nell'Orbital Command di Sergio. Sono l'AI Assistant che gestisce il suo Hedge Fund Algoritmico.\n\nSeleziona una voce per saperne di più sul progetto:"
-                                requests.post(url, json={"chat_id": chat_id, "text": msg, "reply_markup": guest_kb})
-                            elif text == "Progetto Neon Squad":
-                                msg = "🚀 *Progetto Neon Squad*\n\nUn'infrastruttura algoritmica a 4 livelli (Tier) che opera su Binance e Bitget. Utilizziamo 28 bot cecchini (Legion), algoritmi HFT per l'Order Flow e intelligenza artificiale per l'allocazione dinamica del capitale."
-                                requests.post(url, json={"chat_id": chat_id, "text": msg, "parse_mode": "Markdown", "reply_markup": guest_kb})
-                            elif text == "Progetto MEXC":
-                                msg = "🧪 *Laboratorio MEXC*\n\nLa nostra 'Nano Squad' sfrutta lo 0% di commissioni dell'exchange MEXC per estrarre micro-profitti dalla volatilità a basso time-frame (1m e 5m), scalping estremo su piccole candele."
-                                requests.post(url, json={"chat_id": chat_id, "text": msg, "parse_mode": "Markdown", "reply_markup": guest_kb})
-                            elif text == "Statistiche Bot":
-                                msg = "🤖 *Statistiche Operative*\n\n• Oltre 40 algoritmi quantitativi in esecuzione parallela.\n• Watchdog di sistema (Zabbix) per l'auto-guarigione.\n• Latenza media: < 150ms.\n• Modalità operativa: Long, Short e Arbitraggio Spaziale."
-                                requests.post(url, json={"chat_id": chat_id, "text": msg, "parse_mode": "Markdown", "reply_markup": guest_kb})
-                            elif text == "Incasso Medio Giornaliero":
-                                msg = "💰 *Incasso Medio Giornaliero*\n\nTarget operativo: 100€ al giorno.\n\n*(I dati esatti del capitale e le performance dal vivo sono riservati esclusivamente al Comandante).*\n\nIl sistema riversa in automatico il 33% dei profitti in una Cassaforte Blindata a tutela del capitale."
-                                requests.post(url, json={"chat_id": chat_id, "text": msg, "parse_mode": "Markdown", "reply_markup": guest_kb})
+                                requests.post(send_url, json={"chat_id": chat_id, "text": msg, "reply_markup": guest_kb})
+                            elif text == "ANDAMENTO CAPITALE":
+                                msg = "🏦 *Andamento Capitale (Pubblico)*\n\nIl fondo algoritmico è strutturato su un portafoglio protetto. \nLe cifre esatte e il bilancio dal vivo sono crittografati e accessibili solo al Comandante.\n\n*Strategia attuale:* Conservativa / Hedging attivo."
+                                requests.post(send_url, json={"chat_id": chat_id, "text": msg, "parse_mode": "Markdown", "reply_markup": guest_kb})
+                            elif text == "INCASSO GIORNALIERO":
+                                msg = "🎯 *Incasso Giornaliero (Pubblico)*\n\n*Target di Sistema:* 100.00 € / giorno\n*Protocollo Cassaforte:* 33% degli utili viene sigillato quotidianamente.\n\n*(I dati sui ricavi netti in tempo reale sono riservati).*\n\nL'ecosistema è automatizzato 24/7."
+                                requests.post(send_url, json={"chat_id": chat_id, "text": msg, "parse_mode": "Markdown", "reply_markup": guest_kb})
+                            elif text == "SQUADRE ALL'OPERA":
+                                msg = "🚀 *Forze Algoritmiche all'opera*\n\nL'infrastruttura è divisa in distaccamenti strategici d'assalto (oltre 40 algoritmi in esecuzione parallela):\n\n"
+                                msg += "🎯 *SNIPER SQUAD* (Assalto Spot)\n"
+                                msg += "🧟‍♂️ *VAMPIRO* (Griglia BTC)\n"
+                                msg += "🐺 *SCIACALLO* (Meme Crash)\n"
+                                msg += "👻 *PHANTOM* (Book Maker)\n"
+                                msg += "🌊 *TSUNAMI* (Pump Rider)\n"
+                                msg += "🐝 *SCIAME* (Micro-Dips)\n"
+                                msg += "⚡ *PROJECT OLYMPUS* (Griglia HFT su SOL)\n"
+                                msg += "⚔️ *LEGION* (28 Micro-Cecchini su Altcoin)\n"
+                                msg += "📉 *MICRO-SHORTER* (Hedging su Bitget)\n"
+                                msg += "🧨 *KAMIKAZE* (Futures Momentum)\n"
+                                msg += "🌌 *SPATIAL ARB* (Arbitraggio MEXC/Binance)\n"
+                                msg += "📈 *COMPOUNDER* (Auto-Ottimizzatore Capitali)\n"
+                                msg += "🚨 *CRISIS MGR* (Circuit Breaker DEFCON)\n"
+                                msg += "👁️ *ZABBIX* (Watchdog di Auto-Guarigione)\n\n"
+                                msg += "*Un ecosistema quantitativo inarrestabile e autonomo.*"
+                                requests.post(send_url, json={"chat_id": chat_id, "text": msg, "parse_mode": "Markdown", "reply_markup": guest_kb})
                             continue
                         
                         resp_text = ""
@@ -386,9 +407,9 @@ def main_loop():
                             try:
                                 load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env')
                                 # Per ora mettiamo un placeholder per la media
-                                profit = get_daily_profit()
-                                resp_text = f"📊 *Medie e Statistiche (PRIVATO)*\n\nProfitto netto oggi: {profit:.2f} €\nTarget Fissato: 100.00 €\n\n*Dato in aggiornamento...*"
-                            except: pass
+                                profit_str = get_daily_profit()
+                                resp_text = f"📊 *Medie e Statistiche (PRIVATO)*\n\n🎯 Target Fissato: 100.00 €\n\n{profit_str}\n*Dato in aggiornamento...*"
+                            except Exception as e: logging.error(f'ERRORE INCASSO MEDIO: {e}')
                         elif "ELEMOSINA" in text or "GARIBAN" in text:
                             resp_text = get_gariban_stats()
                         
