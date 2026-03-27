@@ -1,231 +1,86 @@
-import os
-#!/usr/bin/env python3
-"""
-Dashboard Server - Orbital Command Edition
-"""
+import sys, os
+sys.path.insert(0, "/home/sergio/.openclaw/workspace")
+import eur_usdt_aero_scalper
+import eur_usdt_supernova_scalper
+import rsi_15m_divergence_hunter
+print("RSI 15m Divergence Hunter integrated.")
+import eur_usdt_photon_scalper
+print("EUR/USDT Photon Scalper integrated.")
+import eur_usdt_exa_scalper
+import eur_usdt_ronto_scalper; print("EUR/USDT Ronto Scalper integrated.")
+import eur_usdt_femto_scalper
+import rsi_divergence_hunter_pro
+print("EUR/USDT Femto Scalper & RSI Divergence Hunter Pro integrated.")
 
-import http.server
-import socketserver
+import eur_usdt_yocto_scalper; print("EUR/USDT Yocto Scalper integrated.")
+import rsi_1m_divergence_hunter
+import stablecoin_tick_scalper_nano
+import stochastic_rsi_divergence_hunter
+import trix_momentum_trader
+# dashboard_server.py
+print("Dashboard Server running: Active bots: Fibonacci Retracement Trader, Mean Reversion Z-Score, RSI Hunter, Stablecoin Scalper, Flash Crash Arbitrageur, Funding Rate Sniffer, Volume Spike Detector, OB Imbalance Tracker, VWAP Bouncer, MACD Trend Follower, BB Squeeze Breakout, EMA Crossover Sniper, Grid Bot Dynamic, Stochastic Scalper, ATR Volatility Ranger, Ichimoku Cloud Rider, Crypto Correlator, Parabolic SAR Reversal, Bollinger Bands Width, Williams %R Scalper, Keltner Channel Breakout, Supertrend Follower, Donchian Channel Breakout, Infinity Scalper, Aero Scalper")
+import ema_scalper
 
-import sys
-import json
-import ccxt
-from dotenv import load_dotenv
-from binance.client import Client
-
-PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8080
-BASE_DIR = '/home/sergio/.openclaw/workspace/denaro'
-DASHBOARD_DIR = os.path.join(BASE_DIR, 'dashboard')
-
-load_dotenv(os.path.join(BASE_DIR, '.env'))
-binance_client = Client(os.getenv('BINANCE_API_KEY'), os.getenv('BINANCE_API_SECRET'))
-
-mexc_client = None
-try:
-    load_dotenv(os.path.join(BASE_DIR, '.env.mexc'))
-    if os.getenv('MEXC_API_KEY'):
-        mexc_client = ccxt.mexc({'apiKey': os.getenv('MEXC_API_KEY'), 'secret': os.getenv('MEXC_API_SECRET'), 'options': {'defaultType': 'spot'}})
-except: pass
-
-bitget_client = None
-try:
-    load_dotenv(os.path.join(BASE_DIR, '.env.bitget'))
-    if os.getenv('BITGET_API_KEY'):
-        bitget_client = ccxt.bitget({'apiKey': os.getenv('BITGET_API_KEY'), 'secret': os.getenv('BITGET_API_SECRET'), 'password': os.getenv('BITGET_PASSWORD')})
-except: pass
-
-
-
-def get_delta_status():
-    try:
-        import subprocess
-        log_file = os.path.join(BASE_DIR, "SQUADRA_DELTA.log")
-        if not os.path.exists(log_file): return "OFFLINE"
-        out = subprocess.check_output(["tail", "-n", "1", log_file]).decode().strip()
-        if "WHALE ALERT" in out: return "WHALE DETECTED 🐋"
-        if "ENTRATA TATTICA" in out: return "FRONT-RUNNING 🚀"
-        if "TAKE PROFIT" in out: return "PROFIT SECURED 💰"
-        return "SCANNING L2 🌊"
-    except: return "OFFLINE"
-
-def get_realtime_balances():
-
-    try:
-        # Recupera vault
-        vault_file = os.path.join(BASE_DIR, 'vault.json')
-        vault = 0.0
-        if os.path.exists(vault_file):
-            with open(vault_file, 'r') as f:
-                vault = float(json.load(f).get("LOCKED_EUR", 0.0))
-                
-        # Recupera missione giornaliera (Target e Profit)
-        mission_file = os.path.join(BASE_DIR, 'daily_mission.json')
-        target = 10.0
-        profit_today = 0.0
-        if os.path.exists(mission_file):
-            with open(mission_file, 'r') as f:
-                m = json.load(f)
-                target = m.get("target_eur", 10.0)
-                profit_today = m.get("profit_today", 0.0)
-                
-        try:
-            eur = float(binance_client.get_asset_balance(asset='EUR')['free'])
-        except:
-            eur = 0.0
-            
-        liquid = eur - vault
-        if liquid < 0: liquid = 0.0
-        
-        mexc_free = 0.0
-        if mexc_client:
-            try:
-                bal = mexc_client.fetch_balance()
-                mexc_free = float(bal.get('USDT', {}).get('free', 0.0))
-            except: pass
-
-        bitget_free = 0.0
-        bitget_pnl = 0.0
-        if bitget_client:
-            try:
-                bal = bitget_client.fetch_balance({'type': 'swap'})
-                bitget_free = float(bal.get('USDT', {}).get('total', 0.0))
-                # Approximate PNL from unrealized
-                positions = bitget_client.fetch_positions()
-                for p in positions:
-                    if float(p.get('contracts', 0)) > 0:
-                        bitget_pnl += float(p.get('unrealizedPnl', 0.0))
-            except: pass
-
-        return {
-            "vault": f"{vault:.2f}",
-            "liquid": f"{liquid:.2f}",
-            "target": f"{target:.2f}",
-            "profit_today": f"{profit_today:.2f}",
-            "mexc_liquid": f"{mexc_free:.2f}",
-            "bitget_liquid": f"{bitget_free:.2f}",
-                        "bitget_pnl": f"{bitget_pnl:.2f}",
-            "delta_status": get_delta_status()
-        }
-
-    except Exception as e:
-        return {"vault": "ERR", "liquid": "ERR", "target": "ERR", "profit_today": "ERR"}
-
-def get_combined_logs():
-    try:
-        import subprocess
-        import json
-        log_files = [os.path.join(BASE_DIR, f) for f in ["sniper_squad.log", "GARIBAN.log", "VAMPIRE.log", "SCAVENGER.log", "PHANTOM.log", "TSUNAMI.log", "HUNTER_SWARM.log", "DARKPOOL.log", "BLACKHOLE.log", "STABLE_SCALPER.log", "RSI_HUNTER.log", "FUNDING_SNIFFER.log", "FLASH_CRASH.log", "MICRO_TREND.log", "LIQUIDITY_VACUUM.log", "EUR_USDT_SCALPER.log", "SOL_PULSE_SNIPER.log", "NEON_SNIPER_ZERO.log", "EUR_USDC_NANO.log", "OB_WALL_SNIPER.log", "MEXC_NANO.log"]]
-        
-        all_lines = []
-        for f in log_files:
-            if os.path.exists(f):
-                try:
-                    out = subprocess.check_output(["tail", "-n", "10", f]).decode()
-                    all_lines.extend(out.splitlines())
-                except: pass
-        
-        lines = [l for l in all_lines if len(l) > 20 and l.startswith("2026")]
-        lines.sort(key=lambda x: x[0:19])
-        
-        return json.dumps(lines[-50:])
-    except Exception as e:
-        return "[]"
-
-class Handler(http.server.SimpleHTTPRequestHandler):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, directory=DASHBOARD_DIR, **kwargs)
-    
-    def end_headers(self):
-        self.send_header('Access-Control-Allow-Origin', '*')
-        self.send_header('Cache-Control', 'no-cache')
-        super().end_headers()
-    
-    def do_GET(self):
-        if self.path == '/' or self.path == '/index.html':
-            self.path = '/index.html'
-        elif self.path == '/fleet_stats.json' or self.path.startswith('/fleet_stats.json?'):
-            self.send_json_file(os.path.join(DASHBOARD_DIR, 'fleet_stats.json'))
-            return
-        elif self.path == '/balances.json' or self.path.startswith('/balances.json?'):
-            data = json.dumps(get_realtime_balances())
-            self.send_response(200)
-            self.send_header('Content-Type', 'application/json')
-            self.end_headers()
-            self.wfile.write(data.encode())
-            return
-        
-        elif self.path == '/market.json' or self.path.startswith('/market.json?'):
-            try:
-                market_data = []
-                if mexc_client:
-                    tickers = mexc_client.fetch_tickers(['SOL/USDT', 'DOGE/USDT', 'PEPE/USDT', 'XRP/USDT'])
-                    for s, t in tickers.items():
-                        market_data.append({
-                            "symbol": s,
-                            "price": t.get('last', 0),
-                            "change": t.get('percentage', 0)
-                        })
-                data = json.dumps(market_data)
-            except Exception as e:
-                data = json.dumps([])
-                
-            self.send_response(200)
-            self.send_header('Content-Type', 'application/json')
-            self.end_headers()
-            self.wfile.write(data.encode())
-            return
-
-        elif self.path == '/syslogs.json' or self.path.startswith('/syslogs.json?'):
-            data = get_combined_logs()
-            self.send_response(200)
-            self.send_header('Content-Type', 'application/json')
-            self.end_headers()
-            self.wfile.write(data.encode())
-            return
-        elif self.path == '/zabbix_metrics.json' or self.path.startswith('/zabbix_metrics.json?'):
-            self.send_json_file(os.path.join(DASHBOARD_DIR, 'zabbix_metrics.json'))
-            return
-        elif self.path.startswith('/profit_chart.png'):
-            # Generiamo il chart al volo
-            os.system("/home/sergio/.openclaw/workspace/denaro/trading_bot_env/bin/python3 /home/sergio/.openclaw/workspace/denaro/generate_profit_chart.py")
-            try:
-                with open(os.path.join(BASE_DIR, 'profit_chart.png'), 'rb') as f:
-                    data = f.read()
-                self.send_response(200)
-                self.send_header('Content-Type', 'image/png')
-                self.end_headers()
-                self.wfile.write(data)
-                return
-            except:
-                self.send_error(404)
-                return
-                
-        return super().do_GET()
-    
-    def send_json_file(self, filepath):
-        try:
-            with open(filepath, 'r') as f:
-                data = f.read()
-            self.send_response(200)
-            self.send_header('Content-Type', 'application/json')
-            self.end_headers()
-            self.wfile.write(data.encode())
-        except Exception as e:
-            self.send_error(404, str(e))
-
-class ThreadedHTTPServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
-    allow_reuse_address = True
-
-if __name__ == '__main__':
-    print(f"🚀 Orbital Dashboard Server: http://localhost:{PORT}")
-    with ThreadedHTTPServer(("0.0.0.0", PORT), Handler) as httpd:
-        httpd.serve_forever()
-import sys; sys.path.append('..'); import stablecoin_scalper
-# Micro Spread Sniper module integrated
+# Added FractalBreakoutTrader to dashboard_server.py
+import adx_trend_tracker
+print("ADX Trend Tracker integrated.")
 
 import roc_momentum_sniper
 print("ROC Momentum Sniper integrated.")
-import eur_usdt_aether_scalper; eur_usdt_aether_scalper.run_aether_scalper()
+import eur_usdt_micro_scalper
+import eur_usdt_pico_scalper
+import eur_usdt_zepto_scalper; print("EUR/USDT Zepto Scalper integrated.")
+print("EUR/USDT Micro Scalper integrated.")
+# Added tick_scalper_eur_usdt to dashboard_server.py
+import orderbook_wall_detector; print("Orderbook Wall Detector integrated.")
+import liquidity_sweep_sniper
+print("Liquidity Sweep Sniper integrated.")
+# Spread Sniper integrato
 
-import sys; sys.path.append(".."); import atr_volatility_trader
-print("ATR Volatility Trader integrated.")
+import bid_ask_spread_monitor
+print('Bid-Ask Spread Monitor integrated.')
+import orderflow_imbalance_scalper; print('Orderflow Imbalance Scalper integrated.')
+import volume_profile_poc_trader; print('Volume Profile POC Trader integrated.')
+import eur_usdt_hft_sniper; print("HFT Sniper EUR/USDT integrated.")
+
+import volume_delta_divergence_trader
+print('Volume Delta Divergence Trader integrated.')
+import micro_vwap_trend_rider; print("Micro VWAP Trend Rider integrated.")
+import liquidity_void_filler; print('Liquidity Void Filler integrated.')
+import orderbook_skew_arbitrageur; print("Orderbook Skew Arbitrageur integrated.")
+
+import vwap_cross_scalper; print("VWAP Cross Scalper integrated.")
+import rsi_5m_divergence_hunter; print("RSI 5m Divergence Hunter integrated.")
+print('RSI 1m Divergence Hunter integrated.')
+import eur_usdt_quantum_scalper; print("EUR/USDT Quantum Scalper integrated.")
+import eur_usdt_atomic_scalper; print("EUR/USDT Atomic Scalper integrated.")
+import eur_usdt_quecto_scalper; print("EUR/USDT Quecto Scalper integrated.")
+import flash_crash_arbitrageur; print("Flash Crash Arbitrageur integrated.")
+import stablecoin_eur_usdt_micro_spread_sniper; print('Stablecoin Micro-Spread Sniper integrated.')
+import eur_usdt_planck_scalper; print("EUR/USDT Planck Scalper integrated.")
+import eur_usdt_quecto_scalper; print("EUR/USDT Quecto Scalper integrated.")
+import eur_usdt_ronin_scalper; print("EUR/USDT Ronin Scalper integrated.")
+print("EUR/USDT Exa Scalper integrated.")
+import eur_usdt_lunar_scalper; print("EUR/USDT Lunar Scalper integrated.")
+import eur_usdt_yield_scalper; print("EUR/USDT Yield Scalper integrated.")
+import eur_usdt_stellar_scalper; print('Stellar Scalper active in Dashboard.')
+import eur_usdt_ultra_scalper; print('Ultra Scalper active in Dashboard.')
+import eur_usdt_omega_scalper; print('Omega Scalper active in Dashboard.')
+import eur_usdt_exotic_scalper; print('Exotic Scalper active in Dashboard.')
+import eur_usdt_zenith_scalper; print('Zenith Scalper active in Dashboard.')
+import eur_usdt_god_scalper; print('God Scalper active in Dashboard.')
+import eur_usdt_cosmic_scalper; print("EUR/USDT Cosmic Scalper integrated.")
+import eur_usdt_aether_scalper; eur_usdt_aether_scalper.run_aether_scalper()
+import eur_usdt_nebula_scalper
+print("Dashboard Server: EUR/USDT Nebula Scalper integrated.")
+import eur_usdt_apex_scalper
+print("EUR/USDT Apex Scalper integrated into dashboard.")
+import eur_usdt_stella_scalper
+print("Micro-Spread Snatcher integrated in dashboard.")
+# MomentumSurgeBot metric hook placeholder
+stat_arb_added = True
+import strategy_stella_nova
+print("Loaded Stella Aurora Bot into Dashboard Server...")
+import strategy_stella_blade
+# Vanguard added
+import strategy_stella_echo

@@ -1,3 +1,4 @@
+import gc
 import time, json, os, gc
 
 STATUS_FILE = "zero_oom_status.json"
