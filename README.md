@@ -1,24 +1,32 @@
 # 🚀 ORBITAL COMMAND: NEON SQUAD
-**Versione Attuale:** Alpha 0.99 (Pre-Beta)
-*La release Beta 1.0 verrà rilasciata solo ed esclusivamente al raggiungimento e mantenimento stabile dell'obiettivo di 100€ di profitto netto giornaliero.*
+**Branch Attuale:** `work_in_progress` (A.G.I. Quantitative Testing)
+*Questo branch ospita l'ecosistema algoritmico in evoluzione continua. Le strategie vengono testate, validate e promosse automaticamente dall'Intelligenza Artificiale isolata (Evolutionary Bot Builder).*
 
-## 👁️ L'INFRASTRUTTURA A 4 TIER (RISCHIO ASIMMETRICO)
+## 👁️ L'INFRASTRUTTURA A 4 TIER (HEDGE FUND MODE)
 La flotta è stata divisa in distaccamenti strategici per massimizzare la resa e frammentare il rischio:
-- **TIER 1 (Squadra Alpha - Binance Spot):** La Roccaforte. Ospita la Sniper Squad e i 28 Legionari. Usa l'85% del capitale per comprare i dip e sfruttare l'interesse composto senza l'uso di leve finanziarie.
-- **TIER 2 (Squadra Beta - MEXC Spot):** Il Laboratorio a Zero Commissioni. La `MEXC Nano Squad` opera su altissime frequenze per grattare millesimi di dollaro dai micro-movimenti del mercato senza pagare fee di transazione.
-- **TIER 3 (Squadra Gamma - Bitget Futures):** Le Forze Speciali. Operano con un budget minuscolo (5% del capitale) su Leva 20x. Contiene il `Kamikaze Bot` (per i pump), il `Micro-Shorter` (per speculare sui crolli) e l'algoritmo `Pairs Trading Neutral` che genera profitti arbitrando la differenza di forza tra due monete contemporaneamente (es. LONG SOL, SHORT DOGE).
-- **TIER 4 (Squadra Delta - Binance Order Flow):** Il Whale Front-Runner. Utilizza il Level 2 Order Book di Binance per scovare inefficienze (Imbalance > 3.5x tra Bids e Asks nei primi 10 livelli). Acquista istanti prima che un muro in acquisto ("Buy Wall") faccia esplodere il prezzo, scalpando un +0.2% netto in frazioni di secondo. Se il muro è "fake" (Spoofing), applica uno stop loss dinamico a -0.5% per protezione del capitale.
+- **TIER 1 (Squadra Alpha - Binance Spot):** La Roccaforte. Ospita la Sniper Squad e i 28 Legionari. Usa capitale senza leva per comprare i dip e sfruttare l'interesse composto. Include il **Project Olympus** (Griglie HFT a spread ravvicinato per incassare dalla volatilità laterale).
+- **TIER 2 (Squadra Beta - MEXC Spot):** Il Laboratorio a Zero Commissioni. La `MEXC Nano Squad` opera su altissime frequenze per grattare millesimi di dollaro dai micro-movimenti senza pagare fee.
+- **TIER 3 (Squadra Gamma - Bitget Futures):** Le Forze Speciali. Operano con budget ridotto su Leva 10x/20x. Contiene il `Kamikaze Bot` (Momentum LONG), il `Micro-Shorter` (Speculazione Crolli) e il `Blade Runner` (Scalper Direzionale estremo).
+- **TIER 4 (Squadra Delta - Market Neutral & Hedging):** Lo Scudo Assoluto.
+  - `delta_neutral_hedge.py`: Calcola l'esposizione Spot su Binance e apre dinamicamente una posizione SHORT su Bitget Futures per bilanciare il portafoglio a Rischio Zero.
+  - `spatial_arbitrageur.py`: Legge i prezzi tra Binance e MEXC e segnala inefficienze di prezzo (Risk-Free Arbitrage).
 
-## 🎖️ IL GENERALE (Dynamic Capital Allocator)
-A capo del Tier 1 è stato posto **IL GENERALE** (`il_generale.py`). Questo algoritmo si sveglia ogni ora per ispezionare il portafoglio:
-- **Stop Loss Tattico:** Taglia le posizioni in forte perdita (<-5% in 24h) vendendole per salvare il capitale.
-- **Moltiplicatore di Profitto:** Inietta budget extra (es. 30€) sulle monete in forte trend rialzista (>+5% in 24h) per massimizzare i profitti prima del picco.
+## 🧠 LA VISTA E LA VELOCITÀ (HFT & Dati Alternativi)
+- **Il Cervello Condiviso (WebSockets):** Il demone `orbital_websocket.py` mantiene una connessione WSS permanente con Binance, scrivendo migliaia di prezzi al secondo su una **RAM-Disk locale (`/dev/shm`)**. I bot leggono dalla RAM in <5ms azzerando la latenza e i Rate Limits API.
+- **La Vista On-Chain:** `whale_alert_onchain.py` fa da proxy analizzando i volumi anomali sui Futures per anticipare i movimenti delle Balene.
+- **News Sentiment Sniper:** `news_sentiment_sniper.py` esegue scraping e parsing RSS in tempo reale di *Cointelegraph* e *CoinDesk*, analizzando i titoli per intercettare keyword esplosive (es. "Hack", "ETF", "Elon Musk") e ordinando ai bot di reagire in millisecondi.
 
-## 🛡️ CHARLIE INFRASTRUCTURE (Zabbix Monitor & Dashboard)
-La nuova architettura si regge su un guardiano supremo: **CHARLIE** (`zabbix_watchdog.py`). Questo demone in background scruta la memoria RAM, l'uso CPU e il battito cardiaco (ultimo log) di tutti i bot. Se un bot entra in stato *Zombie* (log bloccati per >600 secondi), CHARLIE lo killa e il `lite_guardian` lo riporta in vita. Questo, unito ai fix anti-memory-leak sulla Dashboard Web (che consumava 10 GB di Swap e ora è divisa in 4 pannelli operativi per i 4 Tier), garantisce un uptime eterno a consumo quasi zero.
+## 🎖️ IL GENERALE E L'OTTIMIZZATORE
+- **Il Generale:** Taglia le posizioni in forte perdita (Stop Loss Tattico) e inietta budget sulle monete in forte trend rialzista.
+- **L'Auto-Compounder:** `auto_compounder.py` si sveglia ogni 12 ore, legge il capitale totale e applica la formula di Kelly per calcolare il Rischio (es. 2.5%), aumentando dinamicamente la size (potenza di fuoco) di tutti i bot.
 
-## ⚙️ LA FABBRICA DEI BOT (Auto-Builder Cron)
-Un processo isolato di intelligenza artificiale ("Auto-Builder Bot Factory") si sveglia ogni ora per analizzare il mercato, scrivere da zero un nuovo algoritmo Python su Binance Spot, integrarlo nel `lite_guardian` e testarlo in produzione. Questa fabbrica iterativa punta a trovare l'anomalia perfetta per raggiungere i 100€ giornalieri.
+## 🛡️ CHARLIE INFRASTRUCTURE E CRISIS MANAGER
+La nuova architettura si regge su due guardiani:
+- **ZABBIX Watchdog:** Scruta la memoria RAM, l'uso CPU e il battito cardiaco (ultimo log) di tutti i bot. Genera il `fleet_stats.json` per la Dashboard Web e riavvia i bot "Zombie".
+- **CRISIS MANAGER (DEFCON 2):** `crisis_manager.py` monitora il crollo del benchmark globale (BTC). Se il mercato sanguina >4%, dichiara il DEFCON 2, **blocca gli acquisti Spot (No Falling Knives)**, sguinzaglia i bot Short e avverte il Comandante su Telegram.
+
+## ⚙️ EVOLUTIONARY AI BOT BUILDER (Darwinian Engine)
+Un processo di AGI (Artificial General Intelligence) si sveglia ogni **5 minuti**. Legge i log storici, elimina spietatamente i bot in perdita o che consumano troppa RAM, inventa una nuova strategia in Python (Machine Learning / Quant), la testa in RAM e se redditizia la deploya in produzione aggiungendola al Guardiano e aggiornando il repository GitHub in autonomia.
 
 ## 🔐 LA REGOLA D'ORO (Vault del 33%)
-Nessun bot può accrescere a dismisura il capitale esposto. **Ogni singolo trade chiuso in profitto** da una qualsiasi delle intelligenze artificiali è tenuto per legge a dirottare il **33% dell'incasso netto verso il Vault** (Fondo Sicurezza Intoccabile). In più, la funzione **Elemosina Gariban** raccoglie i micro-resti in USDT e li protegge nello stesso fondo. A mezzanotte, il `midnight_sweeper.py` sigilla i profitti giornalieri.
+**Ogni singolo trade chiuso in profitto** da una qualsiasi intelligenza artificiale dirotta il **33% dell'incasso netto verso il Vault** (Fondo Sicurezza Intoccabile). A mezzanotte, il `midnight_sweeper.py` sigilla i profitti della giornata e azzera i contatori.

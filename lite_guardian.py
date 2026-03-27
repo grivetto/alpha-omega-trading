@@ -9,6 +9,7 @@ WORKSPACE = "/home/sergio/.openclaw/workspace/denaro"
 
 # Solo 3 processi essenziali, bassissimo consumo CPU
 BOT_REGISTRY = {
+    "ORBITAL_WS": "orbital_websocket.py",
     "SNIPER_SQUAD": "sniper_squad.py",
     "DASHBOARD": "dashboard/dashboard_server.py",
     "TG-BOT": "telegram_bot_interactive.py",
@@ -83,6 +84,8 @@ def main():
     BOT_REGISTRY["COMPOUNDER"] = "auto_compounder.py"
     BOT_REGISTRY["SPATIAL_ARB"] = "spatial_arbitrageur.py"
     BOT_REGISTRY["CRISIS_MGR"] = "crisis_manager.py"
+    BOT_REGISTRY["DELTA_NEUTRAL"] = "delta_neutral_hedge.py"
+    BOT_REGISTRY["NEWS_SNIPER"] = "news_sentiment_sniper.py"
     BOT_REGISTRY["SQUADRA_GAMMA"] = "squadra_gamma_pairs.py"
     BOT_REGISTRY["LEGION_ADA"] = "legion_01_ada.py"
     BOT_REGISTRY["LEGION_AVAX"] = "legion_02_avax.py"
@@ -123,6 +126,8 @@ def main():
     BOT_REGISTRY["COMPOUNDER"] = "auto_compounder.py"
     BOT_REGISTRY["SPATIAL_ARB"] = "spatial_arbitrageur.py"
     BOT_REGISTRY["CRISIS_MGR"] = "crisis_manager.py"
+    BOT_REGISTRY["DELTA_NEUTRAL"] = "delta_neutral_hedge.py"
+    BOT_REGISTRY["NEWS_SNIPER"] = "news_sentiment_sniper.py"
     BOT_REGISTRY["SQUADRA_GAMMA"] = "squadra_gamma_pairs.py"
 
 # --- LEGIONNAIRES (28 BOTS) ---

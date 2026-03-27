@@ -1,4 +1,7 @@
 import ccxt
+import sys
+sys.path.insert(0, "/home/sergio/.openclaw/workspace/denaro")
+import local_price
 import time
 import os
 import logging
@@ -42,7 +45,7 @@ def run_olympus():
     
     while True:
         try:
-            ticker = binance.fetch_ticker(SYMBOL)
+            ticker = (local_price.get_ticker(SYMBOL) or binance.fetch_ticker(SYMBOL))
             current_price = ticker['last']
             orders = get_open_orders()
             
