@@ -55,6 +55,10 @@ def main():
                     if "-2010" in str(e) or "-1121" in str(e):
                         logger.error(f"Skipping {symbol}: API Error {e}")
                         continue
+                    if "NameResolutionError" in str(e) or "Read timed out" in str(e) or "HTTPSConnectionPool" in str(e):
+                        logger.error(f"Connection error for {symbol}: {e}")
+                        time.sleep(10)
+                        continue
                     raise e
 
                 df = pd.DataFrame(klines, columns=['ts', 'o', 'h', 'l', 'c', 'v', 'ct', 'qv', 'nt', 'tb', 'tq', 'i'])
@@ -81,7 +85,7 @@ def main():
                         pass
                         
                     if eur_bal < RISK_BTC + 1.0:
-                        logger.warning(f"⚠️ Fondo insufficiente ({eur_bal}€ disponibili netti, {RISK_BTC}€ richiesti). Skipping {symbol}")
+                        logger.debug(f"⚠️ Fondo insufficiente ({eur_bal}€ disponibili netti, {RISK_BTC}€ richiesti). Skipping {symbol}")
                         continue
                         
                     qty_to_buy = RISK_BTC / price
