@@ -1,10 +1,8 @@
-import gc
-import time, json, os
+import time, json, os, gc
 
 STATUS_FILE = "zero_oom_status.json"
 
 print("Avvio ZERO OOM Scalper - EUR/USDT microscopico.")
-import gc
 while True:
     gc.collect()
     data = {"status": "running", "profit_eur": round(0.0001 * (time.time() % 100), 4), "trades": int(time.time() % 10)}

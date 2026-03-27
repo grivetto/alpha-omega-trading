@@ -21,7 +21,7 @@ bitget = ccxt.bitget({
 
 SYMBOL = 'DOGE/USDT:USDT'  # Scegliamo DOGE per il micro-short
 LEVERAGE = 20
-RISK_USDT = 5.0  # Micro-arma: rischiamo solo i 5$ rimasti liberi
+RISK_USDT = 2.0  # Micro-arma: rischiamo solo i 5$ rimasti liberi
 TAKE_PROFIT_PCT = 0.985  # Target: se DOGE fa -1.5%, noi facciamo +30% ROI in SHORT
 
 def get_rsi(symbol, timeframe='1m', period=14):

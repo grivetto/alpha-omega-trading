@@ -14,7 +14,7 @@ client = Client(os.getenv('BINANCE_API_KEY'), os.getenv('BINANCE_API_SECRET'))
 def get_simple_earn_product(asset):
     try:
         # Usa il nuovo endpoint Simple Earn
-        res = client._request_margin_api("get", "simple-earn/flexible/list", signed=True, data={"asset": asset})
+        res = client.get_simple_earn_flexible_product_list(asset=asset)
         if res and 'rows' in res and len(res['rows']) > 0:
             return res['rows'][0]['productId']
     except Exception as e:

@@ -21,7 +21,7 @@ bitget = ccxt.bitget({
 
 SYMBOL = 'SOL/USDT:USDT'  # Formato CCXT per Bitget USDT-M
 LEVERAGE = 20
-RISK_USDT = 15.0  # Usiamo massimo 15 USDT per la missione
+RISK_USDT = 2.0  # Usiamo massimo 15 USDT per la missione
 TAKE_PROFIT_PCT = 1.015  # Target +1.5% sul sottostante (a leva 20x è +30% ROI)
 
 def get_rsi(symbol, timeframe='1m', period=14):

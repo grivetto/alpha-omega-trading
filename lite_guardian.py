@@ -79,6 +79,9 @@ def main():
     BOT_REGISTRY["SQUADRA_DELTA"] = "squadra_delta_orderflow.py"
     BOT_REGISTRY["MEXC_NANO"] = "mexc_nano_squad.py"
     BOT_REGISTRY["KAMIKAZE"] = "kamikaze_bitget_futures.py"
+    BOT_REGISTRY["MICRO_SHORTER"] = "micro_shorter_bitget.py"
+    BOT_REGISTRY["BLADE_RUNNER"] = "blade_runner_bitget.py"
+    BOT_REGISTRY["SQUADRA_GAMMA"] = "squadra_gamma_pairs.py"
     BOT_REGISTRY["MICRO_ARBITRAGE"] = "micro_arbitrageur_eur_usdt.py"
     BOT_REGISTRY["LEGION_ADA"] = "legion_01_ada.py"
     BOT_REGISTRY["LEGION_AVAX"] = "legion_02_avax.py"
@@ -115,6 +118,9 @@ def main():
     BOT_REGISTRY["SQUADRA_DELTA"] = "squadra_delta_orderflow.py"
     BOT_REGISTRY["MEXC_NANO"] = "mexc_nano_squad.py"
     BOT_REGISTRY["KAMIKAZE"] = "kamikaze_bitget_futures.py"
+    BOT_REGISTRY["MICRO_SHORTER"] = "micro_shorter_bitget.py"
+    BOT_REGISTRY["BLADE_RUNNER"] = "blade_runner_bitget.py"
+    BOT_REGISTRY["SQUADRA_GAMMA"] = "squadra_gamma_pairs.py"
     BOT_REGISTRY["MICRO_ARBITRAGE"] = "micro_arbitrageur_eur_usdt.py"
 
 # --- LEGIONNAIRES (28 BOTS) ---

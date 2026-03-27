@@ -20,7 +20,7 @@ bitget = ccxt.bitget({
 
 SYMBOLS = ['BTC/USDT:USDT', 'ETH/USDT:USDT', 'ADA/USDT:USDT', 'XRP/USDT:USDT', 'DOT/USDT:USDT', 'AVAX/USDT:USDT']
 LEVERAGE = 10
-TRADE_USDT_PER_LEG = 7.5  # 7.5$ sul LONG, 7.5$ sullo SHORT
+TRADE_USDT_PER_LEG = 2.0  # 7.5$ sul LONG, 7.5$ sullo SHORT
 TAKE_PROFIT_PCT = 0.01     # +1% di spread tra le due (ROI totale 10%)
 
 def get_momentum(symbol):

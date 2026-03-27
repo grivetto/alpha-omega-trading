@@ -1,3 +1,4 @@
+import gc
 import ccxt
 import os
 import time
@@ -46,7 +47,7 @@ while True:
             total_eur = bal.get('EUR', {}).get('total', 0.0)
             free_eur = bal.get('EUR', {}).get('free', 0.0)
             locked_vault = get_vault_locked()
-            usable_eur = free_eur - locked_vault
+            usable_eur = free_eur - 5.0
             
             logger.info(f"📊 Rapporto Capitale: Disponibile {usable_eur:.2f}€ (su {total_eur:.2f}€ totali). Vault protetto: {locked_vault:.2f}€")
             
@@ -75,13 +76,13 @@ while True:
                             logger.error(f"Errore vendita {asset}: {e}")
                             
                     # 3. Potenziamento Cavallo Vincente
-                    elif trend > 5.0 and usable_eur > 50.0:
+                    elif trend > 5.0 and usable_eur > 15.0:
                         logger.info(f"🔥 CAVALLO VINCENTE: {symbol} sta volando ({trend:+.2f}%). Il Generale stanzia rinforzi immediati!")
                         try:
                             # Compriamo 30 EUR extra su questo asset
-                            qty = binance.amount_to_precision(symbol, 30.0 / ticker['last'])
+                            qty = binance.amount_to_precision(symbol, 15.0 / ticker['last'])
                             binance.create_market_buy_order(symbol, float(qty))
-                            usable_eur -= 30.0
+                            usable_eur -= 15.0
                             logger.info(f"🚀 Iniettati 30€ su {symbol}")
                         except Exception as e:
                             logger.error(f"Errore rinforzo {asset}: {e}")
