@@ -81,6 +81,7 @@ def main():
     BOT_REGISTRY["KAMIKAZE"] = "kamikaze_bitget_futures.py"
     BOT_REGISTRY["MICRO_SHORTER"] = "micro_shorter_bitget.py"
     BOT_REGISTRY["BLADE_RUNNER"] = "blade_runner_bitget.py"
+    BOT_REGISTRY["PROJECT_OLYMPUS"] = "olympus_grid_binance.py"
     BOT_REGISTRY["SQUADRA_GAMMA"] = "squadra_gamma_pairs.py"
     BOT_REGISTRY["MICRO_ARBITRAGE"] = "micro_arbitrageur_eur_usdt.py"
     BOT_REGISTRY["LEGION_ADA"] = "legion_01_ada.py"
@@ -120,6 +121,7 @@ def main():
     BOT_REGISTRY["KAMIKAZE"] = "kamikaze_bitget_futures.py"
     BOT_REGISTRY["MICRO_SHORTER"] = "micro_shorter_bitget.py"
     BOT_REGISTRY["BLADE_RUNNER"] = "blade_runner_bitget.py"
+    BOT_REGISTRY["PROJECT_OLYMPUS"] = "olympus_grid_binance.py"
     BOT_REGISTRY["SQUADRA_GAMMA"] = "squadra_gamma_pairs.py"
     BOT_REGISTRY["MICRO_ARBITRAGE"] = "micro_arbitrageur_eur_usdt.py"
 

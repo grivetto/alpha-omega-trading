@@ -277,7 +277,8 @@ def get_dynamic_kb():
         "keyboard": [
             [{"text": btn_text}, {"text": "Dashboard Web"}],
             [{"text": "MEXC Laboratorio"}, {"text": "Stato Squadre"}],
-            [{"text": "Andamento Ricavi"}, {"text": "Elemosina Gariban"}]
+            [{"text": "Andamento Ricavi"}, {"text": "Elemosina Gariban"}],
+            [{"text": "Incasso Medio Giornaliero"}]
         ],
         "resize_keyboard": True
     }
@@ -332,7 +333,32 @@ def main_loop():
                     if "message" in update and "text" in update["message"]:
                         text = update["message"]["text"].upper()
                         chat_id = str(update["message"]["chat"]["id"])
-                        if chat_id != sergio_id: logging.info(f"UNAUTHORIZED USER: {chat_id}"); continue
+                        if chat_id != sergio_id:
+                            # MODALITÀ OSPITE
+                            logging.info(f"GUEST USER: {chat_id}")
+                            guest_kb = {
+                                "keyboard": [
+                                    [{"text": "Progetto Neon Squad"}, {"text": "Progetto MEXC"}],
+                                    [{"text": "Statistiche Bot"}, {"text": "Incasso Medio Giornaliero"}]
+                                ],
+                                "resize_keyboard": True
+                            }
+                            if text == "/start":
+                                msg = "Benvenuto nell'Orbital Command di Sergio. Sono l'AI Assistant che gestisce il suo Hedge Fund Algoritmico.\n\nSeleziona una voce per saperne di più sul progetto:"
+                                requests.post(url, json={"chat_id": chat_id, "text": msg, "reply_markup": guest_kb})
+                            elif text == "Progetto Neon Squad":
+                                msg = "🚀 *Progetto Neon Squad*\n\nUn'infrastruttura algoritmica a 4 livelli (Tier) che opera su Binance e Bitget. Utilizziamo 28 bot cecchini (Legion), algoritmi HFT per l'Order Flow e intelligenza artificiale per l'allocazione dinamica del capitale."
+                                requests.post(url, json={"chat_id": chat_id, "text": msg, "parse_mode": "Markdown", "reply_markup": guest_kb})
+                            elif text == "Progetto MEXC":
+                                msg = "🧪 *Laboratorio MEXC*\n\nLa nostra 'Nano Squad' sfrutta lo 0% di commissioni dell'exchange MEXC per estrarre micro-profitti dalla volatilità a basso time-frame (1m e 5m), scalping estremo su piccole candele."
+                                requests.post(url, json={"chat_id": chat_id, "text": msg, "parse_mode": "Markdown", "reply_markup": guest_kb})
+                            elif text == "Statistiche Bot":
+                                msg = "🤖 *Statistiche Operative*\n\n• Oltre 40 algoritmi quantitativi in esecuzione parallela.\n• Watchdog di sistema (Zabbix) per l'auto-guarigione.\n• Latenza media: < 150ms.\n• Modalità operativa: Long, Short e Arbitraggio Spaziale."
+                                requests.post(url, json={"chat_id": chat_id, "text": msg, "parse_mode": "Markdown", "reply_markup": guest_kb})
+                            elif text == "Incasso Medio Giornaliero":
+                                msg = "💰 *Incasso Medio Giornaliero*\n\nTarget operativo: 100€ al giorno.\n\n*(I dati esatti del capitale e le performance dal vivo sono riservati esclusivamente al Comandante).*\n\nIl sistema riversa in automatico il 33% dei profitti in una Cassaforte Blindata a tutela del capitale."
+                                requests.post(url, json={"chat_id": chat_id, "text": msg, "parse_mode": "Markdown", "reply_markup": guest_kb})
+                            continue
                         
                         resp_text = ""
                         if text == "/START":
@@ -356,6 +382,13 @@ def main_loop():
                                 logging.error(f"Errore generazione chart: {e}")
                         elif "dummy" == text:
                             pass
+                        elif "INCASSO MEDIO" in text:
+                            try:
+                                load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env')
+                                # Per ora mettiamo un placeholder per la media
+                                profit = get_daily_profit()
+                                resp_text = f"📊 *Medie e Statistiche (PRIVATO)*\n\nProfitto netto oggi: {profit:.2f} €\nTarget Fissato: 100.00 €\n\n*Dato in aggiornamento...*"
+                            except: pass
                         elif "ELEMOSINA" in text or "GARIBAN" in text:
                             resp_text = get_gariban_stats()
                         
@@ -363,7 +396,6 @@ def main_loop():
                         
                         elif text == "/HISTORY" or "HISTORY" in text:
                             try:
-                                import subprocess
                                 log_file = "/home/sergio/.openclaw/workspace/denaro/MEXC_NANO.log"
                                 last_logs = subprocess.check_output(["tail", "-n", "20", log_file]).decode()
                                 resp_text = f"📜 *STORICO RECENTE (MEXC NANO SQUAD)*\n`{last_logs[-3500:]}`"
