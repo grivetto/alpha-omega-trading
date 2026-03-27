@@ -53,7 +53,7 @@ while True:
             logger.info(f"📊 Rapporto Capitale: Disponibile {usable_eur:.2f}€ (su {total_eur:.2f}€ totali). Vault protetto: {locked_vault:.2f}€")
             
             # 1. Ispezione Truppe (Posizioni aperte su Altcoin)
-            for asset, asset_data in bal['total'].items():
+            for asset, asset_data in bal['free'].items():
                 if asset in ['EUR', 'USDT', 'USDC'] or asset_data <= 0: continue
                 symbol = f"{asset}/EUR"
                 
@@ -70,8 +70,9 @@ while True:
                         logger.warning(f"✂️ TAGLIO TATTICO: {symbol} in caduta libera ({trend:+.2f}%). Il Generale liquida la posizione per salvare il capitale.")
                         try:
                             # Vendiamo per recuperare EUR
-                            qty = binance.amount_to_precision(symbol, asset_data)
-                            binance.create_market_sell_order(symbol, float(qty))
+                            free_asset = float(bal['free'].get(asset, 0.0))
+                            qty = float(binance.amount_to_precision(symbol, free_asset * 0.99))
+                            binance.create_market_sell_order(symbol, qty)
                             logger.info(f"✅ Recuperati ~{value_eur:.2f}€ da {asset}")
                         except Exception as e:
                             logger.error(f"Errore vendita {asset}: {e}")

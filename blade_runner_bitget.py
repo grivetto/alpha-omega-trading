@@ -23,7 +23,7 @@ except Exception as e:
     logging.error(f"Errore connessione Bitget: {e}")
     exit()
 
-TRADE_USDT = 15.0  # Usiamo 15 USDT di margine
+TRADE_USDT = 8.0  # Usiamo 15 USDT di margine
 LEVERAGE = 10
 TARGET_PROFIT = 0.015  # 1.5% di movimento netto sul sottostante = 15% ROE
 STOP_LOSS = -0.010     # 1% stop loss
@@ -81,7 +81,20 @@ def run_blade_runner():
                 ticker = bitget.fetch_ticker(symbol)
                 price = ticker['last']
                 
-                raw_qty = (TRADE_USDT * LEVERAGE) / price
+                
+                # Check actual balance
+                bal = bitget.fetch_balance()
+                usdt_free = bal.get('USDT', {}).get('free', 0.0)
+                actual_trade_usdt = TRADE_USDT
+                if usdt_free < 2.0:
+                    logging.warning(f"Fondi USDT insufficienti su Bitget: {usdt_free:.2f}. Pausa.")
+                    time.sleep(60)
+                    continue
+                if usdt_free < TRADE_USDT:
+                    actual_trade_usdt = usdt_free * 0.95
+                
+                raw_qty = (actual_trade_usdt * LEVERAGE) / price
+
                 try: qty = float(bitget.amount_to_precision(symbol, raw_qty))
                 except: qty = round(raw_qty, 2)
                 
@@ -92,7 +105,7 @@ def run_blade_runner():
                     entry_price = price
                     active_trade = True
                     current_symbol = symbol
-                    logging.info(f"🚀 INGRESSO {side.upper()} SU {symbol} a {entry_price}. Margine: {TRADE_USDT} USDT (x{LEVERAGE})")
+                    logging.info(f"🚀 INGRESSO {side.upper()} SU {symbol} a {entry_price}. Margine: {actual_trade_usdt:.2f} USDT (x{LEVERAGE})")
                 except Exception as e:
                     logging.error(f"Errore ingresso a mercato: {e}")
                     time.sleep(60)

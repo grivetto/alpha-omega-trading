@@ -39,7 +39,7 @@ def run_delta():
     active_trade = None
 
     import gc
-while True:
+    while True:
         gc.collect()
         try:
             # Controllo fondi
