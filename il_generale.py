@@ -38,7 +38,9 @@ def get_market_trend(symbol):
 def run_generale():
     logger.info("🎖️ IL GENERALE È SUL CAMPO. Avvio riallocazione dinamica del capitale.")
     
-    while True:
+    import gc
+while True:
+        gc.collect()
         try:
             bal = binance.fetch_balance()
             total_eur = bal.get('EUR', {}).get('total', 0.0)

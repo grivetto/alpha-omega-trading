@@ -37,7 +37,9 @@ def run_delta():
     
     active_trade = None
 
-    while True:
+    import gc
+while True:
+        gc.collect()
         try:
             # Controllo fondi
             bal = binance.fetch_balance()

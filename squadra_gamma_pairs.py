@@ -50,7 +50,9 @@ def run_gamma_pairs():
             logger.info(f"🔄 Recuperato Pairs Trading: LONG {long_sym} / SHORT {short_sym}")
     except: pass
 
-    while True:
+    import gc
+while True:
+        gc.collect()
         try:
             bal = bitget.fetch_balance({'type': 'swap'})
             usdt_balance = float(bal.get('USDT', {}).get('free', 0.0))
