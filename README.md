@@ -46,7 +46,7 @@ Il cuore ingegneristico del fondo. Qui non si scommette sulla direzione del merc
 Questa è l'evoluzione predatrice dell'Hedge Fund, nata con l'unico dogma imposto dal Comandante: **"Generare profitti asimmetrici e massicci a fronte di capitale ridotto" (Target 20% ROI Giornaliero)**.
 Per raggiungere volumi irrealistici nel trading umano, la macchina abbandona il "prevedere il mercato" e passa all'"estrarre valore con la forza" tramite la Finanza Decentralizzata (DeFi) e i Nodi RPC.
 
-1. **Il Cervello MEV (Maximal Extractable Value) - *Il Ladro Invisibile*:** Connesso direttamente alla Mempool di Ethereum/Solana tramite WebSockets Alchemy. Spia i grandi fondi che stanno per comprare una moneta, la compra un millisecondo prima di loro sfruttando la latenza del loro nodo, e gliela rivende in faccia un millisecondo dopo (Sandwich Attack). Profitto matematico istantaneo e a rischio zero.
+1. **Il Cervello MEV (Maximal Extractable Value) - *Il Ladro Invisibile*:** Connesso direttamente alla Mempool della rete Arbitrum One tramite un Nodo Privato (Alchemy WSS RPC). Il bot possiede un Wallet Web3 autonomo con carburante in ETH, monitorato in tempo reale dalla Dashboard. Spia i grandi fondi tramite WebSockets Alchemy. Spia i grandi fondi che stanno per comprare una moneta, la compra un millisecondo prima di loro sfruttando la latenza del loro nodo, e gliela rivende in faccia un millisecondo dopo (Sandwich Attack). Profitto matematico istantaneo e a rischio zero.
 2. **Il Cervello Flash Loan - *I Prestiti Quantitativi*:** Chiede in prestito **1 Milione di Dollari** dalla blockchain (Aave/dYdX) per la durata esatta di 1 secondo (senza collaterale). Svuota un'inefficienza globale (Arbitraggio), restituisce il milione pagando 5$ di gas fees e intasca l'intera differenza netta. 
 3. **Il Super-Cervello A.G.I. - *Il Programmatore Divino*:** Integrazione API di modelli LLM superiori (Claude 3.5 / GPT-4). L'Intelligenza Artificiale non usa più librerie statistiche preimpostate: naviga su internet, legge i paper di finanza quantitativa universitari e **scrive da sola nuovi algoritmi in Python e Solidity**, compilandoli e testandoli mentre l'utente dorme.
 
@@ -100,6 +100,15 @@ Ogni **5 minuti**, il Motore Evolutivo si sveglia:
 Il controllo remoto dell'Hedge Fund avviene tramite un Bot Telegram crittografato (`telegram_bot_interactive.py`), dotato di un'architettura a permessi asimmetrici:
 
 - **🔐 Profilo Comandante (Admin Mode):** Autenticazione hardcoded tramite Chat ID. Permette la visione in chiaro del portafoglio totale, l'accesso ai bottoni rossi ("Panic Sell", "All-In BTC", "Spegni Bot") e il monitoraggio degli incassi giornalieri.
+---
+
+## 💻 INTERFACCIA E TELEMETRIA (Dashboard & Telegram)
+L'ecosistema è comandato e monitorato tramite due interfacce distinte e ultra-dettagliate:
+- **Cyberpunk Web Dashboard (`dashboard_server.py` su porta 8080):** Una plancia di comando esposta via Reverse Proxy (HTTPS 8443) che mostra le metriche hardware in tempo reale (CPU, RAM, SWAP) tramite la libreria `psutil`, e il calcolo esatto del "Fleet Memory Load" di tutti i bot. Ricarica automatica ogni 10 secondi.
+- **Telegram C&C (Comando e Controllo):** Una UI a bottoni dinamici che mostra lo stato operativo dei 5 Macro-Settori.
+
+### Sicurezza Asimmetrica:
+- **🔐 Profilo Comandante (Admin Mode):** Autenticazione hardcoded tramite Chat ID. Permette la visione del portafoglio globale (Binance, MEXC, Bitget e Wallet Web3) e lo sgancio di armi HFT.
 - **👁️ Profilo Ospiti (Guest Mode):** Chiunque altro trovi il bot vedrà una UI "castrata". Potrà leggere solo l'Elemosina Globale (Gariban), una spiegazione astratta dell'infrastruttura ("Architettura Macchina") e dati offuscati, senza mai poter accedere al bilancio reale o inviare comandi operativi.
 
 ---
