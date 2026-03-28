@@ -24,6 +24,7 @@ BOTS = {
     "FLASH_CATCHER": "flash_catcher.py",
     "RSI_HUNTER": "rsi_divergence_hunter.py",
     "ALPHA_STRIKE": "alpha_strike_scalper.py",
+    "MEV_BRAIN": "mev_sandwich_bot.py",
     "DELTA_HEDGE": "delta_neutral_hedge.py",
     "ASIAN_ECHO": "spatial_arbitrageur.py",
     "NEWS_SNIPER": "news_sentiment_sniper.py",

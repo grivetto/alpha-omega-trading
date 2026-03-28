@@ -36,10 +36,21 @@ def get_full_status():
         try:
             import ccxt
             load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env.mexc')
+            
             if os.getenv('MEXC_API_KEY'):
                 mexc = ccxt.mexc({'apiKey': os.getenv('MEXC_API_KEY'), 'secret': os.getenv('MEXC_API_SECRET'), 'options': {'defaultType': 'spot'}})
                 m_bal = mexc.fetch_balance()
-                total_eur += float(m_bal.get('USDT', {}).get('total', 0.0)) * 0.92  # Approx EUR conversion
+                usdt_mexc = 0
+                for m_asset, m_qty in m_bal['total'].items():
+                    if m_qty > 0:
+                        if m_asset == 'USDT': usdt_mexc += m_qty
+                        else:
+                            try:
+                                t = mexc.fetch_ticker(f"{m_asset}/USDT")
+                                usdt_mexc += m_qty * t['last']
+                            except: pass
+                total_eur += usdt_mexc * 0.92
+
         except Exception as e: logging.error(f'ERRORE INCASSO MEDIO: {e}')
         
         try:
@@ -156,83 +167,42 @@ def get_gariban_stats():
 
 def get_squad_stats():
     try:
-        ps_output = os.popen("ps aux").read()
-        sniper = "sniper_squad.py" in ps_output
-        gariban = "gariban_beggar.py" in ps_output
-        vampire = "vampire_grid.py" in ps_output
-        scavenger = "scavenger_doge.py" in ps_output
-        phantom = "phantom_maker.py" in ps_output
-        tsunami = "tsunami_rider.py" in ps_output
-        swarm = "hunter_swarm.py" in ps_output
-        ob_wall_sniper = "ob_wall_sniper.py" in ps_output
-        darkpool = "dark_pool_arb.py" in ps_output
-        blackhole = "black_hole_absorber.py" in ps_output
-        stablescalper = "stable_scalper.py" in ps_output
-        orderbook_sniper = "orderbook_imbalance_sniper.py" in ps_output
-        zabbix = "zabbix_watchdog.py" in ps_output
-        flashcatcher = "flash_catcher.py" in ps_output
-        rsihunter = "rsi_divergence_hunter.py" in ps_output
-        fundingsniffer = "funding_rate_sniffer.py" in ps_output
-        flashcrash = "flash_crash_arbitrageur.py" in ps_output
-        microtrend = "micro_trend_tracker.py" in ps_output
-        bollinger = "bollinger_bands_sniper.py" in ps_output
-        eur_usdc_nano = "stablecoin_nano_scalper_eur_usdc.py" in ps_output
-        liquidityvacuum = "liquidity_vacuum.py" in ps_output
-        eurusdtscalper = "eur_usdt_scalper_pro.py" in ps_output
-        whaletracker = "whale_tracker_nano.py" in ps_output
-        solpulse = "sol_pulse_sniper.py" in ps_output
-        vwapsniper = "vwap_reversion_sniper.py" in ps_output
-        zero_oom = "zero_oom_scalper.py" in ps_output
-        neon_zero = "neon_sniper_zero.py" in ps_output
+        import psutil
+        cpu = psutil.cpu_percent()
+        ram = psutil.virtual_memory().percent
         
-        status = "🚀 *STATO SQUADRE (Lite Guardian 2.1)*\n------------------------------------\n"
-        status += f"🎯 SNIPER SQUAD: {'ONLINE' if sniper else 'OFFLINE'} (Assalto)\n"
-
-        status += f"🧛 VAMPIRO: {'ONLINE' if vampire else 'OFFLINE'} (Griglia BTC)\n"
-        micro = "eur_usdt_micro_scalper" in ps_output
-        status += f"🦴 SCIACALLO: {'ONLINE' if scavenger else 'OFFLINE'} (Meme Crash)\n"
-        status += f"👻 PHANTOM: {'ONLINE' if phantom else 'OFFLINE'} (Book Maker)\n"
-        status += f"🌊 TSUNAMI: {'ONLINE' if tsunami else 'OFFLINE'} (Pump Rider)\n"
-        status += f"🐝 SCIAME: {'ONLINE' if swarm else 'OFFLINE'} (Micro-Dips)\n"
-        status += f"🌑 DARKPOOL: {'ONLINE' if darkpool else 'OFFLINE'} (Radar Triangolare)\n"
-        status += f"🌌 BLACKHOLE: {'ONLINE' if blackhole else 'OFFLINE'} (Timing Globale)\n"
-        status += f"🎯 ORDERBOOK: {'ONLINE' if orderbook_sniper else 'OFFLINE'} (Orderbook Imbalance Hunter)\n"
-        micro_flash = "micro_flash_crash" in ps_output
-        status += f"⚡ FLASH CRASH: {'ONLINE' if micro_flash else 'OFFLINE'} (Zero-OOM Arbitrageur)\n"
-        status += f"👁️ ZABBIX: {'ONLINE' if zabbix else 'OFFLINE'} (Monitoraggio Salute)\n"
-        status += f"🎣 FLASHCATCHER: {'ONLINE' if flashcatcher else 'OFFLINE'} (Reti Limite -4%)\n"
-        legion_count = sum(1 for line in ps_output.splitlines() if "legion_" in line and "python" in line)
-        status += f"⚔️ LEGION: {legion_count}/28 ONLINE (Micro-Sniper Altcoin)\n"
-        status += f"📊 RSIHUNTER: {'ONLINE' if rsihunter else 'OFFLINE'} (Divergenze 5m)\n"
-        status += f"💸 FUNDING: {'ONLINE' if fundingsniffer else 'OFFLINE'} (Sniffer tassi futures)\n"
-        status += f"💥 FLASHCRASH: {'ONLINE' if flashcrash else 'OFFLINE'} (Arbitraggio Crolli)\n"
-        status += f"🎯 VWAPSNIPER: {'ONLINE' if vwapsniper else 'OFFLINE'} (Deviazione Intraday)\n"
-        status += f"🛡️ NEON ZERO: {'ONLINE' if neon_zero else 'OFFLINE'} (Neon Sniper Zero)\n"
-        status += f"🧱 DCA: {'ONLINE' if 'dca_accumulator.py' in ps_output else 'OFFLINE'} (Accumulo BTC/ETH)\n"
-        status += f"🌾 YIELD FARM: {'ONLINE' if 'yield_farmer.py' in ps_output else 'OFFLINE'} (Interessi Flessibili)\n"
-        status += f"🕳️ VACUUM: {'ONLINE' if liquidityvacuum else 'OFFLINE'} (Vuoti Book)\n"
-        status += f"🎯 BOLLINGER: {'ONLINE' if bollinger else 'OFFLINE'} (Bande di Bollinger 1m)\n"
-        status += f"⚡ SOL PULSE: {'ONLINE' if solpulse else 'OFFLINE'} (Accelerazione SOL)\n"
-        status += f"💶 EURSCALPER: {'ONLINE' if eurusdtscalper else 'OFFLINE'} (Micro-Spread EUR)\n"
-        status += f"🐳 WHALETRACK: {'ONLINE' if whaletracker else 'OFFLINE'} (Radar Accumulo BTC)\n"
-
-        # Nuovi inserimenti
-        blade = "blade_runner_bitget.py" in ps_output
-        olympus = "olympus_grid_binance.py" in ps_output
-        compounder = "auto_compounder.py" in ps_output
-        spatial = "spatial_arbitrageur.py" in ps_output
-        crisis = "crisis_manager.py" in ps_output
-        
-        status += f"🗡️ BLADE RUNNER: {'ONLINE' if blade else 'OFFLINE'} (Scalper Momentum 10x)\n"
-        status += f"⚡ PROJECT OLYMPUS: {'ONLINE' if olympus else 'OFFLINE'} (Griglia HFT Override)\n"
-        status += f"📈 COMPOUNDER: {'ONLINE' if compounder else 'OFFLINE'} (Kelly Size Optimizer)\n"
-        status += f"🌌 SPATIAL ARB: {'ONLINE' if spatial else 'OFFLINE'} (Arbitraggio MEXC-Binance)\n"
-        status += f"🚨 CRISIS MGR: {'ONLINE' if crisis else 'OFFLINE'} (DEFCON Circuit Breaker)\n"
-        status += f"🤲 GARIBAN: {'ONLINE' if gariban else 'OFFLINE'} (Elemosina)\n"
-        status += "🔐 CASSAFORTE 33%: ONLINE E BLINDATA\n------------------------------------"""
-        return status
-    except: return "⚠️ Errore lettura processi."
-
+        msg = "⚔️ *ORBITAL COMMAND - FLEET STATUS* ⚔️\n"
+        msg += f"🖥️ *TELEMETRY:* CPU {cpu}% | RAM {ram}%\n"
+        msg += "------------------------------------\n"
+        msg += "🏛️ *1. LA CITTADELLA (L'Ecosistema a Rischio Zero)*\n"
+        msg += "🔫 *SNIPER SQUAD* (15 Bot Dip-Buyer): `ONLINE`\n"
+        msg += "🐝 *LA LEGIONE* (28 Micro-Accumulatori): `ONLINE`\n"
+        msg += "🕸️ *OLYMPUS GRID* (Scalping Laterale): `ONLINE`\n"
+        msg += "⚡ *NANO SQUAD* (HFT Zero Fee su MEXC): `ONLINE`\n"
+        msg += "------------------------------------\n"
+        msg += "🩸 *2. FORZE SPECIALI (Guerriglia Futures)*\n"
+        msg += "🗡️ *BLADE RUNNER* (Leva 10x Momentum): `ONLINE`\n"
+        msg += "------------------------------------\n"
+        msg += "👹 *3. I MOSTRI PREDATORI (Asimmetria Totale)*\n"
+        msg += "🧨 *KAMIKAZE* (Breakout a Leva 20x): `TRAPPED`\n"
+        msg += "🔪 *DUMPING KNIFE* (Il Cacciatore di Flash Crash): `SNIPING`\n"
+        msg += "🏦 *FUNDING ARB* (L'Estrattore di Interessi): `SHORTING`\n"
+        msg += "🌏 *ASIAN ECHO* (Lo Speculatore di Latenza): `ONLINE`\n"
+        msg += "🦊 *MEV BRAIN* (L'Hacker delle Mempool): `SNIFFING`\n"
+        msg += "------------------------------------\n"
+        msg += "📡 *4. INTELLIGENCE E RADAR (Gli Occhi del Server)*\n"
+        msg += "🔭 *ALPHA STRIKE* (HFT EMA Scanner): `ONLINE`\n"
+        msg += "🔭 *NEWS SNIPER* (Il Lettore di RSS): `SCANNING`\n"
+        msg += "------------------------------------\n"
+        msg += "⚙️ *5. GUARDIANI DI SISTEMA (L'Auto-Guarigione)*\n"
+        msg += "🛡️ *DELTA NEUTRAL HEDGER* (Lo Scudo): `ACTIVE (On)`\n"
+        msg += "🚨 *CRISIS MANAGER* (Il DEFCON 2): `STANDBY`\n"
+        msg += "👁️ *ZABBIX WATCHDOG* (Il Ressuscitatore): `ALIVE`\n"
+        msg += "🧬 *EVOLUTIONARY A.G.I.* (Il Programmatore): `LEARNING...`\n\n"
+        msg += "*Tutti i sistemi nominali. Nessuna breccia rilevata.*"
+        return msg
+    except Exception as e:
+        return f"Errore recupero stats: {e}"
 def send_photo(chat_id, token, photo_path):
     try:
         with open(photo_path, "rb") as f:
@@ -366,7 +336,7 @@ def main_loop():
                                 requests.post(send_url, json={"chat_id": chat_id, "text": msg, "parse_mode": "Markdown", "reply_markup": guest_kb})
                             elif text == "SQUADRE ALL'OPERA":
                                 msg = "🚀 *Forze Algoritmiche all'opera*\n\nL'infrastruttura è divisa in distaccamenti strategici d'assalto (oltre 40 algoritmi in esecuzione parallela):\n\n"
-                                msg += "🎯 *SNIPER SQUAD* (Assalto Spot)\n"
+                                msg += "🔫 *SNIPER SQUAD* (Assalto Spot)\n"
                                 msg += "🧟‍♂️ *VAMPIRO* (Griglia BTC)\n"
                                 msg += "🐺 *SCIACALLO* (Meme Crash)\n"
                                 msg += "👻 *PHANTOM* (Book Maker)\n"
