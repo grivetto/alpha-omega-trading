@@ -52,7 +52,7 @@ def run_gamma_pairs():
     except: pass
 
     import gc
-while True:
+    while True:
         gc.collect()
         try:
             bal = bitget.fetch_balance({'type': 'swap'})
