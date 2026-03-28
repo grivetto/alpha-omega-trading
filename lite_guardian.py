@@ -89,6 +89,7 @@ def main():
     BOT_REGISTRY["ASIAN_ECHO"] = "spatial_arbitrageur.py"
     BOT_REGISTRY["DUMPING_KNIFE"] = "dumping_knife_sniper.py"
     BOT_REGISTRY["FUNDING_ARBITRAGE"] = "funding_arbitrage_estremo.py"
+    BOT_REGISTRY["ALPHA_STRIKE"] = "alpha_strike_scalper.py"
     BOT_REGISTRY["SQUADRA_GAMMA"] = "squadra_gamma_pairs.py"
     BOT_REGISTRY["LEGION_ADA"] = "legion_01_ada.py"
     BOT_REGISTRY["LEGION_AVAX"] = "legion_02_avax.py"
@@ -134,6 +135,7 @@ def main():
     BOT_REGISTRY["ASIAN_ECHO"] = "spatial_arbitrageur.py"
     BOT_REGISTRY["DUMPING_KNIFE"] = "dumping_knife_sniper.py"
     BOT_REGISTRY["FUNDING_ARBITRAGE"] = "funding_arbitrage_estremo.py"
+    BOT_REGISTRY["ALPHA_STRIKE"] = "alpha_strike_scalper.py"
     BOT_REGISTRY["SQUADRA_GAMMA"] = "squadra_gamma_pairs.py"
 
 # --- LEGIONNAIRES (28 BOTS) ---
