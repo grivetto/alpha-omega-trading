@@ -23,7 +23,7 @@ try:
         'apiKey': os.getenv('BINANCE_API_KEY'),
         'secret': os.getenv('BINANCE_API_SECRET'),
         'enableRateLimit': True,
-        'options': {'defaultType': 'spot'}
+        'options': {'defaultType': 'spot', 'warnOnFetchOpenOrdersWithoutSymbol': False}
     })
     
     bitget = ccxt.bitget({
@@ -155,7 +155,7 @@ def system_health_check():
         
     # Zabbix Check
     import psutil
-    zabbix_alive = any("zabbix_watchdog.py" in p.info['cmdline'] for p in psutil.process_iter(['cmdline']) if p.info['cmdline'])
+    zabbix_alive = any("zabbix_watchdog.py" in " ".join(p.info['cmdline']) for p in psutil.process_iter(['cmdline']) if p.info['cmdline'])
     if zabbix_alive:
         logging.info("✅ Zabbix Watchdog: VIGILE E ARMATO.")
     else:

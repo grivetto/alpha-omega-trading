@@ -184,6 +184,7 @@ def get_squad_stats():
         msg += "🗡️ *BLADE RUNNER* (Leva 10x Momentum): `ONLINE`\n"
         msg += "------------------------------------\n"
         msg += "👹 *3. I MOSTRI PREDATORI (Asimmetria Totale)*\n"
+        msg += "⚖️ *STATISTICAL ARBITRAGE* (Pairs Trading): `CALCULATING...`\n"
         msg += "🧨 *KAMIKAZE* (Breakout a Leva 20x): `TRAPPED`\n"
         msg += "🔪 *DUMPING KNIFE* (Il Cacciatore di Flash Crash): `SNIPING`\n"
         msg += "🏦 *FUNDING ARB* (L'Estrattore di Interessi): `SHORTING`\n"
@@ -326,7 +327,25 @@ def main_loop():
                                 msg = "Benvenuto nell'Orbital Command di Sergio. Sono l'AI Assistant che gestisce il suo Hedge Fund Algoritmico.\n\nSeleziona una voce per saperne di più sul progetto:"
                                 requests.post(send_url, json={"chat_id": chat_id, "text": msg, "reply_markup": guest_kb})
                             elif "ARCHITETTURA" in text:
-                                arch = "🏛️ *L'ECOSISTEMA ASSOLUTO (ORBITAL COMMAND)* 🏛️\n\n📡 *CERVELLO CENTRALE*\n ├─ ⚡ RAM-Disk WebSockets\n ├─ 🐋 Proxy On-Chain Futures\n ├─ 📰 News Sentiment Sniper\n └─ 🌏 Asian Echo Sniper (MEXC/Binance)\n\n🛡️ *GUARDIANI*\n ├─ 👑 Zabbix Watchdog\n ├─ 🚨 Crisis Manager (DEFCON 2)\n ├─ 🧹 Midnight Sweeper (33% Vault)\n └─ 🧬 Evolutionary AI Builder (Ogni 5 min)\n\n⚔️ *FORZE ARMATE (4 TIER)*\n 🟢 TIER 1: Binance Spot (Sniper, Legione, Olympus)\n 🔵 TIER 2: MEXC Spot (Nano Squad)\n 🔴 TIER 3: Bitget Futures (Blade Runner, Kamikaze)\n 🛡️ TIER 4: Bitget Hedge (Delta Neutral Rischio Zero)"
+                                arch = (
+                                    "🏛️ *L'ECOSISTEMA ASSOLUTO (ORBITAL COMMAND)* 🏛️\n\n"
+                                    "📡 *CERVELLO CENTRALE*\n"
+                                    " ├─ ⚡ RAM-Disk WebSockets\n"
+                                    " ├─ 🐋 Proxy On-Chain Futures\n"
+                                    " ├─ 📰 News Sentiment Sniper\n"
+                                    " └─ 🌏 Asian Echo Sniper (MEXC/Binance)\n\n"
+                                    "🛡️ *GUARDIANI*\n"
+                                    " ├─ 👑 Zabbix Watchdog\n"
+                                    " ├─ 🚨 Crisis Manager (DEFCON 2)\n"
+                                    " ├─ 🧹 Midnight Sweeper (33% Vault)\n"
+                                    " └─ 🧬 Evolutionary AI Builder (Ogni 5 min)\n\n"
+                                    "⚔️ *FORZE ARMATE (5 TIER)*\n"
+                                    " 🟢 TIER 1: Binance Spot (Sniper, Legione, Olympus)\n"
+                                    " 🔵 TIER 2: MEXC Spot (Nano Squad)\n"
+                                    " 🔴 TIER 3: Bitget Futures (Blade Runner, Kamikaze)\n"
+                                    " 🛡️ TIER 4: Bitget Hedge (Delta Neutral Rischio Zero)\n"
+                                    " ⚖️ TIER 5: Statistical Arbitrage (Pairs Trading BTC/ETH)\n"
+                                )
                                 requests.post(send_url, json={"chat_id": chat_id, "text": arch, "parse_mode": "Markdown", "reply_markup": guest_kb})
                             elif text == "ANDAMENTO CAPITALE":
                                 msg = "🏦 *Andamento Capitale (Pubblico)*\n\nIl fondo algoritmico è strutturato su un portafoglio protetto. \nLe cifre esatte e il bilancio dal vivo sono crittografati e accessibili solo al Comandante.\n\n*Strategia attuale:* Conservativa / Hedging attivo."
