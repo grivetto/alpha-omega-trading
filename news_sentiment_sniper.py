@@ -114,7 +114,8 @@ def run_sniper():
                     logging.info(f"Scansione: {article['title']}")
                     analyze_and_act(article['title'])
                     
-            time.sleep(60) # Scansione ogni 60 secondi
+            time.sleep(60)
+            logging.info("💗 Heartbeat OK. Scansione RSS completata.")
             
         except Exception as e:
             logging.error(f"Errore News Loop: {e}")

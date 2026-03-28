@@ -98,10 +98,12 @@ def run_olympus():
             
             # Attesa attiva per controllare i fill
             time.sleep(60)
+            logging.info("💗 Heartbeat OK. In osservazione.")
 
         except Exception as e:
             logging.error(f"Errore Loop: {e}")
             time.sleep(60)
+            logging.info("💗 Heartbeat OK. In osservazione.")
 
 if __name__ == '__main__':
     run_olympus()

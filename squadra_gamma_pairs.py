@@ -74,10 +74,22 @@ def run_gamma_pairs():
                 if momenta[strongest] - momenta[weakest] > 1.0: # Differenza dell'1%
                     logger.info(f"🔥 SPREAD TROVATO! Forte: {strongest} ({momenta[strongest]:+.2f}%) | Debole: {weakest} ({momenta[weakest]:+.2f}%)")
                     
-                    bitget.set_leverage(LEVERAGE, strongest)
-                    bitget.set_leverage(LEVERAGE, weakest)
-                    bitget.set_margin_mode('isolated', strongest)
-                    bitget.set_margin_mode('isolated', weakest)
+                    try:
+                        bitget.set_leverage(LEVERAGE, strongest)
+                    except Exception:
+                        pass
+                    try:
+                        bitget.set_leverage(LEVERAGE, weakest)
+                    except Exception:
+                        pass
+                    try:
+                        bitget.set_margin_mode('isolated', strongest)
+                    except Exception:
+                        pass
+                    try:
+                        bitget.set_margin_mode('isolated', weakest)
+                    except Exception:
+                        pass
                     
                     try:
                         p_strong = bitget.fetch_ticker(strongest)['last']
