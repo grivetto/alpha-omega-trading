@@ -331,6 +331,7 @@ def main_loop():
     
     
     logging.info("Triad Bot v3.1 Started.")
+    send_url = f"https://api.telegram.org/bot{token}/sendMessage"
     while True:
         try:
             url = f"https://api.telegram.org/bot{token}/getUpdates?offset={last_update_id + 1}&timeout=20"
@@ -351,7 +352,6 @@ def main_loop():
                                 ],
                                 "resize_keyboard": True
                             }
-                            send_url = f"https://api.telegram.org/bot{token}/sendMessage"
                             if text == "/START":
                                 msg = "Benvenuto nell'Orbital Command di Sergio. Sono l'AI Assistant che gestisce il suo Hedge Fund Algoritmico.\n\nSeleziona una voce per saperne di più sul progetto:"
                                 requests.post(send_url, json={"chat_id": chat_id, "text": msg, "reply_markup": guest_kb})

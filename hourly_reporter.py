@@ -11,7 +11,16 @@ load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env.telegram')
 TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
 
+
+from datetime import datetime
+import pytz
+
 def main():
+    now = datetime.now(pytz.timezone('Europe/Rome'))
+    if 0 <= now.hour < 6:
+        print("Orario notturno (00:00 - 06:00). Notifiche disabilitate.")
+        return
+
     status_text = tbi.get_full_status()
     url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
     payload = {"chat_id": CHAT_ID, "text": f"⏱️ *REPORT ORARIO AUTOMATICO*\n{status_text}", "parse_mode": "Markdown"}
