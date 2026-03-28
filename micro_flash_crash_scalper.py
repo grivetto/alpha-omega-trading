@@ -8,16 +8,14 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s %(message)s', handle
 class MicroFlashCrashScalper:
     def __init__(self):
         self.symbol = "BTC/USDT"
-        self.threshold = 0.05 # 5% drop
+        self.threshold = 0.05
         logging.info("Micro Flash Crash Scalper initialized (Zero-OOM Mode).")
     
     def scan_market(self):
-        # Simulated scan
         time.sleep(10)
         logging.info("Scanning for flash crashes...")
         
     def run(self):
-        import gc
         while True:
             gc.collect()
             try:

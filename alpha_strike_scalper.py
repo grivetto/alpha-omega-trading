@@ -27,10 +27,10 @@ except Exception as e:
 
 # Target Coins for HFT Scalping
 PAIRS = [
-    {'sym': 'BTC/EUR', 'size_eur': 20},
-    {'sym': 'SOL/EUR', 'size_eur': 15},
-    {'sym': 'DOGE/EUR', 'size_eur': 15},
-    {'sym': 'AVAX/EUR', 'size_eur': 15}
+    {'sym': 'BTC/EUR', 'size_eur': 10},
+    {'sym': 'SOL/EUR', 'size_eur': 10},
+    {'sym': 'DOGE/EUR', 'size_eur': 10},
+    {'sym': 'AVAX/EUR', 'size_eur': 10}
 ]
 
 PROFIT_TARGET = 1.0015  # +0.15% a trade
@@ -108,6 +108,12 @@ def run_alpha_strike():
                         qty_str = binance.amount_to_precision(sym, qty)
                         
                         if float(qty_str) > 0:
+                            try:
+                                bal = binance.fetch_balance()
+                                if float(bal.get('EUR', {}).get('free', 0.0)) < pair['size_eur']:
+                                    logging.warning('Fondi EUR insufficienti. Salto acquisto.')
+                                    continue
+                            except: pass
                             logging.info(f"⚡ COMPRO {qty_str} {base_coin} a {current_price} EUR.")
                             try:
                                 binance.create_market_buy_order(sym, float(qty_str))
@@ -117,6 +123,9 @@ def run_alpha_strike():
                                 
             # Il bot riposa solo 1 secondo. Vero HFT.
             time.sleep(1)
+            # Heartbeat per Zabbix
+            if int(time.time()) % 60 == 0:
+                logging.info('💗 Heartbeat OK.')
             
         except Exception as e:
             logging.error(f"Errore Loop: {e}")
