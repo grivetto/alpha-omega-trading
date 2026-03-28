@@ -219,11 +219,12 @@ class DashboardHandler(http.server.SimpleHTTPRequestHandler):
                 <tr><th>Bot / Processo</th><th>Stato</th><th>Memoria RAM</th><th>Ultimo Segnale</th></tr>
 """
             for bot_name, stats in fleet_stats.items():
-                status_class = "status-ok" if stats.get("status") in ["ALIVE", "ONLINE"] else "status-dead"
-                ram = stats.get("mem", 0)
-                last_ping = f"{stats.get('log_age_s', 'N/A')} sec ago"
+                status_class = "status-ok" if isinstance(stats, dict) and stats.get("status") in ["ALIVE", "ONLINE"] else "status-dead"
+                ram = stats.get("mem", 0) if isinstance(stats, dict) else 0
+                last_ping = f"{stats.get('log_age_s', 'N/A')} sec ago" if isinstance(stats, dict) else "N/A"
+                status_text = stats.get('status', 'UNKNOWN') if isinstance(stats, dict) else str(stats)
                 
-                html += f"<tr><td style='font-weight: 500;'>{bot_name}</td><td class='{status_class}'>• {stats.get('status', 'UNKNOWN')}</td><td class='val'>{ram:.1f}%</td><td class='val'>{last_ping}</td></tr>\n"
+                html += f"<tr><td style='font-weight: 500;'>{bot_name}</td><td class='{status_class}'>• {status_text}</td><td class='val'>{ram:.1f}%</td><td class='val'>{last_ping}</td></tr>\n"
                 
             html += """
             </table>

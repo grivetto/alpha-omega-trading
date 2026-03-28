@@ -85,7 +85,7 @@ def run_funding_arbitrage():
                             # Take Profit
                             bitget.create_order(target_symbol, 'limit', 'buy', float(qty_str), float(bitget.price_to_precision(target_symbol, tp_price)), params={'reduceOnly': True})
                             # Stop Loss
-                            bitget.create_order(target_symbol, 'stop_market', 'buy', float(qty_str), params={'stopPrice': float(bitget.price_to_precision(target_symbol, sl_price)), 'reduceOnly': True})
+                            bitget.create_order(target_symbol, 'market', 'buy', float(qty_str), params={'triggerPrice': float(bitget.price_to_precision(target_symbol, sl_price)), 'reduceOnly': True})
                         except Exception as e_sl:
                             logging.error(f"Errore SL/TP su Arbitraggio: {e_sl}")
                             
