@@ -8,7 +8,11 @@ La filosofia di base è la preservazione del capitale: **il Rischio Zero Matemat
 
 ---
 
-## 🏛️ L'ARCHITETTURA A 4 TIER (Le Forze Armate)
+## 🏛️ FASE 1: RICAVO NORMALE (L'Ecosistema a Rischio Zero)
+
+Questa fase rappresenta le fondamenta operative attuali del server. La priorità è la preservazione del capitale tramite coperture matematiche (Hedging) e un'estrazione lenta, sicura e inesorabile dal mercato centralizzato (CEX).
+
+### 🏛️ L'ARCHITETTURA A 4 TIER (Le Forze Armate)
 
 Il capitale globale è frammentato e isolato in 4 distaccamenti operativi indipendenti per massimizzare l'efficienza delle fee e isolare il rischio di rovina statistica.
 
@@ -34,7 +38,21 @@ Il cuore ingegneristico del fondo. Qui non si scommette sulla direzione del merc
 
 ---
 
-## 📡 IL CERVELLO CENTRALE E L'ASIMMETRIA INFORMATIVA
+
+---
+
+## 💥 FASE 2: FACCIAMO DENARO! (The Money Printer Engine)
+
+Questa è l'evoluzione predatrice dell'Hedge Fund, nata con l'unico dogma imposto dal Comandante: **"Generare profitti asimmetrici e massicci a fronte di capitale ridotto" (Target 20% ROI Giornaliero)**.
+Per raggiungere volumi irrealistici nel trading umano, la macchina abbandona il "prevedere il mercato" e passa all'"estrarre valore con la forza" tramite la Finanza Decentralizzata (DeFi) e i Nodi RPC.
+
+1. **Il Cervello MEV (Maximal Extractable Value) - *Il Ladro Invisibile*:** Connesso direttamente alla Mempool di Ethereum/Solana tramite WebSockets Alchemy. Spia i grandi fondi che stanno per comprare una moneta, la compra un millisecondo prima di loro sfruttando la latenza del loro nodo, e gliela rivende in faccia un millisecondo dopo (Sandwich Attack). Profitto matematico istantaneo e a rischio zero.
+2. **Il Cervello Flash Loan - *I Prestiti Quantitativi*:** Chiede in prestito **1 Milione di Dollari** dalla blockchain (Aave/dYdX) per la durata esatta di 1 secondo (senza collaterale). Svuota un'inefficienza globale (Arbitraggio), restituisce il milione pagando 5$ di gas fees e intasca l'intera differenza netta. 
+3. **Il Super-Cervello A.G.I. - *Il Programmatore Divino*:** Integrazione API di modelli LLM superiori (Claude 3.5 / GPT-4). L'Intelligenza Artificiale non usa più librerie statistiche preimpostate: naviga su internet, legge i paper di finanza quantitativa universitari e **scrive da sola nuovi algoritmi in Python e Solidity**, compilandoli e testandoli mentre l'utente dorme.
+
+---
+
+## 📡 IL CERVELLO CENTRALE (Fase 1)
 
 I mercati non si battono guardando i grafici, ma reagendo ai dati prima degli altri.
 
