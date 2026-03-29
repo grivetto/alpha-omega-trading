@@ -71,9 +71,18 @@ def main():
                         positions[symbol] = {'entry': price, 'qty': RISK_BTC / price}
                     except Exception as e:
                         logger.error(f"❌ FAILED SNIPE {symbol}: {e}")
+                        if "insufficient balance" in str(e).lower():
+                            logger.info(f"⏸️ Pausing {symbol} for 15 minutes due to insufficient balance.")
+                            positions[symbol] = {'entry': price, 'qty': 0, 'paused': True, 'resume_time': time.time() + 900}
 
                 # GESTIONE POSIZIONI ESISTENTI
                 if symbol in positions:
+                    if positions[symbol].get('paused'):
+                        if time.time() > positions[symbol]['resume_time']:
+                            del positions[symbol]
+                            logger.info(f"▶️ Resumed {symbol} after cooldown.")
+                        continue
+                    
                     entry = positions[symbol]['entry']
                     pnl = (price - entry) / entry
                     if pnl >= TARGET_REBOUND or pnl <= -STOP_LOSS:
