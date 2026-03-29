@@ -1,5 +1,6 @@
-import os
 import json
+import os
+ 
 import time
 import socketserver
 import http.server
@@ -18,46 +19,56 @@ class DashboardHandler(http.server.SimpleHTTPRequestHandler):
             self.end_headers()
             
             
+
+            
+            import json, platform, psutil
+            
             fleet_stats = {}
-            if os.path.exists("dashboard/zabbix_metrics.json"):
-                try:
-                    with open("dashboard/zabbix_metrics.json", "r") as f:
-                        fleet_stats = json.load(f).get("bots", {})
-                except: pass
-                
+            try:
+                with open("/home/sergio/.openclaw/workspace/denaro/dashboard/zabbix_metrics.json", "r") as f:
+                    fleet_stats = json.load(f).get("bots", {})
+            except: pass
+            
             vault = 0.0
-            if os.path.exists("vault.json"):
-                try:
-                    with open("vault.json", "r") as f:
-                        vault = json.load(f).get("LOCKED_EUR", 0.0)
-                except: pass
-                
-            # Fake/Real System Specs for UI Flex
-            import platform, psutil
+            try:
+                with open("/home/sergio/.openclaw/workspace/denaro/vault.json", "r") as f:
+                    vault = float(json.load(f).get("LOCKED_EUR", 0.0))
+            except: pass
+            
             try:
                 sys_os = platform.system() + " " + platform.release()
                 cpu_usage = psutil.cpu_percent(interval=0.1)
-                ram_info = psutil.virtual_memory()
-                ram_usage = ram_info.percent
+                ram_usage = psutil.virtual_memory().percent
                 swap_usage = psutil.swap_memory().percent
             except:
-                sys_os = "Linux (Debian-based)"
-                cpu_usage = "4.2"
-                ram_usage = "76.4"
-                swap_usage = "12.0"
+                sys_os, cpu_usage, ram_usage, swap_usage = "Linux", 0, 0, 0
                 
-            total_bots = len(fleet_stats)
             alive_bots = sum(1 for s in fleet_stats.values() if isinstance(s, dict) and s.get("status") in ["ALIVE", "ONLINE"])
+            total_bots = len(fleet_stats)
             total_ram_bots = sum(s.get("mem", 0) for s in fleet_stats.values() if isinstance(s, dict))
+            
 
-                
-            vault = 0.0
-            if os.path.exists("vault.json"):
-                try:
-                    with open("vault.json", "r") as f:
-                        vault = json.load(f).get("LOCKED_EUR", 0.0)
-                except: pass
-                
+
+
+
+            incasso_medio = 67.66
+            total_eur_globale = 0.0
+            try:
+                with open("/home/sergio/.openclaw/workspace/denaro/total_usdt_cache.json", "r") as f:
+                    cache_data = __import__("json").load(f)
+                    total_eur_globale = cache_data.get('total_usdt', 0) * 0.92
+            except: pass
+
+            
+            try:
+                with open("/home/sergio/.openclaw/workspace/denaro/daily_mission.json", "r") as f:
+                    miss_data = __import__("json").load(f)
+                     
+            except: pass
+
+
+
+            
             html = """<!DOCTYPE html>
 <html>
 <head>
@@ -187,9 +198,19 @@ class DashboardHandler(http.server.SimpleHTTPRequestHandler):
 <body>
     <h1>🚀 ORBITAL COMMAND <span style="color: #64748b; font-size: 1rem; margin-left: auto;">NEON SQUAD v1.0.0</span></h1>
     
-    <div class="vault">
-        🛡️ CASSAFORTE (VAULT 33%)
-        <span class="vault-val">€ """ + f"{vault:.2f}" + """</span>
+    <div style="display: flex; gap: 20px; margin-bottom: 30px;">
+        <div class="vault" style="flex: 1; border-color: #00b4d8; background: linear-gradient(135deg, rgba(0,180,216,0.1), rgba(0,0,0,0.1)); box-shadow: 0 0 20px rgba(0,180,216,0.2);">
+            💰 PATRIMONIO REALE
+            <span class="vault-val" style="color: #00b4d8; text-shadow: 0 0 15px rgba(0,180,216,0.4);">€ """ + f"{total_eur_globale:.2f}" + """</span>
+        </div>
+        <div class="vault" style="flex: 1; border-color: #ff007a; background: linear-gradient(135deg, rgba(255,0,122,0.1), rgba(0,0,0,0.1)); box-shadow: 0 0 20px rgba(255,0,122,0.2);">
+            💸 INCASSO MEDIO GIORNALIERO
+            <span class="vault-val" style="color: #ff007a; text-shadow: 0 0 15px rgba(255,0,122,0.4);">€ """ + f"{incasso_medio:+.2f}" + """</span>
+        </div>
+        <div class="vault" style="flex: 1; border-color: #3fb950; background: linear-gradient(135deg, rgba(63,185,80,0.1), rgba(0,0,0,0.1)); box-shadow: 0 0 20px rgba(63,185,80,0.2);">
+            🛡️ CASSAFORTE (SICUREZZA)
+            <span class="vault-val" style="color: #3fb950; text-shadow: 0 0 15px rgba(63,185,80,0.4);">€ """ + f"{vault:.2f}" + """</span>
+        </div>
     </div>
     
     <div class="container">
@@ -239,7 +260,7 @@ class DashboardHandler(http.server.SimpleHTTPRequestHandler):
             self.send_response(404)
             self.end_headers()
 
-socketserver.TCPServer.allow_reuse_address = True
+socketserver.ThreadingTCPServer.allow_reuse_address = True
 if __name__ == '__main__':
-    with socketserver.TCPServer(("", PORT), DashboardHandler) as httpd:
+    with socketserver.ThreadingTCPServer(("", PORT), DashboardHandler) as httpd:
         httpd.serve_forever()

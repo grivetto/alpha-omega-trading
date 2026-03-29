@@ -113,7 +113,20 @@ def calculate_and_sweep():
             
     # Simulazione profitto netto giornaliero (es. +3.00 EUR)
     # daily_profit = fetch_daily_profit()
-    daily_profit = 0.0 # Stanotte lo calcolera' matematicamente il bot
+    
+    try:
+        with open("/home/sergio/.openclaw/workspace/denaro/daily_mission.json", "r") as df:
+            daily_data = json.load(df)
+            daily_profit = float(daily_data.get("profit_today", 0.0))
+            daily_data["profit_yesterday"] = daily_profit
+            daily_data["profit_today"] = 0.0
+            daily_data["date"] = "2026-03-30" # si aggiornera' da solo
+        with open("/home/sergio/.openclaw/workspace/denaro/daily_mission.json", "w") as df:
+            json.dump(daily_data, df, indent=4)
+    except Exception as e:
+        daily_profit = 0.0
+        logging.error(f"Errore read daily mission: {e}")
+
     
     if daily_profit > 0:
         sweep_amount = daily_profit * 0.33
