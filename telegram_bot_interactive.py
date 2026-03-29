@@ -14,7 +14,7 @@ from datetime import datetime
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')
 
 # --- CONFIGURAZIONE COSTANTI ---
-CAPITALE_VERSATO_TOTALE = 722.00 
+CAPITALE_VERSATO_TOTALE = 722.0 # 500.0 Operativo + 222.0 Cassaforte0 
 TRADING_SYMBOLS = ['EURUSDT', 'BTCEUR', 'SOLEUR', 'BNBEUR', 'ETHEUR', 'AVAXBTC', 'DOGEBTC', 'ETHBTC', 'SOLBTC']
 
 def get_full_status():
@@ -84,16 +84,24 @@ def get_full_status():
         
         main_vault = locked - gariban if locked >= gariban else locked
         
+        total_eur_lordo = total_eur
+        capitale_operativo = total_eur_lordo - locked
+        # Fix if operative drops below base to avoid fake math (actually keep it real)
+        base_operativa = 500.00
+        target_giornaliero = 100.00
+        profit_operativo = capitale_operativo - base_operativa
+        
         msg = (
-            f"💰 *SITUAZIONE CAPITALE*\n"
+            f"💰 *IL FONDO DEI 5 SOCI (The Dark Pool)*\n"
             f"------------------------------------\n"
-            f"🏦 Valore Attuale: €{total_eur:.2f}\n"
-            f"📥 Cifra Investita: €{CAPITALE_VERSATO_TOTALE:.2f}\n"
-            f"📈 Profitto Totale: {profit:+.2f} €\n"
+            f"⚔️ Capitale in Azione: €{capitale_operativo:.2f}\n"
+            f"📥 Cifra di Partenza: €{base_operativa:.2f}\n"
+            f"🎯 Obiettivo Giornaliero: +€{target_giornaliero:.2f}\n"
             f"------------------------------------\n"
-            f"🔐 Cassaforte (33%): €{main_vault:.2f}\n"
-            f"🤲 Elemosina Gariban: €{gariban:.2f}\n"
-            f"🛡️ **TOTALE PROTETTO**: €{locked:.2f}\n"
+            f"📈 Profitto Operativo: {profit_operativo:+.2f} €\n"
+            f"------------------------------------\n"
+            f"🔐 Cassaforte (Sicurezza): €{main_vault:.2f}\n"
+            f"🤲 Gariban/Elemosina: €{gariban:.2f}\n"
             f"------------------------------------"
         )
         return msg
