@@ -51,7 +51,6 @@ class DashboardHandler(http.server.SimpleHTTPRequestHandler):
 
 
 
-            0.0 = 67.66
             total_eur_globale = 0.0
             try:
                 with open("/home/sergio/.openclaw/workspace/denaro/total_usdt_cache.json", "r") as f:
