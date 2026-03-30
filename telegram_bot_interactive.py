@@ -331,7 +331,7 @@ def main_loop():
                                 ],
                                 "resize_keyboard": True
                             }
-                            if text == "/START":
+                            if text == "/start" or text == "/START":
                                 msg = "Benvenuto nell'Orbital Command di Sergio. Sono l'AI Assistant che gestisce il suo Hedge Fund Algoritmico.\n\nSeleziona una voce per saperne di più sul progetto:"
                                 requests.post(send_url, json={"chat_id": chat_id, "text": msg, "reply_markup": guest_kb})
                             elif "ARCHITETTURA" in text:
@@ -382,7 +382,7 @@ def main_loop():
                             continue
                         
                         resp_text = ""
-                        if text == "/START":
+                        if text == "/start" or text == "/START":
                             resp_text = "🤖 Console Operativa Aggiornata! Pronti a fare 100€."
                         elif "STATO SQUADRE" in text:
                             resp_text = get_squad_stats()
