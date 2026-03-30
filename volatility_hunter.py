@@ -115,7 +115,22 @@ def main():
                             asset_name = symbol.replace('EUR', '').replace('BTC', '')
                             bal = float(client.get_asset_balance(asset=asset_name)['free'])
                             if bal > 0:
-                                client.create_order(symbol=symbol, side='SELL', type='MARKET', quantity=bal)
+                                try:
+                                    import math
+                                    info = client.get_symbol_info(symbol)
+                                    step_size_str = [f['stepSize'] for f in info['filters'] if f['filterType'] == 'LOT_SIZE'][0]
+                                    step_size = float(step_size_str)
+                                    precision = int(round(-math.log(step_size, 10), 0))
+                                    bal = math.floor(bal / step_size) * step_size
+                                    if precision > 0:
+                                        bal = round(bal, precision)
+                                    else:
+                                        bal = int(bal)
+                                    client.create_order(symbol=symbol, side='SELL', type='MARKET', quantity=bal)
+                                except Exception as e_lot:
+                                    logger.error(f"Error rounding LOT_SIZE for {symbol}: {e_lot}")
+                                    client.create_order(symbol=symbol, side='SELL', type='MARKET', quantity=bal)
+
                             logger.info(f"✅ {reason} {symbol} @ {price} | PnL: {pnl:.2%}")
                             del positions[symbol]
                             with open('/home/sergio/.openclaw/workspace/denaro/strike_alert.flag', 'w') as f:
