@@ -55,7 +55,7 @@ class DashboardHandler(http.server.SimpleHTTPRequestHandler):
             try:
                 with open("/home/sergio/.openclaw/workspace/denaro/total_usdt_cache.json", "r") as f:
                     cache_data = __import__("json").load(f)
-                    total_eur_globale = cache_data.get('total_usdt', 0) * 0.92
+                    total_eur_globale = cache_data.get('total_usdt', 0) * 0.92 # Conversion rate stimato
             except: pass
 
             
@@ -203,8 +203,8 @@ class DashboardHandler(http.server.SimpleHTTPRequestHandler):
             <span class="vault-val" style="color: #00b4d8; text-shadow: 0 0 15px rgba(0,180,216,0.4);">€ """ + f"{total_eur_globale:.2f}" + """</span>
         </div>
         <div class="vault" style="flex: 1; border-color: #ff007a; background: linear-gradient(135deg, rgba(255,0,122,0.1), rgba(0,0,0,0.1)); box-shadow: 0 0 20px rgba(255,0,122,0.2);">
-            💸 INCASSO MEDIO GIORNALIERO
-            <span class="vault-val" style="color: #ff007a; text-shadow: 0 0 15px rgba(255,0,122,0.4);">€ """ + f"{0.0:+.2f}" + """</span>
+            🔻 DRAWDOWN STORICO SUI 500 (IN EURO)
+            <span class="vault-val" style="color: #ff007a; text-shadow: 0 0 15px rgba(255,0,122,0.4);">€ """ + f"{total_eur_globale - (500.0 * 0.92):+.2f}" + """</span>
         </div>
         <div class="vault" style="flex: 1; border-color: #3fb950; background: linear-gradient(135deg, rgba(63,185,80,0.1), rgba(0,0,0,0.1)); box-shadow: 0 0 20px rgba(63,185,80,0.2);">
             🛡️ CASSAFORTE (SICUREZZA)

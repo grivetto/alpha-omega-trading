@@ -17,7 +17,48 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')
 CAPITALE_VERSATO_TOTALE = 722.0 # 500.0 Operativo + 222.0 Cassaforte0 
 TRADING_SYMBOLS = ['EURUSDT', 'BTCEUR', 'SOLEUR', 'BNBEUR', 'ETHEUR', 'AVAXBTC', 'DOGEBTC', 'ETHBTC', 'SOLBTC']
 
+import ccxt
+import json
 def get_full_status():
+    try:
+        import ccxt
+        import os
+        from dotenv import load_dotenv
+        # Binance
+        load_dotenv("/home/sergio/.openclaw/workspace/denaro/.env")
+        binance = ccxt.binance({"apiKey": os.getenv("BINANCE_API_KEY"), "secret": os.getenv("BINANCE_API_SECRET")})
+        b_bal = binance.fetch_balance()
+        b_tot = sum([a for c, a in b_bal.get("total", {}).items() if c in ["EUR","USDT","USDC"]])
+        for c, a in b_bal.get("total", {}).items():
+            if a > 0 and c not in ["EUR","USDT","USDC"]:
+                try: b_tot += a * binance.fetch_ticker(f"{c}/USDT")["last"]
+                except: pass
+        # Bitget
+        load_dotenv("/home/sergio/.openclaw/workspace/denaro/.env.bitget")
+        bitget = ccxt.bitget({"apiKey": os.getenv("BITGET_API_KEY"), "secret": os.getenv("BITGET_API_SECRET"), "password": os.getenv("BITGET_PASSWORD"), "options": {"defaultType": "swap"}})
+        bg_tot = bitget.fetch_balance().get("USDT", {}).get("total", 0)
+        # MEXC
+        load_dotenv("/home/sergio/.openclaw/workspace/denaro/.env.mexc")
+        mexc = ccxt.mexc({"apiKey": os.getenv("MEXC_API_KEY"), "secret": os.getenv("MEXC_API_SECRET")})
+        m_bal = mexc.fetch_balance()
+        m_tot = sum([float(a) for c, a in m_bal.get("total", {}).items() if c in ["USDT"]])
+        for c, a in m_bal.get("total", {}).items():
+            if float(a) > 0 and c not in ["USDT"]:
+                try: m_tot += float(a) * float(mexc.fetch_ticker(f"{c}/USDT")["last"])
+                except: pass
+        tot_investito = b_tot + bg_tot + m_tot
+        profit_operativo = tot_investito - 500.0
+        locked = 0.0
+        gariban = 0.0
+        try:
+            with open("/home/sergio/.openclaw/workspace/denaro/vault.json", "r") as vf:
+                vdata = json.load(vf)
+                locked = float(vdata.get("LOCKED_EUR", 0))
+                gariban = float(vdata.get("GARIBAN_TRACKER", 0))
+        except: pass
+        return f"💰 *IL FONDO DEI 5 SOCI (The Dark Pool)*\n------------------------------------\n⚔️ Capitale in Azione: €{tot_investito:.2f}\n📥 Cifra di Partenza: €500.00\n🎯 Obiettivo Giornaliero: +€100.00\n------------------------------------\n📈 DRAWDOWN STORICO (PER NOI AMICI): {profit_operativo:+.2f} €\n------------------------------------\n🔐 Cassaforte (Sicurezza): €{locked:.2f}\n🤲 Gariban/Elemosina: €{gariban:.2f}\n------------------------------------"
+    except Exception as e: return f"Errore: {e}"
+def old_get_full_status():
     try:
         load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env')
         client = Client(os.getenv('BINANCE_API_KEY'), os.getenv('BINANCE_API_SECRET'))
@@ -98,7 +139,7 @@ def get_full_status():
             f"📥 Cifra di Partenza: €{base_operativa:.2f}\n"
             f"🎯 Obiettivo Giornaliero: +€{target_giornaliero:.2f}\n"
             f"------------------------------------\n"
-            f"📈 Profitto Operativo: {profit_operativo:+.2f} €\n"
+            f"📈 DRAWDOWN STORICO (PER NOI AMICI): {profit_operativo:+.2f} €\n"
             f"------------------------------------\n"
             f"🔐 Cassaforte (Sicurezza): €{main_vault:.2f}\n"
             f"🤲 Gariban/Elemosina: €{gariban:.2f}\n"
@@ -264,8 +305,8 @@ def get_dynamic_kb():
         "keyboard": [
             [{"text": btn_text}, {"text": "Dashboard Web"}],
             [{"text": "MEXC Laboratorio"}, {"text": "Stato Squadre"}],
-            [{"text": "Andamento Ricavi"}, {"text": "Elemosina Gariban"}],
-            [{"text": "Incasso Medio Giornaliero"}, {"text": "🏛️ Architettura Macchina"}]
+            [{"text": "Andamento Ricavi (Per noi Amici)"}, {"text": "Elemosina Gariban"}],
+            [{"text": "Incasso Medio (Per noi Amici)"}, {"text": "🏛️ Architettura Macchina"}]
         ],
         "resize_keyboard": True
     }
@@ -333,7 +374,7 @@ def main_loop():
                             }
                             if text == "/start" or text == "/START":
                                 msg = "Benvenuto nell'Orbital Command di Sergio. Sono l'AI Assistant che gestisce il suo Hedge Fund Algoritmico.\n\nSeleziona una voce per saperne di più sul progetto:"
-                                requests.post(send_url, json={"chat_id": chat_id, "text": msg, "reply_markup": guest_kb})
+                                requests.post(send_url, json={"chat_id": chat_id, "text": msg, "reply_markup": guest_kb, "disable_notification": True})
                             elif "ARCHITETTURA" in text:
                                 arch = (
                                     "🏛️ *L'ECOSISTEMA ASSOLUTO (ORBITAL COMMAND)* 🏛️\n\n"
@@ -354,13 +395,13 @@ def main_loop():
                                     " 🛡️ TIER 4: Bitget Hedge (Delta Neutral Rischio Zero)\n"
                                     " ⚖️ TIER 5: Statistical Arbitrage (Pairs Trading BTC/ETH)\n"
                                 )
-                                requests.post(send_url, json={"chat_id": chat_id, "text": arch, "parse_mode": "Markdown", "reply_markup": guest_kb})
+                                requests.post(send_url, json={"chat_id": chat_id, "text": arch, "parse_mode": "Markdown", "reply_markup": guest_kb, "disable_notification": True})
                             elif text == "ANDAMENTO CAPITALE":
                                 msg = "🏦 *Andamento Capitale (Pubblico)*\n\nIl fondo algoritmico è strutturato su un portafoglio protetto. \nLe cifre esatte e il bilancio dal vivo sono crittografati e accessibili solo al Comandante.\n\n*Strategia attuale:* Conservativa / Hedging attivo."
-                                requests.post(send_url, json={"chat_id": chat_id, "text": msg, "parse_mode": "Markdown", "reply_markup": guest_kb})
+                                requests.post(send_url, json={"chat_id": chat_id, "text": msg, "parse_mode": "Markdown", "reply_markup": guest_kb, "disable_notification": True})
                             elif text == "INCASSO GIORNALIERO":
                                 msg = "🎯 *Incasso Giornaliero (Pubblico)*\n\n*Target di Sistema:* 100.00 € / giorno\n*Protocollo Cassaforte:* 33% degli utili viene sigillato quotidianamente.\n\n*(I dati sui ricavi netti in tempo reale sono riservati).*\n\nL'ecosistema è automatizzato 24/7."
-                                requests.post(send_url, json={"chat_id": chat_id, "text": msg, "parse_mode": "Markdown", "reply_markup": guest_kb})
+                                requests.post(send_url, json={"chat_id": chat_id, "text": msg, "parse_mode": "Markdown", "reply_markup": guest_kb, "disable_notification": True})
                             elif text == "SQUADRE ALL'OPERA":
                                 msg = "🚀 *Forze Algoritmiche all'opera*\n\nL'infrastruttura è divisa in distaccamenti strategici d'assalto (oltre 40 algoritmi in esecuzione parallela):\n\n"
                                 msg += "🔫 *SNIPER SQUAD* (Assalto Spot)\n"
@@ -378,7 +419,7 @@ def main_loop():
                                 msg += "🚨 *CRISIS MGR* (Circuit Breaker DEFCON)\n"
                                 msg += "👁️ *ZABBIX* (Watchdog di Auto-Guarigione)\n\n"
                                 msg += "*Un ecosistema quantitativo inarrestabile e autonomo.*"
-                                requests.post(send_url, json={"chat_id": chat_id, "text": msg, "parse_mode": "Markdown", "reply_markup": guest_kb})
+                                requests.post(send_url, json={"chat_id": chat_id, "text": msg, "parse_mode": "Markdown", "reply_markup": guest_kb, "disable_notification": True})
                             continue
                         
                         resp_text = ""
@@ -397,7 +438,7 @@ def main_loop():
                             resp_text = f"📥 *CIFRA INVESTITA ALL'INIZIO*\n------------------------------------\nTotale versato storicamente: *€{CAPITALE_VERSATO_TOTALE:.2f}*\n(Questo è il tuo capitale di partenza usato come riferimento per i profitti globali)."
                         elif "RICAVO GIORNALIERO" in text:
                             resp_text = get_daily_profit()
-                        elif "ANDAMENTO RICAVI" in text:
+                        elif "ANDAMENTO RICAVI (PER NOI AMICI)" in text:
                             resp_text = get_full_status()
                             try:
                                 os.system("/home/sergio/.openclaw/workspace/denaro/trading_bot_env/bin/python3 /home/sergio/.openclaw/workspace/denaro/generate_profit_chart.py")

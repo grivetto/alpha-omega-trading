@@ -270,7 +270,7 @@ def main_loop():
                             resp_text = "Seleziona un'opzione dal menu:"
                         
                         if resp_text:
-                            payload = {"chat_id": chat_id, "text": resp_text, "parse_mode": "Markdown"}
+                            payload = {"disable_notification": True, "chat_id": chat_id, "text": resp_text, "parse_mode": "Markdown"}
                             if kb:
                                 payload["reply_markup"] = kb
                             requests.post(f"https://api.telegram.org/bot{token}/sendMessage", json=payload)

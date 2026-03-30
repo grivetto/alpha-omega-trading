@@ -23,7 +23,7 @@ def main():
 
     status_text = tbi.get_full_status()
     url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
-    payload = {"chat_id": CHAT_ID, "text": f"⏱️ *REPORT ORARIO AUTOMATICO*\n{status_text}", "parse_mode": "Markdown"}
+    payload = {"disable_notification": True, "chat_id": CHAT_ID, "text": f"⏱️ *REPORT ORARIO AUTOMATICO*\n{status_text}", "parse_mode": "Markdown"}
     requests.post(url, data=payload)
 
 if __name__ == "__main__":

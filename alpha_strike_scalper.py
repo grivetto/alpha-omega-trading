@@ -27,13 +27,13 @@ except Exception as e:
 
 # Target Coins for HFT Scalping
 PAIRS = [
-    {'sym': 'BTC/EUR', 'size_eur': 10},
-    {'sym': 'SOL/EUR', 'size_eur': 10},
-    {'sym': 'DOGE/EUR', 'size_eur': 10},
-    {'sym': 'AVAX/EUR', 'size_eur': 10}
+    {'sym': 'BTC/EUR', 'size_eur': 200},
+    {'sym': 'SOL/EUR', 'size_eur': 200},
+    {'sym': 'DOGE/EUR', 'size_eur': 200},
+    {'sym': 'AVAX/EUR', 'size_eur': 200}
 ]
 
-PROFIT_TARGET = 1.0015  # +0.15% a trade
+PROFIT_TARGET = 1.003  # +0.3% a trade
 STOP_LOSS = 0.995       # -0.50% a trade
 SPREAD_MAX = 0.002      # Evitare di comprare se lo spread è maggiore dello 0.2%
 

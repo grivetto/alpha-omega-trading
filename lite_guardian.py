@@ -95,6 +95,8 @@ def main():
     BOT_REGISTRY["PAIRS_TRADER"] = "statistical_arbitrage_pairs.py"
     BOT_REGISTRY["LIQUIDATION_SWEEP"] = "liquidation_sweeper.py"
     BOT_REGISTRY["SQUADRA_GAMMA"] = "squadra_gamma_pairs.py"
+    BOT_REGISTRY["SQUADRA_ALPHA"] = "alpha_strike_scalper.py"
+    BOT_REGISTRY["SQUADRA_DELTA"] = "squadra_delta_orderflow.py"
     BOT_REGISTRY["LEGION_ADA"] = "legion_01_ada.py"
     BOT_REGISTRY["LEGION_AVAX"] = "legion_02_avax.py"
     BOT_REGISTRY["LEGION_LINK"] = "legion_03_link.py"
@@ -144,6 +146,8 @@ def main():
     BOT_REGISTRY["PAIRS_TRADER"] = "statistical_arbitrage_pairs.py"
     BOT_REGISTRY["LIQUIDATION_SWEEP"] = "liquidation_sweeper.py"
     BOT_REGISTRY["SQUADRA_GAMMA"] = "squadra_gamma_pairs.py"
+    BOT_REGISTRY["SQUADRA_ALPHA"] = "alpha_strike_scalper.py"
+    BOT_REGISTRY["SQUADRA_DELTA"] = "squadra_delta_orderflow.py"
 
 # --- LEGIONNAIRES (28 BOTS) ---
     BOT_REGISTRY["LEGION_ADA"] = "legion_01_ada.py"
