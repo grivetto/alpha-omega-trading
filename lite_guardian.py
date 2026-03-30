@@ -53,6 +53,7 @@ BOT_REGISTRY = {
     "FUNDING_NANO": "funding_rate_sniffer.py",
     "MICRO_FLASH_CRASH": "micro_flash_crash_scalper.py",
     "VOLATILITY_HUNTER": "volatility_hunter.py",
+    "ZERO_CPU_ARB": "zero_cpu_arb.py",
 }
 
 def is_running(script):

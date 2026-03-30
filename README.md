@@ -113,3 +113,4 @@ L'ecosistema è comandato e monitorato tramite due interfacce distinte e ultra-d
 
 ---
 *L'Ecosistema perfetto non prevede il futuro. Si prepara matematicamente a reagire prima degli altri.*
+## ZERO CPU ARBITRAGE (New)\nA new quantitative strategy checking funding rates with low-footprint API polling.
