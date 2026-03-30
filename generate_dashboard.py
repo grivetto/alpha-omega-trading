@@ -1,4 +1,6 @@
-import os
+import re
+
+new_code = """import os
 import time
 import psutil
 from flask import Flask, render_template_string
@@ -197,7 +199,7 @@ HTML_TEMPLATE = '''
             <ul>
                 <li><span>⚡ <strong>SQUADRA_ALPHA</strong><br><small>Scalper su Binance</small></span> <span class="status">ATTIVA</span></li>
                 <li><span>🌊 <strong>SQUADRA_DELTA</strong><br><small>Order Flow</small></span> <span class="status">IN AGGUATO</span></li>
-                <li><span>⚖️ <strong>SQUADRA_GAMMA</strong><br><small>Pairs Trading su Bitget</small></span> <span class="status">ALLINEATA</span></li>\n                <li><span>💣 <strong>Il Kamikaze</strong><br><small>Futures Bitget (High Risk)</small></span> <span class=\"status warn\">INNESCATO</span></li>
+                <li><span>⚖️ <strong>SQUADRA_GAMMA</strong><br><small>Pairs Trading su Bitget</small></span> <span class="status">ALLINEATA</span></li>
             </ul>
         </div>
 
@@ -207,7 +209,7 @@ HTML_TEMPLATE = '''
             <ul>
                 <li><span>💸 <strong>Lo Strozzino</strong><br><small>Funding Arb</small></span> <span class="status online">ONLINE</span></li>
                 <li><span>📊 <strong>Il Contabile</strong><br><small>DCA Engine</small></span> <span class="status online">ONLINE</span></li>
-                <li><span>👼 <strong>L'Angelo Custode</strong><br><small>MEV Arbitrum</small></span> <span class="status online">ONLINE</span></li>\n                <li><span>🤲 <strong>L'Elemosiniere</strong><br><small>Gariban Grid / Scavenger</small></span> <span class=\"status online\">RACCOGLIE</span></li>
+                <li><span>👼 <strong>L'Angelo Custode</strong><br><small>MEV Arbitrum</small></span> <span class="status online">ONLINE</span></li>
             </ul>
         </div>
 
@@ -257,7 +259,6 @@ HTML_TEMPLATE = '''
             <div class="metric"><span>⚠️ <strong>Max Drawdown</strong></span> <span style="color: #0f0;">-1.2%</span></div>
             <div class="metric"><span>🎯 <strong>Exposure</strong></span> <span style="color: #ffaa00;">65% LONG / 35% CASH</span></div>
             <div class="metric"><span>🛡️ <strong>Hedge Status</strong></span> <span class="status online blink">ACTIVE (Short ETH)</span></div>
-            <div class="metric"><span>⚙️ <strong>Protocollo Trinity</strong></span> <span class="status online blink" style="color: #f0f; text-shadow: 0 0 8px #f0f;">Online (DCA, Funding, MEV)</span></div>
         </div>
 
         <!-- TERMINALE INTERCETTATO -->
@@ -341,3 +342,8 @@ def index():
 
 if __name__ == '__main__':
     app.run(host='127.0.0.1', port=8080)
+"""
+
+with open('/home/sergio/.openclaw/workspace/denaro/dashboard_server.py', 'w') as f:
+    f.write(new_code)
+
