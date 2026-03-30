@@ -195,6 +195,7 @@ class DashboardHandler(http.server.SimpleHTTPRequestHandler):
     </style>
 </head>
 <body>
+    <!-- Protocollo Trinity Phase 2 active -->
     <h1>🚀 ORBITAL COMMAND <span style="color: #64748b; font-size: 1rem; margin-left: auto;">NEON SQUAD v1.0.0</span></h1>
     
     <div style="background: linear-gradient(90deg, rgba(255,165,0,0.1), rgba(255,69,0,0.1)); border: 1px solid #ff8c00; border-radius: 8px; padding: 15px; margin-bottom: 25px; text-align: center; color: #ff8c00; font-weight: bold; font-size: 1.1rem; box-shadow: 0 0 15px rgba(255,140,0,0.2);">
