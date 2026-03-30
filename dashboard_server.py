@@ -51,7 +51,7 @@ class DashboardHandler(http.server.SimpleHTTPRequestHandler):
 
 
 
-            incasso_medio = 67.66
+            0.0 = 67.66
             total_eur_globale = 0.0
             try:
                 with open("/home/sergio/.openclaw/workspace/denaro/total_usdt_cache.json", "r") as f:
@@ -205,7 +205,7 @@ class DashboardHandler(http.server.SimpleHTTPRequestHandler):
         </div>
         <div class="vault" style="flex: 1; border-color: #ff007a; background: linear-gradient(135deg, rgba(255,0,122,0.1), rgba(0,0,0,0.1)); box-shadow: 0 0 20px rgba(255,0,122,0.2);">
             💸 INCASSO MEDIO GIORNALIERO
-            <span class="vault-val" style="color: #ff007a; text-shadow: 0 0 15px rgba(255,0,122,0.4);">€ """ + f"{incasso_medio:+.2f}" + """</span>
+            <span class="vault-val" style="color: #ff007a; text-shadow: 0 0 15px rgba(255,0,122,0.4);">€ """ + f"{0.0:+.2f}" + """</span>
         </div>
         <div class="vault" style="flex: 1; border-color: #3fb950; background: linear-gradient(135deg, rgba(63,185,80,0.1), rgba(0,0,0,0.1)); box-shadow: 0 0 20px rgba(63,185,80,0.2);">
             🛡️ CASSAFORTE (SICUREZZA)
