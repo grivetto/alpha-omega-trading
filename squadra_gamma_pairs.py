@@ -48,9 +48,19 @@ def run_gamma_pairs():
         active_pos = [p for p in pos if float(p.get('contracts', 0)) > 0]
         if len(active_pos) == 2:
             in_position = True
+            p_long = 1.0
+            p_short = 1.0
             for p in active_pos:
-                if p['side'] == 'long': long_sym = p['symbol']
-                else: short_sym = p['symbol']
+                if p['side'] == 'long': 
+                    long_sym = p['symbol']
+                    if p.get('entryPrice'): p_long = float(p['entryPrice'])
+                else: 
+                    short_sym = p['symbol']
+                    if p.get('entryPrice'): p_short = float(p['entryPrice'])
+            if p_short > 0:
+                entry_spread = p_long / p_short
+            else:
+                entry_spread = 1.0
             logger.info(f"🔄 Recuperato Pairs Trading: LONG {long_sym} / SHORT {short_sym}")
     except: pass
 
