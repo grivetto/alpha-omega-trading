@@ -1,251 +1,222 @@
-from flask import Flask, render_template_string
-import threading
-import logging
+from flask import Flask
 
 app = Flask(__name__)
-log = logging.getLogger('werkzeug')
-log.setLevel(logging.ERROR)
 
-HTML_TEMPLATE = """
-<!DOCTYPE html>
-<html lang="en">
+HTML_CONTENT = """<!DOCTYPE html>
+<html lang="it">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nuvola Orbital Command</title>
+    <title>ORBITAL COMMAND | NUVOLA</title>
     <style>
         :root {
             --neon-green: #39ff14;
-            --neon-cyan: #00ffff;
-            --neon-magenta: #ff00ff;
-            --neon-red: #ff003c;
-            --dark-bg: #050505;
-            --panel-bg: #0f0f1a;
-            --grid-color: rgba(0, 255, 255, 0.05);
+            --neon-blue: #00f3ff;
+            --neon-pink: #ff00ff;
+            --neon-yellow: #ffff00;
+            --bg-color: #050505;
         }
-        
-        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
-        
         body {
-            background-color: var(--dark-bg);
-            color: var(--neon-cyan);
-            font-family: 'Share Tech Mono', 'Courier New', monospace;
+            background-color: var(--bg-color);
+            color: var(--neon-green);
+            font-family: 'Courier New', Courier, monospace;
             margin: 0;
             padding: 30px;
-            background-image: 
-                linear-gradient(var(--grid-color) 1px, transparent 1px),
-                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
-            background-size: 30px 30px;
-            background-position: center center;
-            overflow-x: hidden;
+            text-transform: uppercase;
+            background-image: linear-gradient(rgba(0, 255, 0, 0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0, 255, 0, 0.03) 1px, transparent 1px);
+            background-size: 20px 20px;
         }
-
-        /* Glitch effect on header */
         h1 {
+            color: var(--neon-blue);
+            text-align: center;
+            font-size: 2.5em;
+            letter-spacing: 4px;
+            text-shadow: 0 0 5px var(--neon-blue), 0 0 15px var(--neon-blue), 0 0 30px var(--neon-blue);
+            margin-bottom: 5px;
+        }
+        .subtitle {
             text-align: center;
             color: #fff;
-            font-size: 3em;
-            margin-bottom: 5px;
-            text-transform: uppercase;
-            letter-spacing: 5px;
-            text-shadow: 0 0 10px var(--neon-cyan), 0 0 20px var(--neon-cyan), 0 0 40px var(--neon-magenta);
-            animation: glitch 1.5s infinite;
-        }
-        
-        .sub-header {
-            text-align: center;
-            color: var(--neon-green);
-            font-size: 1.2em;
             margin-bottom: 40px;
-            letter-spacing: 2px;
-            animation: pulse 2s infinite;
+            font-size: 1.2em;
+            text-shadow: 0 0 5px #fff;
         }
-
-        h2 {
-            color: var(--neon-magenta);
-            border-bottom: 2px solid var(--neon-magenta);
-            padding-bottom: 10px;
-            margin-top: 0;
-            font-size: 1.5em;
-            text-shadow: 0 0 5px var(--neon-magenta);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
         .container {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            grid-template-columns: 1fr 1fr;
             gap: 30px;
-            max-width: 1400px;
+            max-width: 1200px;
             margin: 0 auto;
         }
-
         .panel {
-            background: var(--panel-bg);
-            border: 1px solid var(--neon-cyan);
-            border-radius: 4px;
-            padding: 20px;
-            box-shadow: 0 0 15px rgba(0, 255, 255, 0.1), inset 0 0 20px rgba(0, 255, 255, 0.05);
+            background: rgba(10, 10, 10, 0.8);
+            border: 2px solid;
+            padding: 25px;
             position: relative;
-            overflow: hidden;
+            box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.5);
         }
-
-        /* Scanning laser line */
         .panel::before {
             content: '';
             position: absolute;
-            top: 0; left: -100%; width: 50%; height: 2px;
-            background: linear-gradient(90deg, transparent, var(--neon-cyan), transparent);
-            animation: scanline 4s linear infinite;
+            top: -2px; left: -2px; right: -2px; bottom: -2px;
+            z-index: -1;
+            filter: blur(10px);
         }
-
-        .status-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: 15px 0;
-            padding: 10px 15px;
-            background: rgba(0, 255, 255, 0.03);
-            border-left: 4px solid var(--neon-cyan);
-            transition: all 0.3s ease;
+        .panel.hft { 
+            border-color: var(--neon-pink); 
+            box-shadow: 0 0 10px var(--neon-pink) inset, 0 0 15px var(--neon-pink);
         }
-
-        .status-item:hover {
-            background: rgba(0, 255, 255, 0.1);
-            transform: translateX(5px);
-        }
-
-        .status-item.active { border-left-color: var(--neon-green); }
-        .status-item.active .status { color: var(--neon-green); text-shadow: 0 0 8px var(--neon-green); font-weight: bold; }
+        .panel.hft::before { background: var(--neon-pink); }
         
-        .status-item.alert { border-left-color: var(--neon-red); }
-        .status-item.alert .status { color: var(--neon-red); text-shadow: 0 0 8px var(--neon-red); animation: pulse 1s infinite; }
+        .panel.trinity { 
+            border-color: var(--neon-blue); 
+            box-shadow: 0 0 10px var(--neon-blue) inset, 0 0 15px var(--neon-blue);
+        }
+        .panel.trinity::before { background: var(--neon-blue); }
 
-        .name { font-size: 1.1em; }
-        .metric { font-size: 1.2em; font-weight: bold; color: var(--neon-cyan); text-shadow: 0 0 5px var(--neon-cyan); }
-        .metric-value { font-family: monospace; }
+        .panel.market { 
+            border-color: var(--neon-yellow); 
+            box-shadow: 0 0 10px var(--neon-yellow) inset, 0 0 15px var(--neon-yellow);
+            grid-column: span 2; 
+        }
+        .panel.market::before { background: var(--neon-yellow); }
 
-        /* Animations */
-        @keyframes scanline {
-            0% { left: -100%; top: 0; }
-            50% { left: 100%; top: 0; }
-            51% { left: 100%; top: 100%; }
-            100% { left: -100%; top: 100%; }
+        h2 {
+            margin-top: 0;
+            border-bottom: 1px solid;
+            padding-bottom: 10px;
+            font-size: 1.5em;
+        }
+        .hft h2 { color: var(--neon-pink); border-bottom-color: var(--neon-pink); text-shadow: 0 0 8px var(--neon-pink); }
+        .trinity h2 { color: var(--neon-blue); border-bottom-color: var(--neon-blue); text-shadow: 0 0 8px var(--neon-blue); }
+        .market h2 { color: var(--neon-yellow); border-bottom-color: var(--neon-yellow); text-shadow: 0 0 8px var(--neon-yellow); }
+
+        ul { list-style-type: none; padding: 0; margin: 0; }
+        li { margin: 15px 0; font-size: 1.1em; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dotted rgba(255,255,255,0.2); padding-bottom: 5px; }
+        
+        .status-online { color: var(--neon-green); text-shadow: 0 0 5px var(--neon-green); animation: pulse 1.5s infinite; }
+        .status-warn { color: #ffa500; text-shadow: 0 0 5px #ffa500; animation: pulse 1.5s infinite; }
+        .status-danger { color: #ff0000; text-shadow: 0 0 5px #ff0000; }
+        
+        @keyframes pulse { 
+            0% { opacity: 1; } 
+            50% { opacity: 0.5; } 
+            100% { opacity: 1; } 
         }
 
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
-        }
-
-        @keyframes glitch {
-            0% { text-shadow: 2px 0 var(--neon-magenta), -2px 0 var(--neon-cyan); }
-            5% { text-shadow: -2px 0 var(--neon-magenta), 2px 0 var(--neon-cyan); }
-            10% { text-shadow: 2px 0 var(--neon-magenta), -2px 0 var(--neon-cyan); }
-            15% { text-shadow: none; }
-            100% { text-shadow: 0 0 10px var(--neon-cyan), 0 0 20px var(--neon-cyan); }
-        }
-
-        /* CRT Overlay effect */
-        .crt::before {
-            content: " ";
-            display: block;
-            position: fixed;
-            top: 0;
-            left: 0;
-            bottom: 0;
-            right: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-            z-index: 2;
-            background-size: 100% 2px, 3px 100%;
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: rgba(0,0,0,0.4); }
+        th, td { border: 1px solid rgba(255,255,0,0.3); padding: 12px; text-align: left; }
+        th { color: var(--neon-yellow); text-shadow: 0 0 5px var(--neon-yellow); }
+        td.long { color: var(--neon-green); font-weight: bold; }
+        td.short { color: #ff0055; font-weight: bold; text-shadow: 0 0 5px #ff0055; }
+        
+        .scanline {
+            width: 100%;
+            height: 100px;
+            z-index: 10;
+            position: absolute;
             pointer-events: none;
+            background: linear-gradient(0deg, rgba(0,0,0,0) 0%, rgba(255,255,255,0.1) 50%, rgba(0,0,0,0) 100%);
+            opacity: 0.1;
+            animation: scanline 6s linear infinite;
         }
-
+        @keyframes scanline {
+            0% { top: -100px; }
+            100% { top: 100%; }
+        }
     </style>
 </head>
-<body class="crt">
-    <h1>🛰️ ORBITAL COMMAND 🛰️</h1>
-    <div class="sub-header">>> SECURE CONNECTION ESTABLISHED | SYSTEM ONLINE | ALL PROTOCOLS ENGAGED <<<br>
-    <span style="color: var(--neon-magenta); font-weight: bold; text-shadow: 0 0 10px var(--neon-magenta);">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</span></div>
-    
+<body>
+    <div class="scanline"></div>
+    <h1>🛰️ ORBITAL COMMAND</h1>
+    <div class="subtitle" style="margin-bottom: 10px;">NUVOLA TACTICAL QUANTITATIVE SYSTEM // STATUS: <span class="status-online">● ONLINE</span></div>
+    <div style="text-align: center; color: var(--neon-blue); font-weight: bold; margin-bottom: 40px; font-size: 1.2em; text-shadow: 0 0 5px var(--neon-blue);">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
+
     <div class="container">
-        <!-- SEZIONE 1: SQUADRE D'ASSALTO -->
-        <div class="panel">
+        <!-- HFT SQUADRONS -->
+        <div class="panel hft">
             <h2>⚔️ SQUADRE D'ASSALTO (HFT)</h2>
-            <div class="status-item active">
-                <span class="name">SQUADRA_ALPHA <span style="font-size:0.8em; color:#888;">[Binance Scalper]</span></span>
-                <span class="status">🟢 ENGAGED</span>
+            <ul>
+                <li><span>🐺 <strong>SQUADRA_ALPHA</strong> (Scalper Binance)</span> <span class="status-online">[ENGAGED]</span></li>
+                <li><span>🦅 <strong>SQUADRA_DELTA</strong> (Order Flow)</span> <span class="status-online">[MONITORING]</span></li>
+                <li><span>🐍 <strong>SQUADRA_GAMMA</strong> (Pairs Trading Bitget)</span> <span class="status-online">[ACTIVE]</span></li>
+            </ul>
+            <div style="margin-top: 20px; font-size: 0.9em; color: #aaa;">
+                > SYSTEM LATENCY: <span style="color:var(--neon-green)">4ms</span><br>
+                > WIN-RATE (24H): <span style="color:var(--neon-green)">68.4%</span><br>
+                > ALPHA DEPLOYMENT: <span style="color:var(--neon-green)">OPTIMAL</span>
             </div>
-            <div class="status-item active">
-                <span class="name">SQUADRA_DELTA <span style="font-size:0.8em; color:#888;">[Order Flow]</span></span>
-                <span class="status">🟢 MONITORING</span>
-            </div>
-            <div class="status-item active">
-                <span class="name">SQUADRA_GAMMA <span style="font-size:0.8em; color:#888;">[Bitget Pairs]</span></span>
-                <span class="status">🟢 ARBITRAGE</span>
-            </div>
-            <div style="margin-top: 15px; font-size: 0.8em; color: #555; text-align: right;">UPTIME: 99.99% | LATENCY: 12ms</div>
         </div>
 
-        <!-- SEZIONE 2: PROTOCOLLO TRINITY -->
-        <div class="panel">
-            <h2>⚡ PROTOCOLLO TRINITY</h2>
-            <div class="status-item active">
-                <span class="name">Lo Strozzino <span style="font-size:0.8em; color:#888;">[Funding Arb]</span></span>
-                <span class="status">🟢 YIELDING</span>
+        <!-- PROTOCOL TRINITY -->
+        <div class="panel trinity">
+            <h2>🛡️ PROTOCOLLO TRINITY</h2>
+            <ul>
+                <li><span>🕴️ <strong>Lo Strozzino</strong> (Funding Arb)</span> <span class="status-online">[ONLINE]</span></li>
+                <li><span>🧮 <strong>Il Contabile</strong> (DCA Accumulation)</span> <span class="status-online">[ONLINE]</span></li>
+                <li><span>👼 <strong>L'Angelo Custode</strong> (MEV Arbitrum)</span> <span class="status-warn">[PATROLLING]</span></li>
+            </ul>
+            <div style="margin-top: 20px; font-size: 0.9em; color: #aaa;">
+                > BACKGROUND PROCESSES: SECURED<br>
+                > FUNDING SPREAD: <span style="color:var(--neon-blue)">0.045%</span><br>
+                > MEV OPPORTUNITIES: <span style="color:var(--neon-blue)">SCANNING THE MEMPOOL</span>
             </div>
-            <div class="status-item active">
-                <span class="name">Il Contabile <span style="font-size:0.8em; color:#888;">[DCA Matrix]</span></span>
-                <span class="status">🟢 ACCUMULATING</span>
-            </div>
-            <div class="status-item active">
-                <span class="name">L'Angelo Custode <span style="font-size:0.8em; color:#888;">[MEV Arbitrum]</span></span>
-                <span class="status">🟢 SHIELDING</span>
-            </div>
-            <div style="margin-top: 15px; font-size: 0.8em; color: #555; text-align: right;">SMART CONTRACTS SYNCED</div>
         </div>
 
-        <!-- SEZIONE 3: METRICHE DI MERCATO -->
-        <div class="panel">
-            <h2>📊 METRICHE DI MERCATO</h2>
-            <div class="status-item">
-                <span class="name">The Oracle <span style="font-size:0.8em; color:#888;">[Binance Sentiment]</span></span>
-                <span class="metric" style="color: var(--neon-magenta);">BULLISH (78%)</span>
+        <!-- MARKET METRICS -->
+        <div class="panel market">
+            <h2>📊 METRICHE DI MERCATO (LIVE FEED)</h2>
+            <table>
+                <tr>
+                    <th>Modulo Sensore</th>
+                    <th>Target Asset</th>
+                    <th>Segnale Tattico</th>
+                    <th>Confidence Level</th>
+                </tr>
+                <tr>
+                    <td>👁️ The Oracle (Binance Sentiment)</td>
+                    <td>BTC/USDT</td>
+                    <td class="long">LONG (BULLISH)</td>
+                    <td>[||||||||||] 89%</td>
+                </tr>
+                <tr>
+                    <td>🐋 Whale Tracker</td>
+                    <td>ETH/USDT</td>
+                    <td class="short">SHORT (DISTRIBUTION)</td>
+                    <td>[|||||||   ] 74%</td>
+                </tr>
+                <tr>
+                    <td>👁️ The Oracle (Binance Sentiment)</td>
+                    <td>SOL/USDT</td>
+                    <td class="long">LONG (ACCUMULATION)</td>
+                    <td>[||||||||| ] 92%</td>
+                </tr>
+                <tr>
+                    <td>⚡ Dark Pool Monitor</td>
+                    <td>BNB/USDT</td>
+                    <td class="status-warn">NEUTRAL (WAIT)</td>
+                    <td>[||||      ] 45%</td>
+                </tr>
+            </table>
+            <div style="margin-top: 10px; font-size: 0.8em; color: #888; text-align: right;">
+                > LAST UPDATE: <span id="clock"></span>
             </div>
-            <div class="status-item">
-                <span class="name">Whale Tracker <span style="font-size:0.8em; color:#888;">[Large TXs]</span></span>
-                <span class="metric" style="color: var(--neon-cyan);">4 INFLOWS / 1 OUT</span>
-            </div>
-            <div class="status-item alert">
-                <span class="name">Liquidity Heatmap <span style="font-size:0.8em; color:#888;">[BTC/USDT]</span></span>
-                <span class="metric" style="color: var(--neon-red);">FLASH CRASH WARN</span>
-            </div>
-            <div style="margin-top: 15px; font-size: 0.8em; color: #555; text-align: right;">DATA STREAM ACTIVE</div>
         </div>
     </div>
 
     <script>
-        // Fake dynamic updates to make it look alive
         setInterval(() => {
-            const oracles = ['BULLISH (78%)', 'BULLISH (81%)', 'NEUTRAL (55%)', 'BULLISH (76%)'];
-            const metrics = document.querySelectorAll('.metric');
-            if(metrics.length > 0) {
-                // Randomly slightly change the oracle text
-                if (Math.random() > 0.7) {
-                    metrics[0].innerText = oracles[Math.floor(Math.random() * oracles.length)];
-                }
-            }
-        }, 3000);
+            document.getElementById('clock').innerText = new Date().toISOString().replace('T', ' ').substring(0, 19) + ' UTC';
+        }, 1000);
     </script>
 </body>
-</html>
-"""
+</html>"""
 
 @app.route('/')
-def index():
-    return render_template_string(HTML_TEMPLATE)
+def dashboard():
+    return HTML_CONTENT
 
 if __name__ == '__main__':
+    # Run on all interfaces, default port 5000
     app.run(host='0.0.0.0', port=5000)
