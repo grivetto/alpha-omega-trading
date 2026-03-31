@@ -96,11 +96,24 @@ HTML_TEMPLATE = """
         <h1><span class="glow-cyan">🛰️ NUVOLA ORBITAL COMMAND 🛰️</span></h1>
         <h3 class="blink glow-red">SYSTEM ONLINE // AUTHORIZED ACCESS ONLY // QUANTITATIVE ENGAGEMENT PROTOCOLS ACTIVE</h3>
         <div style="margin-top: 15px; padding: 10px; border: 2px solid #0f0; background: rgba(0,255,0,0.1); display: inline-block; font-weight: bold; font-size: 1.2em;" class="glow-yellow blink">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)
+            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - V2 ACTV
         </div>
     </div>
 
     <div class="container">
+        <!-- PATRIMONIO -->
+        <div class="panel">
+            <h2 class="glow-yellow">💰 PATRIMONIO GLOBALE</h2>
+            <div class="metric-grid">
+                <div class="metric-box">
+                    <div style="font-size:0.8em; color:#aaa;">TOTAL AUM</div>
+                    <div class="metric-val glow-yellow">$1,450,320.00</div>
+                </div>
+            </div>
+            <div style="margin-top: 15px; padding: 10px; border: 1px dashed #0f0; text-align: center;" class="glow-cyan">
+                ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)
+            </div>
+        </div>
         <!-- SQUADRE D'ASSALTO -->
         <div class="panel">
             <h2 class="glow-red">⚔️ SQUADRE D'ASSALTO (HFT)</h2>
