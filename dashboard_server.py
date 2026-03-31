@@ -14,176 +14,368 @@ HTML_TEMPLATE = """
     <title>Nuvola - Orbital Command</title>
     <style>
         :root {
-            --bg: #050505;
-            --neon-green: #0f0;
-            --neon-blue: #0ff;
-            --neon-red: #f00;
-            --neon-purple: #b0f;
-            --border: 1px solid rgba(0, 255, 0, 0.3);
+            --bg-color: #020202;
+            --matrix-green: #00ff41;
+            --cyber-blue: #00f3ff;
+            --alert-red: #ff003c;
+            --neon-purple: #bd00ff;
+            --panel-bg: rgba(0, 20, 0, 0.4);
+            --border-glow: 0 0 10px var(--matrix-green);
+            --font-main: 'Courier New', Courier, monospace;
         }
+
         body {
-            background-color: var(--bg);
-            color: var(--neon-green);
-            font-family: 'Courier New', Courier, monospace;
+            background-color: var(--bg-color);
+            background-image: 
+                linear-gradient(rgba(0, 255, 65, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 65, 0.05) 1px, transparent 1px);
+            background-size: 30px 30px;
+            color: var(--matrix-green);
+            font-family: var(--font-main);
             margin: 0;
             padding: 20px;
             text-transform: uppercase;
             overflow-x: hidden;
         }
-        h1, h2 {
-            text-align: center;
-            text-shadow: 0 0 10px var(--neon-green);
-            letter-spacing: 2px;
-        }
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-        }
-        .panel {
-            border: var(--border);
-            padding: 15px;
-            background: rgba(0, 50, 0, 0.1);
-            box-shadow: 0 0 10px rgba(0, 255, 0, 0.1) inset;
-            position: relative;
-        }
-        .panel::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; height: 2px;
-            background: var(--neon-green);
-            box-shadow: 0 0 10px var(--neon-green);
-        }
-        .title {
-            font-weight: bold;
-            margin-bottom: 10px;
-            border-bottom: 1px dashed var(--neon-green);
-            padding-bottom: 5px;
-        }
-        .status-online {
-            color: var(--neon-green);
-            text-shadow: 0 0 5px var(--neon-green);
-            animation: blink 1.5s infinite;
-        }
-        .status-active {
-            color: var(--neon-blue);
-            text-shadow: 0 0 5px var(--neon-blue);
-        }
-        .status-warning {
-            color: var(--neon-red);
-            text-shadow: 0 0 5px var(--neon-red);
-        }
-        .status-special {
-            color: var(--neon-purple);
-            text-shadow: 0 0 5px var(--neon-purple);
-        }
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-        ul {
-            list-style-type: none;
-            padding: 0;
-        }
-        li {
-            margin: 8px 0;
-            display: flex;
-            justify-content: space-between;
-        }
-        .terminal {
-            margin-top: 20px;
-            border: var(--border);
-            padding: 10px;
-            height: 150px;
-            overflow-y: auto;
-            font-size: 0.9em;
-            background: rgba(0, 0, 0, 0.8);
-            box-shadow: 0 0 10px rgba(0, 255, 0, 0.2) inset;
-        }
-        .scan-line {
-            width: 100%;
-            height: 2px;
-            background: rgba(0, 255, 0, 0.5);
+
+        /* Scanline Effect */
+        body::after {
+            content: "";
             position: fixed;
             top: 0;
             left: 0;
-            animation: scan 5s linear infinite;
-            z-index: 9999;
+            width: 100vw;
+            height: 100vh;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.15),
+                rgba(0, 0, 0, 0.15) 1px,
+                transparent 1px,
+                transparent 2px
+            );
             pointer-events: none;
+            z-index: 1000;
         }
-        @keyframes scan {
-            0% { top: -10px; }
-            100% { top: 100vh; }
+
+        .crt-flicker {
+            animation: flicker 0.15s infinite;
         }
-        .glow-text {
-            color: #fff;
-            text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px var(--neon-green), 0 0 40px var(--neon-green);
+
+        @keyframes flicker {
+            0% { opacity: 0.95; }
+            100% { opacity: 1; }
         }
+
+        h1 {
+            text-align: center;
+            font-size: 2.5em;
+            color: var(--cyber-blue);
+            text-shadow: 0 0 10px var(--cyber-blue), 0 0 20px var(--cyber-blue);
+            margin-bottom: 5px;
+            letter-spacing: 5px;
+        }
+
+        h2 {
+            text-align: center;
+            font-size: 1.2em;
+            color: var(--matrix-green);
+            text-shadow: var(--border-glow);
+            margin-top: 0;
+            margin-bottom: 30px;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 25px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--matrix-green);
+            box-shadow: inset 0 0 20px rgba(0, 255, 65, 0.1), 0 0 15px rgba(0, 255, 65, 0.2);
+            padding: 20px;
+            position: relative;
+            backdrop-filter: blur(5px);
+            border-radius: 4px;
+        }
+
+        .panel::before {
+            content: '';
+            position: absolute;
+            top: -2px; left: -2px; right: -2px; height: 3px;
+            background: linear-gradient(90deg, transparent, var(--matrix-green), transparent);
+            animation: scan-horizontal 3s linear infinite;
+        }
+
+        @keyframes scan-horizontal {
+            0% { opacity: 0; transform: translateX(-100%); }
+            50% { opacity: 1; }
+            100% { opacity: 0; transform: translateX(100%); }
+        }
+
+        .panel-header {
+            font-size: 1.2em;
+            font-weight: bold;
+            border-bottom: 2px dashed var(--matrix-green);
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-shadow: 0 0 5px var(--matrix-green);
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(0, 255, 65, 0.2);
+            font-size: 0.95em;
+        }
+
+        li:last-child {
+            border-bottom: none;
+        }
+
+        .status-badge {
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 0.85em;
+            font-weight: bold;
+            animation: pulse 2s infinite;
+        }
+
+        .status-active {
+            border: 1px solid var(--cyber-blue);
+            color: var(--cyber-blue);
+            box-shadow: 0 0 10px rgba(0, 243, 255, 0.4);
+        }
+
+        .status-online {
+            border: 1px solid var(--matrix-green);
+            color: var(--matrix-green);
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.4);
+        }
+
+        .status-warning {
+            border: 1px solid var(--alert-red);
+            color: var(--alert-red);
+            box-shadow: 0 0 10px rgba(255, 0, 60, 0.4);
+            animation: pulse-fast 1s infinite;
+        }
+        
+        .status-trinity {
+            border: 1px solid var(--neon-purple);
+            color: var(--neon-purple);
+            box-shadow: 0 0 15px rgba(189, 0, 255, 0.6);
+            text-shadow: 0 0 5px var(--neon-purple);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        @keyframes pulse-fast {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .trinity-header {
+            text-align: center;
+            padding: 10px;
+            background: rgba(189, 0, 255, 0.1);
+            border: 1px solid var(--neon-purple);
+            margin-bottom: 15px;
+            color: var(--neon-purple);
+            text-shadow: 0 0 10px var(--neon-purple);
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+
+        .terminal {
+            margin: 30px auto;
+            max-width: 1400px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid var(--matrix-green);
+            height: 200px;
+            overflow-y: auto;
+            padding: 15px;
+            box-shadow: inset 0 0 15px rgba(0, 255, 65, 0.1);
+            font-size: 0.9em;
+        }
+
+        .terminal-line {
+            margin-bottom: 5px;
+            opacity: 0.9;
+        }
+
+        .terminal-line .time {
+            color: #888;
+            margin-right: 10px;
+        }
+
+        .sys-prefix { color: var(--cyber-blue); }
+        .hft-prefix { color: var(--alert-red); }
+        .trin-prefix { color: var(--neon-purple); }
+        
+        .value-bar-container {
+            width: 100%;
+            height: 4px;
+            background: #222;
+            margin-top: 5px;
+            position: relative;
+        }
+        .value-bar {
+            height: 100%;
+            background: var(--cyber-blue);
+            box-shadow: 0 0 5px var(--cyber-blue);
+        }
+        
+        .metric-data {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+        }
+
     </style>
 </head>
-<body>
-    <div class="scan-line"></div>
-    <h1 class="glow-text">🛰️ ORBITAL COMMAND 🛰️</h1>
-    <h2>[ NUVOLA QUANTITATIVE SYSTEM ]</h2>
+<body class="crt-flicker">
+    <h1>🛰️ ORBITAL COMMAND 🛰️</h1>
+    <h2>[ NUVOLA QUANTITATIVE SYSTEM ] // UPLINK SECURE</h2>
+    <div style="text-align: center; color: var(--neon-purple); margin-bottom: 20px; font-weight: bold; text-shadow: 0 0 10px var(--neon-purple); font-size: 1.2em;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
 
-    <div class="grid">
+    <div class="dashboard-grid">
         <!-- SQUADRE D'ASSALTO (HFT) -->
         <div class="panel">
-            <div class="title">⚔️ SQUADRE D'ASSALTO (HFT)</div>
+            <div class="panel-header">⚔️ SQUADRE D'ASSALTO (HFT)</div>
             <ul>
-                <li><span>🐺 SQUADRA_ALPHA [Binance Scalper]</span> <span class="status-active">ENGAGED</span></li>
-                <li><span>🦅 SQUADRA_DELTA [Order Flow]</span> <span class="status-active">ENGAGED</span></li>
-                <li><span>🦂 SQUADRA_GAMMA [Bitget Pairs]</span> <span class="status-active">ENGAGED</span></li>
+                <li>
+                    <span>🐺 SQUADRA_ALPHA <br><small style="color:#aaa;">[Binance Scalper]</small></span>
+                    <span class="status-badge status-active">ENGAGED</span>
+                </li>
+                <li>
+                    <span>🦅 SQUADRA_DELTA <br><small style="color:#aaa;">[Order Flow Imbalance]</small></span>
+                    <span class="status-badge status-active">ENGAGED</span>
+                </li>
+                <li>
+                    <span>🦂 SQUADRA_GAMMA <br><small style="color:#aaa;">[Pairs Trading - Bitget]</small></span>
+                    <span class="status-badge status-active">ENGAGED</span>
+                </li>
             </ul>
         </div>
 
         <!-- PROTOCOLLO TRINITY -->
-        <div class="panel">
-            <div class="title">🔺 PROTOCOLLO TRINITY</div>
+        <div class="panel" style="border-color: var(--neon-purple); box-shadow: inset 0 0 20px rgba(189, 0, 255, 0.1);">
+            <div class="panel-header" style="color: var(--neon-purple); border-bottom-color: var(--neon-purple);">🔺 PROTOCOLLO TRINITY</div>
+            <div class="trinity-header">SYSTEM TRINITY ACTIVE IN BACKGROUND</div>
             <ul>
-                <li style="margin-bottom: 15px; border-bottom: 1px solid var(--neon-green); padding-bottom: 5px;"><span class="status-online glow-text">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</span></li>
-                <li><span>🕴️ Lo Strozzino [Funding Arb]</span> <span class="status-online">ONLINE</span></li>
-                <li><span>🧮 Il Contabile [DCA]</span> <span class="status-online">ONLINE</span></li>
-                <li><span>🛡️ L'Angelo Custode [MEV Arbitrum]</span> <span class="status-online">ONLINE</span></li>
+                <li>
+                    <span>🕴️ LO STROZZINO <br><small style="color:#aaa;">[Funding Rate Arbitrage]</small></span>
+                    <span class="status-badge status-trinity">ONLINE</span>
+                </li>
+                <li>
+                    <span>🧮 IL CONTABILE <br><small style="color:#aaa;">[Smart DCA Grid]</small></span>
+                    <span class="status-badge status-trinity">ONLINE</span>
+                </li>
+                <li>
+                    <span>🛡️ L'ANGELO CUSTODE <br><small style="color:#aaa;">[MEV Sandwich - Arbitrum]</small></span>
+                    <span class="status-badge status-trinity">ONLINE</span>
+                </li>
             </ul>
         </div>
 
         <!-- METRICHE DI MERCATO -->
         <div class="panel">
-            <div class="title">📊 METRICHE DI MERCATO</div>
+            <div class="panel-header">📊 METRICHE DI MERCATO</div>
             <ul>
-                <li><span>👁️ The Oracle [Binance Sentiment]</span> <span class="status-special">BULLISH 78%</span></li>
-                <li><span>🐋 Whale Tracker [Large TXs]</span> <span class="status-warning">DETECTED</span></li>
-                <li><span>⚡ Network Latency</span> <span class="status-online">12ms</span></li>
+                <li>
+                    <div class="metric-data">
+                        <div class="metric-row">
+                            <span>👁️ THE ORACLE <small>[Binance Sentiment]</small></span>
+                            <span class="status-badge status-online">BULLISH 82%</span>
+                        </div>
+                        <div class="value-bar-container"><div class="value-bar" style="width: 82%; background: var(--matrix-green);"></div></div>
+                    </div>
+                </li>
+                <li>
+                    <div class="metric-data">
+                        <div class="metric-row">
+                            <span>🐋 WHALE TRACKER <small>[Large TXs]</small></span>
+                            <span class="status-badge status-warning">DETECTED</span>
+                        </div>
+                        <div class="value-bar-container"><div class="value-bar" style="width: 95%; background: var(--alert-red);"></div></div>
+                    </div>
+                </li>
+                <li>
+                    <div class="metric-data">
+                        <div class="metric-row">
+                            <span>⚡ NETWORK LATENCY <small>[AWS-Tokyo]</small></span>
+                            <span class="status-badge status-online">14ms</span>
+                        </div>
+                    </div>
+                </li>
             </ul>
         </div>
     </div>
 
     <div class="terminal" id="terminal">
-        <div>[SYS] ORBITAL COMMAND INITIALIZED.</div>
-        <div>[SYS] SECURE CONNECTION TO NUVOLA ESTABLISHED.</div>
+        <div class="terminal-line"><span class="time">[00:00:00]</span> <span class="sys-prefix">[SYS]</span> ORBITAL COMMAND INITIALIZED.</div>
+        <div class="terminal-line"><span class="time">[00:00:01]</span> <span class="sys-prefix">[SYS]</span> SECURE CONNECTION TO NUVOLA ESTABLISHED.</div>
+        <div class="terminal-line"><span class="time">[00:00:02]</span> <span class="trin-prefix">[TRINITY]</span> PROTOCOLLO TRINITY BACKGROUND DAEMONS SYNCHRONIZED.</div>
     </div>
 
     <script>
         const terminal = document.getElementById('terminal');
         const logs = [
-            "[HFT] SQUADRA_ALPHA executes BUY 1.5 BTC @ 64,230",
-            "[TRINITY] Lo Strozzino rebalancing Funding Rates...",
-            "[SYS] Whale movement detected on chain: 15,000 ETH",
-            "[HFT] SQUADRA_DELTA tracking order flow imbalance...",
-            "[SYS] L'Angelo Custode successfully preempted MEV sandwich",
-            "[HFT] SQUADRA_GAMMA Pairs trading spread optimal",
-            "[ORACLE] Sentiment shifting to neutral-bullish."
+            { type: 'hft', prefix: '[HFT]', text: "SQUADRA_ALPHA executing flash BUY 2.1 BTC @ MKT" },
+            { type: 'hft', prefix: '[HFT]', text: "SQUADRA_DELTA detected heavy Ask wall at 71,500. Adjusting..." },
+            { type: 'hft', prefix: '[HFT]', text: "SQUADRA_GAMMA Pairs spread deviation optimal > executing arb" },
+            { type: 'trin', prefix: '[TRINITY]', text: "Lo Strozzino balancing Funding Rates on Perps" },
+            { type: 'trin', prefix: '[TRINITY]', text: "Il Contabile acquired 0.15 BTC (DCA layer 3)" },
+            { type: 'trin', prefix: '[TRINITY]', text: "L'Angelo Custode successfully preempted MEV sandwich on SushiSwap" },
+            { type: 'sys', prefix: '[ORACLE]', text: "Sentiment shifting. Retail euphoria +12%" },
+            { type: 'sys', prefix: '[WHALE]', text: "Alert: 24,000 ETH moved to Coinbase" }
         ];
         
+        function getTimestamp() {
+            const now = new Date();
+            return `[${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}]`;
+        }
+
         setInterval(() => {
             const log = logs[Math.floor(Math.random() * logs.length)];
             const div = document.createElement('div');
-            div.textContent = `> ${log}`;
+            div.className = 'terminal-line';
+            
+            let prefixClass = 'sys-prefix';
+            if(log.type === 'hft') prefixClass = 'hft-prefix';
+            if(log.type === 'trin') prefixClass = 'trin-prefix';
+
+            div.innerHTML = `<span class="time">${getTimestamp()}</span> <span class="${prefixClass}">${log.prefix}</span> ${log.text}`;
             terminal.appendChild(div);
+            
+            if (terminal.childElementCount > 50) {
+                terminal.removeChild(terminal.firstChild);
+            }
+            
             terminal.scrollTop = terminal.scrollHeight;
-        }, 3000);
+        }, 2500);
     </script>
 </body>
 </html>
