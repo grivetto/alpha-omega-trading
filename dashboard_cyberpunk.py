@@ -388,15 +388,30 @@ def index():
     total_nav = get_total_nav()
 
     
-    alpha = check_bot('alpha_strike_scalper.py')
-    delta = check_bot('squadra_delta_orderflow.py')
-    gamma = check_bot('squadra_gamma_pairs.py')
-    kamikaze = check_bot('kamikaze_bitget_futures.py')
-    
-    strozzino = check_bot('funding_arbitrage_estremo.py')
-    dca = check_bot('dca_accumulator.py')
-    mev = check_bot('mev_sandwich_bot.py')
-    gariban = check_bot('gariban_beggar.py')
+
+    alpha = False
+    delta = False
+    gamma = False
+    kamikaze = False
+    strozzino = False
+    dca = False
+    mev = False
+    gariban = False
+    active_bots_count = 0
+    try:
+        import json
+        with open('/home/sergio/.openclaw/workspace/denaro/bot_status_cache.json', 'r') as f:
+            s = json.load(f)
+            alpha = s.get('alpha', False)
+            delta = s.get('delta', False)
+            gamma = s.get('gamma', False)
+            kamikaze = s.get('kamikaze', False)
+            strozzino = s.get('strozzino', False)
+            dca = s.get('dca', False)
+            mev = s.get('mev', False)
+            gariban = s.get('gariban', False)
+            active_bots_count = s.get('active_bots_count', 0)
+    except: pass
 
     return render_template_string(HTML_TEMPLATE,
                                   cpu_percent=cpu_percent,
@@ -406,7 +421,7 @@ def index():
                                   disk_free=disk_free,
                                   uptime_str=uptime_str,
                                   total_nav=total_nav,
-                                  active_bots_count=count_all_bots(),
+                                  active_bots_count=active_bots_count,
                                   alpha_status="ATTIVA" if alpha else "OFFLINE", alpha_class="online" if alpha else "",
                                   delta_status="IN AGGUATO" if delta else "OFFLINE", delta_class="online" if delta else "",
                                   gamma_status="ALLINEATA" if gamma else "OFFLINE", gamma_class="online" if gamma else "",
@@ -415,7 +430,3 @@ def index():
                                   dca_status="ONLINE" if dca else "OFFLINE", dca_class="online" if dca else "",
                                   mev_status="ONLINE" if mev else "OFFLINE", mev_class="online" if mev else "",
                                   gariban_status="RACCOGLIE" if gariban else "OFFLINE", gariban_class="online" if gariban else "")
-
-
-if __name__ == '__main__':
-    app.run(host='127.0.0.1', port=8081)

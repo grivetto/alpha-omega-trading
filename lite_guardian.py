@@ -13,6 +13,7 @@ BOT_REGISTRY = {
     "SNIPER_SQUAD": "sniper_squad.py",
     "TG-BOT": "telegram_bot_interactive.py",
     "DASHBOARD": "dashboard_cyberpunk.py",
+    "BOT_STATUS_CACHE": "update_bot_status.py",
     "CACHE_UPD": "update_cache.py",
     "GARIBAN": "gariban_beggar.py",
     "VAMPIRO": "vampire_grid.py",
