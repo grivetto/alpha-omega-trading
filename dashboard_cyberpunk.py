@@ -217,7 +217,7 @@ HTML_TEMPLATE = '''
     <!-- FLEET TOPOLOGY ARCHITECTURE -->
     <div class="container" style="margin-top: 10px;">
         <div class="card" style="width: 100%; max-width: 1200px; border-color: #a371f7; box-shadow: 0 0 15px #a371f7, inset 0 0 10px #a371f7;">
-            <h3 style="color: #a371f7; text-shadow: 0 0 10px #a371f7; border-color: #a371f7; text-align: left;">🌌 FLEET TOPOLOGY & GLOBAL ARCHITECTURE (4-NODE CLUSTER)</h3>
+            <h3 style="color: #a371f7; text-shadow: 0 0 10px #a371f7; border-color: #a371f7; text-align: left;">🌌 FLEET TOPOLOGY & GLOBAL ARCHITECTURE (5-NODE CLUSTER)</h3>
             <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px;">
                 
                 <!-- NODE 1: NUVOLA -->

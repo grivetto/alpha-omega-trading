@@ -202,8 +202,10 @@ HTML_TEMPLATE = """
             ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)
         </div>
         
-        <!-- PATRIMONIO <!-- PATRIMONIO & STATO --> STATO -->
-        <div style="color: #39ff14; text-align: center; font-weight: bold; border: 1px dashed #39ff14; padding: 5px; margin-bottom: 10px;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
+        <!-- PATRIMONIO & STATO -->
+        <div class="status-row" style="background: rgba(57, 255, 20, 0.2); border-color: var(--neon-green); justify-content: center; font-size: 1.2em; font-weight: bold; color: var(--neon-green); animation: pulse 2s infinite;">
+            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)
+        </div>
         <div class="panel" style="border-color: var(--neon-green); box-shadow: 0 0 15px rgba(57, 255, 20, 0.2) inset;">
             <h2 class="glow-text-green">💰 PATRIMONIO & STATO</h2>
             <div style="background-color: var(--neon-green); color: #000; padding: 5px; margin-bottom: 10px; text-align: center; font-weight: bold; font-size: 1.1em; animation: pulse 2s infinite;">
