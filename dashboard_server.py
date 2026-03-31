@@ -330,7 +330,7 @@ HTML_TEMPLATE = """
         <div style="margin-top: 25px; font-size: 1.3em; color: var(--neon-green); font-weight: bold; border: 2px solid var(--neon-green); display: inline-block; padding: 10px 30px; background: rgba(57,255,20,0.15); box-shadow: 0 0 20px rgba(57,255,20,0.4), inset 0 0 10px rgba(57,255,20,0.2); text-shadow: 0 0 8px var(--neon-green); letter-spacing: 3px; border-radius: 4px;">
             <span style="animation: flicker 2s infinite;">[✓] CORE SYSTEMS NOMINAL</span><br>
             <span style="color: var(--neon-pink); font-size: 0.9em; text-shadow: 0 0 8px var(--neon-pink); letter-spacing: 2px;">⚡ PROTOCOLLO TRINITY: ONLINE & DETACHED</span><br>
-            <span style="color: var(--neon-yellow); font-size: 0.85em; text-shadow: 0 0 5px var(--neon-yellow);">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</span>
+            <div style="margin-top: 15px; border: 1px solid var(--neon-yellow); padding: 5px; background: rgba(252, 238, 10, 0.1); color: var(--neon-yellow); font-size: 0.85em; text-shadow: 0 0 5px var(--neon-yellow);">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
         </div>
         <div class="top-stats">
             UPTIME: <span style="color:#fff; font-family:'Orbitron', sans-serif; font-size: 1.1em; text-shadow: 0 0 5px #fff;" id="uptime">00:00:00</span><br>
