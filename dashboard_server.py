@@ -1,8 +1,11 @@
-from flask import Flask
+from flask import Flask, render_template_string
+import threading
+import time
 
 app = Flask(__name__)
 
-HTML_CONTENT = """<!DOCTYPE html>
+HTML_TEMPLATE = """
+<!DOCTYPE html>
 <html lang="it">
 <head>
     <meta charset="UTF-8">
@@ -12,414 +15,236 @@ HTML_CONTENT = """<!DOCTYPE html>
         @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
         
         :root {
-            --bg-base: #020202;
-            --grid-color: rgba(0, 255, 170, 0.05);
-            --neon-green: #39ff14;
-            --neon-cyan: #00ffff;
-            --neon-pink: #ff007f;
-            --neon-yellow: #fcee0a;
-            --neon-red: #ff003c;
-            --text-main: #d1d1d1;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
+            --neon-green: #0f3;
+            --neon-blue: #0ff;
+            --neon-red: #f03;
+            --bg-color: #050505;
+            --panel-bg: rgba(0, 255, 0, 0.02);
         }
 
         body {
-            background-color: var(--bg-base);
-            color: var(--text-main);
+            background-color: var(--bg-color);
+            color: var(--neon-green);
             font-family: 'Share Tech Mono', monospace;
-            background-image: 
-                linear-gradient(var(--grid-color) 1px, transparent 1px),
-                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
-            background-size: 30px 30px;
+            margin: 0;
+            padding: 20px;
             overflow-x: hidden;
-        }
-
-        /* Scanline Overlay */
-        body::after {
-            content: " ";
-            display: block;
-            position: fixed;
-            top: 0;
-            left: 0;
-            bottom: 0;
-            right: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-            z-index: 2;
-            background-size: 100% 2px, 3px 100%;
-            pointer-events: none;
-        }
-
-        header {
-            text-align: center;
-            padding: 30px 0 20px 0;
-            border-bottom: 2px solid var(--neon-cyan);
-            box-shadow: 0 4px 15px rgba(0, 255, 255, 0.2);
-            margin-bottom: 40px;
-            position: relative;
+            background-image: 
+                linear-gradient(rgba(0, 255, 0, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 0, 0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
         }
 
         h1 {
-            color: var(--neon-cyan);
-            font-size: 3.5rem;
+            text-align: center;
+            color: var(--neon-blue);
+            text-shadow: 0 0 10px var(--neon-blue), 0 0 20px var(--neon-blue);
             text-transform: uppercase;
             letter-spacing: 5px;
-            text-shadow: 0 0 10px var(--neon-cyan), 0 0 20px var(--neon-cyan), 0 0 40px var(--neon-cyan);
-            margin-bottom: 10px;
-            animation: glitch 3s infinite;
+            margin-bottom: 40px;
+            animation: pulse 2s infinite;
         }
 
-        @keyframes glitch {
-            0% { text-shadow: 0 0 10px var(--neon-cyan); }
-            2% { transform: translate(-2px, 2px); text-shadow: -2px 0 var(--neon-red), 2px 0 var(--neon-cyan); }
-            4% { transform: translate(2px, -2px); text-shadow: 2px 0 var(--neon-red), -2px 0 var(--neon-cyan); }
-            6% { transform: translate(0, 0); text-shadow: 0 0 10px var(--neon-cyan); }
-            100% { text-shadow: 0 0 10px var(--neon-cyan); }
-        }
-
-        .status-badge {
-            display: inline-block;
-            padding: 5px 15px;
-            border: 1px solid var(--neon-green);
-            color: var(--neon-green);
-            background: rgba(57, 255, 20, 0.1);
-            border-radius: 3px;
-            text-shadow: 0 0 5px var(--neon-green);
-            box-shadow: 0 0 10px rgba(57, 255, 20, 0.2);
-            animation: pulse-green 2s infinite;
-        }
-
-        @keyframes pulse-green {
-            0% { box-shadow: 0 0 5px var(--neon-green); }
-            50% { box-shadow: 0 0 20px var(--neon-green); }
-            100% { box-shadow: 0 0 5px var(--neon-green); }
-        }
-
-        .dashboard-container {
+        .container {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-            gap: 30px;
-            padding: 0 40px 40px 40px;
-            max-width: 1600px;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            max-width: 1400px;
             margin: 0 auto;
-            position: relative;
-            z-index: 10;
         }
 
         .panel {
-            background: rgba(10, 10, 15, 0.85);
-            border: 1px solid #333;
-            padding: 25px;
-            border-radius: 5px;
+            background: var(--panel-bg);
+            border: 1px solid var(--neon-green);
+            box-shadow: 0 0 10px rgba(0, 255, 51, 0.2), inset 0 0 15px rgba(0, 255, 51, 0.1);
+            padding: 20px;
             position: relative;
-            backdrop-filter: blur(5px);
-            transition: all 0.3s ease;
+            border-radius: 5px;
         }
 
-        .panel:hover {
-            transform: translateY(-5px);
-        }
-
-        .panel-hft {
-            border-top: 3px solid var(--neon-pink);
-            box-shadow: 0 -5px 15px rgba(255, 0, 127, 0.2), inset 0 0 20px rgba(255, 0, 127, 0.05);
-        }
-
-        .panel-trinity {
-            border-top: 3px solid var(--neon-cyan);
-            box-shadow: 0 -5px 15px rgba(0, 255, 255, 0.2), inset 0 0 20px rgba(0, 255, 255, 0.05);
-        }
-
-        .panel-market {
-            grid-column: 1 / -1;
-            border-top: 3px solid var(--neon-yellow);
-            box-shadow: 0 -5px 15px rgba(252, 238, 10, 0.2), inset 0 0 20px rgba(252, 238, 10, 0.05);
+        .panel::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: var(--neon-green);
+            box-shadow: 0 0 10px var(--neon-green);
         }
 
         h2 {
-            font-size: 1.8rem;
-            margin-bottom: 20px;
+            color: var(--neon-green);
+            border-bottom: 1px dashed var(--neon-green);
             padding-bottom: 10px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            display: flex;
-            align-items: center;
-        }
-
-        .panel-hft h2 { color: var(--neon-pink); text-shadow: 0 0 8px var(--neon-pink); }
-        .panel-trinity h2 { color: var(--neon-cyan); text-shadow: 0 0 8px var(--neon-cyan); }
-        .panel-market h2 { color: var(--neon-yellow); text-shadow: 0 0 8px var(--neon-yellow); }
-
-        .squad-list { list-style: none; }
-        .squad-item {
-            margin-bottom: 15px;
-            padding: 15px;
-            background: rgba(0, 0, 0, 0.5);
-            border-left: 3px solid;
+            font-size: 1.2em;
+            text-shadow: 0 0 5px var(--neon-green);
             display: flex;
             justify-content: space-between;
-            align-items: center;
         }
 
-        .hft-item { border-color: var(--neon-pink); }
-        .trinity-item { border-color: var(--neon-cyan); }
+        .status {
+            color: var(--neon-blue);
+            animation: blink 1.5s infinite;
+        }
 
-        .squad-name {
-            font-size: 1.2rem;
-            font-weight: bold;
+        .item {
+            margin: 15px 0;
+            padding: 10px;
+            background: rgba(0,0,0,0.5);
+            border-left: 3px solid var(--neon-green);
+            transition: all 0.3s ease;
+        }
+
+        .item:hover {
+            border-left: 3px solid var(--neon-blue);
+            box-shadow: inset 20px 0 20px -20px var(--neon-blue);
+            transform: translateX(5px);
+        }
+
+        .metric {
             display: flex;
-            align-items: center;
-            gap: 10px;
+            justify-content: space-between;
+            margin: 10px 0;
+            font-size: 0.9em;
         }
 
-        .squad-status {
-            font-size: 0.9rem;
-            padding: 3px 8px;
-            background: rgba(57, 255, 20, 0.15);
-            color: var(--neon-green);
-            border: 1px solid var(--neon-green);
-            border-radius: 2px;
-            text-shadow: 0 0 5px var(--neon-green);
+        .value {
+            color: var(--neon-blue);
+            text-shadow: 0 0 5px var(--neon-blue);
         }
 
-        .status-warn {
-            color: var(--neon-yellow);
-            border-color: var(--neon-yellow);
-            background: rgba(252, 238, 10, 0.15);
-            text-shadow: 0 0 5px var(--neon-yellow);
-        }
-
-        .status-danger {
+        .value.alert {
             color: var(--neon-red);
-            border-color: var(--neon-red);
-            background: rgba(255, 0, 60, 0.15);
             text-shadow: 0 0 5px var(--neon-red);
-            animation: blink 1s infinite;
         }
 
-        @keyframes blink { 50% { opacity: 0.5; } }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: rgba(0, 0, 0, 0.6);
+        .scan-line {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 5px;
+            background: rgba(0, 255, 255, 0.3);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+            animation: scan 6s linear infinite;
+            pointer-events: none;
+            z-index: 1000;
         }
 
-        th, td {
-            padding: 15px;
-            text-align: left;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
         }
 
-        th {
-            color: var(--neon-yellow);
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            font-size: 1.1rem;
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
         }
 
-        tr:hover {
-            background: rgba(252, 238, 10, 0.05);
+        @keyframes scan {
+            0% { top: -10px; }
+            100% { top: 100vh; }
         }
 
-        .signal-long { color: var(--neon-green); font-weight: bold; text-shadow: 0 0 5px var(--neon-green); }
-        .signal-short { color: var(--neon-red); font-weight: bold; text-shadow: 0 0 5px var(--neon-red); }
-        .signal-wait { color: var(--neon-yellow); font-weight: bold; text-shadow: 0 0 5px var(--neon-yellow); }
-
-        .progress-bar {
-            width: 100px;
-            height: 10px;
-            background: #222;
-            border: 1px solid #444;
-            display: inline-block;
-            vertical-align: middle;
-            margin-right: 10px;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: var(--neon-green);
-            box-shadow: 0 0 5px var(--neon-green);
-        }
-
-        .console-output {
+        .terminal-text {
+            color: #888;
+            font-size: 0.8em;
             margin-top: 20px;
-            padding: 15px;
-            background: #000;
-            border: 1px solid #333;
-            color: #aaa;
-            font-size: 0.9rem;
-            height: 120px;
-            overflow-y: hidden;
-            position: relative;
+            border-top: 1px solid #333;
+            padding-top: 10px;
         }
-
-        .console-line {
-            margin-bottom: 5px;
-            opacity: 0.8;
-        }
-        
-        .console-line::before {
-            content: "> ";
-            color: var(--neon-cyan);
-        }
-
-        .sys-time {
-            position: absolute;
-            top: 20px;
-            right: 40px;
-            font-size: 1.2rem;
-            color: var(--neon-cyan);
-            text-shadow: 0 0 5px var(--neon-cyan);
-        }
-
     </style>
 </head>
 <body>
+    <div class="scan-line"></div>
+    
+    <h1>🛰️ ORBITAL COMMAND | NUVOLA SECURE LINK</h1>
 
-    <header>
-        <div class="sys-time" id="clock">00:00:00 UTC</div>
-        <h1><span style="color:#fff;">[</span> ORBITAL COMMAND <span style="color:#fff;">]</span></h1>
-        <div class="status-badge">SYSTEM SECURED // LATENCY: 3ms // UPTIME: 99.99%</div>
-        <br>
-        <div class="status-badge" style="margin-top: 10px; border-color: var(--neon-cyan); color: var(--neon-cyan); text-shadow: 0 0 5px var(--neon-cyan); box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-    </header>
-
-    <div class="dashboard-container">
-        
-        <!-- SQUADRE D'ASSALTO -->
-        <div class="panel panel-hft">
-            <h2>⚔️ SQUADRE D'ASSALTO (HFT)</h2>
-            <ul class="squad-list">
-                <li class="squad-item hft-item">
-                    <span class="squad-name">🐺 SQUADRA_ALPHA <span style="font-size:0.8rem; color:#888;">[Scalper Binance]</span></span>
-                    <span class="squad-status">ENGAGED</span>
-                </li>
-                <li class="squad-item hft-item">
-                    <span class="squad-name">🦅 SQUADRA_DELTA <span style="font-size:0.8rem; color:#888;">[Order Flow]</span></span>
-                    <span class="squad-status">MONITORING</span>
-                </li>
-                <li class="squad-item hft-item">
-                    <span class="squad-name">🐍 SQUADRA_GAMMA <span style="font-size:0.8rem; color:#888;">[Pairs Bitget]</span></span>
-                    <span class="squad-status status-warn">REBALANCING</span>
-                </li>
-            </ul>
-            <div class="console-output">
-                <div class="console-line">ALPHA: Executed 43 trades in last 60s.</div>
-                <div class="console-line">DELTA: Imbalance detected on ETH orderbook.</div>
-                <div class="console-line">GAMMA: Z-Score spread expanding above 2.5 std dev.</div>
-                <div class="console-line" style="color:var(--neon-green)">ALL TACTICAL UNITS RESPONDING.</div>
-            </div>
-        </div>
-
-        <!-- PROTOCOLLO TRINITY -->
-        <div class="panel panel-trinity">
-            <h2>🛡️ PROTOCOLLO TRINITY</h2>
-            <ul class="squad-list">
-                <li class="squad-item trinity-item">
-                    <span class="squad-name">🕴️ Lo Strozzino <span style="font-size:0.8rem; color:#888;">[Funding Arb]</span></span>
-                    <span class="squad-status">COLLECTING YIELD</span>
-                </li>
-                <li class="squad-item trinity-item">
-                    <span class="squad-name">🧮 Il Contabile <span style="font-size:0.8rem; color:#888;">[DCA Accumulation]</span></span>
-                    <span class="squad-status">ONLINE</span>
-                </li>
-                <li class="squad-item trinity-item">
-                    <span class="squad-name">👼 L'Angelo Custode <span style="font-size:0.8rem; color:#888;">[MEV Arbitrum]</span></span>
-                    <span class="squad-status status-danger">SNIPING MEMPOOL</span>
-                </li>
-            </ul>
-            <div class="console-output">
-                <div class="console-line">Strozzino: Funding rate delta 0.045% (LONG ARB).</div>
-                <div class="console-line">Contabile: BTC DCA trigger next in 4h 12m.</div>
-                <div class="console-line">Angelo: Block 1984203 analyzed. Frontrun executed.</div>
-                <div class="console-line" style="color:var(--neon-cyan)">BACKGROUND DAEMONS NOMINAL.</div>
-            </div>
-        </div>
-
-        <!-- METRICHE DI MERCATO -->
-        <div class="panel panel-market">
-            <h2>👁️ THE ORACLE // MARKET METRICS</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Modulo Sensore</th>
-                        <th>Target Asset</th>
-                        <th>Segnale Tattico</th>
-                        <th>Confidence</th>
-                        <th>Azione</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>🔮 The Oracle (Sentiment)</td>
-                        <td>BTC/USDT</td>
-                        <td class="signal-long">LONG (BULLISH)</td>
-                        <td>
-                            <div class="progress-bar"><div class="progress-fill" style="width: 89%;"></div></div> 89%
-                        </td>
-                        <td>[ HOLD ]</td>
-                    </tr>
-                    <tr>
-                        <td>🐋 Whale Tracker</td>
-                        <td>ETH/USDT</td>
-                        <td class="signal-short">SHORT (DISTRIBUTION)</td>
-                        <td>
-                            <div class="progress-bar"><div class="progress-fill" style="width: 74%; background: var(--neon-red); box-shadow: 0 0 5px var(--neon-red);"></div></div> 74%
-                        </td>
-                        <td>[ HEDGE ]</td>
-                    </tr>
-                    <tr>
-                        <td>🔮 The Oracle (Sentiment)</td>
-                        <td>SOL/USDT</td>
-                        <td class="signal-long">LONG (ACCUMULATION)</td>
-                        <td>
-                            <div class="progress-bar"><div class="progress-fill" style="width: 92%;"></div></div> 92%
-                        </td>
-                        <td>[ DEPLOY ALPHA ]</td>
-                    </tr>
-                    <tr>
-                        <td>⚡ Dark Pool Monitor</td>
-                        <td>BNB/USDT</td>
-                        <td class="signal-wait">NEUTRAL (WAIT)</td>
-                        <td>
-                            <div class="progress-bar"><div class="progress-fill" style="width: 45%; background: var(--neon-yellow); box-shadow: 0 0 5px var(--neon-yellow);"></div></div> 45%
-                        </td>
-                        <td>[ STANDBY ]</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-
+    <div style="text-align: center; margin-bottom: 30px; font-size: 1.5em; color: var(--neon-green); text-shadow: 0 0 10px var(--neon-green); border: 1px solid var(--neon-green); padding: 10px; background: rgba(0,255,0,0.1); border-radius: 5px;">
+        ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)
     </div>
 
-    <script>
-        // Clock
-        setInterval(() => {
-            const now = new Date();
-            document.getElementById('clock').innerText = now.toISOString().replace('T', ' ').substring(0, 19) + ' UTC';
-        }, 1000);
+    <div class="container">
+        <!-- SEZIONE 1: SQUADRE D'ASSALTO -->
+        <div class="panel">
+            <h2>⚔️ SQUADRE D'ASSALTO (HFT) <span class="status">[DEPLOYED]</span></h2>
+            <div class="item">
+                <div><strong>SQUADRA_ALPHA</strong> 🦅</div>
+                <div class="metric"><span>Target:</span> <span class="value">Binance Scalper</span></div>
+                <div class="metric"><span>Status:</span> <span class="value">ONLINE - 1420 TPS</span></div>
+                <div class="metric"><span>Win Rate:</span> <span class="value">68.4%</span></div>
+            </div>
+            <div class="item">
+                <div><strong>SQUADRA_DELTA</strong> 🌊</div>
+                <div class="metric"><span>Target:</span> <span class="value">Order Flow / Liquidations</span></div>
+                <div class="metric"><span>Status:</span> <span class="value">SCANNING BOOKS</span></div>
+                <div class="metric"><span>Depth:</span> <span class="value">L2 Active</span></div>
+            </div>
+            <div class="item">
+                <div><strong>SQUADRA_GAMMA</strong> ⚖️</div>
+                <div class="metric"><span>Target:</span> <span class="value">Pairs Trading (Bitget)</span></div>
+                <div class="metric"><span>Status:</span> <span class="value">SYNCED</span></div>
+                <div class="metric"><span>Spread:</span> <span class="value">0.15%</span></div>
+            </div>
+        </div>
 
-        // Simple Matrix rain effect for the console backgrounds? Nah, keep it clean.
-        // Randomly update numbers to look alive
-        setInterval(() => {
-            const lines = document.querySelectorAll('.console-line');
-            const target = lines[Math.floor(Math.random() * 3)]; // Randomly pick one of the first 3 lines of either console
-            if(target && target.innerText.includes('Executed')) {
-                const trades = Math.floor(Math.random() * 100);
-                target.innerText = `ALPHA: Executed ${trades} trades in last 60s.`;
-            }
-        }, 2500);
-    </script>
+        <!-- SEZIONE 2: PROTOCOLLO TRINITY -->
+        <div class="panel">
+            <h2>🔮 PROTOCOLLO TRINITY <span class="status">[ACTIVE]</span></h2>
+            <div class="item">
+                <div><strong>Lo Strozzino</strong> 🕴️</div>
+                <div class="metric"><span>Role:</span> <span class="value">Funding Arbitrage</span></div>
+                <div class="metric"><span>Status:</span> <span class="value">EXTRACTING YIELD</span></div>
+                <div class="metric"><span>Est. APR:</span> <span class="value">24.5%</span></div>
+            </div>
+            <div class="item">
+                <div><strong>Il Contabile</strong> 🧮</div>
+                <div class="metric"><span>Role:</span> <span class="value">DCA & Rebalancing</span></div>
+                <div class="metric"><span>Status:</span> <span class="value">ACCUMULATING</span></div>
+                <div class="metric"><span>Next Buy:</span> <span class="value">14h 22m</span></div>
+            </div>
+            <div class="item">
+                <div><strong>L'Angelo Custode</strong> 🛡️</div>
+                <div class="metric"><span>Role:</span> <span class="value">MEV Protection (Arbitrum)</span></div>
+                <div class="metric"><span>Status:</span> <span class="value">GUARDING MEMPOOL</span></div>
+                <div class="metric"><span>Threats Blocked:</span> <span class="value">12</span></div>
+            </div>
+        </div>
+
+        <!-- SEZIONE 3: METRICHE DI MERCATO -->
+        <div class="panel">
+            <h2>📊 METRICHE DI MERCATO <span class="status">[LIVE]</span></h2>
+            <div class="item">
+                <div><strong>The Oracle</strong> 👁️</div>
+                <div class="metric"><span>Source:</span> <span class="value">Binance Sentiment Net</span></div>
+                <div class="metric"><span>Bias:</span> <span class="value" style="color: var(--neon-green)">BULLISH (78%)</span></div>
+                <div class="metric"><span>Volatility Index:</span> <span class="value">MEDIUM</span></div>
+            </div>
+            <div class="item">
+                <div><strong>Whale Tracker</strong> 🐳</div>
+                <div class="metric"><span>Scan Area:</span> <span class="value">ERC-20 & TRC-20</span></div>
+                <div class="metric"><span>Alerts:</span> <span class="value alert">3 MASSIVE TX DETECTED</span></div>
+                <div class="metric"><span>Largest Move:</span> <span class="value alert">14,500 ETH -> Coinbase</span></div>
+            </div>
+            <div class="item">
+                <div><strong>System Health</strong> 💻</div>
+                <div class="metric"><span>Latency:</span> <span class="value">14ms</span></div>
+                <div class="metric"><span>Memory Usage:</span> <span class="value">42%</span></div>
+                <div class="metric"><span>Uptime:</span> <span class="value">99.999%</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="terminal-text">
+        <p>> INITIALIZING SECURE HANDSHAKE... OK.</p>
+        <p>> LOADING NUVOLA PROTOCOLS... OK.</p>
+        <p>> ORBITAL COMMAND IS WATCHING. ALL SYSTEMS NOMINAL.</p>
+    </div>
 </body>
-</html>"""
+</html>
+"""
 
 @app.route('/')
 def dashboard():
-    return HTML_CONTENT
+    return render_template_string(HTML_TEMPLATE)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    # Run on port 5000 by default, accessible on all interfaces
+    app.run(host='0.0.0.0', port=5000, threaded=True)
