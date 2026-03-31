@@ -198,12 +198,10 @@ HTML_TEMPLATE = """
 
     <div class="container">
         <!-- PATRIMONIO & STATO -->
-        <div style="color: var(--neon-yellow); font-weight: bold; text-align: center; margin-bottom: 10px; border: 1px dashed var(--neon-yellow); padding: 5px;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
         <div class="panel" style="border-color: var(--neon-green); box-shadow: 0 0 15px rgba(57, 255, 20, 0.2) inset;">
-            <h2 class="glow-text-green">💰 PATRIMONIO <h2 class="glow-text-green">💰 PATRIMONIO & STATO</h2> STATO</h2>
-            <div style="background: rgba(57, 255, 20, 0.15); border: 1px solid var(--neon-green); padding: 10px; margin-bottom: 15px; text-align: center; font-weight: bold; color: var(--neon-green); text-shadow: 0 0 5px var(--neon-green);">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="color: var(--neon-green); text-align: center; font-weight: bold; margin-bottom: 10px; font-size: 1.2em;" class="blink">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="color: var(--neon-blue); text-align: center; margin-bottom: 15px;">🚀 PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - FASE 2</div>
+            <h2 class="glow-text-green">💰 PATRIMONIO & STATO</h2>
+            <div style="color: var(--neon-yellow); font-weight: bold; text-align: center; margin-bottom: 10px; border: 1px dashed var(--neon-yellow); padding: 5px; background: rgba(240, 240, 0, 0.1);">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
+            <div style="color: var(--neon-blue); text-align: center; margin-bottom: 15px;">🚀 PROTOCOLLO TRINITY - FASE 2</div>
             
             <!-- TRINITY STATUS BOX -->
             <div style="background: rgba(57, 255, 20, 0.15); border: 2px solid var(--neon-green); padding: 15px; margin-bottom: 15px; text-align: center; box-shadow: 0 0 10px var(--neon-green); animation: pulse 2s infinite;">
