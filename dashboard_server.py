@@ -200,7 +200,9 @@ HTML_TEMPLATE = """
         <!-- PATRIMONIO & STATO -->
         <div class="panel" style="border-color: var(--neon-green); box-shadow: 0 0 15px rgba(57, 255, 20, 0.2) inset;">
             <h2 class="glow-text-green">💰 PATRIMONIO & STATO</h2>
-            <div style="color: var(--neon-yellow); font-weight: bold; text-align: center; margin-bottom: 10px; border: 1px dashed var(--neon-yellow); padding: 5px; background: rgba(240, 240, 0, 0.1);">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
+            <div class="status-row" style="border-color: var(--neon-yellow); background: rgba(240, 240, 0, 0.1); text-align: center; justify-content: center; margin-bottom: 15px;">
+                <strong style="color: var(--neon-yellow); font-size: 1.1em; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</strong>
+            </div>
             <div style="color: var(--neon-blue); text-align: center; margin-bottom: 15px;">🚀 PROTOCOLLO TRINITY - FASE 2</div>
             
             <!-- TRINITY STATUS BOX -->
