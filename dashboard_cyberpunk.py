@@ -11,6 +11,7 @@ HTML_TEMPLATE = '''
 <html lang="it">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ORBITAL COMMAND | NUVOLA</title>
     <style>
         body {
@@ -179,6 +180,27 @@ HTML_TEMPLATE = '''
         }
         @keyframes blinker {
             50% { opacity: 0; }
+        }
+    
+        @media screen and (max-width: 900px) {
+            .card {
+                width: 100%;
+                margin: 10px 0;
+                min-width: unset;
+                box-sizing: border-box;
+            }
+            .container {
+                flex-direction: column;
+                margin-top: 10px;
+            }
+            body {
+                padding: 10px;
+                height: auto;
+            }
+            h1 { font-size: 1.5em; }
+            h2 { font-size: 1.1em; }
+            .metric { flex-direction: column; align-items: flex-start; }
+            .metric span:last-child { margin-top: 5px; align-self: flex-end; }
         }
     </style>
 </head>
