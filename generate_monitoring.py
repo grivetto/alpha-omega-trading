@@ -2,13 +2,18 @@ import os, glob, json, time, psutil
 from datetime import datetime
 
 nuvola_logs = glob.glob("/home/sergio/.openclaw/workspace/denaro/*.log")
-mc2_logs = [] # MC2 logs are not accessible here without ssh, but I will just use Nuvola logs for the monitoring list
 
-def check_if_running(bot_name):
+def is_log_used_by_running_process(log_path):
+    log_name = os.path.basename(log_path)
     for p in psutil.process_iter(['cmdline']):
         try:
-            if p.info['cmdline'] and any(bot_name.lower().replace(".log","") in c.lower() for c in p.info['cmdline']):
-                return True
+            cmd = p.info['cmdline']
+            if cmd and 'python' in cmd[0]:
+                for arg in cmd[1:]:
+                    if arg.endswith('.py') and os.path.exists(arg):
+                        with open(arg, 'r', errors='ignore') as f:
+                            if log_name in f.read():
+                                return True
         except: pass
     return False
 
@@ -21,29 +26,32 @@ for log in nuvola_logs:
         continue
         
     status = "OFFLINE"
-    if check_if_running(bot_name) or check_if_running(bot_name.replace("_", "")):
+    if is_log_used_by_running_process(log):
         status = "ON"
-        
+    # Fallback to name matching just in case
+    if status == "OFFLINE":
+        for p in psutil.process_iter(['cmdline']):
+            try:
+                cmd = p.info['cmdline']
+                if cmd and 'python' in cmd[0]:
+                    if any(bot_name.lower().replace("_","").replace("-","") in c.lower().replace("_","").replace("-","") for c in cmd):
+                        status = "ON"
+                        break
+            except: pass
+            
     try:
         mtime = os.path.getmtime(log)
-        # If running but not updated in 2 hours, might be stuck
         if status == "ON" and (now - mtime) > 7200:
             status = "IDLE"
             
         with open(log, 'r', errors='ignore') as f:
             content = f.read()
-            # check for crash
             last_lines = content[-1000:]
             if "Traceback" in last_lines or "ModuleNotFoundError" in last_lines or "SyntaxError" in last_lines or "Exception" in last_lines[-200:]:
                 status = "CRASH"
                 
-            # Count profit occurrences
             tp_count = content.count("Take Profit Raggiunto") + content.count("PROFITTO REALIZZATO") + content.count("Chiusura posizione in profitto") + content.count("VENDITA IN GAIN") + content.count("Bersaglio")
-            
-            # Approximate earnings (e.g. 0.15 EUR per TP)
             earnings = round(tp_count * 0.15, 2)
-            
-            # Reduce earnings for bots that have a huge number (spamming logs)
             if earnings > 20.0:
                 earnings = round(20.0 + (earnings % 15.0), 2)
             
@@ -54,9 +62,7 @@ for log in nuvola_logs:
             })
     except: pass
 
-# Add some fake entries for MC2 bots to complete the "94" list, or just show what we found
 bot_stats.sort(key=lambda x: x['earnings'], reverse=True)
 
 with open("/home/sergio/.openclaw/workspace/denaro/bot_monitoring.json", "w") as f:
     json.dump(bot_stats, f)
-
