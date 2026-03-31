@@ -198,6 +198,7 @@ HTML_TEMPLATE = """
 
     <div class="container">
         <!-- PATRIMONIO & STATO -->
+        <div style="color: var(--neon-yellow); font-weight: bold; text-align: center; margin-bottom: 10px; border: 1px dashed var(--neon-yellow); padding: 5px;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
         <div class="panel" style="border-color: var(--neon-green); box-shadow: 0 0 15px rgba(57, 255, 20, 0.2) inset;">
             <h2 class="glow-text-green">💰 PATRIMONIO & STATO</h2>
             <div style="color: var(--neon-green); text-align: center; font-weight: bold; margin-bottom: 10px; font-size: 1.2em;" class="blink">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
