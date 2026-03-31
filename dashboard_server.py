@@ -200,6 +200,9 @@ HTML_TEMPLATE = """
         <!-- PATRIMONIO & STATO -->
         <div class="panel" style="border-color: var(--neon-green); box-shadow: 0 0 15px rgba(57, 255, 20, 0.2) inset;">
             <h2 class="glow-text-green">💰 PATRIMONIO & STATO</h2>
+            <div style="background-color: var(--neon-green); color: #000; padding: 5px; margin-bottom: 10px; text-align: center; font-weight: bold; font-size: 1.1em; animation: pulse 2s infinite;">
+                ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)
+            </div>
             
             <!-- NEW STATUS LINE FOR PROTOCOLLO TRINITY FASE 2 -->
             <div style="background-color: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 10px; margin-bottom: 15px; text-align: center; font-weight: bold; animation: pulse 2s infinite;">
