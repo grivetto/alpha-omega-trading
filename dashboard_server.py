@@ -82,3 +82,4 @@ print("Loaded Stella Aurora Bot into Dashboard Server...")
 import strategy_stella_blade
 # Vanguard added
 import strategy_stella_echo
+print("⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)")
