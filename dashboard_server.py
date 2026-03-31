@@ -172,7 +172,7 @@ HTML_TEMPLATE = """
     <div class="header">
         <h1>🛰️ ORBITAL COMMAND 🛰️</h1>
         <p>NUVOLA TACTICAL DASHBOARD v3.0 - NEURAL LINK ESTABLISHED</p>
-        <div style="margin-top: 15px; font-size: 1.2em; color: var(--neon-pink); text-shadow: 0 0 10px var(--neon-pink); animation: blink 2s infinite;">
+        <div style="margin-top: 15px; font-size: 1.2em; color: var(--neon-pink); text-shadow: 0 0 10px var(--neon-pink); animation: blink 2s infinite; border: 1px solid var(--neon-pink); padding: 5px; display: inline-block;">
             ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)
         </div>
     </div>
