@@ -430,3 +430,6 @@ def index():
                                   dca_status="ONLINE" if dca else "OFFLINE", dca_class="online" if dca else "",
                                   mev_status="ONLINE" if mev else "OFFLINE", mev_class="online" if mev else "",
                                   gariban_status="RACCOGLIE" if gariban else "OFFLINE", gariban_class="online" if gariban else "")
+
+if __name__ == '__main__':
+    app.run(host='127.0.0.1', port=8081)
