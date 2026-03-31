@@ -12,7 +12,7 @@ BOT_REGISTRY = {
     "ORBITAL_WS": "orbital_websocket.py",
     "SNIPER_SQUAD": "sniper_squad.py",
     "TG-BOT": "telegram_bot_interactive.py",
-    "DASHBOARD": "dashboard_server.py",
+    "DASHBOARD": "dashboard_cyberpunk.py",
     "CACHE_UPD": "update_cache.py",
     "GARIBAN": "gariban_beggar.py",
     "VAMPIRO": "vampire_grid.py",
