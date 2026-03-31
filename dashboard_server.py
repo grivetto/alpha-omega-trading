@@ -117,6 +117,18 @@ HTML_TEMPLATE = """
     </div>
 
     <div class="grid">
+        <!-- PATRIMONIO -->
+        <div class="panel">
+            <h2>💰 PATRIMONIO</h2>
+            <div class="item">
+                <span class="status-indicator"></span> Total Balance
+                <span class="value">$ <span class="rand-val" data-base="150000.00" data-noise="100">150000.00</span></span>
+            </div>
+            <div class="item">
+                <p style="color: var(--neon-blue); font-weight: bold; font-size: 1.1em; text-shadow: 0 0 8px var(--neon-blue);">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</p>
+            </div>
+        </div>
+
         <!-- SQUADRE D'ASSALTO (HFT) -->
         <div class="panel">
             <h2>⚔️ SQUADRE D'ASSALTO (HFT)</h2>
