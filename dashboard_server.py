@@ -203,6 +203,9 @@ HTML_TEMPLATE = """
             <div style="background: rgba(57, 255, 20, 0.1); border: 1px solid var(--neon-green); padding: 15px; margin-bottom: 15px; text-align: center; animation: pulse 2s infinite;">
                 <h3 style="color: var(--neon-green); margin: 0; font-size: 1.1em;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</h3>
             </div>
+            <div class="status-row badge-online" style="margin-top: 10px;">
+                <strong>⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</strong>
+            </div>
             <div class="status-row" style="border-color: var(--neon-green);">
                 <div>
                     <strong style="color: var(--neon-green);">Sistemi Autonomi Attivi</strong><br>
