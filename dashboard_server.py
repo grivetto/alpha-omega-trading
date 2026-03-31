@@ -197,7 +197,8 @@ HTML_TEMPLATE = """
     </div>
 
     <div class="container">
-        <!-- PATRIMONIO & STATO -->
+        <!-- PATRIMONIO <!-- PATRIMONIO & STATO --> STATO -->
+        <!-- Update Trinity Protocol Status -->
         <div class="panel" style="border-color: var(--neon-green); box-shadow: 0 0 15px rgba(57, 255, 20, 0.2) inset;">
             <h2 class="glow-text-green">💰 PATRIMONIO & STATO</h2>
             <div class="status-row" style="border-color: var(--neon-green);">
