@@ -1,5 +1,5 @@
 from flask import Flask, render_template_string
-import os
+import threading
 
 app = Flask(__name__)
 
@@ -9,14 +9,14 @@ HTML_TEMPLATE = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NUVOLA ORBITAL COMMAND</title>
+    <title>Nuvola Orbital Command 🌐</title>
     <style>
         :root {
-            --neon-green: #0fa;
-            --neon-blue: #0ff;
+            --neon-green: #0f0;
+            --neon-cyan: #0ff;
             --neon-pink: #f0f;
             --bg-color: #050505;
-            --panel-bg: #111;
+            --panel-bg: rgba(0, 255, 0, 0.05);
         }
         body {
             background-color: var(--bg-color);
@@ -24,165 +24,89 @@ HTML_TEMPLATE = """
             font-family: 'Courier New', Courier, monospace;
             margin: 0;
             padding: 20px;
+            text-transform: uppercase;
             overflow-x: hidden;
         }
         h1, h2, h3 {
-            text-shadow: 0 0 5px var(--neon-green), 0 0 10px var(--neon-green);
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-        .header {
             text-align: center;
-            border-bottom: 2px solid var(--neon-green);
-            padding-bottom: 10px;
-            margin-bottom: 30px;
-            animation: flicker 3s infinite;
+            text-shadow: 0 0 10px var(--neon-cyan);
+            color: var(--neon-cyan);
         }
-        .container {
+        .grid-container {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 20px;
+            margin-top: 30px;
         }
         .panel {
-            background-color: var(--panel-bg);
-            border: 1px solid var(--neon-blue);
-            border-radius: 5px;
+            border: 1px solid var(--neon-green);
+            background: var(--panel-bg);
             padding: 15px;
-            box-shadow: 0 0 10px rgba(0, 255, 255, 0.2), inset 0 0 10px rgba(0, 255, 255, 0.1);
+            box-shadow: 0 0 10px var(--neon-green) inset;
             position: relative;
         }
         .panel::before {
             content: '';
             position: absolute;
-            top: 0; left: 0; right: 0; height: 2px;
-            background: linear-gradient(90deg, transparent, var(--neon-blue), transparent);
+            top: 0; left: 0; right: 0; bottom: 0;
+            box-shadow: 0 0 15px var(--neon-green);
+            pointer-events: none;
+            z-index: -1;
+            animation: pulse 2s infinite alternate;
         }
-        .panel h2 {
-            color: var(--neon-blue);
-            text-shadow: 0 0 5px var(--neon-blue);
-            font-size: 1.2em;
-            border-bottom: 1px dashed var(--neon-blue);
-            padding-bottom: 5px;
+        @keyframes pulse {
+            from { opacity: 0.5; }
+            to { opacity: 1; }
         }
         .status-online {
-            color: var(--neon-green);
-            font-weight: bold;
-            text-shadow: 0 0 5px var(--neon-green);
+            color: var(--neon-cyan);
+            text-shadow: 0 0 5px var(--neon-cyan);
+            animation: blink 1.5s infinite;
         }
-        .status-standby {
-            color: #ff0;
-            font-weight: bold;
-            text-shadow: 0 0 5px #ff0;
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
         }
-        .item {
-            margin: 10px 0;
-            padding: 5px;
-            border-left: 2px solid var(--neon-pink);
-            background: rgba(255, 0, 255, 0.05);
-        }
-        .item-title {
-            color: var(--neon-pink);
-            text-shadow: 0 0 3px var(--neon-pink);
-            font-weight: bold;
-        }
-        @keyframes flicker {
-            0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% { opacity: 1; }
-            20%, 22%, 24%, 55% { opacity: 0.8; text-shadow: none; }
-        }
-        .metric-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            font-size: 0.9em;
-        }
-        .metric-box {
-            border: 1px solid #444;
-            padding: 10px;
-            text-align: center;
-            background: #0a0a0a;
-        }
-        .metric-val {
-            font-size: 1.5em;
-            color: var(--neon-green);
-        }
-        .blink { animation: blinker 1.5s linear infinite; }
-        @keyframes blinker { 50% { opacity: 0; } }
+        ul { list-style-type: none; padding: 0; }
+        li { margin: 15px 0; border-bottom: 1px dashed #333; padding-bottom: 10px; }
+        .metric { display: flex; justify-content: space-between; }
+        .pink-glow { color: var(--neon-pink); text-shadow: 0 0 8px var(--neon-pink); }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>🛰️ ORBITAL COMMAND - NUVOLA DASHBOARD 🛰️</h1>
-        <p>SYSTEM STATUS: <span class="status-online blink">ONLINE</span> | UPLINK: SECURE</p>
+    <h1>🛰️ ORBITAL COMMAND 🛰️</h1>
+    <h2>NUVOLA TACTICAL DASHBOARD</h2>
+    <div style="text-align: center; margin-bottom: 20px; font-size: 1.2em; border: 1px dashed var(--neon-pink); padding: 10px; color: var(--neon-pink); text-shadow: 0 0 5px var(--neon-pink);">
+        ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)
     </div>
-
-    <div class="container">
-        <!-- SQUADRE D'ASSALTO -->
+    
+    <div class="grid-container">
         <div class="panel">
-            <h2>⚔️ SQUADRE D'ASSALTO (HFT)</h2>
-            <div class="item">
-                <span class="item-title">🦅 SQUADRA_ALPHA</span><br>
-                Role: Scalper on Binance<br>
-                Status: <span class="status-online">ACTIVE</span> | Latency: 12ms
-            </div>
-            <div class="item">
-                <span class="item-title">🎯 SQUADRA_DELTA</span><br>
-                Role: Order Flow Analysis<br>
-                Status: <span class="status-online">SCANNING</span> | Depth: 500 levels
-            </div>
-            <div class="item">
-                <span class="item-title">⚖️ SQUADRA_GAMMA</span><br>
-                Role: Pairs Trading on Bitget<br>
-                Status: <span class="status-standby">AWAITING ARB</span> | Spread: 0.02%
-            </div>
+            <h3>⚔️ SQUADRE D'ASSALTO (HFT)</h3>
+            <ul>
+                <li>🐺 <b>SQUADRA_ALPHA</b> <br><small>(Scalper Binance)</small> <br><span class="status-online">[ONLINE - DEPLOYED]</span></li>
+                <li>🎯 <b>SQUADRA_DELTA</b> <br><small>(Order Flow)</small> <br><span class="status-online">[ONLINE - SCANNING]</span></li>
+                <li>⚖️ <b>SQUADRA_GAMMA</b> <br><small>(Pairs Trading Bitget)</small> <br><span class="status-online">[ONLINE - ARB ACTIVE]</span></li>
+            </ul>
         </div>
 
-        <!-- PROTOCOLLO TRINITY -->
         <div class="panel">
-            <h2>💠 PROTOCOLLO TRINITY</h2>
-            <p class="status-online blink">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</p>
-            <p>Background Daemons Online</p>
-            <div class="item">
-                <span class="item-title">🎩 Lo Strozzino</span><br>
-                Strategy: Funding Rate Arbitrage<br>
-                Yield: <span class="status-online">+14.2% APY</span>
-            </div>
-            <div class="item">
-                <span class="item-title">🧮 Il Contabile</span><br>
-                Strategy: Smart DCA<br>
-                Next Buy: In 4h 12m
-            </div>
-            <div class="item">
-                <span class="item-title">🛡️ L'Angelo Custode</span><br>
-                Strategy: MEV Protection Arbitrum<br>
-                Blocks Checked: 14,204,112
-            </div>
+            <h3>🛡️ PROTOCOLLO TRINITY</h3>
+            <ul>
+                <li>🕴️ <b>Lo Strozzino</b> <br><small>(Funding Arb)</small> <br><span class="status-online">[ONLINE - YIELDING]</span></li>
+                <li>🧮 <b>Il Contabile</b> <br><small>(DCA)</small> <br><span class="status-online">[ONLINE - ACCUMULATING]</span></li>
+                <li>👼 <b>L'Angelo Custode</b> <br><small>(MEV Arbitrum)</small> <br><span class="status-online">[ONLINE - PROTECTING]</span></li>
+            </ul>
         </div>
 
-        <!-- METRICHE DI MERCATO -->
         <div class="panel">
-            <h2>📡 METRICHE DI MERCATO</h2>
-            <div class="metric-grid">
-                <div class="metric-box">
-                    <div>The Oracle (Binance)</div>
-                    <div class="metric-val">BULLISH</div>
-                    <div>Sentiment Score: 78/100</div>
-                </div>
-                <div class="metric-box">
-                    <div>Whale Tracker</div>
-                    <div class="metric-val">+$412M</div>
-                    <div>Net Inflow (24h)</div>
-                </div>
-                <div class="metric-box">
-                    <div>Global Volatility</div>
-                    <div class="metric-val">ELEVATED</div>
-                    <div>VIX Crypto: 65.4</div>
-                </div>
-                <div class="metric-box">
-                    <div>Network Fee</div>
-                    <div class="metric-val">12 Gwei</div>
-                    <div>ETH Mainnet</div>
-                </div>
-            </div>
+            <h3>📊 METRICHE DI MERCATO</h3>
+            <ul>
+                <li class="metric"><span>👁️ THE ORACLE (Sentiment):</span> <span class="pink-glow">EXTREME GREED (88)</span></li>
+                <li class="metric"><span>🐋 WHALE TRACKER:</span> <span class="pink-glow">LARGE INFLOWS DETECTED</span></li>
+                <li class="metric"><span>⚡ VOLATILITY INDEX:</span> <span class="status-online">HIGH (VIX 24.5)</span></li>
+                <li class="metric"><span>🌐 SYSTEM UPTIME:</span> <span>99.99%</span></li>
+            </ul>
         </div>
     </div>
 </body>
@@ -194,5 +118,4 @@ def dashboard():
     return render_template_string(HTML_TEMPLATE)
 
 if __name__ == '__main__':
-    print("Starting Nuvola Orbital Command Dashboard...")
-    app.run(host='0.0.0.0', port=5000, debug=False)
+    app.run(host='0.0.0.0', port=8080)
