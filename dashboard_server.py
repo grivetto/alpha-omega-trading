@@ -387,3 +387,5 @@ if __name__ == '__main__':
  
 # Protocollo Trinity Phase 2 active
 # Updated Trinity Status - FASE 2 INIZIALIZZATA E ATTIVA
+# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)
+
