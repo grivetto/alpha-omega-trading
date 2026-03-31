@@ -217,7 +217,8 @@ HTML_TEMPLATE = """
             <div style="margin-top: 20px; border: 1px solid rgba(57, 255, 20, 0.3); padding: 10px; background: rgba(0,0,0,0.5);">
                 <div style="display: flex; justify-content: space-between; font-size: 1.2em;">
                     <span>TOTAL WEALTH (AUM):</span>
-                    <strong style="color: var(--neon-green);">--- YIELDING ---</strong>
+                    <strong style="color: var(--neon-green);">--- YIELDING ---
+                    <div style="color: var(--neon-purple); font-size: 0.9em; margin-top: 10px; font-weight: bold;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div></strong>
                 </div>
             </div>
         </div>
