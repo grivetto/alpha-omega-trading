@@ -204,15 +204,9 @@ HTML_TEMPLATE = """
             <!-- TRINITY STATUS BOX -->
             <div style="background: rgba(57, 255, 20, 0.15); border: 2px solid var(--neon-green); padding: 15px; margin-bottom: 15px; text-align: center; box-shadow: 0 0 10px var(--neon-green); animation: pulse 2s infinite;">
                 <h3 style="color: var(--neon-green); margin: 0; font-size: 1.2em; text-shadow: 0 0 5px var(--neon-green);">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</h3>
+                <p style="color: var(--neon-green); margin: 5px 0 0 0; font-size: 0.9em;">[ FASE 2 INIZIALIZZATA E ATTIVA ]</p>
             </div>
 
-            <div class="status-row badge-online" style="margin-top: 10px;"><strong>⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) v2</strong></div>
-            <div style="background: rgba(57, 255, 20, 0.1); border: 1px solid var(--neon-green); padding: 15px; margin-bottom: 15px; text-align: center; animation: pulse 2s infinite;">
-                <h3 style="color: var(--neon-green); margin: 0; font-size: 1.1em;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</h3>
-            </div>
-            <div class="status-row badge-online" style="margin-top: 10px;">
-                <strong>⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</strong>
-            </div>
             <div class="status-row" style="border-color: var(--neon-green);">
                 <div>
                     <strong style="color: var(--neon-green);">Sistemi Autonomi Attivi</strong><br>
