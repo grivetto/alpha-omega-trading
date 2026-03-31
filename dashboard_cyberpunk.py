@@ -285,6 +285,28 @@ HTML_TEMPLATE = '''
             <div class="metric"><span>🛡️ <strong>Hedge Status</strong></span> <span class="status online blink">ACTIVE (Short ETH)</span></div>
         </div>
 
+        
+        <!-- BOT FLEET MONITORING -->
+        <div class="card" style="width: 100%; max-width: 1200px; border-color: #58a6ff; box-shadow: 0 0 15px #58a6ff, inset 0 0 10px #58a6ff;">
+            <h3 style="color: #58a6ff; text-shadow: 0 0 10px #58a6ff; border-color: #58a6ff;">🤖 BOT FLEET MONITORING</h3>
+            <div style="max-height: 400px; overflow-y: auto; background: rgba(0,0,0,0.5); padding: 10px; border: 1px solid #58a6ff;">
+                <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9em;">
+                    <tr style="border-bottom: 2px solid #58a6ff; color: #8b949e;">
+                        <th style="padding: 10px;">Nome Bot</th>
+                        <th style="padding: 10px;">Status</th>
+                        <th style="padding: 10px; text-align: right;">Profitto Stimato (€)</th>
+                    </tr>
+                    {% for bot in monitoring_bots %}
+                    <tr style="border-bottom: 1px solid rgba(88, 166, 255, 0.2);">
+                        <td style="padding: 8px; color: #0ff;">{{ bot.name }}</td>
+                        <td style="padding: 8px; font-weight: bold; color: {% if bot.status == 'ON' %}#00ff00{% elif bot.status == 'CRASH' %}#ff0055{% elif bot.status == 'IDLE' %}#ffaa00{% else %}#8b949e{% endif %};">{{ bot.status }}</td>
+                        <td style="padding: 8px; text-align: right; color: {% if bot.earnings > 0 %}#33ff33{% else %}#8b949e{% endif %};">{% if bot.earnings > 0 %}+{% endif %}{{ bot.earnings|round(2) }} €</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            </div>
+        </div>
+
         <!-- TERMINALE INTERCETTATO -->
         <div class="card" style="border-color: #ff0055; box-shadow: 0 0 15px #ff0055, inset 0 0 10px #ff0055;">
             <h3 style="color: #ff0055; text-shadow: 0 0 10px #ff0055; border-color: #ff0055;">📡 INTERCEPT LOGS</h3>
@@ -413,6 +435,17 @@ def index():
             active_bots_count = s.get('active_bots_count', 0)
     except: pass
 
+    
+    monitoring_bots = []
+    try:
+        import subprocess
+        # Run the generator script silently to refresh data
+        subprocess.Popen(['python3', '/home/sergio/.openclaw/workspace/denaro/generate_monitoring.py'])
+        import json
+        with open('/home/sergio/.openclaw/workspace/denaro/bot_monitoring.json', 'r') as f:
+            monitoring_bots = json.load(f)
+    except: pass
+
     return render_template_string(HTML_TEMPLATE,
                                   cpu_percent=cpu_percent,
                                   ram_percent=ram_percent,
@@ -429,7 +462,7 @@ def index():
                                   strozzino_status="ONLINE" if strozzino else "OFFLINE", strozzino_class="online" if strozzino else "",
                                   dca_status="ONLINE" if dca else "OFFLINE", dca_class="online" if dca else "",
                                   mev_status="ONLINE" if mev else "OFFLINE", mev_class="online" if mev else "",
-                                  gariban_status="RACCOGLIE" if gariban else "OFFLINE", gariban_class="online" if gariban else "")
+                                  gariban_status="RACCOGLIE" if gariban else "OFFLINE", gariban_class="online" if gariban else "", monitoring_bots=monitoring_bots)
 
 if __name__ == '__main__':
     app.run(host='127.0.0.1', port=8081)
