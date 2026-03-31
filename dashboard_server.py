@@ -1,5 +1,6 @@
 from flask import Flask, render_template_string
-import os
+import random
+from datetime import datetime
 
 app = Flask(__name__)
 
@@ -9,30 +10,47 @@ HTML_TEMPLATE = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ORBITAL COMMAND | Nuvola Dashboard</title>
+    <title>ORBITAL COMMAND // NUVOLA</title>
     <style>
         :root {
-            --bg-color: #050510;
-            --neon-blue: #00f3ff;
-            --neon-pink: #ff00c8;
-            --neon-green: #39ff14;
-            --neon-red: #ff073a;
-            --panel-bg: rgba(10, 15, 30, 0.85);
-            --border-color: rgba(0, 243, 255, 0.3);
-            --font-main: 'Courier New', Courier, monospace;
+            --bg-color: #050505;
+            --panel-bg: rgba(10, 15, 20, 0.85);
+            --neon-cyan: #00f3ff;
+            --neon-magenta: #ff00ff;
+            --neon-lime: #39ff14;
+            --neon-red: #ff2a2a;
+            --neon-yellow: #ffeb3b;
+            --text-main: #e0e0e0;
+            --text-muted: #888888;
+            --font-mono: 'Courier New', Courier, monospace;
         }
 
         body {
             background-color: var(--bg-color);
-            color: var(--neon-blue);
-            font-family: var(--font-main);
+            color: var(--text-main);
+            font-family: var(--font-mono);
             margin: 0;
             padding: 20px;
             background-image: 
-                linear-gradient(rgba(0, 243, 255, 0.05) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 243, 255, 0.05) 1px, transparent 1px);
+                linear-gradient(rgba(0, 243, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 243, 255, 0.03) 1px, transparent 1px);
             background-size: 20px 20px;
             overflow-x: hidden;
+        }
+
+        /* CRT Effect */
+        body::after {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 2;
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
         }
 
         h1, h2, h3 {
@@ -43,31 +61,34 @@ HTML_TEMPLATE = """
 
         .header {
             text-align: center;
+            padding: 20px;
+            border-bottom: 2px solid var(--neon-cyan);
+            box-shadow: 0 0 15px var(--neon-cyan);
             margin-bottom: 30px;
-            text-shadow: 0 0 10px var(--neon-blue), 0 0 20px var(--neon-blue);
-            border-bottom: 2px solid var(--neon-blue);
-            padding-bottom: 15px;
-            animation: pulse 2s infinite;
+            position: relative;
+            background: linear-gradient(90deg, transparent, rgba(0, 243, 255, 0.1), transparent);
         }
 
-        @keyframes pulse {
-            0% { text-shadow: 0 0 5px var(--neon-blue); }
-            50% { text-shadow: 0 0 20px var(--neon-blue), 0 0 30px #fff; }
-            100% { text-shadow: 0 0 5px var(--neon-blue); }
+        .header h1 {
+            color: var(--neon-cyan);
+            text-shadow: 0 0 10px var(--neon-cyan), 0 0 20px var(--neon-cyan);
+            animation: glitch 3s infinite;
         }
 
-        .container {
+        .dashboard-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 20px;
+            gap: 25px;
+            position: relative;
+            z-index: 3;
         }
 
         .panel {
-            background: var(--panel-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 5px;
+            background-color: var(--panel-bg);
+            border: 1px solid var(--text-muted);
             padding: 20px;
-            box-shadow: 0 0 15px rgba(0, 243, 255, 0.1);
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
             position: relative;
             overflow: hidden;
         }
@@ -76,204 +97,228 @@ HTML_TEMPLATE = """
             content: '';
             position: absolute;
             top: 0;
-            left: -100%;
+            left: 0;
             width: 100%;
             height: 2px;
-            background: linear-gradient(90deg, transparent, var(--neon-blue));
-            animation: scanline 3s linear infinite;
         }
 
-        @keyframes scanline {
-            0% { left: -100%; }
-            100% { left: 100%; }
+        .panel.assault { border-color: var(--neon-red); box-shadow: inset 0 0 10px rgba(255, 42, 42, 0.1), 0 0 10px rgba(255, 42, 42, 0.2); }
+        .panel.assault::before { background-color: var(--neon-red); box-shadow: 0 0 10px var(--neon-red); }
+        .panel.assault h2 { color: var(--neon-red); text-shadow: 0 0 5px var(--neon-red); }
+
+        .panel.trinity { border-color: var(--neon-magenta); box-shadow: inset 0 0 10px rgba(255, 0, 255, 0.1), 0 0 10px rgba(255, 0, 255, 0.2); }
+        .panel.trinity::before { background-color: var(--neon-magenta); box-shadow: 0 0 10px var(--neon-magenta); }
+        .panel.trinity h2 { color: var(--neon-magenta); text-shadow: 0 0 5px var(--neon-magenta); }
+
+        .panel.metrics { border-color: var(--neon-lime); box-shadow: inset 0 0 10px rgba(57, 255, 20, 0.1), 0 0 10px rgba(57, 255, 20, 0.2); }
+        .panel.metrics::before { background-color: var(--neon-lime); box-shadow: 0 0 10px var(--neon-lime); }
+        .panel.metrics h2 { color: var(--neon-lime); text-shadow: 0 0 5px var(--neon-lime); }
+
+        .status-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px dashed var(--text-muted);
         }
 
-        .status-indicator {
-            display: inline-block;
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background-color: var(--neon-green);
-            box-shadow: 0 0 10px var(--neon-green);
-            margin-right: 10px;
-            animation: blink 1s infinite alternate;
+        .status-row:last-child {
+            border-bottom: none;
         }
 
-        .status-offline {
-            background-color: var(--neon-red);
-            box-shadow: 0 0 10px var(--neon-red);
-            animation: none;
-        }
-
-        @keyframes blink {
-            from { opacity: 0.5; }
-            to { opacity: 1; }
-        }
-
-        .team {
-            margin-bottom: 15px;
-            padding: 10px;
-            border-left: 3px solid var(--neon-pink);
-            background: rgba(255, 0, 200, 0.05);
-        }
-
-        .team-title {
-            color: var(--neon-pink);
+        .badge {
+            padding: 4px 8px;
+            font-size: 0.8em;
             font-weight: bold;
+            border-radius: 3px;
+            text-transform: uppercase;
         }
+        
+        .badge.online { background-color: rgba(57, 255, 20, 0.2); color: var(--neon-lime); border: 1px solid var(--neon-lime); }
+        .badge.standby { background-color: rgba(255, 235, 59, 0.2); color: var(--neon-yellow); border: 1px solid var(--neon-yellow); }
+        .badge.active { background-color: rgba(0, 243, 255, 0.2); color: var(--neon-cyan); border: 1px solid var(--neon-cyan); animation: pulse 2s infinite; }
 
-        .protocol {
-            margin-bottom: 15px;
-            padding: 10px;
-            border-left: 3px solid var(--neon-green);
-            background: rgba(57, 255, 20, 0.05);
-        }
-
-        .protocol-title {
-            color: var(--neon-green);
+        .data-value {
             font-weight: bold;
+            font-size: 1.1em;
         }
 
-        .metric-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-        }
+        .positive { color: var(--neon-lime); }
+        .negative { color: var(--neon-red); }
+        .neutral { color: var(--neon-cyan); }
 
-        .metric-box {
-            background: rgba(0, 0, 0, 0.5);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 10px;
-            text-align: center;
+        /* Animations */
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.6; box-shadow: 0 0 10px currentColor; }
+            100% { opacity: 1; }
         }
-
-        .metric-value {
-            font-size: 1.5em;
-            color: var(--neon-blue);
-            margin-top: 5px;
-            text-shadow: 0 0 5px var(--neon-blue);
-        }
-
-        .log-terminal {
-            background: #000;
-            border: 1px solid var(--neon-blue);
-            padding: 10px;
-            height: 150px;
-            overflow-y: hidden;
-            font-size: 0.9em;
-            color: #00ff00;
-            margin-top: 20px;
-        }
-
-        .log-line { margin: 5px 0; }
-        .glitch { animation: glitch 1s linear infinite; }
 
         @keyframes glitch {
-            2%, 64% { transform: translate(2px,0) skew(0deg); }
-            4%, 60% { transform: translate(-2px,0) skew(0deg); }
-            62% { transform: translate(0,0) skew(5deg); }
+            0% { text-shadow: 0.05em 0 0 #00fffc, -0.03em -0.04em 0 #fc00ff, 0.025em 0.04em 0 #fffc00; }
+            15% { text-shadow: 0.05em 0 0 #00fffc, -0.03em -0.04em 0 #fc00ff, 0.025em 0.04em 0 #fffc00; }
+            16% { text-shadow: -0.05em -0.025em 0 #00fffc, 0.025em 0.035em 0 #fc00ff, -0.05em -0.05em 0 #fffc00; }
+            49% { text-shadow: -0.05em -0.025em 0 #00fffc, 0.025em 0.035em 0 #fc00ff, -0.05em -0.05em 0 #fffc00; }
+            50% { text-shadow: 0.05em 0.035em 0 #00fffc, 0.03em 0 0 #fc00ff, 0 -0.04em 0 #fffc00; }
+            99% { text-shadow: 0.05em 0.035em 0 #00fffc, 0.03em 0 0 #fc00ff, 0 -0.04em 0 #fffc00; }
+            100% { text-shadow: -0.025em 0 0 #00fffc, -0.025em -0.025em 0 #fc00ff, -0.025em -0.05em 0 #fffc00; }
         }
+
+        .blink {
+            animation: blinker 1s linear infinite;
+        }
+
+        @keyframes blinker {
+            50% { opacity: 0; }
+        }
+        
+        .footer {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 0.8em;
+            color: var(--text-muted);
+            border-top: 1px solid #333;
+            padding-top: 10px;
+        }
+
     </style>
 </head>
 <body>
+
     <div class="header">
-        <h1 class="glitch">🌐 ORBITAL COMMAND 🌐</h1>
-        <h3>Sistema Tattico Quantitativo Nuvola // STATUS: <span style="color:var(--neon-green)">ONLINE</span></h3>
-        <div style="margin-top: 10px; font-weight: bold; color: var(--neon-green); text-shadow: 0 0 10px var(--neon-green); font-size: 1.2em;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
+        <h1>NUVOLA // ORBITAL COMMAND</h1>
+        <p>SYSTEM STATUS: <span class="neon-cyan blink">ENGAGED</span> | UPTIME: {{ uptime }} | SECURE CONNECTION</p>
     </div>
 
-    <div class="container">
-        <!-- SQUADRE D'ASSALTO (HFT) -->
-        <div class="panel">
+    <div style="text-align: center; margin-bottom: 20px; font-weight: bold; color: var(--neon-magenta); border: 1px dashed var(--neon-magenta); padding: 10px; background-color: rgba(255, 0, 255, 0.1); text-shadow: 0 0 5px var(--neon-magenta);">
+        ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)
+    </div>
+
+    <div class="dashboard-grid">
+        
+        <!-- SQUADRE D'ASSALTO -->
+        <div class="panel assault">
             <h2>⚔️ SQUADRE D'ASSALTO (HFT)</h2>
-            <div class="team">
-                <div class="team-title"><span class="status-indicator"></span>SQUADRA_ALPHA (Scalper)</div>
-                <div>Target: Binance [BTC/USDT, ETH/USDT]</div>
-                <div>Status: High Frequency Mode. PnL (24h): +4.2%</div>
+            <div class="status-row">
+                <div>
+                    <strong>SQUADRA_ALPHA</strong><br>
+                    <span style="font-size: 0.8em; color: var(--text-muted);">Binance Scalper</span>
+                </div>
+                <div style="text-align: right;">
+                    <span class="badge active">ENGAGED</span><br>
+                    <span class="data-value positive">+1.24% <small>1H</small></span>
+                </div>
             </div>
-            <div class="team">
-                <div class="team-title"><span class="status-indicator"></span>SQUADRA_DELTA (Order Flow)</div>
-                <div>Target: Cross-Exchange Futures</div>
-                <div>Status: Absorbing Liquidity. PnL (24h): +1.8%</div>
+            <div class="status-row">
+                <div>
+                    <strong>SQUADRA_DELTA</strong><br>
+                    <span style="font-size: 0.8em; color: var(--text-muted);">Order Flow Analysis</span>
+                </div>
+                <div style="text-align: right;">
+                    <span class="badge online">MONITORING</span><br>
+                    <span class="data-value neutral">FLAT</span>
+                </div>
             </div>
-            <div class="team">
-                <div class="team-title"><span class="status-indicator"></span>SQUADRA_GAMMA (Pairs Trading)</div>
-                <div>Target: Bitget</div>
-                <div>Status: Statistical Arbitrage Active. PnL (24h): +2.5%</div>
+            <div class="status-row">
+                <div>
+                    <strong>SQUADRA_GAMMA</strong><br>
+                    <span style="font-size: 0.8em; color: var(--text-muted);">Pairs Trading (Bitget)</span>
+                </div>
+                <div style="text-align: right;">
+                    <span class="badge active">ARBITRAGE</span><br>
+                    <span class="data-value positive">+0.85% <small>1H</small></span>
+                </div>
             </div>
         </div>
 
         <!-- PROTOCOLLO TRINITY -->
-        <div class="panel">
+        <div class="panel trinity">
             <h2>🔺 PROTOCOLLO TRINITY</h2>
-            <div class="protocol">
-                <div class="protocol-title"><span class="status-indicator"></span>Lo Strozzino</div>
-                <div>Ruolo: Funding Rate Arbitrage</div>
-                <div>Operatività: Background Delta-Neutral (Yield: 18% APY)</div>
+            <div class="status-row">
+                <div>
+                    <strong>Lo Strozzino</strong> 🎩<br>
+                    <span style="font-size: 0.8em; color: var(--text-muted);">Funding Rate Arbitrage</span>
+                </div>
+                <div style="text-align: right;">
+                    <span class="badge online">ONLINE (BG)</span><br>
+                    <span class="data-value positive">APR: 18.4%</span>
+                </div>
             </div>
-            <div class="protocol">
-                <div class="protocol-title"><span class="status-indicator"></span>Il Contabile</div>
-                <div>Ruolo: Accumulo Dinamico DCA</div>
-                <div>Operatività: Buy The Dip su Drawdown &gt; 5%</div>
+            <div class="status-row">
+                <div>
+                    <strong>Il Contabile</strong> 🧮<br>
+                    <span style="font-size: 0.8em; color: var(--text-muted);">Dynamic DCA Module</span>
+                </div>
+                <div style="text-align: right;">
+                    <span class="badge online">ONLINE (BG)</span><br>
+                    <span class="data-value neutral">NEXT: 4h 12m</span>
+                </div>
             </div>
-            <div class="protocol">
-                <div class="protocol-title"><span class="status-indicator"></span>L'Angelo Custode</div>
-                <div>Ruolo: MEV &amp; Sandwich Protection</div>
-                <div>Operatività: Arbitrum Network Monitoring</div>
+            <div class="status-row">
+                <div>
+                    <strong>L'Angelo Custode</strong> 🛡️<br>
+                    <span style="font-size: 0.8em; color: var(--text-muted);">MEV Protection (Arbitrum)</span>
+                </div>
+                <div style="text-align: right;">
+                    <span class="badge standby">PATROLLING</span><br>
+                    <span class="data-value neutral">TXs Shielded: 142</span>
+                </div>
             </div>
         </div>
 
         <!-- METRICHE DI MERCATO -->
-        <div class="panel">
-            <h2>📊 METRICHE DI MERCATO</h2>
-            <div class="metric-grid">
-                <div class="metric-box">
-                    <div>The Oracle (Binance Sentiment)</div>
-                    <div class="metric-value">BULLISH 78%</div>
+        <div class="panel metrics">
+            <h2>👁️ METRICHE DI MERCATO</h2>
+            <div class="status-row">
+                <div>
+                    <strong>The Oracle</strong> 🔮<br>
+                    <span style="font-size: 0.8em; color: var(--text-muted);">Binance Global Sentiment</span>
                 </div>
-                <div class="metric-box">
-                    <div>Whale Tracker (Inflow/Outflow)</div>
-                    <div class="metric-value" style="color:var(--neon-green)">+ $42.5M</div>
-                </div>
-                <div class="metric-box">
-                    <div>Global VIX (Crypto)</div>
-                    <div class="metric-value" style="color:var(--neon-red)">45.2</div>
-                </div>
-                <div class="metric-box">
-                    <div>Liquidity Heatmap</div>
-                    <div class="metric-value">DENSE</div>
+                <div style="text-align: right;">
+                    <span class="badge active">ANALYZING</span><br>
+                    <span class="data-value positive">BULLISH (68%)</span>
                 </div>
             </div>
-            <div class="log-terminal">
-                <div class="log-line">&gt; INIZIALIZZAZIONE SISTEMA... OK</div>
-                <div class="log-line">&gt; CONNESSIONE WEBSOCKET BINANCE... STABILITA</div>
-                <div class="log-line">&gt; SINC. NODI ARBITRUM... COMPLETATA</div>
-                <div class="log-line">&gt; ANALISI SENTIMENT THE ORACLE... IN CORSO</div>
-                <div class="log-line">&gt; ATTESA NUOVI BLOCCHI...</div>
+            <div class="status-row">
+                <div>
+                    <strong>Whale Tracker</strong> 🐋<br>
+                    <span style="font-size: 0.8em; color: var(--text-muted);">Large TXs On-Chain</span>
+                </div>
+                <div style="text-align: right;">
+                    <span class="badge online">SCANNING</span><br>
+                    <span class="data-value negative">INFLOW DETECTED</span>
+                </div>
+            </div>
+            <div class="status-row">
+                <div>
+                    <strong>Liquidity Heatmap</strong> 🌡️<br>
+                    <span style="font-size: 0.8em; color: var(--text-muted);">Orderbook Density</span>
+                </div>
+                <div style="text-align: right;">
+                    <span class="data-value neutral">CLUSTER @ $69,420</span>
+                </div>
             </div>
         </div>
+
+    </div>
+
+    <div class="footer">
+        ORBITAL COMMAND NETWORK PROTOCOL V3.1 // CLASSIFIED // DATA REFRESH: LIVE
     </div>
 
     <script>
-        // Simulazione log terminale
-        const terminal = document.querySelector('.log-terminal');
-        const logs = [
-            "&gt; ESECUZIONE ARBITRAGGIO SQUADRA_GAMMA...",
-            "&gt; PROFITTO REGISTRATO: +$12.45",
-            "&gt; AGGIORNAMENTO FUNDING RATE BITGET...",
-            "&gt; LO STROZZINO: RIBILANCIAMENTO POSIZIONE",
-            "&gt; WHALE ALERT: 500 BTC SPOSTATI SU BINANCE",
-            "&gt; PREPARAZIONE SCUDO MEV ANGELO CUSTODE..."
-        ];
-        
+        // Fake dynamic updates to make it look alive
         setInterval(() => {
-            const line = document.createElement('div');
-            line.className = 'log-line';
-            line.textContent = logs[Math.floor(Math.random() * logs.length)];
-            terminal.appendChild(line);
-            if(terminal.children.length > 6) {
-                terminal.removeChild(terminal.firstChild);
-            }
+            const values = document.querySelectorAll('.positive, .negative');
+            values.forEach(el => {
+                if(Math.random() > 0.7 && el.innerText.includes('%')) {
+                    let current = parseFloat(el.innerText.match(/[-+]?[0-9]*\.?[0-9]+/)[0]);
+                    let change = (Math.random() * 0.1) - 0.05;
+                    let newVal = (current + change).toFixed(2);
+                    let prefix = newVal >= 0 ? '+' : '';
+                    el.innerText = `${prefix}${newVal}% 1H`;
+                }
+            });
         }, 3000);
     </script>
 </body>
@@ -282,7 +327,9 @@ HTML_TEMPLATE = """
 
 @app.route('/')
 def dashboard():
-    return render_template_string(HTML_TEMPLATE)
+    now = datetime.now()
+    uptime_str = f"{now.hour:02d}H:{now.minute:02d}M:{now.second:02d}S"
+    return render_template_string(HTML_TEMPLATE, uptime=uptime_str)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
