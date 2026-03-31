@@ -212,6 +212,56 @@ HTML_TEMPLATE = '''
         <strong>⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</strong>
     </div>
     
+    
+    <!-- FLEET TOPOLOGY ARCHITECTURE -->
+    <div class="container" style="margin-top: 10px;">
+        <div class="card" style="width: 100%; max-width: 1200px; border-color: #a371f7; box-shadow: 0 0 15px #a371f7, inset 0 0 10px #a371f7;">
+            <h3 style="color: #a371f7; text-shadow: 0 0 10px #a371f7; border-color: #a371f7; text-align: left;">🌌 FLEET TOPOLOGY & GLOBAL ARCHITECTURE (3-NODE CLUSTER)</h3>
+            <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 15px;">
+                
+                <!-- NODE 1: NUVOLA -->
+                <div style="flex: 1; min-width: 280px; background: rgba(0,0,0,0.6); padding: 15px; border: 1px dashed #00ffcc; border-radius: 5px;">
+                    <h4 style="color: #00ffcc; margin-top: 0; text-shadow: 0 0 5px #00ffcc;">☁️ NODO 1: NUVOLA (Ammiraglia)</h4>
+                    <p style="font-size: 0.9em; margin: 5px 0;"><strong>IP/Host:</strong> sgrivett.ddns.net (Ionos VPS)</p>
+                    <p style="font-size: 0.9em; margin: 5px 0; color: #ffaa00;"><strong>Ruolo:</strong> Cassaforte, AI Risk, Auto-Healer</p>
+                    <ul style="font-size: 0.85em; padding-left: 15px; margin-top: 5px; color: #ccc;">
+                        <li><span style="color:#0f0;">ON</span> <b>Vault Manager</b> (Riserva Frazionaria 33%)</li>
+                        <li><span style="color:#0f0;">ON</span> <b>AI Risk Engine</b> (Dinamico su RSI)</li>
+                        <li><span style="color:#0f0;">ON</span> <b>Auto-Healer</b> (Auto-riparazione log)</li>
+                        <li><span style="color:#0f0;">ON</span> <b>DCA & Hedging</b> (Basso rischio)</li>
+                    </ul>
+                </div>
+
+                <!-- NODE 2: MC2 -->
+                <div style="flex: 1; min-width: 280px; background: rgba(0,0,0,0.6); padding: 15px; border: 1px dashed #ff0055; border-radius: 5px;">
+                    <h4 style="color: #ff0055; margin-top: 0; text-shadow: 0 0 5px #ff0055;">🏠 NODO 2: MC2 (On-Premise)</h4>
+                    <p style="font-size: 0.9em; margin: 5px 0;"><strong>IP/Host:</strong> mgrivett.ddns.net (Fisico N150)</p>
+                    <p style="font-size: 0.9em; margin: 5px 0; color: #ffaa00;"><strong>Ruolo:</strong> HFT, Cecchini in Leva, Orderbook</p>
+                    <ul style="font-size: 0.85em; padding-left: 15px; margin-top: 5px; color: #ccc;">
+                        <li><span style="color:#0f0;">ON</span> <b>Brain Supervisor</b> (Kill Switch Globale)</li>
+                        <li><span style="color:#0f0;">ON</span> <b>HFT Swarm & Predators</b> (Leva 5x)</li>
+                        <li><span style="color:#0f0;">ON</span> <b>Snipers & Ghosts</b> (Scalping millisecondi)</li>
+                        <li><span style="color:#0f0;">ON</span> <b>Dark Arts & Whale Tracker</b></li>
+                    </ul>
+                </div>
+
+                <!-- NODE 3: MC3 -->
+                <div style="flex: 1; min-width: 280px; background: rgba(0,0,0,0.6); padding: 15px; border: 1px dashed #39ff14; border-radius: 5px;">
+                    <h4 style="color: #39ff14; margin-top: 0; text-shadow: 0 0 5px #39ff14;">💣 NODO 3: MC3 (Artiglieria)</h4>
+                    <p style="font-size: 0.9em; margin: 5px 0;"><strong>IP/Host:</strong> 87.106.222.123 (Cloud Basso-Ping)</p>
+                    <p style="font-size: 0.9em; margin: 5px 0; color: #ffaa00;"><strong>Ruolo:</strong> Heavy Duty, 28 Legioni, Altcoins</p>
+                    <ul style="font-size: 0.85em; padding-left: 15px; margin-top: 5px; color: #ccc;">
+                        <li><span style="color:#0f0;">ON</span> <b>28 Legioni Spot</b> (ADA, DOT, MATIC...)</li>
+                        <li><span style="color:#0f0;">ON</span> <b>Project Olympus & Scavengers</b></li>
+                        <li><span style="color:#0f0;">ON</span> <b>Blade Runner & Il Generale</b></li>
+                        <li><span style="color:#0f0;">ON</span> <b>Liquidation Sweepers</b> (Caccia spike)</li>
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
     <!-- ROW 1: EXISTING STUFF -->
     <div class="container">
         <!-- SQUADRE D'ASSALTO -->
