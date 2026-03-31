@@ -10,5 +10,5 @@
 - **Host Name:** mc2
 - **IP Address:** 93.43.252.114 (Port: 2222)
 - **Type:** On-Premise (Fisico, Intel N150, 16GB RAM, 4-Core)
-- **Initial Capital Base:** 50.00 € (54 USDT)
+- **Initial Capital Base:** 100.00 €
 - **Role:** Cacciatore HFT Isolato. Lavora tramite la libreria asincrona ad alta frequenza (ccxt.async_support). Analizza l'orderbook in millisecondi su BTC, ETH, SOL e DOGE con Leva 5x. Chiude tutte le posizioni ogni notte alle 23:50 e preleva i profitti verso lo Spot ogni domenica alle 23:55 (Weekly Harvest). Espone la dashboard su https://mgrivett.ddns.net.

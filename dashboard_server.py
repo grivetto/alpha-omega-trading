@@ -7,195 +7,161 @@ HTML_TEMPLATE = """
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nuvola: Orbital Command</title>
+    <title>Nuvola Orbital Command</title>
     <style>
-        :root {
-            --neon-green: #0f0;
-            --neon-cyan: #0ff;
-            --neon-pink: #f0f;
-            --dark-bg: #050505;
-            --panel-bg: rgba(10, 20, 15, 0.8);
-            --grid-line: rgba(0, 255, 0, 0.1);
-        }
         body {
-            background-color: var(--dark-bg);
-            color: var(--neon-green);
+            background-color: #0b0b12;
+            color: #00ffcc;
             font-family: 'Courier New', Courier, monospace;
             margin: 0;
-            padding: 20px;
-            background-image: 
-                linear-gradient(var(--grid-line) 1px, transparent 1px),
-                linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
-            background-size: 20px 20px;
-            animation: scanline 10s linear infinite;
-        }
-        @keyframes scanline {
-            0% { background-position: 0 0; }
-            100% { background-position: 0 1000px; }
-        }
-        h1, h2, h3 {
+            padding: 30px;
             text-transform: uppercase;
-            text-shadow: 0 0 10px var(--neon-green);
-            letter-spacing: 2px;
         }
-        .header {
+        h1 {
             text-align: center;
-            border-bottom: 2px solid var(--neon-cyan);
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-            box-shadow: 0 10px 10px -10px var(--neon-cyan);
+            color: #ff007f;
+            text-shadow: 0 0 10px #ff007f, 0 0 20px #ff007f, 0 0 40px #ff007f;
+            font-size: 3em;
+            margin-bottom: 40px;
+            border-bottom: 2px solid #ff007f;
+            padding-bottom: 15px;
+            letter-spacing: 5px;
         }
-        .container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-        }
-        .panel {
-            background: var(--panel-bg);
-            border: 1px solid var(--neon-green);
-            border-radius: 5px;
-            padding: 15px;
-            box-shadow: 0 0 15px rgba(0, 255, 0, 0.2);
-            transition: all 0.3s ease;
-        }
-        .panel:hover {
-            box-shadow: 0 0 25px var(--neon-cyan);
-            border-color: var(--neon-cyan);
-        }
-        .panel h2 {
-            color: var(--neon-cyan);
-            text-shadow: 0 0 5px var(--neon-cyan);
-            border-bottom: 1px dashed var(--neon-cyan);
-            padding-bottom: 5px;
-            font-size: 1.2em;
-        }
-        .status-indicator {
-            display: inline-block;
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background-color: var(--neon-green);
-            box-shadow: 0 0 10px var(--neon-green);
-            animation: blink 1.5s infinite alternate;
-            margin-right: 10px;
-        }
-        .status-warning {
-            background-color: var(--neon-pink);
-            box-shadow: 0 0 10px var(--neon-pink);
-        }
-        @keyframes blink {
-            from { opacity: 0.5; }
-            to { opacity: 1; }
-        }
-        ul {
-            list-style-type: none;
-            padding: 0;
-        }
-        li {
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            border-left: 2px solid var(--neon-green);
-            padding-left: 10px;
-            background: rgba(0, 255, 0, 0.05);
-            font-size: 0.9em;
-        }
-        .data-grid {
+        .grid-container {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-top: 10px;
+            gap: 30px;
         }
-        .data-cell {
-            background: rgba(0, 255, 255, 0.1);
-            border: 1px solid var(--neon-cyan);
-            padding: 10px;
-            text-align: center;
-            font-size: 0.9em;
-            box-shadow: inset 0 0 5px rgba(0,255,255,0.2);
+        .panel {
+            border: 1px solid #00ffcc;
+            padding: 20px;
+            background: rgba(0, 255, 204, 0.03);
+            box-shadow: 0 0 20px rgba(0, 255, 204, 0.15) inset, 0 0 10px rgba(0, 255, 204, 0.2);
+            border-radius: 8px;
+            position: relative;
         }
-        .data-cell span {
-            font-size: 1.2em;
+        .panel::before {
+            content: '';
+            position: absolute;
+            top: -2px; left: -2px; right: -2px; bottom: -2px;
+            background: linear-gradient(45deg, #00ffcc, #ff007f, #ffff00);
+            z-index: -1;
+            filter: blur(10px);
+            opacity: 0.3;
+        }
+        .panel h2 {
+            color: #ffff00;
+            text-shadow: 0 0 8px #ffff00;
+            border-bottom: 1px dashed #ffff00;
+            padding-bottom: 10px;
+            margin-top: 0;
+            font-size: 1.5em;
+        }
+        .status-online {
+            color: #00ff00;
+            text-shadow: 0 0 8px #00ff00;
+            animation: blinker 1.2s cubic-bezier(0.5, 0, 1, 1) infinite alternate;
             font-weight: bold;
-            display: block;
-            margin-top: 5px;
+        }
+        @keyframes blinker {
+            from { opacity: 1; }
+            to { opacity: 0.3; }
+        }
+        .item { margin: 15px 0; font-size: 1.2em; display: flex; align-items: center; justify-content: space-between; }
+        .item-label { display: flex; align-items: center; }
+        .emoji { margin-right: 15px; font-size: 1.4em; }
+        .market-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .market-stat {
+            background: rgba(255, 0, 127, 0.05);
+            border: 1px solid #ff007f;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 0 15px rgba(255, 0, 127, 0.2) inset;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+        .market-stat:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 25px rgba(255, 0, 127, 0.4) inset;
         }
         .glitch {
-            animation: glitch-anim 2s infinite;
+            animation: glitch 2s linear infinite;
         }
-        @keyframes glitch-anim {
-            0% { transform: translate(0) }
-            2% { transform: translate(-2px, 2px) }
-            4% { transform: translate(-2px, -2px) }
-            6% { transform: translate(2px, 2px) }
-            8% { transform: translate(2px, -2px) }
-            10% { transform: translate(0) }
-            100% { transform: translate(0) }
+        @keyframes glitch {
+            2%, 64% { transform: translate(2px,0) skew(0deg); }
+            4%, 60% { transform: translate(-2px,0) skew(0deg); }
+            62% { transform: translate(0,0) skew(5deg); text-shadow: -2px 0 #00ffcc, 2px 2px #ffff00; }
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1 class="glitch">🛰️ NUVOLA: ORBITAL COMMAND 🛰️</h1>
-        <p>SISTEMA DI CONTROLLO QUANTITATIVO - LIVELLO DI AUTORIZZAZIONE: OMEGA</p>
-        <div style="margin-top: 15px; padding: 10px; border: 1px solid var(--neon-green); background: rgba(0,255,0,0.1); display: inline-block; border-radius: 5px; box-shadow: 0 0 10px var(--neon-green);">
-            <span class="status-indicator"></span>
-            <b>⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</b>
-        </div>
-    </div>
+    <h1 class="glitch">🛰️ ORBITAL COMMAND - NUVOLA 🛰️</h1>
 
-    <div class="container">
-        <!-- SQUADRE D'ASSALTO (HFT) -->
+    <div class="grid-container">
+        <!-- SQUADRE D'ASSALTO -->
         <div class="panel">
             <h2>⚔️ SQUADRE D'ASSALTO (HFT)</h2>
-            <ul>
-                <li><span class="status-indicator"></span> <div><b>SQUADRA_ALPHA</b> (Scalper su Binance)<br> └─ Latenza: 12ms | PNL 24h: +$450.20</div></li>
-                <li><span class="status-indicator"></span> <div><b>SQUADRA_DELTA</b> (Order Flow)<br> └─ Win Rate: 68% | Flusso anomalo BTC: Rilevato</div></li>
-                <li><span class="status-indicator"></span> <div><b>SQUADRA_GAMMA</b> (Pairs Trading su Bitget)<br> └─ Posizione: Long/Short | Spread ARB/OP: 0.45%</div></li>
-            </ul>
+            <div class="item">
+                <span class="item-label"><span class="emoji">🐺</span> SQUADRA_ALPHA [Binance Scalper]</span> 
+                <span class="status-online">ENGAGED</span>
+            </div>
+            <div class="item">
+                <span class="item-label"><span class="emoji">🌊</span> SQUADRA_DELTA [Order Flow]</span> 
+                <span class="status-online">MONITORING</span>
+            </div>
+            <div class="item">
+                <span class="item-label"><span class="emoji">⚖️</span> SQUADRA_GAMMA [Bitget Pairs]</span> 
+                <span class="status-online">SYNCED</span>
+            </div>
         </div>
 
         <!-- PROTOCOLLO TRINITY -->
         <div class="panel">
-            <h2>🔮 PROTOCOLLO TRINITY</h2>
-            <p style="font-size:0.8em; opacity:0.8;">[Processi di ritrasmissione in background]</p>
-            <ul>
-                <li><span class="status-indicator"></span> <div><b>Lo Strozzino</b> (Funding Arb)<br> └─ Yield Mensile: 3.4% | Allineamento API: OK</div></li>
-                <li><span class="status-indicator"></span> <div><b>Il Contabile</b> (DCA)<br> └─ Stato: ONLINE | Acquisto ETH a $3400 completato</div></li>
-                <li><span class="status-indicator status-warning"></span> <div><b>L'Angelo Custode</b> (MEV Arbitrum)<br> └─ Scansione Mempool | Frontrun attempts: 42</div></li>
-            </ul>
+            <h2>🔺 PROTOCOLLO TRINITY</h2>
+            <div style="background: rgba(0, 255, 0, 0.1); border: 1px solid #00ff00; padding: 10px; text-align: center; margin-bottom: 15px; border-radius: 5px; box-shadow: 0 0 10px rgba(0,255,0,0.2);">
+                <span class="status-online" style="text-shadow: 0 0 10px #00ff00;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</span>
+            </div>
+            <div class="item">
+                <span class="item-label"><span class="emoji">🦈</span> Lo Strozzino [Funding Arb]</span> 
+                <span class="status-online">SYS_BACKGROUND</span>
+            </div>
+            <div class="item">
+                <span class="item-label"><span class="emoji">🧮</span> Il Contabile [DCA]</span> 
+                <span class="status-online">SYS_BACKGROUND</span>
+            </div>
+            <div class="item">
+                <span class="item-label"><span class="emoji">🛡️</span> L'Angelo Custode [MEV Arbitrum]</span> 
+                <span class="status-online">SYS_BACKGROUND</span>
+            </div>
         </div>
-
+        
         <!-- METRICHE DI MERCATO -->
-        <div class="panel">
-            <h2>📊 METRICHE DI MERCATO (RADAR)</h2>
-            <div class="data-grid">
-                <div class="data-cell">
-                    <b>The Oracle (Binance)</b>
-                    <span style="color:var(--neon-cyan)">BULLISH 72%</span>
+        <div class="panel" style="grid-column: span 2;">
+            <h2>📊 METRICHE DI MERCATO & INTEL</h2>
+            <div class="market-grid">
+                <div class="market-stat">
+                    <div>🔮 THE ORACLE<br>(Binance Sentiment)</div>
+                    <div style="font-size: 1.8em; color: #00ffcc; margin-top: 15px; text-shadow: 0 0 10px #00ffcc;">BULLISH 78%</div>
                 </div>
-                <div class="data-cell">
-                    <b>Whale Tracker</b>
-                    <span style="color:var(--neon-green)">+$240M Inflow</span>
+                <div class="market-stat">
+                    <div>🐋 WHALE TRACKER<br>(On-Chain Flows)</div>
+                    <div style="font-size: 1.8em; color: #ff007f; margin-top: 15px; text-shadow: 0 0 10px #ff007f;">+1.4K BTC</div>
                 </div>
-                <div class="data-cell">
-                    <b>BTC Dominance</b>
-                    <span style="color:var(--neon-green)">52.4% (Stabile)</span>
+                <div class="market-stat">
+                    <div>🔥 LIQUIDATION MAP<br>(Heat Zones)</div>
+                    <div style="font-size: 1.8em; color: #ffff00; margin-top: 15px; text-shadow: 0 0 10px #ffff00;">SQUEEZE IMMINENT</div>
                 </div>
-                <div class="data-cell">
-                    <b>Indice Paura/Avidità</b>
-                    <span style="color:var(--neon-pink)">78 (Avidità)</span>
+                <div class="market-stat">
+                    <div>⚡ NETWORK CONGESTION<br>(Gas Monitor)</div>
+                    <div style="font-size: 1.8em; color: #00ff00; margin-top: 15px; text-shadow: 0 0 10px #00ff00;">LOW (12 GWEI)</div>
                 </div>
             </div>
-            <p style="margin-top:15px; font-size: 0.8em; text-align:center;">
-                [Flusso dati da aggregatori esterni: Crittografato AES-256]
-            </p>
         </div>
-    </div>
-    
-    <div style="text-align: center; margin-top: 30px; font-size: 0.8em; opacity: 0.7;">
-        NUVOLA CORE v9.2.1 | CONNESSO AL NODO CENTRALE | STATUS: OPERATIVO | TEMPO REALE
     </div>
 </body>
 </html>
