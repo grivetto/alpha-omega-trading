@@ -1,21 +1,22 @@
+import os
 from flask import Flask, render_template_string
 
 app = Flask(__name__)
 
 HTML_TEMPLATE = """
 <!DOCTYPE html>
-<html lang="en">
+<html lang="it">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nuvola Orbital Command</title>
+    <title>NUVOLA ORBITAL COMMAND</title>
     <style>
         :root {
-            --neon-green: #0f0;
-            --neon-cyan: #0ff;
-            --neon-magenta: #f0f;
+            --neon-green: #39ff14;
+            --neon-blue: #00f3ff;
+            --neon-pink: #ff00ff;
             --bg-color: #050505;
-            --panel-bg: rgba(10, 20, 10, 0.8);
+            --panel-bg: #0a0a0a;
         }
         body {
             background-color: var(--bg-color);
@@ -23,152 +24,145 @@ HTML_TEMPLATE = """
             font-family: 'Courier New', Courier, monospace;
             margin: 0;
             padding: 20px;
-            overflow-x: hidden;
+            background-image: linear-gradient(rgba(0, 243, 255, 0.05) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(0, 243, 255, 0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
         }
-        h1, h2, h3 {
+        h1, h2 {
             text-align: center;
-            text-shadow: 0 0 5px var(--neon-green), 0 0 10px var(--neon-green);
             text-transform: uppercase;
+            text-shadow: 0 0 10px var(--neon-blue), 0 0 20px var(--neon-blue);
+            color: var(--neon-blue);
+            margin-bottom: 30px;
             letter-spacing: 2px;
-        }
-        .header-glow {
-            color: var(--neon-cyan);
-            text-shadow: 0 0 5px var(--neon-cyan), 0 0 15px var(--neon-cyan);
         }
         .container {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
             gap: 20px;
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
         }
         .panel {
             background: var(--panel-bg);
             border: 1px solid var(--neon-green);
-            box-shadow: 0 0 10px rgba(0, 255, 0, 0.2), inset 0 0 10px rgba(0, 255, 0, 0.1);
-            padding: 15px;
+            box-shadow: 0 0 10px rgba(57, 255, 20, 0.2), inset 0 0 10px rgba(57, 255, 20, 0.1);
+            padding: 20px;
             border-radius: 5px;
             position: relative;
+            overflow: hidden;
         }
         .panel::before {
             content: '';
             position: absolute;
             top: 0; left: 0; right: 0; height: 2px;
-            background: linear-gradient(90deg, transparent, var(--neon-green), transparent);
+            background: var(--neon-green);
+            box-shadow: 0 0 15px var(--neon-green);
             animation: scanline 2s linear infinite;
         }
         @keyframes scanline {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
+            0% { transform: translateY(-100%); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: translateY(10000%); opacity: 0; }
         }
-        .trinity { border-color: var(--neon-magenta); box-shadow: 0 0 10px rgba(255, 0, 255, 0.2); color: var(--neon-magenta); }
-        .trinity h2 { text-shadow: 0 0 5px var(--neon-magenta); }
-        
-        .status-indicator {
-            display: inline-block;
-            width: 10px; height: 10px;
-            border-radius: 50%;
-            background-color: var(--neon-green);
-            box-shadow: 0 0 8px var(--neon-green);
-            margin-right: 10px;
-            animation: blink 1.5s infinite alternate;
+        .panel h3 {
+            color: var(--neon-pink);
+            text-shadow: 0 0 5px var(--neon-pink);
+            border-bottom: 1px dashed var(--neon-pink);
+            padding-bottom: 10px;
+            margin-top: 0;
         }
-        @keyframes blink {
-            0% { opacity: 0.3; }
-            100% { opacity: 1; }
-        }
-        .item-row { display: flex; justify-content: space-between; border-bottom: 1px dashed rgba(0,255,0,0.3); padding: 8px 0; }
-        .trinity .item-row { border-bottom: 1px dashed rgba(255,0,255,0.3); }
-        .data-value { font-weight: bold; }
-        
-        .glitch {
-            animation: glitch 1s linear infinite;
-        }
-        @keyframes glitch {
-            2%, 64% { transform: translate(2px,0) skew(0deg); }
-            4%, 60% { transform: translate(-2px,0) skew(0deg); }
-            62% { transform: translate(0,0) skew(5deg); }
+        .status-online { color: var(--neon-green); text-shadow: 0 0 5px var(--neon-green); animation: blink 1.5s infinite; }
+        .status-standby { color: #f0f000; text-shadow: 0 0 5px #f0f000; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        ul { list-style-type: none; padding: 0; margin: 0; }
+        li { margin-bottom: 15px; border-left: 2px solid var(--neon-blue); padding-left: 10px; }
+        .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .metric-box { background: rgba(0, 243, 255, 0.1); padding: 10px; text-align: center; border: 1px solid var(--neon-blue); }
+        .metric-value { font-size: 1.5em; font-weight: bold; color: white; text-shadow: 0 0 5px white; margin-top: 5px; }
+        .glitch { animation: glitch 1s linear infinite; }
+        @keyframes glitch { 
+            2%, 64% { transform: translate(2px,0) skew(0deg); } 
+            4%, 60% { transform: translate(-2px,0) skew(0deg); } 
+            62% { transform: translate(0,0) skew(5deg); } 
         }
     </style>
 </head>
 <body>
-    <h1 class="header-glow glitch">🛰️ ORBITAL COMMAND TERMINAL 🛰️</h1>
-    <h3>SYS.VER: 9.4.2 // STATUS: <span style="color:var(--neon-green)">ONLINE</span></h3>
-    <div style="text-align: center; margin-bottom: 20px;">
-        <span style="color:var(--neon-magenta); border: 1px solid var(--neon-magenta); padding: 8px 15px; display: inline-block; box-shadow: 0 0 10px var(--neon-magenta); font-weight: bold; letter-spacing: 1px;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</span>
-    </div>
-    
+    <h1 class="glitch">🛰️ ORBITAL COMMAND 🛰️</h1>
+    <h2>SYSTEM STATUS: <span class="status-online">NOMINAL</span></h2>
+    <h3 style="text-align: center; color: var(--neon-green); text-shadow: 0 0 10px var(--neon-green);">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</h3>
+
     <div class="container">
         <!-- SQUADRE D'ASSALTO -->
         <div class="panel">
-            <h2>⚔️ SQUADRE D'ASSALTO (HFT)</h2>
-            <div class="item-row">
-                <span><div class="status-indicator"></div> 🐺 SQUADRA_ALPHA</span>
-                <span class="data-value">BINANCE SCALPER [ACTIVE]</span>
-            </div>
-            <div class="item-row">
-                <span><div class="status-indicator" style="animation-delay: 0.2s"></div> 🦅 SQUADRA_DELTA</span>
-                <span class="data-value">ORDER FLOW [DEPLOYED]</span>
-            </div>
-            <div class="item-row">
-                <span><div class="status-indicator" style="animation-delay: 0.4s"></div> 🐍 SQUADRA_GAMMA</span>
-                <span class="data-value">BITGET PAIRS [HUNTING]</span>
-            </div>
+            <h3>⚔️ SQUADRE D'ASSALTO (HFT)</h3>
+            <ul>
+                <li>
+                    <strong>[SQUADRA_ALPHA]</strong> - 🟢 <span class="status-online">ENGAGED</span><br>
+                    <small>Target: Binance Scalping | Latency: 12ms</small>
+                </li>
+                <li>
+                    <strong>[SQUADRA_DELTA]</strong> - 🟡 <span class="status-standby">STANDBY</span><br>
+                    <small>Target: Order Flow Analysis | Awaiting Imbalance</small>
+                </li>
+                <li>
+                    <strong>[SQUADRA_GAMMA]</strong> - 🟢 <span class="status-online">ENGAGED</span><br>
+                    <small>Target: Bitget Pairs Trading | Spread: 0.15%</small>
+                </li>
+            </ul>
         </div>
 
         <!-- PROTOCOLLO TRINITY -->
-        <div class="panel trinity">
-            <h2>🔺 PROTOCOLLO TRINITY</h2>
-            <div class="item-row">
-                <span><div class="status-indicator" style="background:var(--neon-magenta); box-shadow: 0 0 8px var(--neon-magenta)"></div> 🕴️ Lo Strozzino</span>
-                <span class="data-value">FUNDING ARB [SYNCED]</span>
-            </div>
-            <div class="item-row">
-                <span><div class="status-indicator" style="background:var(--neon-magenta); box-shadow: 0 0 8px var(--neon-magenta); animation-delay: 0.3s"></div> 🧮 Il Contabile</span>
-                <span class="data-value">DCA MATRIX [COMPUTING]</span>
-            </div>
-            <div class="item-row">
-                <span><div class="status-indicator" style="background:var(--neon-magenta); box-shadow: 0 0 8px var(--neon-magenta); animation-delay: 0.6s"></div> 🛡️ L'Angelo Custode</span>
-                <span class="data-value">ARBITRUM MEV [GUARDING]</span>
-            </div>
+        <div class="panel">
+            <h3>🔺 PROTOCOLLO TRINITY</h3>
+            <ul>
+                <li>
+                    <strong>🕴️ Lo Strozzino</strong> (Funding Arb)<br>
+                    Status: <span class="status-online">BACKGROUND ACTIVE</span>
+                </li>
+                <li>
+                    <strong>💼 Il Contabile</strong> (Smart DCA)<br>
+                    Status: <span class="status-online">ACCUMULATING</span>
+                </li>
+                <li>
+                    <strong>👼 L'Angelo Custode</strong> (MEV Arbitrum)<br>
+                    Status: <span class="status-online">MONITORING MEMPOOL</span>
+                </li>
+            </ul>
         </div>
 
         <!-- METRICHE DI MERCATO -->
-        <div class="panel" style="grid-column: 1 / -1; border-color: var(--neon-cyan);">
-            <h2 style="color:var(--neon-cyan); text-shadow: 0 0 5px var(--neon-cyan)">📊 METRICHE DI MERCATO GLOBALI</h2>
-            <div style="display: flex; justify-content: space-around; text-align: center; margin-top: 20px;">
-                <div>
-                    <h4 style="color:var(--neon-cyan)">👁️ THE ORACLE (SENTIMENT)</h4>
-                    <div class="data-value glitch" style="font-size: 2em; color:var(--neon-green)">EXTREME GREED</div>
-                    <div>BINANCE AGGREGATED</div>
+        <div class="panel">
+            <h3>📊 METRICHE DI MERCATO</h3>
+            <div class="metric-grid">
+                <div class="metric-box">
+                    <div>👁️ The Oracle (Sentiment)</div>
+                    <div class="metric-value" style="color:var(--neon-green)">BULLISH 78%</div>
                 </div>
-                <div>
-                    <h4 style="color:var(--neon-cyan)">🐋 WHALE TRACKER</h4>
-                    <div class="data-value" style="font-size: 2em; color:var(--neon-magenta)">+42,069 BTC</div>
-                    <div>LAST 24H INFLOW</div>
+                <div class="metric-box">
+                    <div>🐋 Whale Tracker</div>
+                    <div class="metric-value" style="color:var(--neon-pink)">DETECTED 🚨</div>
                 </div>
-                <div>
-                    <h4 style="color:var(--neon-cyan)">⚡ SYSTEM LOAD</h4>
-                    <div class="data-value" style="font-size: 2em; color:var(--neon-green)">12.4%</div>
-                    <div>QUANT CORE CPU</div>
+                <div class="metric-box">
+                    <div>⚡ Global Volume (24h)</div>
+                    <div class="metric-value">$42.5B</div>
+                </div>
+                <div class="metric-box">
+                    <div>🛡️ Network Risk</div>
+                    <div class="metric-value" style="color:var(--neon-blue)">LOW</div>
                 </div>
             </div>
         </div>
     </div>
-    
-    <script>
-        setInterval(() => {
-            const load = (Math.random() * 15 + 5).toFixed(1);
-            document.querySelectorAll('.data-value')[8].innerText = load + '%';
-        }, 2000);
-    </script>
 </body>
 </html>
 """
 
 @app.route('/')
-def index():
+def dashboard():
     return render_template_string(HTML_TEMPLATE)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=False)
