@@ -520,3 +520,4 @@ def dashboard():
 if __name__ == '__main__':
     # Porta esplicita per evitare conflitti e bind a tutte le interfacce
     app.run(host='0.0.0.0', port=5000)
+ 
