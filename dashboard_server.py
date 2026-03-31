@@ -394,3 +394,4 @@ if __name__ == '__main__':
 # ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)
 
 # ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2 Verified
+<!-- ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) -->
