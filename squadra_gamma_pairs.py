@@ -57,11 +57,14 @@ def run_gamma_pairs():
                 else: 
                     short_sym = p['symbol']
                     if p.get('entryPrice'): p_short = float(p['entryPrice'])
-            if p_short > 0:
-                entry_spread = p_long / p_short
+            if long_sym is None or short_sym is None:
+                in_position = False
             else:
-                entry_spread = 1.0
-            logger.info(f"🔄 Recuperato Pairs Trading: LONG {long_sym} / SHORT {short_sym}")
+                if p_short > 0:
+                    entry_spread = p_long / p_short
+                else:
+                    entry_spread = 1.0
+                logger.info(f"🔄 Recuperato Pairs Trading: LONG {long_sym} / SHORT {short_sym}")
     except: pass
 
     import gc
@@ -141,7 +144,8 @@ def run_gamma_pairs():
             time.sleep(15)
 
         except Exception as e:
-            logger.error(f"Errore ciclo Gamma: {e}")
+            import traceback
+            logger.error(f"Errore ciclo Gamma: {traceback.format_exc()}")
             time.sleep(30)
 
 if __name__ == '__main__':

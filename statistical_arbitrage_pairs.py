@@ -32,7 +32,7 @@ def run_pairs_trading():
     # Settaggi Strategici
     SYM_A = 'BTC/USDT:USDT'  # Leader
     SYM_B = 'ETH/USDT:USDT'  # Follower
-    MARGIN_PER_LEG_USDT = 15.0 # Rischio 15$ per lato (Totale 30$)
+    MARGIN_PER_LEG_USDT = 2.0 # Rischio 15$ per lato (Totale 30$)
     LEVERAGE = 10
     
     # Parametri Statistici (Z-Score)
