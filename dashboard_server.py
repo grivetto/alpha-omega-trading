@@ -2,7 +2,6 @@ import os
 from flask import Flask, render_template_string
 import logging
 
-# Disabilita log di Flask per "eseguire silenziosamente in background"
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
 
@@ -45,7 +44,6 @@ HTML_TEMPLATE = """
             overflow-x: hidden;
         }
 
-        /* Scanline Overlay */
         body::after {
             content: " ";
             display: block;
@@ -423,5 +421,4 @@ def dashboard():
     return render_template_string(HTML_TEMPLATE)
 
 if __name__ == '__main__':
-    # Esegue sulla porta 5000 in tutte le interfacce
     app.run(host='0.0.0.0', port=5000, debug=False)
