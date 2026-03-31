@@ -378,7 +378,7 @@ def check_bot(script_name):
         try:
             if proc.info['cmdline'] and any(script_name in cmd for cmd in proc.info['cmdline']):
                 return True
-        except: pass
+        except Exception as e: print("ERROR READING CACHE:", e)
     return False
 
 def count_all_bots():
@@ -390,7 +390,7 @@ def count_all_bots():
                     if '.py' in cmd and '/denaro/' in cmd:
                         count += 1
                         break
-        except: pass
+        except Exception as e: print("ERROR READING CACHE:", e)
     return count
 
 @app.route('/')
@@ -433,7 +433,7 @@ def index():
             mev = s.get('mev', False)
             gariban = s.get('gariban', False)
             active_bots_count = s.get('active_bots_count', 0)
-    except: pass
+    except Exception as e: print("ERROR READING CACHE:", e)
 
     
     monitoring_bots = []
@@ -444,7 +444,7 @@ def index():
         import json
         with open('/home/sergio/.openclaw/workspace/denaro/bot_monitoring.json', 'r') as f:
             monitoring_bots = json.load(f)
-    except: pass
+    except Exception as e: print("ERROR READING CACHE:", e)
 
     return render_template_string(HTML_TEMPLATE,
                                   cpu_percent=cpu_percent,
