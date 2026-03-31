@@ -218,10 +218,10 @@ HTML_TEMPLATE = '''
         <div class="card">
             <h3>⚔️ SQUADRE D'ASSALTO (HFT)</h3>
             <ul>
-                <li><span>⚡ <strong>SQUADRA_ALPHA</strong><br><small>Scalper su Binance</small></span> <span class="status">ATTIVA</span></li>
-                <li><span>🌊 <strong>SQUADRA_DELTA</strong><br><small>Order Flow</small></span> <span class="status">IN AGGUATO</span></li>
-                <li><span>⚖️ <strong>SQUADRA_GAMMA</strong><br><small>Pairs Trading su Bitget</small></span> <span class="status">ALLINEATA</span></li>
-                <li><span>💣 <strong>Il Kamikaze</strong><br><small>Futures Bitget (High Risk)</small></span> <span class="status warn">INNESCATO</span></li>
+                <li><span>⚡ <strong>SQUADRA_ALPHA</strong><br><small>Scalper su Binance</small></span> <span class="status {{ alpha_class }}">{{ alpha_status }}</span></li>
+                <li><span>🌊 <strong>SQUADRA_DELTA</strong><br><small>Order Flow</small></span> <span class="status {{ delta_class }}">{{ delta_status }}</span></li>
+                <li><span>⚖️ <strong>SQUADRA_GAMMA</strong><br><small>Pairs Trading</small></span> <span class="status {{ gamma_class }}">{{ gamma_status }}</span></li>
+                <li><span>💣 <strong>Il Kamikaze</strong><br><small>Futures Bitget</small></span> <span class="status {{ kamikaze_class }}">{{ kamikaze_status }}</span></li>
             </ul>
         </div>
 
@@ -229,10 +229,11 @@ HTML_TEMPLATE = '''
         <div class="card" style="border-color: #f0f; box-shadow: 0 0 15px #f0f, inset 0 0 10px #f0f;">
             <h3 style="color: #f0f; text-shadow: 0 0 10px #f0f; border-color: #f0f;">🛡️ PROTOCOLLO TRINITY</h3>
             <ul>
-                <li><span>💸 <strong>Lo Strozzino</strong><br><small>Funding Arb</small></span> <span class="status online">ONLINE</span></li>
-                <li><span>📊 <strong>Il Contabile</strong><br><small>DCA Engine</small></span> <span class="status online">ONLINE</span></li>
-                <li><span>👼 <strong>L'Angelo Custode</strong><br><small>MEV Arbitrum</small></span> <span class="status online">ONLINE</span></li>
-                <li><span>🤲 <strong>L'Elemosiniere</strong><br><small>Gariban Grid / Scavenger</small></span> <span class="status online">RACCOGLIE</span></li>
+                <li><span>💸 <strong>Lo Strozzino</strong><br><small>Funding Arb</small></span> <span class="status {{ strozzino_class }}">{{ strozzino_status }}</span></li>
+                <li><span>📊 <strong>Il Contabile</strong><br><small>DCA Engine</small></span> <span class="status {{ dca_class }}">{{ dca_status }}</span></li>
+                <li><span>👼 <strong>L'Angelo Custode</strong><br><small>MEV Arbitrum</small></span> <span class="status {{ mev_class }}">{{ mev_status }}</span></li>
+                <li><span>🤲 <strong>L'Elemosiniere</strong><br><small>Gariban Grid</small></span> <span class="status {{ gariban_class }}">{{ gariban_status }}</span></li>
+                <li><span>🤖 <strong>Altri Bot Attivi</strong><br><small>Micro-servizi Nuvola</small></span> <span style="color:#0ff; font-weight:bold;">{{ active_bots_count }} ONLINE</span></li>
             </ul>
         </div>
 
@@ -341,6 +342,7 @@ def get_uptime_string():
     minutes, seconds = divmod(remainder, 60)
     return f"{int(hours)}h {int(minutes)}m {int(seconds)}s"
 
+
 def get_total_nav():
     try:
         with open("/home/sergio/.openclaw/workspace/denaro/total_usdt_cache.json", "r") as f:
@@ -349,9 +351,30 @@ def get_total_nav():
     except:
         return 18420.69
 
+def check_bot(script_name):
+    for proc in psutil.process_iter(['cmdline']):
+        try:
+            if proc.info['cmdline'] and any(script_name in cmd for cmd in proc.info['cmdline']):
+                return True
+        except: pass
+    return False
+
+def count_all_bots():
+    count = 0
+    for proc in psutil.process_iter(['cmdline']):
+        try:
+            if proc.info['cmdline'] and 'python' in proc.info['cmdline'][0]:
+                for cmd in proc.info['cmdline']:
+                    if '.py' in cmd and '/denaro/' in cmd:
+                        count += 1
+                        break
+        except: pass
+    return count
+
 @app.route('/')
 def index():
     # Fetch real system stats
+
     cpu_percent = psutil.cpu_percent(interval=0.1)
     ram = psutil.virtual_memory()
     ram_percent = ram.percent
@@ -364,6 +387,17 @@ def index():
     uptime_str = get_uptime_string()
     total_nav = get_total_nav()
 
+    
+    alpha = check_bot('alpha_strike_scalper.py')
+    delta = check_bot('squadra_delta_orderflow.py')
+    gamma = check_bot('squadra_gamma_pairs.py')
+    kamikaze = check_bot('kamikaze_bitget_futures.py')
+    
+    strozzino = check_bot('funding_arbitrage_estremo.py')
+    dca = check_bot('dca_accumulator.py')
+    mev = check_bot('mev_sandwich_bot.py')
+    gariban = check_bot('gariban_beggar.py')
+
     return render_template_string(HTML_TEMPLATE,
                                   cpu_percent=cpu_percent,
                                   ram_percent=ram_percent,
@@ -371,7 +405,17 @@ def index():
                                   disk_percent=disk_percent,
                                   disk_free=disk_free,
                                   uptime_str=uptime_str,
-                                  total_nav=total_nav)
+                                  total_nav=total_nav,
+                                  active_bots_count=count_all_bots(),
+                                  alpha_status="ATTIVA" if alpha else "OFFLINE", alpha_class="online" if alpha else "",
+                                  delta_status="IN AGGUATO" if delta else "OFFLINE", delta_class="online" if delta else "",
+                                  gamma_status="ALLINEATA" if gamma else "OFFLINE", gamma_class="online" if gamma else "",
+                                  kamikaze_status="INNESCATO" if kamikaze else "OFFLINE", kamikaze_class="warn" if kamikaze else "",
+                                  strozzino_status="ONLINE" if strozzino else "OFFLINE", strozzino_class="online" if strozzino else "",
+                                  dca_status="ONLINE" if dca else "OFFLINE", dca_class="online" if dca else "",
+                                  mev_status="ONLINE" if mev else "OFFLINE", mev_class="online" if mev else "",
+                                  gariban_status="RACCOGLIE" if gariban else "OFFLINE", gariban_class="online" if gariban else "")
+
 
 if __name__ == '__main__':
     app.run(host='127.0.0.1', port=8081)
