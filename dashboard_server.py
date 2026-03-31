@@ -1,5 +1,5 @@
-import os
 from flask import Flask, render_template_string
+import random
 
 app = Flask(__name__)
 
@@ -9,222 +9,206 @@ HTML_TEMPLATE = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nuvola Orbital Command</title>
+    <title>ORBITAL COMMAND - NUVOLA</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
-        
         body {
-            background-color: #020202;
+            background-color: #050505;
             color: #0f0;
-            font-family: 'Share Tech Mono', monospace;
+            font-family: 'Courier New', Courier, monospace;
             margin: 0;
             padding: 20px;
-            background-image: 
-                linear-gradient(rgba(0, 255, 0, 0.05) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 255, 0, 0.05) 1px, transparent 1px);
-            background-size: 30px 30px;
             overflow-x: hidden;
         }
-        
         h1, h2, h3 {
+            text-shadow: 0 0 5px #0f0, 0 0 10px #0f0;
             text-transform: uppercase;
-            margin: 0 0 10px 0;
             letter-spacing: 2px;
         }
-        
-        .glow-text { color: #0f0; text-shadow: 0 0 5px #0f0, 0 0 10px #0f0; }
-        .glow-text-red { color: #f00; text-shadow: 0 0 5px #f00, 0 0 10px #f00; }
-        .glow-text-cyan { color: #0ff; text-shadow: 0 0 5px #0ff, 0 0 10px #0ff; }
-        .glow-text-purple { color: #b0f; text-shadow: 0 0 5px #b0f, 0 0 10px #b0f; }
-        
+        h1 { 
+            color: #0ff; 
+            text-shadow: 0 0 10px #0ff, 0 0 20px #0ff, 0 0 30px #0ff; 
+            text-align: center; 
+            border-bottom: 2px solid #0ff; 
+            padding-bottom: 15px; 
+            margin-bottom: 30px;
+        }
         .container {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 20px;
+            gap: 25px;
             max-width: 1400px;
             margin: 0 auto;
-            position: relative;
-            z-index: 2;
         }
-        
-        .header {
-            grid-column: 1 / -1;
-            border: 2px solid #0f0;
-            padding: 20px;
-            text-align: center;
-            box-shadow: 0 0 20px rgba(0, 255, 0, 0.2) inset;
-            background: rgba(0, 15, 0, 0.85);
-            position: relative;
-        }
-        
         .panel {
             border: 1px solid #0f0;
             padding: 20px;
-            background: rgba(0, 15, 0, 0.65);
-            box-shadow: 0 0 15px rgba(0, 255, 0, 0.1) inset;
+            background: rgba(0, 255, 0, 0.03);
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.2) inset, 0 0 10px rgba(0, 255, 0, 0.1);
+            border-radius: 4px;
             position: relative;
-            overflow: hidden;
         }
-        
         .panel::before {
             content: '';
             position: absolute;
-            top: 0; left: 0; right: 0; height: 2px;
-            background: linear-gradient(90deg, transparent, rgba(0, 255, 0, 0.8), transparent);
-            animation: scan 4s linear infinite;
-            opacity: 0.5;
-        }
-        
-        @keyframes scan {
-            0% { transform: translateY(-100%); }
-            100% { transform: translateY(800px); }
-        }
-        
-        .status-ok { color: #0f0; font-weight: bold; }
-        .status-warn { color: #ff0; font-weight: bold; }
-        .status-eng { color: #0ff; font-weight: bold; animation: pulse 2s infinite; }
-        
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-        }
-        
-        th, td {
-            border: 1px solid rgba(0, 255, 0, 0.2);
-            padding: 10px;
-            text-align: left;
-        }
-        
-        th { background: rgba(0, 255, 0, 0.1); color: #0f0; }
-        
-        .scanline {
-            width: 100vw;
-            height: 100vh;
-            z-index: 9999;
-            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            box-shadow: 0 0 5px #0f0;
+            opacity: 0.3;
+            z-index: -1;
             pointer-events: none;
-            background: linear-gradient(
-                to bottom,
-                rgba(255, 255, 255, 0),
-                rgba(255, 255, 255, 0) 50%,
-                rgba(0, 0, 0, 0.15) 50%,
-                rgba(0, 0, 0, 0.15)
-            );
-            background-size: 100% 4px;
-            top: 0; left: 0;
         }
+        .status-online { color: #0f0; animation: blink 1.5s infinite; text-shadow: 0 0 5px #0f0; font-weight: bold; }
+        .status-standby { color: #ff0; text-shadow: 0 0 5px #ff0; }
+        .status-active { color: #f0f; animation: pulse 1s infinite; text-shadow: 0 0 8px #f0f; font-weight: bold; }
         
-        .blink { animation: blinker 1s linear infinite; }
-        @keyframes blinker { 50% { opacity: 0; } }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
         
-        .metric-box {
-            background: rgba(0, 0, 0, 0.5);
-            border: 1px solid #333;
-            padding: 15px;
-            flex: 1;
-            margin: 0 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5) inset;
+        ul { list-style-type: none; padding: 0; margin: 0; }
+        li { margin: 15px 0; border-bottom: 1px dashed rgba(0, 255, 0, 0.3); padding-bottom: 10px;}
+        li:last-child { border-bottom: none; }
+        
+        .metric { font-size: 1.3em; font-weight: bold; color: #0ff; text-shadow: 0 0 8px #0ff; }
+        .metric-red { color: #f00; text-shadow: 0 0 8px #f00; }
+        .metric-green { color: #0f0; text-shadow: 0 0 8px #0f0; }
+        
+        .trinity-panel { 
+            border-color: #f0f; 
+            background: rgba(255, 0, 255, 0.03); 
+            box-shadow: 0 0 15px rgba(255, 0, 255, 0.2) inset; 
+        }
+        .trinity-panel h2 { color: #f0f; text-shadow: 0 0 5px #f0f, 0 0 15px #f0f; border-bottom: 1px solid rgba(255,0,255,0.3); padding-bottom: 5px; }
+        
+        .assault-panel h2 { color: #ff0; text-shadow: 0 0 5px #ff0, 0 0 15px #ff0; border-bottom: 1px solid rgba(255,255,0,0.3); padding-bottom: 5px; }
+        .assault-panel { border-color: #ff0; box-shadow: 0 0 15px rgba(255, 255, 0, 0.2) inset; }
+
+        .terminal-text { font-size: 0.85em; color: #88ff88; display: block; margin-top: 5px; opacity: 0.8; }
+        
+        .glow-button {
+            background: transparent;
+            border: 1px solid #0ff;
+            color: #0ff;
+            padding: 5px 10px;
+            cursor: pointer;
+            text-transform: uppercase;
+            font-family: monospace;
+            box-shadow: 0 0 5px #0ff inset;
+            transition: all 0.2s;
+        }
+        .glow-button:hover { background: rgba(0, 255, 255, 0.2); box-shadow: 0 0 10px #0ff; }
+        
+        #matrix-bg {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; opacity: 0.05; pointer-events: none;
         }
     </style>
 </head>
 <body>
-    <div class="scanline"></div>
+    <canvas id="matrix-bg"></canvas>
+    
+    <h1>🛰️ ORBITAL COMMAND - NUVOLA DASHBOARD 🛰️</h1>
+    
     <div class="container">
-        <div class="header">
-            <h1 class="glow-text">🛰️ NUVOLA ORBITAL COMMAND 🛰️</h1>
-            <p>UPLINK ESTABLISHED | <span class="blink glow-text-cyan">SECURE CONNECTION</span> | CORE SYSTEM: ONLINE</p>
-            <div style="margin-top: 15px; padding: 10px; border: 1px solid #0f0; background: rgba(0, 255, 0, 0.1); display: inline-block;">
-                <span class="glow-text" style="font-weight: bold; font-size: 1.2em;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</span>
-            </div>
-        </div>
         
+        <!-- SQUADRE D'ASSALTO (HFT) -->
+        <div class="panel assault-panel">
+            <h2>⚔️ SQUADRE D'ASSALTO (HFT)</h2>
+            <ul>
+                <li>
+                    <strong>🐺 SQUADRA ALPHA</strong> (Scalper - Binance) 
+                    <span class="status-online">[ENGAGED]</span>
+                    <span class="terminal-text">> Latency: <span id="lat-alpha">12</span>ms | Executions: 1,442/hr | PnL: <span class="metric-green">+$412.50</span></span>
+                </li>
+                <li>
+                    <strong>🦅 SQUADRA DELTA</strong> (Order Flow - Bybit) 
+                    <span class="status-active">[HUNTING]</span>
+                    <span class="terminal-text">> Imbalance detected: +4.2% bid side | Absorbing liquidity...</span>
+                </li>
+                <li>
+                    <strong>🐍 SQUADRA GAMMA</strong> (Pairs Trading - Bitget) 
+                    <span class="status-online">[TRACKING]</span>
+                    <span class="terminal-text">> BTC/ETH Spread: Z-Score <span id="zscore">+2.14</span> | Exposure: Delta Neutral</span>
+                </li>
+            </ul>
+        </div>
+
+        <!-- PROTOCOLLO TRINITY -->
+        <div class="panel trinity-panel">
+            <h2>🔺 PROTOCOLLO TRINITY</h2>
+            <div style="text-align: center; margin-bottom: 15px; font-weight: bold; color: #0f0; border: 1px solid #0f0; padding: 5px; box-shadow: 0 0 10px #0f0 inset;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
+            <ul>
+                <li>
+                    <strong>🕴️ Lo Strozzino</strong> (Funding Arb) 
+                    <span class="status-online">[YIELDING]</span>
+                    <span class="terminal-text">> Capturing +0.024% on SOL-PERP | Capacity: $50,000 | APY: 34.2%</span>
+                </li>
+                <li>
+                    <strong>🧮 Il Contabile</strong> (DCA Core) 
+                    <span class="status-standby">[STANDBY]</span>
+                    <span class="terminal-text">> Next accumulation: 4h 12m | Target: BTC @ Spot | Reserves: $12,400</span>
+                </li>
+                <li>
+                    <strong>👼 L'Angelo Custode</strong> (MEV - Arbitrum) 
+                    <span class="status-active">[SCANNING]</span>
+                    <span class="terminal-text">> Monitoring mempool... | Flashbots RPC Active | Last payload: +0.015 ETH</span>
+                </li>
+            </ul>
+        </div>
+
+        <!-- THE ORACLE -->
         <div class="panel">
-            <h2 class="glow-text-red">⚔️ SQUADRE D'ASSALTO (HFT)</h2>
-            <hr style="border-color: #f00; opacity: 0.5;">
-            <table>
-                <tr>
-                    <th>UNIT</th>
-                    <th>ROLE / DEPLOYMENT</th>
-                    <th>STATUS</th>
-                </tr>
-                <tr>
-                    <td><span class="glow-text-red">SQUADRA_ALPHA</span> 🐺</td>
-                    <td>Scalper / Binance</td>
-                    <td class="status-eng">ENGAGED [ACTIVE]</td>
-                </tr>
-                <tr>
-                    <td><span class="glow-text-red">SQUADRA_DELTA</span> 🦅</td>
-                    <td>Order Flow</td>
-                    <td class="status-ok">STANDBY [READY]</td>
-                </tr>
-                <tr>
-                    <td><span class="glow-text-red">SQUADRA_GAMMA</span> 🐍</td>
-                    <td>Pairs Trading / Bitget</td>
-                    <td class="status-eng">HUNTING [ACTIVE]</td>
-                </tr>
-            </table>
+            <h2>🔮 THE ORACLE (METRICS)</h2>
+            <ul>
+                <li><strong>Binance Sentiment:</strong> <span class="metric">EXTREME GREED (82)</span></li>
+                <li><strong>Global CVD (1H):</strong> <span class="metric-green">+$45.2M</span></li>
+                <li><strong>Liquidation Heatmap:</strong> Heavy cluster @ <span class="metric-red">$73,400</span></li>
+                <li><strong>Volatility Index:</strong> <span class="metric" id="vol">42.1</span> (Rising)</li>
+            </ul>
         </div>
-        
+
+        <!-- WHALE TRACKER -->
         <div class="panel">
-            <h2 class="glow-text-purple">👁️ PROTOCOLLO TRINITY</h2>
-            <hr style="border-color: #b0f; opacity: 0.5;">
-            <table>
-                <tr>
-                    <th>MODULE</th>
-                    <th>FUNCTION</th>
-                    <th>STATUS</th>
-                </tr>
-                <tr>
-                    <td><span class="glow-text-purple">LO STROZZINO</span> 🦇</td>
-                    <td>Funding Rate Arb</td>
-                    <td class="status-ok">ONLINE (BKG)</td>
-                </tr>
-                <tr>
-                    <td><span class="glow-text-purple">IL CONTABILE</span> 🧮</td>
-                    <td>DCA Protocol</td>
-                    <td class="status-ok">ONLINE (BKG)</td>
-                </tr>
-                <tr>
-                    <td><span class="glow-text-purple">L'ANGELO CUSTODE</span> 🛡️</td>
-                    <td>MEV Protection / Arbitrum</td>
-                    <td class="status-ok">ONLINE (BKG)</td>
-                </tr>
-            </table>
+            <h2>🐋 WHALE TRACKER</h2>
+            <ul id="whale-logs">
+                <li>🚨 <strong>1,500 BTC</strong> moved to Coinbase Prime (OTC) <span class="terminal-text">Tx: 0x4a9...f1a | 2 mins ago</span></li>
+                <li>🚨 <strong>50,000 ETH</strong> withdrawn from Binance <span class="terminal-text">Tx: 0x8b2...c41 | 14 mins ago</span></li>
+                <li>⚠️ <strong>Unusual Options:</strong> Deribit Calls $80k Exp. Friday <span class="terminal-text">Volume spike: 4,000 contracts</span></li>
+            </ul>
         </div>
         
-        <div class="panel" style="grid-column: 1 / -1;">
-            <h2 class="glow-text-cyan">📊 METRICHE DI MERCATO STRATEGICHE</h2>
-            <hr style="border-color: #0ff; opacity: 0.5;">
-            <div style="display: flex; justify-content: space-between; text-align: center; margin-top: 15px;">
-                <div class="metric-box" style="border-color: #0ff;">
-                    <h3 style="color: #aaa; font-size: 1em;">THE ORACLE (BINANCE) 🔮</h3>
-                    <div style="font-size: 2.2em; margin: 10px 0;" class="glow-text-cyan">BULLISH 78%</div>
-                    <p style="color: #777; margin:0;">Long/Short Ratio: 1.45</p>
-                </div>
-                <div class="metric-box" style="border-color: #f00;">
-                    <h3 style="color: #aaa; font-size: 1em;">WHALE TRACKER 🐋</h3>
-                    <div style="font-size: 2.2em; margin: 10px 0;" class="glow-text-red blink">ALERT</div>
-                    <p style="color: #777; margin:0;">+4,500 BTC moved to Exchange</p>
-                </div>
-                <div class="metric-box" style="border-color: #b0f;">
-                    <h3 style="color: #aaa; font-size: 1em;">VOLATILITY INDEX ⚡</h3>
-                    <div style="font-size: 2.2em; margin: 10px 0;" class="glow-text-purple">ELEVATED</div>
-                    <p style="color: #777; margin:0;">VIX Crypto: 65.2</p>
-                </div>
-            </div>
-        </div>
-        
-        <div class="header" style="background: rgba(0, 10, 0, 0.95); font-size: 0.85em; padding: 10px; border-width: 1px; color: #555;">
-            SYSTEM UPTIME: <span class="status-ok">99.999%</span> | CPU LOAD: <span class="status-warn">74%</span> | MEMORY: <span class="status-ok">32GB / 64GB</span> | NETWORK: <span class="glow-text-cyan">SECURE</span>
-        </div>
     </div>
+
+    <script>
+        // Matrix effect background
+        const canvas = document.getElementById('matrix-bg');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        const letters = '01ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        const fontSize = 16;
+        const columns = canvas.width / fontSize;
+        const drops = Array(Math.floor(columns)).fill(1);
+        
+        function drawMatrix() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#0F0';
+            ctx.font = fontSize + 'px monospace';
+            for (let i = 0; i < drops.length; i++) {
+                const text = letters[Math.floor(Math.random() * letters.length)];
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+                drops[i]++;
+            }
+        }
+        setInterval(drawMatrix, 50);
+
+        // Simulated real-time updates
+        setInterval(() => {
+            document.getElementById('lat-alpha').innerText = Math.floor(Math.random() * 8) + 10;
+            const zscore = (Math.random() * 0.5 + 2.0).toFixed(2);
+            document.getElementById('zscore').innerText = "+" + zscore;
+            document.getElementById('vol').innerText = (Math.random() * 2 + 41).toFixed(1);
+        }, 1500);
+    </script>
 </body>
 </html>
 """
@@ -234,9 +218,5 @@ def index():
     return render_template_string(HTML_TEMPLATE)
 
 if __name__ == '__main__':
-    # Force Flask to run silently in production mode via Waitress if available, else plain Flask
-    try:
-        from waitress import serve
-        serve(app, host='0.0.0.0', port=5000)
-    except ImportError:
-        app.run(host='0.0.0.0', port=5000)
+    # Start on port 5000 (typical flask) or whatever was used.
+    app.run(host='0.0.0.0', port=5000, debug=False)
