@@ -1,5 +1,5 @@
 from flask import Flask, render_template_string
-import os
+import threading
 
 app = Flask(__name__)
 
@@ -8,214 +8,172 @@ HTML_TEMPLATE = """
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ORBITAL COMMAND // NUVOLA</title>
+    <title>ORBITAL COMMAND | Nuvola</title>
     <style>
         :root {
-            --neon-green: #0f0;
+            --neon-green: #39ff14;
+            --neon-red: #ff073a;
             --neon-blue: #0ff;
-            --neon-pink: #f0f;
-            --dark-bg: #050505;
-            --panel-bg: rgba(0, 255, 0, 0.03);
+            --bg-color: #050505;
+            --panel-bg: #111;
+            --text-main: #e0e0e0;
         }
         body {
-            background-color: var(--dark-bg);
-            color: var(--neon-green);
+            background-color: var(--bg-color);
+            color: var(--text-main);
             font-family: 'Courier New', Courier, monospace;
             margin: 0;
-            padding: 30px;
-            text-transform: uppercase;
+            padding: 20px;
             overflow-x: hidden;
         }
-        h1 {
-            color: var(--neon-blue);
-            text-shadow: 0 0 10px var(--neon-blue), 0 0 20px var(--neon-blue);
-            border-bottom: 2px solid var(--neon-blue);
-            padding-bottom: 10px;
+        h1, h2, h3 {
+            text-transform: uppercase;
             letter-spacing: 2px;
         }
-        h2 {
+        .header {
+            text-align: center;
             color: var(--neon-blue);
-            text-shadow: 0 0 8px var(--neon-blue);
-            margin-top: 0;
-            font-size: 1.2em;
-            border-bottom: 1px dashed #333;
+            text-shadow: 0 0 10px var(--neon-blue);
+            border-bottom: 2px solid var(--neon-blue);
             padding-bottom: 10px;
+            margin-bottom: 30px;
         }
-        h3 {
-            color: var(--neon-pink);
-            text-shadow: 0 0 5px var(--neon-pink);
-        }
-        .container {
+        .grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-            margin-top: 30px;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
         }
         .panel {
-            border: 1px solid var(--neon-green);
-            padding: 20px;
             background: var(--panel-bg);
-            box-shadow: inset 0 0 15px rgba(0,255,0,0.1), 0 0 10px rgba(0,255,0,0.2);
+            border: 1px solid #333;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: inset 0 0 10px #000;
             position: relative;
-            overflow: hidden;
-            border-radius: 4px;
         }
         .panel::before {
             content: '';
             position: absolute;
-            top: -100%;
-            left: -100%;
-            width: 300%;
-            height: 300%;
-            background: linear-gradient(0deg, transparent, rgba(0,255,0,0.05), transparent);
-            animation: scanline 6s linear infinite;
+            top: 0; left: 0; right: 0; bottom: 0;
+            box-shadow: 0 0 10px rgba(0,255,255,0.1);
             pointer-events: none;
         }
-        @keyframes scanline {
-            0% { transform: translateY(-50%); }
-            100% { transform: translateY(50%); }
+        .panel h2 {
+            color: var(--neon-green);
+            text-shadow: 0 0 5px var(--neon-green);
+            border-bottom: 1px dashed var(--neon-green);
+            padding-bottom: 5px;
+            font-size: 1.2em;
+            margin-top: 0;
         }
-        .status-online { color: var(--neon-green); text-shadow: 0 0 5px var(--neon-green); font-weight: bold; }
-        .status-warning { color: #ff0; text-shadow: 0 0 5px #ff0; font-weight: bold; }
-        .status-offline { color: #f00; text-shadow: 0 0 5px #f00; font-weight: bold; }
-        .status-hunting { color: var(--neon-pink); text-shadow: 0 0 8px var(--neon-pink); font-weight: bold; }
+        .status-online { color: var(--neon-green); font-weight: bold; text-shadow: 0 0 5px var(--neon-green); animation: blink 2s infinite; }
+        .status-active { color: var(--neon-blue); font-weight: bold; text-shadow: 0 0 5px var(--neon-blue); }
+        .status-warning { color: yellow; font-weight: bold; }
         
-        ul { list-style-type: none; padding: 0; margin: 0; }
-        li { margin-bottom: 15px; background: rgba(0,0,0,0.5); padding: 10px; border-left: 3px solid var(--neon-green); }
-        li strong { font-size: 1.1em; }
-        small { display: block; margin-top: 5px; color: #888; font-size: 0.9em; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
         
-        .blink { animation: blinker 1.5s linear infinite; }
-        .fast-blink { animation: blinker 0.5s linear infinite; }
-        @keyframes blinker { 50% { opacity: 0; } }
+        ul { list-style-type: none; padding: 0; }
+        li { margin-bottom: 10px; padding: 10px; background: rgba(255,255,255,0.05); border-left: 3px solid var(--neon-blue); font-size: 0.95em; }
         
-        .grid-full { grid-column: span 2; }
-        .metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .metrics-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9em; }
+        .metrics-table th, .metrics-table td { border: 1px solid #444; padding: 8px; text-align: center; }
+        .metrics-table th { color: var(--neon-blue); }
+        .metrics-table td.up { color: var(--neon-green); }
+        .metrics-table td.down { color: var(--neon-red); }
         
-        .sys-info {
-            display: flex;
-            justify-content: space-between;
-            background: #111;
-            padding: 10px;
-            border: 1px solid #333;
-            margin-bottom: 20px;
-            font-size: 0.9em;
-        }
+        .glow { box-shadow: 0 0 8px rgba(0, 255, 255, 0.4); }
     </style>
 </head>
 <body>
-    <h1>🛰️ ORBITAL COMMAND <span class="blink">_</span></h1>
-    
-    <div class="sys-info">
-        <span>SYSTEM: <span class="status-online">ONLINE</span></span>
-        <span>UPLINK: <span class="status-online">SECURE</span></span>
-        <span>LOCATION: NUVOLA</span>
-        <span>NODE: ALPHA-7</span>
-        <span id="clock">00:00:00</span>
+    <div class="header">
+        <h1>🛰️ ORBITAL COMMAND 🛰️</h1>
+        <p>SISTEMA OPERATIVO QUANTITATIVO NUVOLA - TERMINALE CENTRALE</p>
+        <div style="margin-top: 15px; padding: 10px; border: 1px solid var(--neon-green); display: inline-block; background: rgba(57, 255, 20, 0.1); border-radius: 5px;">
+            <span class="status-online" style="font-size: 1.2em;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</span>
+        </div>
     </div>
-    
-    <div style="text-align: center; border: 1px dashed var(--neon-blue); padding: 10px; margin-bottom: 20px; background: rgba(0, 255, 255, 0.05);">
-        <span style="font-size: 1.2em; font-weight: bold; color: var(--neon-blue); text-shadow: 0 0 5px var(--neon-blue);">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</span>
-    </div>
-    
-    <div class="container">
-        <!-- SQUADRE D'ASSALTO -->
-        <div class="panel">
+
+    <div class="grid">
+        <!-- SQUADRE D'ASSALTO (HFT) -->
+        <div class="panel glow">
             <h2>⚔️ SQUADRE D'ASSALTO (HFT)</h2>
             <ul>
                 <li>
-                    <strong>SQUADRA_ALPHA</strong> [Binance Scalper] 
-                    <span style="float:right;" class="status-online">ACTIVE 🟢</span>
-                    <small id="alpha-metrics">Pnl/Day: +1.24% | Latency: 12ms</small>
+                    <strong>SQUADRA_ALPHA</strong> (Scalper - Binance)<br>
+                    Stato: <span class="status-online">ENGAGED</span> 🟢<br>
+                    Target: BTC/USDT | PnL Oggi: +124.50 USDT
                 </li>
                 <li>
-                    <strong>SQUADRA_DELTA</strong> [Order Flow] 
-                    <span style="float:right;" class="status-online">ACTIVE 🟢</span>
-                    <small>Imbalance detected. Accumulating bid side...</small>
+                    <strong>SQUADRA_DELTA</strong> (Order Flow)<br>
+                    Stato: <span class="status-active">SCANNING</span> 🔵<br>
+                    Imbalance Detect: Attivo | Spoofing Alert: Nessuno
                 </li>
                 <li>
-                    <strong>SQUADRA_GAMMA</strong> [Bitget Pairs] 
-                    <span style="float:right;" class="status-warning">STANDBY 🟡</span>
-                    <small>Awaiting divergence threshold (Z-Score > 2.5)</small>
+                    <strong>SQUADRA_GAMMA</strong> (Pairs Trading - Bitget)<br>
+                    Stato: <span class="status-online">ARBITRATING</span> 🟢<br>
+                    Pair: ETH/BTC | Z-Score: 2.4 (Mean Reversion Iniziata)
                 </li>
             </ul>
         </div>
 
         <!-- PROTOCOLLO TRINITY -->
-        <div class="panel">
-            <h2>🔺 PROTOCOLLO TRINITY</h2>
+        <div class="panel glow">
+            <h2>🛡️ PROTOCOLLO TRINITY</h2>
             <ul>
                 <li>
-                    <strong>LO STROZZINO</strong> [Funding Arb] 
-                    <span style="float:right;" class="status-online">DEPLOYED 🟢</span>
-                    <small>Net APR: +24.5% (Short Perps, Long Spot)</small>
+                    <strong>Lo Strozzino</strong> (Funding Arb)<br>
+                    Stato: <span class="status-online">YIELDING IN BACKGROUND</span> 💸<br>
+                    Spread: 0.04% / 8h | Posizione: Long Spot / Short Perp
                 </li>
                 <li>
-                    <strong>IL CONTABILE</strong> [DCA] 
-                    <span style="float:right;" class="status-online">RUNNING 🟢</span>
-                    <small id="dca-timer">Next BTC buy in: 04h 12m 30s</small>
+                    <strong>Il Contabile</strong> (DCA)<br>
+                    Stato: <span class="status-active">ACCUMULATING IN BACKGROUND</span> 📊<br>
+                    Asset: BTC, SOL | Prossimo acquisto: 14:00 UTC
                 </li>
                 <li>
-                    <strong>L'ANGELO CUSTODE</strong> [MEV Arbitrum] 
-                    <span style="float:right;" class="status-hunting fast-blink">HUNTING 🟣</span>
-                    <small>Scanning mempool for sandwich opportunities...</small>
+                    <strong>L'Angelo Custode</strong> (MEV - Arbitrum)<br>
+                    Stato: <span class="status-warning">MONITORING MEMPOOL IN BACKGROUND</span> 🦇<br>
+                    Flashloans: Pronti | Sandwich Opp: 0
                 </li>
             </ul>
         </div>
 
         <!-- METRICHE DI MERCATO -->
-        <div class="panel grid-full">
-            <h2>📊 METRICHE DI MERCATO</h2>
-            <div class="metrics-grid">
-                <div style="background: rgba(0,255,255,0.05); padding: 15px; border: 1px solid var(--neon-blue);">
-                    <h3>🔮 THE ORACLE (Binance Sentiment)</h3>
-                    <p>Current Bias: <span class="status-online">BULLISH (68%)</span></p>
-                    <p>Orderbook Depth: <span class="status-warning">ASYMMETRIC (Ask Heavy)</span></p>
-                    <p>Vol. Spike Detected: <span class="status-offline blink">FALSE</span></p>
-                </div>
-                <div style="background: rgba(255,0,255,0.05); padding: 15px; border: 1px solid var(--neon-pink);">
-                    <h3>🐋 WHALE TRACKER</h3>
-                    <p>Large TX Alert: <span class="status-offline">1,500 BTC to Coinbase</span></p>
-                    <p>Tether Treasury: <span class="status-online">Minted 1B USDT</span></p>
-                    <p>Exchange Netflow: <span class="status-online">-12,450 BTC (Outflow)</span></p>
-                </div>
-            </div>
+        <div class="panel glow">
+            <h2>📡 METRICHE DI MERCATO</h2>
+            <p><strong>The Oracle</strong> (Binance Sentiment): <span class="status-online">BULLISH (68%)</span></p>
+            <p><strong>Whale Tracker</strong>: Rilevato transito 12,000 BTC</p>
+            
+            <table class="metrics-table">
+                <tr><th>Asset</th><th>Prezzo</th><th>1H %</th></tr>
+                <tr><td>BTC/USDT</td><td class="up">72,450.00</td><td class="up">+1.2%</td></tr>
+                <tr><td>ETH/USDT</td><td class="up">3,850.20</td><td class="up">+0.8%</td></tr>
+                <tr><td>SOL/USDT</td><td class="down">145.30</td><td class="down">-0.4%</td></tr>
+            </table>
         </div>
     </div>
-
+    
     <script>
-        // Clock
+        // Simulazione animazioni dati
         setInterval(() => {
-            const now = new Date();
-            document.getElementById('clock').innerText = now.toISOString().split('T')[1].split('.')[0] + " UTC";
-        }, 1000);
-
-        // Simulate live HFT metrics
-        setInterval(() => {
-            const latency = Math.floor(Math.random() * 15) + 5;
-            const pnl = (1.2 + Math.random() * 0.1).toFixed(3);
-            document.getElementById('alpha-metrics').innerText = `Pnl/Day: +${pnl}% | Latency: ${latency}ms | Ops/sec: ${Math.floor(Math.random()*50)+10}`;
-        }, 800);
-        
-        // Simulate countdown for DCA
-        let dcaSeconds = 15150; // 4h 12m 30s
-        setInterval(() => {
-            dcaSeconds--;
-            const h = Math.floor(dcaSeconds / 3600);
-            const m = Math.floor((dcaSeconds % 3600) / 60);
-            const s = dcaSeconds % 60;
-            document.getElementById('dca-timer').innerText = `Next BTC buy in: ${h.toString().padStart(2, '0')}h ${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`;
-        }, 1000);
+            const elements = document.querySelectorAll('.up, .down');
+            elements.forEach(el => {
+                if(Math.random() > 0.7 && el.innerText.includes('%')) {
+                    let val = parseFloat(el.innerText.replace('%', ''));
+                    val += (Math.random() * 0.2 - 0.1);
+                    el.innerText = (val >= 0 ? '+' : '') + val.toFixed(2) + '%';
+                    el.className = val >= 0 ? 'up' : 'down';
+                }
+            });
+        }, 3000);
     </script>
 </body>
 </html>
 """
 
 @app.route('/')
-def dashboard():
+def index():
     return render_template_string(HTML_TEMPLATE)
 
 if __name__ == '__main__':
-    # Riavvia su porta 5000 in tutte le interfacce per la rete locale / tailscale
     app.run(host='0.0.0.0', port=5000, debug=False)
