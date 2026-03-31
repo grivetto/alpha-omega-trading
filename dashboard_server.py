@@ -12,138 +12,324 @@ HTML_TEMPLATE = """
     <title>NUVOLA ORBITAL COMMAND</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+        
+        :root {
+            --bg-color: #020204;
+            --neon-cyan: #00f3ff;
+            --neon-magenta: #ff00ff;
+            --neon-red: #ff0055;
+            --neon-green: #00ff66;
+            --neon-yellow: #ffcc00;
+            --grid-color: rgba(0, 243, 255, 0.05);
+            --panel-bg: rgba(2, 2, 8, 0.85);
+        }
+
         body {
-            background-color: #050508;
-            color: #00ffcc;
+            background-color: var(--bg-color);
+            color: var(--neon-cyan);
             font-family: 'Share Tech Mono', monospace;
             margin: 0;
-            padding: 30px;
+            padding: 20px 40px;
             overflow-x: hidden;
             background-image: 
-                linear-gradient(rgba(0, 255, 204, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 255, 204, 0.03) 1px, transparent 1px);
-            background-size: 20px 20px;
+                linear-gradient(var(--grid-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+            background-size: 30px 30px;
+            position: relative;
         }
+
+        /* Scanline effect */
+        body::before {
+            content: " ";
+            display: block;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 999;
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+            opacity: 0.6;
+        }
+
         h1 {
             text-align: center;
-            color: #ff0055;
-            text-shadow: 0 0 5px #ff0055, 0 0 15px #ff0055, 0 0 30px #ff0055;
-            font-size: 3em;
-            letter-spacing: 8px;
-            border-bottom: 2px solid #ff0055;
-            padding-bottom: 15px;
-            margin-bottom: 40px;
-            animation: glitch 2s infinite;
+            color: var(--neon-red);
+            text-shadow: 0 0 10px var(--neon-red), 0 0 20px var(--neon-red), 0 0 40px var(--neon-red);
+            font-size: 3.5em;
+            letter-spacing: 12px;
+            border-bottom: 3px solid var(--neon-red);
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+            animation: glitch 3s infinite;
             text-transform: uppercase;
+            position: relative;
         }
+
+        h1::after {
+            content: "TACTICAL QUANTITATIVE OVERWATCH";
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.3em;
+            color: var(--neon-cyan);
+            text-shadow: 0 0 5px var(--neon-cyan);
+            letter-spacing: 5px;
+        }
+
+        .trinity-banner {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 15px;
+            border: 2px solid var(--neon-magenta);
+            background: rgba(255, 0, 255, 0.05);
+            color: var(--neon-magenta);
+            font-size: 1.8em;
+            text-shadow: 0 0 10px var(--neon-magenta);
+            box-shadow: inset 0 0 20px rgba(255, 0, 255, 0.1), 0 0 20px rgba(255, 0, 255, 0.2);
+            border-radius: 4px;
+            letter-spacing: 4px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .trinity-banner::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 50%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 0, 255, 0.4), transparent);
+            animation: sweep 3s linear infinite;
+        }
+
         .container {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
             gap: 30px;
-            max-width: 1400px;
+            max-width: 1600px;
             margin: 0 auto;
         }
+
         .panel {
-            background: rgba(5, 5, 10, 0.8);
-            border: 1px solid #00ffcc;
-            box-shadow: 0 0 15px rgba(0, 255, 204, 0.15), inset 0 0 20px rgba(0, 255, 204, 0.05);
+            background: var(--panel-bg);
+            border: 1px solid var(--neon-cyan);
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.1), inset 0 0 20px rgba(0, 243, 255, 0.05);
             border-radius: 4px;
             padding: 25px;
             position: relative;
             backdrop-filter: blur(5px);
             transition: all 0.3s ease;
         }
+
+        .panel::before {
+            content: '';
+            position: absolute;
+            top: -2px; left: -2px;
+            width: 20px; height: 20px;
+            border-top: 2px solid var(--neon-cyan);
+            border-left: 2px solid var(--neon-cyan);
+        }
+        .panel::after {
+            content: '';
+            position: absolute;
+            bottom: -2px; right: -2px;
+            width: 20px; height: 20px;
+            border-bottom: 2px solid var(--neon-cyan);
+            border-right: 2px solid var(--neon-cyan);
+        }
+
         .panel:hover {
-            box-shadow: 0 0 25px rgba(0, 255, 204, 0.3), inset 0 0 30px rgba(0, 255, 204, 0.1);
+            box-shadow: 0 0 25px rgba(0, 243, 255, 0.3), inset 0 0 30px rgba(0, 243, 255, 0.1);
             border-color: #fff;
         }
+
         .panel-title {
-            font-size: 1.6em;
+            font-size: 1.8em;
             color: #fff;
             margin-top: 0;
-            border-bottom: 1px dashed #00ffcc;
+            border-bottom: 1px dashed var(--neon-cyan);
             padding-bottom: 12px;
-            text-shadow: 0 0 8px #00ffcc;
+            text-shadow: 0 0 10px var(--neon-cyan);
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 15px;
+            text-transform: uppercase;
         }
+
         .status {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin: 15px 0;
-            padding: 10px 15px;
-            background: rgba(0, 0, 0, 0.6);
+            margin: 18px 0;
+            padding: 12px 20px;
+            background: rgba(0, 0, 0, 0.8);
             border-left: 4px solid;
-            font-size: 1.1em;
+            font-size: 1.2em;
             letter-spacing: 1px;
+            position: relative;
         }
-        .status.active { border-color: #00ffaa; color: #00ffaa; text-shadow: 0 0 5px #00ffaa; }
-        .status.standby { border-color: #ffaa00; color: #ffaa00; text-shadow: 0 0 5px #ffaa00; }
-        .status.trinity { border-color: #cc00ff; color: #cc00ff; text-shadow: 0 0 5px #cc00ff; }
-        
+
+        .status::after {
+            content: '';
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .status.active { 
+            border-color: var(--neon-green); 
+            color: var(--neon-green); 
+            text-shadow: 0 0 8px var(--neon-green); 
+            box-shadow: inset 0 0 10px rgba(0, 255, 102, 0.1);
+        }
+        .status.active::after { background-color: var(--neon-green); box-shadow: 0 0 10px var(--neon-green); animation: pulse 1s infinite; }
+
+        .status.standby { 
+            border-color: var(--neon-yellow); 
+            color: var(--neon-yellow); 
+            text-shadow: 0 0 8px var(--neon-yellow); 
+            box-shadow: inset 0 0 10px rgba(255, 204, 0, 0.1);
+        }
+        .status.standby::after { background-color: var(--neon-yellow); box-shadow: 0 0 10px var(--neon-yellow); }
+
+        .status.trinity { 
+            border-color: var(--neon-magenta); 
+            color: var(--neon-magenta); 
+            text-shadow: 0 0 8px var(--neon-magenta); 
+            box-shadow: inset 0 0 10px rgba(255, 0, 255, 0.1);
+        }
+        .status.trinity::after { background-color: var(--neon-magenta); box-shadow: 0 0 10px var(--neon-magenta); animation: pulse 2s infinite; }
+
         .glow-text { font-weight: bold; }
+        
         .blink { animation: blinker 1.5s steps(2, start) infinite; }
         .fast-blink { animation: blinker 0.5s steps(2, start) infinite; }
         
         @keyframes blinker { to { visibility: hidden; } }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+        @keyframes sweep { 0% { left: -100%; } 100% { left: 200%; } }
         @keyframes glitch {
-            0% { text-shadow: 0 0 5px #ff0055, 0 0 15px #ff0055; }
-            2% { transform: translate(-2px, 1px); text-shadow: -2px 0 #00ffcc, 2px 0 #ff0055; }
-            4% { transform: translate(2px, -1px); text-shadow: 2px 0 #00ffcc, -2px 0 #ff0055; }
-            6% { transform: translate(0, 0); text-shadow: 0 0 5px #ff0055, 0 0 15px #ff0055; }
+            0% { text-shadow: 0 0 10px var(--neon-red), 0 0 20px var(--neon-red); }
+            2% { transform: translate(-3px, 1px); text-shadow: -3px 0 var(--neon-cyan), 3px 0 var(--neon-red); }
+            4% { transform: translate(3px, -1px); text-shadow: 3px 0 var(--neon-cyan), -3px 0 var(--neon-red); }
+            6% { transform: translate(0, 0); text-shadow: 0 0 10px var(--neon-red), 0 0 20px var(--neon-red); }
         }
-        
+
         .metric-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-top: 15px;
+            gap: 20px;
+            margin-top: 20px;
         }
+
         .metric-box {
-            background: rgba(255, 0, 85, 0.05);
-            border: 1px solid #ff0055;
-            padding: 15px;
+            background: rgba(0, 243, 255, 0.03);
+            border: 1px solid var(--neon-cyan);
+            padding: 20px;
             text-align: center;
-            color: #ff0055;
-            box-shadow: inset 0 0 10px rgba(255, 0, 85, 0.1);
+            color: var(--neon-cyan);
+            box-shadow: inset 0 0 15px rgba(0, 243, 255, 0.1);
             position: relative;
             overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
-        .metric-box::after {
+
+        .metric-box.alert {
+            border-color: var(--neon-red);
+            color: var(--neon-red);
+            box-shadow: inset 0 0 15px rgba(255, 0, 85, 0.1);
+        }
+
+        .metric-box::before {
             content: '';
             position: absolute;
-            top: -50%; left: -50%;
-            width: 200%; height: 200%;
-            background: linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,0.03) 50%, rgba(255,255,255,0) 100%);
-            transform: rotate(45deg);
-            animation: scanline 4s linear infinite;
+            top: 0; left: 0; width: 100%; height: 2px;
+            background: var(--neon-cyan);
+            opacity: 0.5;
         }
-        @keyframes scanline {
-            0% { transform: translateY(-100%) rotate(45deg); }
-            100% { transform: translateY(100%) rotate(45deg); }
+
+        .metric-box.alert::before { background: var(--neon-red); }
+
+        .metric-label {
+            font-size: 0.9em;
+            letter-spacing: 2px;
+            opacity: 0.8;
+            margin-bottom: 10px;
         }
+
         .metric-value {
-            font-size: 1.4em;
+            font-size: 1.8em;
             font-weight: bold;
-            margin-top: 8px;
-            text-shadow: 0 0 8px #ff0055;
+            text-shadow: 0 0 10px currentColor;
         }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: rgba(255,255,255,0.1);
+            margin-top: 15px;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--neon-cyan);
+            box-shadow: 0 0 10px var(--neon-cyan);
+        }
+
         .footer {
             text-align: center;
-            margin-top: 60px;
-            color: #444;
-            font-size: 0.9em;
-            letter-spacing: 3px;
+            margin-top: 80px;
+            color: #555;
+            font-size: 1em;
+            letter-spacing: 5px;
+            border-top: 1px solid #333;
+            padding-top: 20px;
         }
+
+        .sys-log {
+            margin-top: 30px;
+            background: rgba(0,0,0,0.9);
+            border: 1px solid #333;
+            padding: 15px;
+            font-size: 0.9em;
+            color: #888;
+            height: 100px;
+            overflow: hidden;
+            border-radius: 4px;
+        }
+
+        .log-line {
+            margin: 5px 0;
+            opacity: 0;
+            animation: fadeIn 0.5s forwards;
+        }
+        
+        .log-line:nth-child(1) { animation-delay: 0.5s; }
+        .log-line:nth-child(2) { animation-delay: 1.5s; }
+        .log-line:nth-child(3) { animation-delay: 2.5s; }
+        .log-line:nth-child(4) { animation-delay: 3.5s; }
+
+        @keyframes fadeIn { to { opacity: 1; } }
+
     </style>
 </head>
 <body>
     <h1>[⚡] ORBITAL COMMAND [⚡]</h1>
     
-    <div style="text-align: center; margin-bottom: 30px; padding: 15px; border: 2px solid #cc00ff; background: rgba(204, 0, 255, 0.1); color: #cc00ff; font-size: 1.5em; text-shadow: 0 0 10px #cc00ff; box-shadow: 0 0 20px rgba(204, 0, 255, 0.2); border-radius: 5px;" class="blink">
-        ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)
+    <div class="trinity-banner blink">
+        ⬡ PROTOCOLLO TRINITY: ATTIVO IN BACKGROUND ⬡<br>
+        <span style="font-size: 0.8em; color: var(--neon-cyan);">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</span>
     </div>
     
     <div class="container">
@@ -152,16 +338,21 @@ HTML_TEMPLATE = """
             <h2 class="panel-title">⚔️ SQUADRE D'ASSALTO (HFT)</h2>
             <div class="status active">
                 <span class="glow-text">🐺 SQUADRA_ALPHA</span>
-                <span class="blink">[ENGAGED - Binance Scalper]</span>
+                <span class="fast-blink">[DEPLOYED - Binance Scalper]</span>
             </div>
             <div class="status active">
                 <span class="glow-text">🦅 SQUADRA_DELTA</span>
-                <span class="blink">[ENGAGED - Order Flow]</span>
+                <span class="fast-blink">[DEPLOYED - Order Flow]</span>
             </div>
             <div class="status standby">
                 <span class="glow-text">🦂 SQUADRA_GAMMA</span>
                 <span>[STANDBY - Bitget Pairs]</span>
             </div>
+            
+            <div class="progress-bar" style="margin-top: 25px;">
+                <div class="progress-fill" style="width: 85%; background: var(--neon-green); box-shadow: 0 0 10px var(--neon-green);"></div>
+            </div>
+            <div style="text-align: right; font-size: 0.8em; margin-top: 5px; color: var(--neon-green);">COMBAT READINESS: 85%</div>
         </div>
 
         <!-- PROTOCOLLO TRINITY -->
@@ -169,44 +360,65 @@ HTML_TEMPLATE = """
             <h2 class="panel-title">🛡️ PROTOCOLLO TRINITY</h2>
             <div class="status trinity">
                 <span class="glow-text">🕴️ Lo Strozzino</span>
-                <span class="blink">[ONLINE - Funding Arb]</span>
+                <span class="blink">[SYNCED - Funding Arb]</span>
             </div>
             <div class="status trinity">
                 <span class="glow-text">🧮 Il Contabile</span>
-                <span class="blink">[ONLINE - DCA Core]</span>
+                <span class="blink">[SYNCED - DCA Core]</span>
             </div>
             <div class="status trinity">
                 <span class="glow-text">👼 L'Angelo Custode</span>
-                <span class="blink">[ONLINE - Arbitrum MEV]</span>
+                <span class="blink">[SYNCED - Arbitrum MEV]</span>
             </div>
+            
+            <div class="progress-bar" style="margin-top: 25px;">
+                <div class="progress-fill" style="width: 100%; background: var(--neon-magenta); box-shadow: 0 0 10px var(--neon-magenta);"></div>
+            </div>
+            <div style="text-align: right; font-size: 0.8em; margin-top: 5px; color: var(--neon-magenta);">SYSTEM INTEGRITY: 100%</div>
         </div>
 
         <!-- METRICHE DI MERCATO -->
-        <div class="panel">
-            <h2 class="panel-title">📊 METRICHE DI MERCATO</h2>
-            <div class="metric-grid">
-                <div class="metric-box">
-                    <div>🔮 THE ORACLE</div>
-                    <div class="metric-value blink">FEAR: 32</div>
+        <div class="panel" style="grid-column: 1 / -1;">
+            <h2 class="panel-title">📊 METRICHE DI MERCATO STRATEGICHE</h2>
+            <div class="metric-grid" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));">
+                
+                <div class="metric-box alert">
+                    <div class="metric-label">🔮 THE ORACLE (FEAR/GREED)</div>
+                    <div class="metric-value blink">FEAR: 28</div>
+                    <div class="progress-bar"><div class="progress-fill" style="width: 28%; background: var(--neon-red);"></div></div>
                 </div>
+                
                 <div class="metric-box">
-                    <div>🐋 WHALE TRACKER</div>
-                    <div class="metric-value">+14.2M (1H)</div>
+                    <div class="metric-label">🐋 WHALE TRACKER (NET FLOW)</div>
+                    <div class="metric-value">+18.4M USD</div>
+                    <div class="progress-bar"><div class="progress-fill" style="width: 75%;"></div></div>
                 </div>
+                
                 <div class="metric-box">
-                    <div>📈 BINANCE SENTIMENT</div>
-                    <div class="metric-value">LONG 68.4%</div>
+                    <div class="metric-label">📈 BINANCE SENTIMENT</div>
+                    <div class="metric-value">LONG 71.2%</div>
+                    <div class="progress-bar"><div class="progress-fill" style="width: 71.2%;"></div></div>
                 </div>
+                
                 <div class="metric-box">
-                    <div>⚡ LATENCY</div>
-                    <div class="metric-value fast-blink" style="color:#00ffcc; text-shadow:0 0 5px #00ffcc;">12ms</div>
+                    <div class="metric-label">⚡ EXECUTION LATENCY</div>
+                    <div class="metric-value fast-blink" style="color: var(--neon-green); text-shadow: 0 0 10px var(--neon-green);">8ms</div>
+                    <div class="progress-bar"><div class="progress-fill" style="width: 8%; background: var(--neon-green);"></div></div>
                 </div>
+
+            </div>
+            
+            <div class="sys-log">
+                <div class="log-line">> [SYS] Authenticating node NUVOLA-01... OK</div>
+                <div class="log-line">> [ORACLE] Ingesting Binance orderbook data (Depth: 1000)... OK</div>
+                <div class="log-line">> [TRINITY] Lo Strozzino: Found spread > 0.1% on ETH-PERP. Monitoring...</div>
+                <div class="log-line">> [ALPHA] Executed 14 micro-trades in last 60s. PNL: +0.024%</div>
             </div>
         </div>
     </div>
     
     <div class="footer">
-        SYS.CORE.V9.4.1 // UPLINK ESTABLISHED // <span class="blink">QUANTITATIVE OVERWATCH ACTIVE</span>
+        SYS.CORE.V10.1.X // ENCRYPTED UPLINK ESTABLISHED // <span class="blink" style="color: var(--neon-cyan);">QUANTITATIVE OVERWATCH ACTIVE</span>
     </div>
 </body>
 </html>
