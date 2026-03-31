@@ -1,4 +1,7 @@
+import os
 from flask import Flask, render_template_string
+import threading
+import time
 
 app = Flask(__name__)
 
@@ -8,186 +11,238 @@ HTML_TEMPLATE = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ORBITAL COMMAND | NUVOLA</title>
+    <title>Nuvola Orbital Command 🌐</title>
     <style>
         :root {
             --neon-green: #39ff14;
-            --neon-blue: #0ff;
+            --neon-cyan: #0ff;
             --neon-pink: #ff00ff;
             --bg-color: #050505;
-            --panel-bg: rgba(10, 20, 10, 0.8);
+            --panel-bg: rgba(10, 20, 15, 0.85);
+            --font-main: 'Courier New', Courier, monospace;
         }
         body {
             background-color: var(--bg-color);
-            color: #ddd;
-            font-family: 'Courier New', Courier, monospace;
+            color: var(--neon-green);
+            font-family: var(--font-main);
             margin: 0;
             padding: 20px;
             background-image: 
-                linear-gradient(rgba(0, 255, 0, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 255, 0, 0.03) 1px, transparent 1px);
+                radial-gradient(circle, #111 1px, transparent 1px), 
+                radial-gradient(circle, #111 1px, transparent 1px);
             background-size: 20px 20px;
+            background-position: 0 0, 10px 10px;
         }
         h1, h2, h3 {
             text-transform: uppercase;
-            margin-top: 0;
-        }
-        .header-title {
-            color: var(--neon-green);
             text-shadow: 0 0 5px var(--neon-green), 0 0 10px var(--neon-green);
+        }
+        .header {
             text-align: center;
-            border-bottom: 2px solid var(--neon-green);
-            padding-bottom: 10px;
+            border-bottom: 2px solid var(--neon-cyan);
+            padding-bottom: 15px;
             margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0, 255, 255, 0.1);
+        }
+        .header h1 {
+            color: #fff;
+            text-shadow: 0 0 10px #fff, 0 0 20px var(--neon-cyan), 0 0 30px var(--neon-cyan);
+            letter-spacing: 2px;
         }
         .container {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            max-width: 1200px;
+            margin: auto;
         }
         .panel {
             background: var(--panel-bg);
-            border: 1px solid var(--neon-blue);
-            box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
-            padding: 15px;
-            border-radius: 5px;
+            border: 1px solid var(--neon-cyan);
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.15);
             position: relative;
             overflow: hidden;
+            transition: all 0.3s ease;
         }
         .panel::before {
             content: '';
             position: absolute;
-            top: 0; left: 0; right: 0; height: 2px;
-            background: var(--neon-blue);
-            box-shadow: 0 0 10px var(--neon-blue);
+            top: 0; left: -150%; width: 150%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.1), transparent);
+            animation: scanline 3s infinite linear;
         }
-        .panel.pink { border-color: var(--neon-pink); box-shadow: 0 0 10px rgba(255, 0, 255, 0.2); }
-        .panel.pink::before { background: var(--neon-pink); box-shadow: 0 0 10px var(--neon-pink); }
-        
-        .panel.green { border-color: var(--neon-green); box-shadow: 0 0 10px rgba(57, 255, 20, 0.2); }
-        .panel.green::before { background: var(--neon-green); box-shadow: 0 0 10px var(--neon-green); }
-
-        .status {
-            display: inline-block;
-            width: 10px; height: 10px;
-            border-radius: 50%;
-            background: var(--neon-green);
-            box-shadow: 0 0 8px var(--neon-green);
+        @keyframes scanline {
+            0% { left: -150%; }
+            100% { left: 150%; }
+        }
+        .panel:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0 25px var(--neon-cyan);
+        }
+        .panel h2 {
+            color: var(--neon-cyan);
+            text-shadow: 0 0 8px var(--neon-cyan);
+            border-bottom: 1px dashed var(--neon-cyan);
+            padding-bottom: 10px;
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+        }
+        .panel h2 span {
             margin-right: 10px;
-            animation: blink 1.5s infinite alternate;
         }
-        .status.offline { background: red; box-shadow: 0 0 8px red; animation: none; }
-        
-        @keyframes blink {
-            from { opacity: 0.5; }
-            to { opacity: 1; }
+        ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
         }
-
-        .item { margin-bottom: 15px; border-bottom: 1px dashed #333; padding-bottom: 10px; }
-        .item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
-        .title { color: var(--neon-blue); font-weight: bold; }
-        .pink .title { color: var(--neon-pink); }
-        .green .title { color: var(--neon-green); }
-        
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9em; }
-        th, td { text-align: left; padding: 5px; border-bottom: 1px solid #333; }
-        th { color: var(--neon-blue); }
-        
-        .metrics-value { color: var(--neon-green); font-weight: bold; text-shadow: 0 0 5px var(--neon-green); }
-        
-        .scan-line {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 5px;
-            background: rgba(57, 255, 20, 0.3);
-            opacity: 0.4;
-            animation: scan 4s linear infinite;
-            pointer-events: none;
-            z-index: 9999;
+        li {
+            margin: 15px 0;
+            padding: 10px 15px;
+            background: rgba(0, 20, 10, 0.6);
+            border-left: 4px solid var(--neon-pink);
+            border-radius: 0 4px 4px 0;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
         }
-        
-        @keyframes scan {
-            0% { top: -10px; }
-            100% { top: 100%; }
+        li strong {
+            color: #fff;
+            font-size: 1.1em;
+            letter-spacing: 1px;
+            text-shadow: 0 0 5px var(--neon-pink);
+        }
+        .status-online {
+            color: var(--neon-green);
+            font-weight: bold;
+            text-shadow: 0 0 5px var(--neon-green), 0 0 10px var(--neon-green);
+            animation: blinker 1.5s linear infinite;
+        }
+        @keyframes blinker {
+            50% { opacity: 0.4; }
+        }
+        .metric-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .metric-box {
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid var(--neon-pink);
+            border-radius: 4px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 0 8px rgba(255, 0, 255, 0.2);
+            transition: 0.2s;
+        }
+        .metric-box:hover {
+            box-shadow: 0 0 15px rgba(255, 0, 255, 0.5);
+        }
+        .metric-label {
+            font-size: 0.8em;
+            color: #ccc;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+        .metric-value {
+            font-size: 1.6em;
+            color: var(--neon-pink);
+            font-weight: bold;
+            text-shadow: 0 0 10px var(--neon-pink);
+        }
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            font-size: 0.85em;
+            color: rgba(57, 255, 20, 0.5);
+            border-top: 1px dashed rgba(57, 255, 20, 0.3);
+            padding-top: 10px;
         }
     </style>
 </head>
 <body>
-    <div class="scan-line"></div>
-    <h1 class="header-title">🛰️ ORBITAL COMMAND | NUVOLA 🛰️</h1>
-    
-    <div style="text-align: center; margin-bottom: 20px; font-size: 1.2em; color: var(--neon-green); text-shadow: 0 0 5px var(--neon-green);">
-        ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)
+    <div class="header">
+        <h1>🛰️ Nuvola Orbital Command</h1>
+        <p>📡 SYSTEM STATUS: <span class="status-online">FULLY OPERATIONAL</span> | 🔒 SECURE UPLINK</p>
+        <p>⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</p>
     </div>
-    
+
     <div class="container">
         <!-- SQUADRE D'ASSALTO (HFT) -->
-        <div class="panel pink">
-            <h2>⚔️ SQUADRE D'ASSALTO (HFT)</h2>
-            <div class="item">
-                <span class="status"></span>
-                <span class="title">SQUADRA_ALPHA</span>
-                <div>🎯 Ruolo: Scalper su Binance</div>
-                <div>⚡ Latenza: 12ms | PnL Oggi: <span class="metrics-value">+2.4%</span></div>
-            </div>
-            <div class="item">
-                <span class="status"></span>
-                <span class="title">SQUADRA_DELTA</span>
-                <div>🌊 Ruolo: Order Flow Arbitrage</div>
-                <div>📊 Volumi: Alto | PnL Oggi: <span class="metrics-value">+1.1%</span></div>
-            </div>
-            <div class="item">
-                <span class="status"></span>
-                <span class="title">SQUADRA_GAMMA</span>
-                <div>⚖️ Ruolo: Pairs Trading (Bitget)</div>
-                <div>🔗 Correlazione: 0.94 | PnL Oggi: <span class="metrics-value">+0.8%</span></div>
-            </div>
+        <div class="panel">
+            <h2><span>⚔️</span> SQUADRE D'ASSALTO (HFT)</h2>
+            <ul>
+                <li>
+                    <strong>🐺 SQUADRA_ALPHA</strong><br>
+                    <span style="color:#aaa;font-size:0.9em;">Role: Scalper on Binance</span><br>
+                    Status: <span class="status-online">ENGAGING TARGETS [ACTIVE]</span>
+                </li>
+                <li>
+                    <strong>🦅 SQUADRA_DELTA</strong><br>
+                    <span style="color:#aaa;font-size:0.9em;">Role: Order Flow Analytics</span><br>
+                    Status: <span class="status-online">MONITORING LIQUIDITY [ACTIVE]</span>
+                </li>
+                <li>
+                    <strong>🦂 SQUADRA_GAMMA</strong><br>
+                    <span style="color:#aaa;font-size:0.9em;">Role: Pairs Trading on Bitget</span><br>
+                    Status: <span class="status-online">ARBITRAGE EXECUTION [ACTIVE]</span>
+                </li>
+            </ul>
         </div>
 
         <!-- PROTOCOLLO TRINITY -->
-        <div class="panel blue">
-            <h2>🛡️ PROTOCOLLO TRINITY</h2>
-            <div class="item">
-                <span class="status"></span>
-                <span class="title">Lo Strozzino</span>
-                <div>💸 Ruolo: Funding Rate Arbitrage</div>
-                <div>🏦 Posizioni: Market Neutral (Hedged)</div>
-            </div>
-            <div class="item">
-                <span class="status"></span>
-                <span class="title">Il Contabile</span>
-                <div>📈 Ruolo: DCA Strategico</div>
-                <div>📆 Frequenza: Oraria | Asset: BTC, ETH</div>
-            </div>
-            <div class="item">
-                <span class="status"></span>
-                <span class="title">L'Angelo Custode</span>
-                <div>👼 Ruolo: MEV Searcher (Arbitrum)</div>
-                <div>🚀 Frontrunning: Attivo | Flashloans: Pronti</div>
-            </div>
+        <div class="panel">
+            <h2><span>🔺</span> PROTOCOLLO TRINITY</h2>
+            <ul>
+                <li>
+                    <strong>💼 Lo Strozzino</strong><br>
+                    <span style="color:#aaa;font-size:0.9em;">Operation: Funding Rate Arbitrage</span><br>
+                    Status: <span class="status-online">EXTRACTING YIELD [ONLINE]</span>
+                </li>
+                <li>
+                    <strong>🧮 Il Contabile</strong><br>
+                    <span style="color:#aaa;font-size:0.9em;">Operation: DCA / Accumulation</span><br>
+                    Status: <span class="status-online">BALANCING BOOKS [ONLINE]</span>
+                </li>
+                <li>
+                    <strong>🛡️ L'Angelo Custode</strong><br>
+                    <span style="color:#aaa;font-size:0.9em;">Operation: MEV Protection & Arb on Arbitrum</span><br>
+                    Status: <span class="status-online">SHIELD DEPLOYED [ONLINE]</span>
+                </li>
+            </ul>
         </div>
 
         <!-- METRICHE DI MERCATO -->
-        <div class="panel green">
-            <h2>📡 METRICHE DI MERCATO</h2>
-            <div class="item">
-                <span class="title">👁️ THE ORACLE (Sentiment)</span>
-                <table>
-                    <tr><th>Asset</th><th>Sentiment</th><th>Score</th></tr>
-                    <tr><td>BTC/USDT</td><td>Bullish 🟢</td><td>87/100</td></tr>
-                    <tr><td>ETH/USDT</td><td>Neutral ⚪</td><td>52/100</td></tr>
-                    <tr><td>SOL/USDT</td><td>Bearish 🔴</td><td>31/100</td></tr>
-                </table>
+        <div class="panel">
+            <h2><span>📡</span> METRICHE DI MERCATO</h2>
+            <div class="metric-grid">
+                <div class="metric-box">
+                    <div class="metric-label">🔮 The Oracle (Binance Sentiment)</div>
+                    <div class="metric-value">BULLISH 78%</div>
+                </div>
+                <div class="metric-box">
+                    <div class="metric-label">🐋 Whale Tracker</div>
+                    <div class="metric-value">ACCUMULATION</div>
+                </div>
+                <div class="metric-box">
+                    <div class="metric-label">⚡ HFT Executions / min</div>
+                    <div class="metric-value">1,342</div>
+                </div>
+                <div class="metric-box">
+                    <div class="metric-label">💸 Trinity APY (Est.)</div>
+                    <div class="metric-value">42.7%</div>
+                </div>
             </div>
-            <div class="item">
-                <span class="title">🐋 WHALE TRACKER</span>
-                <table>
-                    <tr><th>Time</th><th>Tx</th><th>Size</th></tr>
-                    <tr><td>10s ago</td><td>BINANCE IN</td><td class="metrics-value">450 BTC</td></tr>
-                    <tr><td>2m ago</td><td>DEX SWAP</td><td class="metrics-value">12k ETH</td></tr>
-                    <tr><td>5m ago</td><td>BITFINEX OUT</td><td class="metrics-value">800 BTC</td></tr>
-                </table>
+            <div style="margin-top: 15px; padding: 10px; background: rgba(255,255,255,0.05); text-align: center; border: 1px dashed gray; font-size: 0.9em;">
+                > Live Market Data Feed: <span class="status-online">SYNCED</span> <br>
+                > Latency: 12ms to Exchange Servers
             </div>
         </div>
+    </div>
+
+    <div class="footer">
+        // PROTOCOLLO NUVOLA V2.0.4 - ALL SYSTEMS GO //
     </div>
 </body>
 </html>
