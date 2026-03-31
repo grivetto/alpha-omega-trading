@@ -14,7 +14,7 @@ HTML_TEMPLATE = """
         @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
         
         :root {
-            --bg: #030303;
+            --bg: #050505;
             --neon-primary: #0ff;
             --neon-secondary: #f0f;
             --neon-success: #0f0;
@@ -32,12 +32,12 @@ HTML_TEMPLATE = """
             background-image: 
                 linear-gradient(var(--grid-color) 1px, transparent 1px),
                 linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
-            background-size: 20px 20px;
+            background-size: 30px 30px;
             overflow-x: hidden;
             text-transform: uppercase;
         }
 
-        /* Scanline effect */
+        /* CRT Scanline effect */
         body::after {
             content: " ";
             display: block;
@@ -49,7 +49,7 @@ HTML_TEMPLATE = """
             background: linear-gradient(
                 to bottom,
                 rgba(18, 16, 16, 0) 50%,
-                rgba(0, 0, 0, 0.25) 50%
+                rgba(0, 0, 0, 0.3) 50%
             );
             background-size: 100% 4px;
             z-index: 50;
@@ -58,67 +58,90 @@ HTML_TEMPLATE = """
 
         h1 {
             text-align: center;
-            font-size: 2.5rem;
+            font-size: 3rem;
             color: #fff;
             text-shadow: 0 0 10px var(--neon-primary), 0 0 20px var(--neon-primary), 0 0 40px var(--neon-primary);
             margin-bottom: 5px;
-            letter-spacing: 4px;
+            letter-spacing: 5px;
         }
 
         .subtitle {
             text-align: center;
             color: var(--neon-secondary);
-            font-size: 1.2rem;
+            font-size: 1.3rem;
+            margin-bottom: 30px;
+            text-shadow: 0 0 8px var(--neon-secondary);
+            letter-spacing: 3px;
+        }
+
+        .trinity-status {
+            text-align: center;
+            color: var(--neon-success);
+            font-size: 1.5rem;
             margin-bottom: 40px;
-            text-shadow: 0 0 5px var(--neon-secondary);
-            letter-spacing: 2px;
+            text-shadow: 0 0 10px var(--neon-success);
+            font-weight: bold;
+            border: 2px dashed var(--neon-success);
+            padding: 15px;
+            width: fit-content;
+            margin-left: auto;
+            margin-right: auto;
+            box-shadow: inset 0 0 20px rgba(0, 255, 0, 0.2);
+            animation: pulse-border 2s infinite;
+        }
+
+        @keyframes pulse-border {
+            0% { box-shadow: inset 0 0 10px rgba(0, 255, 0, 0.1), 0 0 10px rgba(0,255,0,0.1); }
+            50% { box-shadow: inset 0 0 30px rgba(0, 255, 0, 0.4), 0 0 30px rgba(0,255,0,0.4); }
+            100% { box-shadow: inset 0 0 10px rgba(0, 255, 0, 0.1), 0 0 10px rgba(0,255,0,0.1); }
         }
 
         .container {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 25px;
-            max-width: 1400px;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+            max-width: 1600px;
             margin: 0 auto;
         }
 
         .panel {
-            background: rgba(0, 20, 20, 0.8);
+            background: rgba(0, 15, 15, 0.85);
             border: 1px solid var(--neon-primary);
-            box-shadow: 0 0 15px rgba(0, 255, 255, 0.2), inset 0 0 10px rgba(0, 255, 255, 0.1);
-            padding: 20px;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.2), inset 0 0 15px rgba(0, 255, 255, 0.1);
+            padding: 25px;
             position: relative;
             overflow: hidden;
+            border-radius: 4px;
         }
 
         .panel::before {
             content: '';
             position: absolute;
             top: 0; left: 0;
-            width: 100%; height: 2px;
+            width: 100%; height: 3px;
             background: var(--neon-primary);
-            box-shadow: 0 0 10px var(--neon-primary);
+            box-shadow: 0 0 15px var(--neon-primary);
         }
 
         .panel h2 {
-            font-size: 1.5rem;
+            font-size: 1.8rem;
             color: var(--neon-success);
-            text-shadow: 0 0 8px var(--neon-success);
+            text-shadow: 0 0 10px var(--neon-success);
             border-bottom: 1px dashed var(--neon-success);
             padding-bottom: 10px;
             margin-top: 0;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 15px;
         }
 
         .row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid rgba(0, 255, 255, 0.2);
-            font-size: 1.1rem;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(0, 255, 255, 0.15);
+            font-size: 1.2rem;
         }
 
         .row:last-child {
@@ -127,12 +150,13 @@ HTML_TEMPLATE = """
 
         .label {
             color: #fff;
-            text-shadow: 0 0 4px rgba(255,255,255,0.5);
+            text-shadow: 0 0 5px rgba(255,255,255,0.6);
         }
 
         .status {
             font-weight: bold;
-            text-shadow: 0 0 8px currentColor;
+            text-shadow: 0 0 10px currentColor;
+            letter-spacing: 1px;
         }
 
         .s-ok { color: var(--neon-success); }
@@ -142,65 +166,92 @@ HTML_TEMPLATE = """
         .s-purple { color: var(--neon-secondary); }
 
         .blink {
-            animation: blinker 1.5s linear infinite;
+            animation: blinker 1s linear infinite;
         }
 
         @keyframes blinker {
-            50% { opacity: 0.3; }
+            50% { opacity: 0.2; }
         }
 
         .terminal-box {
-            background: #000;
+            background: rgba(0,0,0,0.8);
             border: 1px solid var(--neon-primary);
             color: var(--neon-success);
-            padding: 10px;
-            height: 120px;
+            padding: 15px;
+            height: 150px;
             overflow-y: hidden;
-            font-size: 0.9rem;
-            margin-top: 15px;
+            font-size: 1rem;
+            margin-top: 20px;
             position: relative;
-            box-shadow: inset 0 0 10px rgba(0,255,0,0.2);
+            box-shadow: inset 0 0 15px rgba(0,255,0,0.15);
+            font-family: monospace;
         }
 
-        .terminal-box p { margin: 2px 0; }
+        .terminal-box p { margin: 4px 0; }
+        .terminal-box::after {
+            content: "█";
+            animation: blinker 1s infinite;
+        }
         
         .pulse-bg {
-            animation: bgPulse 4s infinite alternate;
+            animation: bgPulse 3s infinite alternate;
         }
         
         @keyframes bgPulse {
             0% { box-shadow: 0 0 10px rgba(0, 255, 255, 0.1), inset 0 0 10px rgba(0, 255, 255, 0.05); }
-            100% { box-shadow: 0 0 25px rgba(0, 255, 255, 0.3), inset 0 0 20px rgba(0, 255, 255, 0.15); }
+            100% { box-shadow: 0 0 30px rgba(0, 255, 255, 0.4), inset 0 0 25px rgba(0, 255, 255, 0.2); }
         }
 
         .trinity-core {
             border-color: var(--neon-secondary);
-            box-shadow: 0 0 15px rgba(255, 0, 255, 0.2), inset 0 0 10px rgba(255, 0, 255, 0.1);
+            box-shadow: 0 0 20px rgba(255, 0, 255, 0.3), inset 0 0 15px rgba(255, 0, 255, 0.15);
         }
-        .trinity-core::before { background: var(--neon-secondary); box-shadow: 0 0 10px var(--neon-secondary); }
-        .trinity-core h2 { color: var(--neon-secondary); text-shadow: 0 0 8px var(--neon-secondary); border-bottom-color: var(--neon-secondary); }
+        .trinity-core::before { background: var(--neon-secondary); box-shadow: 0 0 15px var(--neon-secondary); }
+        .trinity-core h2 { color: var(--neon-secondary); text-shadow: 0 0 10px var(--neon-secondary); border-bottom-color: var(--neon-secondary); }
 
         /* Progress bars */
         .bar-bg {
             background: rgba(255,255,255,0.1);
-            height: 8px;
+            height: 10px;
             width: 100%;
-            margin-top: 5px;
-            border-radius: 4px;
+            margin-top: 8px;
+            border-radius: 2px;
             overflow: hidden;
+            box-shadow: inset 0 0 5px #000;
         }
         .bar-fill {
             height: 100%;
             background: var(--neon-primary);
-            box-shadow: 0 0 8px var(--neon-primary);
+            box-shadow: 0 0 10px var(--neon-primary);
+            transition: width 0.5s ease-in-out;
+        }
+        
+        .hud-overlay {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            border: 1px solid var(--neon-primary);
+            padding: 10px;
+            color: var(--neon-primary);
+            font-size: 0.8rem;
+            background: rgba(0,0,0,0.8);
+            z-index: 100;
         }
     </style>
 </head>
 <body>
+    <div class="hud-overlay">
+        LATENCY: 12ms<br>
+        UPLINK: SECURE<br>
+        NODES: 42 ONLINE
+    </div>
+
     <h1>[ NUVOLA ORBITAL COMMAND ]</h1>
     <div class="subtitle blink">SYSTEM STATUS: NOMINAL // ALL HFT NODES CONNECTED // DEFCON 5</div>
-    <div style="text-align: center; color: #0f0; font-size: 1.2rem; margin-bottom: 30px; text-shadow: 0 0 8px #0f0; font-weight: bold; border: 1px dashed #0f0; padding: 10px; width: fit-content; margin-left: auto; margin-right: auto; box-shadow: inset 0 0 10px rgba(0, 255, 0, 0.2);">
+    
+    <div class="trinity-status">
         ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)
+        <div style="font-size: 0.6em; color: var(--neon-primary); margin-top: 5px; text-shadow: none;">[ LO STROZZINO // IL CONTABILE // L'ANGELO CUSTODE ]</div>
     </div>
 
     <div class="container">
@@ -208,15 +259,15 @@ HTML_TEMPLATE = """
         <div class="panel pulse-bg">
             <h2>⚔️ SQUADRE D'ASSALTO (HFT)</h2>
             <div class="row">
-                <span class="label">🐺 SQUADRA_ALPHA <span style="font-size:0.8em; color:#888;">[BINANCE SCALPER]</span></span>
+                <span class="label">🐺 SQUADRA_ALPHA <span style="font-size:0.7em; color:#888;">[BINANCE SCALPER]</span></span>
                 <span class="status s-ok blink">[ ENGAGED ]</span>
             </div>
             <div class="row">
-                <span class="label">⚡ SQUADRA_DELTA <span style="font-size:0.8em; color:#888;">[ORDER FLOW]</span></span>
+                <span class="label">⚡ SQUADRA_DELTA <span style="font-size:0.7em; color:#888;">[ORDER FLOW]</span></span>
                 <span class="status s-info">[ ACTIVE ]</span>
             </div>
             <div class="row">
-                <span class="label">⚖️ SQUADRA_GAMMA <span style="font-size:0.8em; color:#888;">[BITGET PAIRS]</span></span>
+                <span class="label">⚖️ SQUADRA_GAMMA <span style="font-size:0.7em; color:#888;">[BITGET PAIRS]</span></span>
                 <span class="status s-warn">[ ARBITRAGING ]</span>
             </div>
             <div class="terminal-box">
@@ -232,18 +283,18 @@ HTML_TEMPLATE = """
         <div class="panel trinity-core pulse-bg">
             <h2>🔺 PROTOCOLLO TRINITY</h2>
             <div class="row">
-                <span class="label">🕴️ Lo Strozzino <span style="font-size:0.8em; color:#888;">[FUNDING ARB]</span></span>
+                <span class="label">🕴️ Lo Strozzino <span style="font-size:0.7em; color:#888;">[FUNDING ARB]</span></span>
                 <span class="status s-purple blink">[ HARVESTING ]</span>
             </div>
             <div class="row">
-                <span class="label">🧮 Il Contabile <span style="font-size:0.8em; color:#888;">[DCA/VAULT]</span></span>
+                <span class="label">🧮 Il Contabile <span style="font-size:0.7em; color:#888;">[DCA/VAULT]</span></span>
                 <span class="status s-info">[ ACCUMULATING ]</span>
             </div>
             <div class="row">
-                <span class="label">🛡️ L'Angelo Custode <span style="font-size:0.8em; color:#888;">[MEV ARBITRUM]</span></span>
+                <span class="label">🛡️ L'Angelo Custode <span style="font-size:0.7em; color:#888;">[MEV ARBITRUM]</span></span>
                 <span class="status s-ok">[ PROTECTING ]</span>
             </div>
-            <div class="terminal-box" style="color: var(--neon-secondary); border-color: var(--neon-secondary); box-shadow: inset 0 0 10px rgba(255,0,255,0.2);">
+            <div class="terminal-box" style="color: var(--neon-secondary); border-color: var(--neon-secondary); box-shadow: inset 0 0 15px rgba(255,0,255,0.15);">
                 <p>> [TRINITY] STROZZINO: Short PERP, Long SPOT (Est. APR: 19.4%)</p>
                 <p>> [TRINITY] CONTABILE: BTC Vault balance +0.0125 BTC.</p>
                 <p>> [TRINITY] ANGELO: Arbitrum mempool scan active. 0 threats.</p>
@@ -255,22 +306,22 @@ HTML_TEMPLATE = """
         <div class="panel pulse-bg">
             <h2>📊 METRICHE DI MERCATO</h2>
             <div class="row">
-                <span class="label">👁️ THE ORACLE <span style="font-size:0.8em; color:#888;">[BINANCE SENTIMENT]</span></span>
+                <span class="label">👁️ THE ORACLE <span style="font-size:0.7em; color:#888;">[BINANCE SENTIMENT]</span></span>
                 <span class="status s-warn">GREED (74)</span>
             </div>
-            <div class="bar-bg"><div class="bar-fill" style="width: 74%; background: var(--neon-warning); box-shadow: 0 0 8px var(--neon-warning);"></div></div>
+            <div class="bar-bg"><div class="bar-fill" style="width: 74%; background: var(--neon-warning); box-shadow: 0 0 10px var(--neon-warning);"></div></div>
             
-            <div class="row" style="margin-top: 10px;">
-                <span class="label">🐋 WHALE TRACKER <span style="font-size:0.8em; color:#888;">[ON-CHAIN]</span></span>
+            <div class="row" style="margin-top: 15px;">
+                <span class="label">🐋 WHALE TRACKER <span style="font-size:0.7em; color:#888;">[ON-CHAIN]</span></span>
                 <span class="status s-err blink">ALERT: 8000 BTC -> CEX</span>
             </div>
             
-            <div class="row" style="margin-top: 10px;">
+            <div class="row" style="margin-top: 15px;">
                 <span class="label">🌊 LIQUIDITY HEATMAP</span>
                 <span class="status s-info">CONCENTRATED @ $65,500</span>
             </div>
             
-            <div class="row" style="margin-top: 10px;">
+            <div class="row" style="margin-top: 15px;">
                 <span class="label">🔥 NETWORK GAS (ETH)</span>
                 <span class="status s-ok">14 GWEI</span>
             </div>
