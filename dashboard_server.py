@@ -197,6 +197,24 @@ HTML_TEMPLATE = """
     </div>
 
     <div class="container">
+        <!-- PATRIMONIO & STATO -->
+        <div class="panel" style="border-color: var(--neon-green); box-shadow: 0 0 15px rgba(57, 255, 20, 0.2) inset;">
+            <h2 class="glow-text-green">💰 PATRIMONIO & STATO</h2>
+            <div class="status-row" style="border-color: var(--neon-green);">
+                <div>
+                    <strong style="color: var(--neon-green);">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</strong><br>
+                    <span style="font-size: 0.8em; color: #888;">[Sistemi Autonomi Attivi]</span>
+                </div>
+                <span class="status-badge badge-online">ACTIVE</span>
+            </div>
+            <div style="margin-top: 20px; border: 1px solid rgba(57, 255, 20, 0.3); padding: 10px; background: rgba(0,0,0,0.5);">
+                <div style="display: flex; justify-content: space-between; font-size: 1.2em;">
+                    <span>TOTAL WEALTH (AUM):</span>
+                    <strong style="color: var(--neon-green);">--- YIELDING ---</strong>
+                </div>
+            </div>
+        </div>
+
         <!-- SQUADRE D'ASSALTO (HFT) -->
         <div class="panel blue">
             <h2 class="glow-text-blue">⚔️ SQUADRE D'ASSALTO (HFT)</h2>
