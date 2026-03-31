@@ -26,9 +26,7 @@ HTML_TEMPLATE = """
             --font-main: 'Share Tech Mono', 'Courier New', monospace;
         }
         
-        * {
-            box-sizing: border-box;
-        }
+        * { box-sizing: border-box; }
         
         body {
             background-color: var(--bg-color);
@@ -49,21 +47,14 @@ HTML_TEMPLATE = """
             content: " ";
             display: block;
             position: absolute;
-            top: 0;
-            left: 0;
-            bottom: 0;
-            right: 0;
+            top: 0; left: 0; bottom: 0; right: 0;
             background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
             z-index: 2;
             background-size: 100% 2px, 3px 100%;
             pointer-events: none;
         }
         
-        h1, h2, h3, h4 {
-            text-transform: uppercase;
-            margin-top: 0;
-            font-weight: normal;
-        }
+        h1, h2, h3, h4 { text-transform: uppercase; margin-top: 0; font-weight: normal; }
         
         .header {
             text-align: center;
@@ -77,8 +68,9 @@ HTML_TEMPLATE = """
         .header h1 {
             font-size: 3.5em;
             letter-spacing: 8px;
-            text-shadow: 0 0 10px var(--neon-green), 0 0 20px var(--neon-green);
+            text-shadow: 0 0 10px var(--neon-green), 0 0 20px var(--neon-green), 0 0 40px var(--neon-green);
             margin-bottom: 5px;
+            animation: glitch 4s infinite;
         }
         
         .header .status {
@@ -105,6 +97,7 @@ HTML_TEMPLATE = """
             box-shadow: inset 0 0 15px rgba(0, 255, 0, 0.05), 0 0 20px rgba(0, 0, 0, 0.9);
             position: relative;
             transition: all 0.3s ease;
+            backdrop-filter: blur(4px);
         }
         
         .panel:hover {
@@ -113,12 +106,8 @@ HTML_TEMPLATE = """
         }
         
         .panel::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0;
-            height: 3px;
-            background: var(--neon-green);
-            box-shadow: 0 0 15px var(--neon-green);
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+            background: var(--neon-green); box-shadow: 0 0 15px var(--neon-green);
         }
         
         .panel.red::before { background: var(--neon-red); box-shadow: 0 0 15px var(--neon-red); }
@@ -130,124 +119,68 @@ HTML_TEMPLATE = """
         .panel.purple::before { background: var(--neon-purple); box-shadow: 0 0 15px var(--neon-purple); }
         .panel.purple h2 { color: var(--neon-purple); text-shadow: 0 0 8px var(--neon-purple); border-bottom: 1px solid rgba(176,38,255,0.3); padding-bottom: 10px; }
         
-        .panel.yellow::before { background: var(--neon-yellow); box-shadow: 0 0 15px var(--neon-yellow); }
-        .panel.yellow h2 { color: var(--neon-yellow); text-shadow: 0 0 8px var(--neon-yellow); border-bottom: 1px solid rgba(242,255,0,0.3); padding-bottom: 10px; }
-        
         ul { list-style-type: none; padding: 0; margin: 0; }
         li { 
-            margin-bottom: 15px; 
-            padding: 12px; 
+            margin-bottom: 15px; padding: 12px; 
             border-left: 3px solid var(--neon-green); 
-            background: rgba(0,255,0,0.03); 
-            position: relative;
+            background: rgba(0,255,0,0.03); position: relative;
         }
         
         .panel.red li { border-left-color: var(--neon-red); background: rgba(255,0,60,0.03); }
         .panel.purple li { border-left-color: var(--neon-purple); background: rgba(176,38,255,0.03); }
         
         .status-badge {
-            float: right;
-            background: var(--neon-green);
-            color: black;
-            padding: 3px 8px;
-            font-size: 0.8em;
-            font-weight: bold;
-            border-radius: 2px;
-            letter-spacing: 1px;
-            box-shadow: 0 0 5px var(--neon-green);
+            float: right; background: var(--neon-green); color: black; padding: 3px 8px;
+            font-size: 0.8em; font-weight: bold; border-radius: 2px; letter-spacing: 1px;
+            box-shadow: 0 0 5px var(--neon-green); text-transform: uppercase;
         }
         
-        .status-badge.standby { 
-            background: var(--neon-yellow); 
-            box-shadow: 0 0 5px var(--neon-yellow); 
-        }
+        .status-badge.standby { background: var(--neon-yellow); box-shadow: 0 0 5px var(--neon-yellow); color: black; }
+        .status-badge.active { background: var(--neon-red); color: white; animation: pulse-red 1.5s infinite; box-shadow: 0 0 5px var(--neon-red); }
+        .status-badge.hunting { background: var(--neon-purple); color: white; animation: pulse-purple 1s infinite; box-shadow: 0 0 5px var(--neon-purple); }
         
-        .status-badge.active { 
-            background: var(--neon-red); 
-            color: white;
-            animation: pulse 1.5s infinite; 
-            box-shadow: 0 0 5px var(--neon-red);
-        }
-        
-        .status-badge.hunting {
-            background: var(--neon-purple);
-            color: white;
-            animation: pulse-purple 1s infinite;
-        }
-        
-        .details {
-            display: block;
-            margin-top: 8px;
-            font-size: 0.85em;
-            color: #aaa;
-            line-height: 1.4;
-        }
-        
-        .metric-value {
-            font-weight: bold;
-            color: white;
-        }
+        .details { display: block; margin-top: 8px; font-size: 0.85em; color: #ccc; line-height: 1.5; }
+        .metric-value { font-weight: bold; color: white; text-shadow: 0 0 2px rgba(255,255,255,0.5); }
         
         table { width: 100%; border-collapse: collapse; margin-top: 15px; text-align: left; }
-        th, td { border-bottom: 1px solid rgba(255,255,255,0.1); padding: 12px 8px; }
-        th { color: #888; font-size: 0.9em; letter-spacing: 1px; }
+        th, td { border-bottom: 1px solid rgba(255,255,255,0.1); padding: 12px 8px; font-size: 0.9em; }
+        th { color: #888; letter-spacing: 1px; }
         tr:hover td { background: rgba(255,255,255,0.05); }
         
-        .positive { color: var(--neon-green); text-shadow: 0 0 3px var(--neon-green); }
-        .negative { color: var(--neon-red); text-shadow: 0 0 3px var(--neon-red); }
-        .neutral { color: var(--neon-yellow); text-shadow: 0 0 3px var(--neon-yellow); }
+        .positive { color: var(--neon-green); text-shadow: 0 0 5px var(--neon-green); }
+        .negative { color: var(--neon-red); text-shadow: 0 0 5px var(--neon-red); }
+        .neutral { color: var(--neon-yellow); text-shadow: 0 0 5px var(--neon-yellow); }
         
-        .progress-bar {
-            width: 100%;
-            height: 4px;
-            background: #222;
-            margin-top: 5px;
-            border-radius: 2px;
-            overflow: hidden;
-        }
+        .progress-bar { width: 100%; height: 4px; background: #222; margin-top: 8px; border-radius: 2px; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--neon-blue); box-shadow: 0 0 8px var(--neon-blue); animation: load 2s ease-in-out infinite alternate; }
         
-        .progress-fill {
-            height: 100%;
-            background: var(--neon-blue);
-            box-shadow: 0 0 5px var(--neon-blue);
-            width: 75%;
-            animation: load 2s ease-in-out infinite alternate;
-        }
-        
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; text-shadow: none; } }
-        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255,0,60,0.8); } 70% { box-shadow: 0 0 0 8px rgba(255,0,60,0); } 100% { box-shadow: 0 0 0 0 rgba(255,0,60,0); } }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; text-shadow: none; } }
+        @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(255,0,60,0.8); } 70% { box-shadow: 0 0 0 8px rgba(255,0,60,0); } 100% { box-shadow: 0 0 0 0 rgba(255,0,60,0); } }
         @keyframes pulse-purple { 0% { box-shadow: 0 0 0 0 rgba(176,38,255,0.8); } 70% { box-shadow: 0 0 0 8px rgba(176,38,255,0); } 100% { box-shadow: 0 0 0 0 rgba(176,38,255,0); } }
-        @keyframes load { 0% { width: 40%; } 100% { width: 90%; } }
+        @keyframes load { 0% { width: 30%; } 100% { width: 95%; } }
+        @keyframes glitch { 0% { transform: translate(0) } 2% { transform: translate(-2px, 2px) } 4% { transform: translate(-2px, -2px) } 6% { transform: translate(2px, 2px) } 8% { transform: translate(2px, -2px) } 10% { transform: translate(0) } 100% { transform: translate(0) } }
         
         .scanline {
-            width: 100%;
-            height: 150px;
-            z-index: 9999;
-            position: fixed;
-            pointer-events: none;
+            width: 100%; height: 150px; z-index: 9999; position: fixed; pointer-events: none;
             background: linear-gradient(0deg, rgba(0,0,0,0) 0%, rgba(57,255,20,0.05) 50%, rgba(0,0,0,0) 100%);
-            animation: scan 8s linear infinite;
-            top: 0;
-            left: 0;
+            animation: scan 6s linear infinite; top: 0; left: 0;
         }
         @keyframes scan { 0% { top: -150px; } 100% { top: 100vh; } }
         
-        .footer-metrics {
-            margin-top: 40px;
-            text-align: center;
-            font-size: 0.9em;
-            color: #555;
-            border-top: 1px dashed #333;
-            padding-top: 20px;
+        .footer-metrics { margin-top: 40px; text-align: center; font-size: 0.9em; color: #555; border-top: 1px dashed #333; padding-top: 20px; }
+        .terminal-cursor { display: inline-block; width: 10px; height: 1.2em; background-color: var(--neon-green); vertical-align: middle; animation: blink 1s step-end infinite; }
+        
+        .log-box {
+            margin-top: 20px; padding: 15px; background: rgba(0,0,0,0.8); border: 1px solid #333; 
+            font-size: 0.85em; font-family: 'Courier New', monospace; height: 120px; overflow-y: hidden;
+            box-shadow: inset 0 0 10px rgba(0,255,0,0.1);
         }
         
-        .terminal-cursor {
-            display: inline-block;
-            width: 10px;
-            height: 1.2em;
-            background-color: var(--neon-green);
-            vertical-align: middle;
-            animation: blink 1s step-end infinite;
+        .trinity-badge {
+            color: var(--neon-purple); margin-top: 10px; font-size: 1.3em; 
+            text-shadow: 0 0 10px var(--neon-purple); border: 1px solid var(--neon-purple); 
+            padding: 8px 15px; display: inline-block; background: rgba(176,38,255,0.1);
+            letter-spacing: 1px; box-shadow: 0 0 20px rgba(176,38,255,0.2);
         }
     </style>
 </head>
@@ -257,12 +190,12 @@ HTML_TEMPLATE = """
     <div class="header">
         <h1>🛰️ ORBITAL COMMAND</h1>
         <p class="status">>>> UPLINK_ESTABLISHED | SYSTEM_NOMINAL | QUANTUM_ENCRYPTION_ACTIVE <<<</p>
-        <h3 style="color: var(--neon-blue); margin-top: 15px; font-size: 1.2em;">
-            [CORE_V4.2.9] LATENCY: <span class="positive">8ms</span> | NODES: <span class="positive">12/12</span> ONLINE
+        <h3 style="color: var(--neon-blue); margin-top: 15px; font-size: 1.2em; text-shadow: 0 0 8px var(--neon-blue);">
+            [CORE_V5.1.0-OMEGA] LATENCY: <span class="positive">4ms</span> | NODES: <span class="positive">16/16</span> ONLINE
         </h3>
-        <h3 style="color: var(--neon-purple); margin-top: 10px; font-size: 1.3em; text-shadow: 0 0 10px var(--neon-purple); border: 1px solid var(--neon-purple); padding: 5px; display: inline-block; background: rgba(176,38,255,0.1);">
+        <div class="trinity-badge">
             ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)
-        </h3>
+        </div>
     </div>
 
     <div class="grid">
@@ -271,67 +204,67 @@ HTML_TEMPLATE = """
             <h2>⚔️ SQUADRE D'ASSALTO (HFT)</h2>
             <ul>
                 <li>
-                    <strong>SQUADRA_ALPHA</strong> [Binance Scalper]
+                    <strong>SQUADRA_ALPHA</strong> <span style="color:#888;">[Binance Scalper]</span>
                     <span class="status-badge active">ENGAGED</span>
                     <span class="details">
-                        > Target: <span class="metric-value">BTC/USDT</span><br>
-                        > Win Rate (1h): <span class="positive">68.4%</span> | PnL: <span class="positive">+$412.50</span><br>
-                        > Execution Latency: <span class="metric-value">12ms</span> API / <span class="metric-value">4ms</span> WS
+                        > Target: <span class="metric-value">BTC/USDT</span> (Tick: 1ms)<br>
+                        > Win Rate (1h): <span class="positive">72.1%</span> | PnL: <span class="positive">+$580.20</span><br>
+                        > Execution Latency: <span class="metric-value">8ms</span> API / <span class="metric-value">2ms</span> WS
                     </span>
-                    <div class="progress-bar"><div class="progress-fill" style="background: var(--neon-red); box-shadow: 0 0 5px var(--neon-red); width: 85%; animation: none;"></div></div>
+                    <div class="progress-bar"><div class="progress-fill" style="background: var(--neon-red); box-shadow: 0 0 8px var(--neon-red); width: 88%; animation: none;"></div></div>
                 </li>
                 <li>
-                    <strong>SQUADRA_DELTA</strong> [Order Flow]
-                    <span class="status-badge">ONLINE</span>
+                    <strong>SQUADRA_DELTA</strong> <span style="color:#888;">[Order Flow]</span>
+                    <span class="status-badge" style="background: var(--neon-blue); color: black;">SCANNING</span>
                     <span class="details">
                         > Target: <span class="metric-value">ETH/USDT</span><br>
                         > Status: <span class="metric-value">Monitoring Orderbook Imbalance</span><br>
-                        > Delta Volume: <span class="positive">+1,450 ETH</span> (Buy pressure)
+                        > Delta Volume: <span class="positive">+2,150 ETH</span> (Buy pressure wall detected)
                     </span>
-                    <div class="progress-bar"><div class="progress-fill" style="width: 45%;"></div></div>
+                    <div class="progress-bar"><div class="progress-fill" style="width: 65%;"></div></div>
                 </li>
                 <li>
-                    <strong>SQUADRA_GAMMA</strong> [Bitget Pairs Trading]
+                    <strong>SQUADRA_GAMMA</strong> <span style="color:#888;">[Bitget Pairs Trading]</span>
                     <span class="status-badge standby">STANDBY</span>
                     <span class="details">
                         > Pairs: <span class="metric-value">SOL-PERP / APT-PERP</span><br>
-                        > Spread: <span class="neutral">1.45 std dev</span> (Target: 2.0)<br>
-                        > Status: <span class="metric-value">Awaiting mean reversion trigger</span>
+                        > Spread: <span class="neutral">1.85 std dev</span> (Target: 2.0)<br>
+                        > Status: <span class="metric-value">Awaiting mean reversion trigger...</span>
                     </span>
-                    <div class="progress-bar"><div class="progress-fill" style="background: var(--neon-yellow); box-shadow: 0 0 5px var(--neon-yellow); width: 25%; animation: none;"></div></div>
+                    <div class="progress-bar"><div class="progress-fill" style="background: var(--neon-yellow); box-shadow: 0 0 8px var(--neon-yellow); width: 45%; animation: none;"></div></div>
                 </li>
             </ul>
         </div>
 
         <!-- PROTOCOLLO TRINITY -->
         <div class="panel purple">
-            <h2>🛡️ PROTOCOLLO TRINITY</h2>
+            <h2>🛡️ PROTOCOLLO TRINITY <span style="font-size: 0.5em; float: right; margin-top: 10px; color: var(--neon-purple);">[BACKGROUND_PROCESSES]</span></h2>
             <ul>
                 <li>
-                    <strong>🎩 Lo Strozzino</strong> [Funding Arb]
+                    <strong>🎩 Lo Strozzino</strong> <span style="color:#888;">[Funding Arb]</span>
                     <span class="status-badge">HARVESTING</span>
                     <span class="details">
                         > Strategy: <span class="metric-value">Delta-Neutral Cash & Carry</span><br>
-                        > Active Markets: <span class="metric-value">14</span> | Exposure: <span class="metric-value">$125,000</span><br>
-                        > Avg APR: <span class="positive">+18.4%</span> | 24h Yield: <span class="positive">+$63.01</span>
+                        > Active Markets: <span class="metric-value">18</span> | Exposure: <span class="metric-value">$250,000</span><br>
+                        > Avg APR: <span class="positive">+22.4%</span> | 24h Yield: <span class="positive">+$153.40</span>
                     </span>
                 </li>
                 <li>
-                    <strong>🧮 Il Contabile</strong> [DCA Matrix]
-                    <span class="status-badge">ONLINE</span>
+                    <strong>🧮 Il Contabile</strong> <span style="color:#888;">[DCA Matrix]</span>
+                    <span class="status-badge" style="background: var(--neon-blue); color: black;">ONLINE</span>
                     <span class="details">
-                        > Phase: <span class="metric-value">Accumulation (Bear/Crab)</span><br>
-                        > Targets: <span class="metric-value">BTC (60%), ETH (30%), SOL (10%)</span><br>
-                        > Next Execution: <span class="metric-value">T-Minus 04h 12m 45s</span>
+                        > Phase: <span class="metric-value">Accumulation (Bear/Crab Macro)</span><br>
+                        > Targets: <span class="metric-value">BTC (50%), ETH (30%), SOL (20%)</span><br>
+                        > Next Execution: <span class="metric-value">T-Minus 02h 15m 10s</span>
                     </span>
                 </li>
                 <li>
-                    <strong>👼 L'Angelo Custode</strong> [MEV Arbitrum]
+                    <strong>👼 L'Angelo Custode</strong> <span style="color:#888;">[MEV Arbitrum]</span>
                     <span class="status-badge hunting">HUNTING</span>
                     <span class="details">
                         > Protocol: <span class="metric-value">Flashbots / Arbitrum Sequencer</span><br>
                         > Strategies: <span class="metric-value">Sandwich, Liquidations, Dex Arb</span><br>
-                        > Mempool Scans/sec: <span class="metric-value">4,500</span> | Flashloans: <span class="positive">READY</span>
+                        > Mempool Scans/sec: <span class="metric-value">8,500</span> | Flashloans: <span class="positive">READY (AAVE V3)</span>
                     </span>
                 </li>
             </ul>
@@ -347,43 +280,45 @@ HTML_TEMPLATE = """
                     <th>TREND</th>
                 </tr>
                 <tr>
-                    <td>👁️ The Oracle (Binance Sentiment)</td>
-                    <td class="positive">BULLISH (78/100)</td>
+                    <td>👁️ The Oracle <span style="font-size: 0.8em; color: #555;">(Binance Sentiment)</span></td>
+                    <td class="positive">EXTREME GREED (82/100)</td>
                     <td class="positive">↗ UP</td>
                 </tr>
                 <tr>
-                    <td>🐋 Whale Tracker (On-Chain)</td>
-                    <td class="negative">LARGE OUTFLOW ($45M)</td>
+                    <td>🐋 Whale Tracker <span style="font-size: 0.8em; color: #555;">(On-Chain)</span></td>
+                    <td class="negative">LARGE OUTFLOW ($120M)</td>
                     <td class="negative">↘ ALERT</td>
                 </tr>
                 <tr>
-                    <td>⚡ Network Gwei (ETH Mainnet)</td>
-                    <td class="metric-value">15.4 (Low)</td>
+                    <td>⚡ Network Gwei <span style="font-size: 0.8em; color: #555;">(ETH Mainnet)</span></td>
+                    <td class="metric-value">12.5 (Low)</td>
                     <td class="neutral">→ FLAT</td>
                 </tr>
                 <tr>
-                    <td>💧 Liquidity Siphon (DEX Vol)</td>
-                    <td class="positive">+2.4M USD (24h)</td>
+                    <td>💧 Liquidity Siphon <span style="font-size: 0.8em; color: #555;">(DEX Vol)</span></td>
+                    <td class="positive">+5.8M USD (24h)</td>
                     <td class="positive">↗ UP</td>
                 </tr>
                 <tr>
-                    <td>🔥 Funding Heatmap</td>
-                    <td class="metric-value">Overheated (Alts)</td>
-                    <td class="negative">↘ CAUTION</td>
+                    <td>🔥 Funding Heatmap <span style="font-size: 0.8em; color: #555;">(Perps)</span></td>
+                    <td class="metric-value">Overheated (Memes)</td>
+                    <td class="negative">↘ SHORT_SQUEEZE_RISK</td>
                 </tr>
             </table>
             
-            <div style="margin-top: 20px; padding: 10px; background: rgba(0,0,0,0.5); border: 1px solid #333; font-size: 0.85em;">
+            <div class="log-box">
                 <span style="color: #888;">[SYSTEM_LOG]</span> <span style="color: var(--neon-green);">Establishing WebSocket multiplex stream... OK</span><br>
                 <span style="color: #888;">[SYSTEM_LOG]</span> <span style="color: var(--neon-green);">Syncing Orderbooks (Binance, Bybit, Bitget)... OK</span><br>
+                <span style="color: #888;">[SYSTEM_LOG]</span> <span style="color: var(--neon-purple);">TRINITY: MEV Searcher injected 3 bundles successfully.</span><br>
+                <span style="color: #888;">[SYSTEM_LOG]</span> <span style="color: var(--neon-red);">SQUADRA_ALPHA: Executed limit buy BTC @ 69,420.</span><br>
                 <span style="color: #888;">[SYSTEM_LOG]</span> <span style="color: var(--neon-blue);">Awaiting execution triggers</span><span class="terminal-cursor"></span>
             </div>
         </div>
     </div>
     
     <div class="footer-metrics">
-        ORBITAL COMMAND v4.2.9 // UNAUTHORIZED ACCESS WILL BE MET WITH LETHAL QUANTS // MEMORY USAGE: 45% // CPU: 12% // 
-        <span style="color: var(--neon-green);">CONNECTION: SECURE</span>
+        ORBITAL COMMAND v5.1.0-OMEGA // UNAUTHORIZED ACCESS WILL BE MET WITH LETHAL QUANTS // MEMORY USAGE: 42% // CPU: 18% // 
+        <span style="color: var(--neon-green); text-shadow: 0 0 5px var(--neon-green);">CONNECTION: SECURE</span>
     </div>
 </body>
 </html>
