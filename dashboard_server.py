@@ -116,23 +116,30 @@ HTML_TEMPLATE = """
         }
 
         /* Panels */
+        /* Enhanced Glow & Animations */
         .panel {
-            background: rgba(5, 5, 8, 0.85);
+            background: rgba(5, 5, 8, 0.9);
             border: 1px solid var(--neon-green);
             position: relative;
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(15px);
             box-shadow: 
-                inset 0 0 30px rgba(0, 255, 204, 0.05), 
-                0 0 20px rgba(0, 255, 204, 0.1);
+                inset 0 0 50px rgba(0, 255, 204, 0.05), 
+                0 0 30px rgba(0, 255, 204, 0.2);
             overflow: hidden;
             display: flex;
             flex-direction: column;
+            animation: panel-glow 4s infinite alternate;
+        }
+
+        @keyframes panel-glow {
+            0% { box-shadow: inset 0 0 50px rgba(0, 255, 204, 0.05), 0 0 20px rgba(0, 255, 204, 0.1); }
+            100% { box-shadow: inset 0 0 60px rgba(0, 255, 204, 0.1), 0 0 40px rgba(0, 255, 204, 0.3); }
         }
 
         .panel-header {
-            background: rgba(0, 255, 204, 0.1);
+            background: rgba(0, 255, 204, 0.15);
             padding: 15px 20px;
-            border-bottom: 1px solid var(--neon-green);
+            border-bottom: 2px solid var(--neon-green);
             display: flex;
             justify-content: space-between;
             align-items: center;
