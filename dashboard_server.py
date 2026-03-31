@@ -20,9 +20,10 @@ HTML_CONTENT = """
             --neon-pink: #ff00ff;
             --neon-red: #ff003c;
             --neon-yellow: #fcee0a;
-            --bg-color: #020202;
+            --neon-purple: #b026ff;
+            --bg-color: #050505;
             --panel-bg: rgba(10, 15, 12, 0.85);
-            --grid-color: rgba(57, 255, 20, 0.05);
+            --grid-color: rgba(57, 255, 20, 0.08);
             --text-main: #39ff14;
         }
 
@@ -39,12 +40,12 @@ HTML_CONTENT = """
             background-image: 
                 linear-gradient(var(--grid-color) 1px, transparent 1px),
                 linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
-            background-size: 30px 30px;
+            background-size: 40px 40px;
             overflow-x: hidden;
             text-transform: uppercase;
         }
 
-        /* CRT Effect / Scanlines */
+        /* CRT Scanlines */
         body::after {
             content: " ";
             display: block;
@@ -53,7 +54,7 @@ HTML_CONTENT = """
             background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
                         linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
             z-index: 999;
-            background-size: 100% 3px, 3px 100%;
+            background-size: 100% 2px, 3px 100%;
             pointer-events: none;
         }
 
@@ -67,10 +68,10 @@ HTML_CONTENT = """
 
         h1 {
             color: var(--neon-blue);
-            font-size: 3em;
-            letter-spacing: 8px;
+            font-size: 3.5em;
+            letter-spacing: 10px;
             margin: 0;
-            text-shadow: 0 0 10px var(--neon-blue), 0 0 20px var(--neon-blue), 0 0 40px var(--neon-blue);
+            text-shadow: 0 0 10px var(--neon-blue), 0 0 20px var(--neon-blue), 0 0 40px var(--neon-blue), 0 0 80px var(--neon-blue);
             border-bottom: 2px solid var(--neon-blue);
             display: inline-block;
             padding-bottom: 10px;
@@ -81,19 +82,19 @@ HTML_CONTENT = """
             content: '';
             position: absolute;
             bottom: -2px;
-            width: 20px;
-            height: 2px;
+            width: 30px;
+            height: 4px;
             background: #fff;
-            box-shadow: 0 0 10px #fff;
+            box-shadow: 0 0 15px #fff;
         }
         h1::before { left: 0; }
         h1::after { right: 0; }
 
         .sys-status {
             margin-top: 15px;
-            font-size: 1.2em;
+            font-size: 1.4em;
             color: var(--neon-yellow);
-            text-shadow: 0 0 5px var(--neon-yellow);
+            text-shadow: 0 0 8px var(--neon-yellow);
             animation: pulse 2s infinite;
         }
 
@@ -101,19 +102,19 @@ HTML_CONTENT = """
         .dashboard-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 25px;
+            gap: 30px;
             position: relative;
             z-index: 10;
-            max-width: 1600px;
+            max-width: 1800px;
             margin: 0 auto;
         }
 
-        @media (max-width: 1200px) {
+        @media (max-width: 1400px) {
             .dashboard-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
         }
-        @media (max-width: 800px) {
+        @media (max-width: 900px) {
             .dashboard-grid {
                 grid-template-columns: 1fr;
             }
@@ -122,15 +123,16 @@ HTML_CONTENT = """
         /* Panels */
         .panel {
             background: var(--panel-bg);
-            border: 1px solid;
-            border-radius: 4px;
-            padding: 20px;
+            border: 2px solid;
+            border-radius: 8px;
+            padding: 25px;
             position: relative;
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            gap: 15px;
-            backdrop-filter: blur(5px);
+            gap: 20px;
+            backdrop-filter: blur(8px);
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
         }
 
         /* Glitch / Scanner line inside panels */
@@ -140,40 +142,41 @@ HTML_CONTENT = """
             top: -50%; left: -50%;
             width: 200%; height: 2px;
             background: inherit;
-            opacity: 0.5;
+            opacity: 0.7;
             transform: rotate(30deg);
-            animation: scan 4s linear infinite;
+            animation: scan 3s linear infinite;
+            box-shadow: 0 0 10px inherit;
         }
 
         @keyframes scan {
             0% { transform: translateY(-100px) rotate(30deg); }
-            100% { transform: translateY(1000px) rotate(30deg); }
+            100% { transform: translateY(1200px) rotate(30deg); }
         }
 
         /* Specific Panel Colors */
         .panel.hft {
             border-color: var(--neon-red);
-            box-shadow: 0 0 15px rgba(255, 0, 60, 0.15) inset, 0 0 10px rgba(255, 0, 60, 0.3);
+            box-shadow: 0 0 20px rgba(255, 0, 60, 0.2) inset, 0 0 15px rgba(255, 0, 60, 0.4);
         }
-        .panel.hft h2 { color: var(--neon-red); text-shadow: 0 0 10px var(--neon-red); border-bottom: 1px dashed var(--neon-red); }
+        .panel.hft h2 { color: var(--neon-red); text-shadow: 0 0 15px var(--neon-red); border-bottom: 2px dashed var(--neon-red); }
 
         .panel.trinity {
-            border-color: var(--neon-pink);
-            box-shadow: 0 0 15px rgba(255, 0, 255, 0.15) inset, 0 0 10px rgba(255, 0, 255, 0.3);
+            border-color: var(--neon-purple);
+            box-shadow: 0 0 20px rgba(176, 38, 255, 0.2) inset, 0 0 15px rgba(176, 38, 255, 0.4);
         }
-        .panel.trinity h2 { color: var(--neon-pink); text-shadow: 0 0 10px var(--neon-pink); border-bottom: 1px dashed var(--neon-pink); }
+        .panel.trinity h2 { color: var(--neon-purple); text-shadow: 0 0 15px var(--neon-purple); border-bottom: 2px dashed var(--neon-purple); }
 
         .panel.market {
             border-color: var(--neon-blue);
-            box-shadow: 0 0 15px rgba(0, 243, 255, 0.15) inset, 0 0 10px rgba(0, 243, 255, 0.3);
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.2) inset, 0 0 15px rgba(0, 243, 255, 0.4);
         }
-        .panel.market h2 { color: var(--neon-blue); text-shadow: 0 0 10px var(--neon-blue); border-bottom: 1px dashed var(--neon-blue); }
+        .panel.market h2 { color: var(--neon-blue); text-shadow: 0 0 15px var(--neon-blue); border-bottom: 2px dashed var(--neon-blue); }
 
         h2 {
-            margin: 0 0 10px 0;
-            padding-bottom: 10px;
-            font-size: 1.6em;
-            letter-spacing: 2px;
+            margin: 0 0 15px 0;
+            padding-bottom: 12px;
+            font-size: 1.8em;
+            letter-spacing: 3px;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -181,103 +184,119 @@ HTML_CONTENT = """
 
         /* Cards inside panels */
         .card {
-            background: rgba(0, 0, 0, 0.6);
-            border-left: 3px solid;
-            padding: 12px;
+            background: rgba(0, 0, 0, 0.7);
+            border-left: 4px solid;
+            padding: 15px;
             position: relative;
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
         }
         .card:hover {
-            transform: translateX(5px);
-            background: rgba(20, 20, 20, 0.8);
+            transform: translateX(10px) scale(1.02);
+            background: rgba(20, 20, 20, 0.9);
+            box-shadow: 0 0 15px rgba(255,255,255,0.1);
         }
 
         .hft .card { border-color: var(--neon-red); }
-        .trinity .card { border-color: var(--neon-pink); }
+        .trinity .card { border-color: var(--neon-purple); }
         .market .card { border-color: var(--neon-blue); }
 
         .card h3 {
-            margin: 0 0 8px 0;
-            font-size: 1.2em;
+            margin: 0 0 10px 0;
+            font-size: 1.3em;
             display: flex;
             justify-content: space-between;
+            align-items: center;
         }
         
         .card p {
-            margin: 4px 0;
-            font-size: 0.9em;
-            color: #ccc;
+            margin: 6px 0;
+            font-size: 1em;
+            color: #d0d0d0;
             display: flex;
             justify-content: space-between;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding-bottom: 4px;
+        }
+        .card p:last-child {
+            border-bottom: none;
         }
 
-        .highlight { color: #fff; text-shadow: 0 0 5px #fff; }
-        .good { color: var(--matrix-green); text-shadow: 0 0 5px var(--matrix-green); }
-        .bad { color: var(--neon-red); text-shadow: 0 0 5px var(--neon-red); }
-        .warn { color: var(--neon-yellow); text-shadow: 0 0 5px var(--neon-yellow); }
+        .highlight { color: #fff; text-shadow: 0 0 8px #fff; font-weight: bold; }
+        .good { color: var(--matrix-green); text-shadow: 0 0 8px var(--matrix-green); font-weight: bold; }
+        .bad { color: var(--neon-red); text-shadow: 0 0 8px var(--neon-red); font-weight: bold; }
+        .warn { color: var(--neon-yellow); text-shadow: 0 0 8px var(--neon-yellow); font-weight: bold; }
 
         /* Status indicators */
         .indicator {
             display: inline-block;
-            width: 12px;
-            height: 12px;
+            width: 14px;
+            height: 14px;
             border-radius: 50%;
-            margin-right: 8px;
+            margin-right: 10px;
         }
-        .indicator.active { background: var(--matrix-green); box-shadow: 0 0 10px var(--matrix-green); animation: blink 1s infinite alternate; }
-        .indicator.standby { background: var(--neon-yellow); box-shadow: 0 0 10px var(--neon-yellow); }
-        .indicator.combat { background: var(--neon-red); box-shadow: 0 0 10px var(--neon-red); animation: fast-blink 0.3s infinite alternate; }
+        .indicator.active { background: var(--matrix-green); box-shadow: 0 0 12px var(--matrix-green); animation: blink 1.5s infinite alternate; }
+        .indicator.standby { background: var(--neon-yellow); box-shadow: 0 0 12px var(--neon-yellow); }
+        .indicator.combat { background: var(--neon-red); box-shadow: 0 0 12px var(--neon-red); animation: fast-blink 0.2s infinite alternate; }
 
         .tag {
-            font-size: 0.6em;
-            padding: 2px 6px;
+            font-size: 0.65em;
+            padding: 3px 8px;
             border: 1px solid;
-            border-radius: 2px;
-            letter-spacing: 1px;
+            border-radius: 3px;
+            letter-spacing: 2px;
+            background: rgba(0,0,0,0.5);
         }
 
         /* Animations */
-        @keyframes blink { 0% { opacity: 0.4; } 100% { opacity: 1; } }
-        @keyframes fast-blink { 0% { opacity: 0.2; } 100% { opacity: 1; } }
-        @keyframes pulse { 0% { opacity: 0.8; text-shadow: 0 0 5px var(--neon-yellow); } 50% { opacity: 1; text-shadow: 0 0 20px var(--neon-yellow); } 100% { opacity: 0.8; text-shadow: 0 0 5px var(--neon-yellow); } }
+        @keyframes blink { 0% { opacity: 0.5; } 100% { opacity: 1; } }
+        @keyframes fast-blink { 0% { opacity: 0.1; } 100% { opacity: 1; } }
+        @keyframes pulse { 0% { opacity: 0.8; text-shadow: 0 0 8px var(--neon-yellow); } 50% { opacity: 1; text-shadow: 0 0 25px var(--neon-yellow); } 100% { opacity: 0.8; text-shadow: 0 0 8px var(--neon-yellow); } }
 
         /* Terminal/Logs block */
         .terminal {
-            font-family: monospace;
-            font-size: 0.85em;
-            background: #000;
-            border: 1px solid #333;
-            padding: 10px;
-            height: 140px;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.9em;
+            background: rgba(0,0,0,0.8);
+            border: 1px solid rgba(0, 243, 255, 0.4);
+            padding: 12px;
+            height: 180px;
             overflow: hidden;
             position: relative;
+            box-shadow: inset 0 0 10px rgba(0, 243, 255, 0.1);
         }
         .terminal p {
-            margin: 2px 0;
-            color: #888;
+            margin: 4px 0;
+            color: #aaa;
+            border-bottom: none;
         }
-        .terminal p.alert { color: var(--neon-red); }
-        .terminal p.info { color: var(--neon-blue); }
+        .terminal p.alert { color: var(--neon-red); text-shadow: 0 0 5px var(--neon-red); }
+        .terminal p.info { color: var(--matrix-green); text-shadow: 0 0 5px var(--matrix-green); }
+        .terminal p.warn { color: var(--neon-yellow); text-shadow: 0 0 5px var(--neon-yellow); }
         
         /* Grid specifically for Oracle */
         .oracle-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-top: 10px;
+            gap: 15px;
+            margin-top: 15px;
         }
         .oracle-box {
-            background: rgba(0,243,255,0.05);
-            border: 1px solid rgba(0,243,255,0.3);
-            padding: 8px;
+            background: rgba(0,243,255,0.08);
+            border: 1px solid rgba(0,243,255,0.4);
+            padding: 12px;
             text-align: center;
+            transition: all 0.2s;
+        }
+        .oracle-box:hover {
+            background: rgba(0,243,255,0.15);
+            box-shadow: 0 0 15px rgba(0,243,255,0.3);
         }
         .oracle-box .val {
-            font-size: 1.4em;
+            font-size: 1.6em;
             font-weight: bold;
-            margin-top: 5px;
+            margin-top: 8px;
             color: var(--neon-blue);
-            text-shadow: 0 0 8px var(--neon-blue);
+            text-shadow: 0 0 10px var(--neon-blue);
         }
 
     </style>
@@ -285,11 +304,11 @@ HTML_CONTENT = """
 <body>
 
     <div class="header-container">
-        <h1>🛰️ ORBITAL COMMAND</h1>
+        <h1>🛰️ ORBITAL COMMAND 🛰️</h1>
         <div class="sys-status">
-            <span class="indicator active"></span> SYSTEM ONLINE // UPLINK ESTABLISHED // QUANTUM CORE STABLE
+            <span class="indicator active"></span> UPLINK ESTABLISHED // QUANTUM CORE STABLE // TACTICAL OVERVIEW
         </div>
-        <div class="sys-status" style="color:var(--neon-pink); font-weight:bold; margin-top:10px; animation: pulse 2s infinite;">
+        <div class="sys-status" style="color:var(--neon-purple); font-weight:bold; margin-top:10px; animation: pulse 1.5s infinite; text-shadow: 0 0 10px var(--neon-purple);">
             ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)
         </div>
     </div>
@@ -301,94 +320,95 @@ HTML_CONTENT = """
             <h2>⚔️ SQUADRE D'ASSALTO <span class="tag" style="color:var(--neon-red); border-color:var(--neon-red);">HFT DIV</span></h2>
             
             <div class="card">
-                <h3><span><span class="indicator combat"></span>🐺 SQUADRA_ALPHA</span> <span class="tag" style="color:var(--neon-red)">ENGAGED</span></h3>
-                <p><span>> MISSION:</span> <span class="highlight">SCALPER BINANCE</span></p>
-                <p><span>> LATENCY:</span> <span class="good">12ms</span></p>
-                <p><span>> PNL (24H):</span> <span class="good">+1.85%</span></p>
+                <h3><span><span class="indicator combat"></span>🐺 SQUADRA_ALPHA</span> <span class="tag" style="color:var(--neon-red); box-shadow: 0 0 5px var(--neon-red);">ENGAGED</span></h3>
+                <p><span>> TACTIC:</span> <span class="highlight">SCALPER BINANCE</span></p>
+                <p><span>> LATENCY:</span> <span class="good">8ms</span></p>
+                <p><span>> PNL (24H):</span> <span class="good">+2.14%</span></p>
                 <p><span>> APEX TICK:</span> <span class="highlight">BTC/USDT</span></p>
+                <p><span>> ALGO:</span> <span class="highlight">MOMENTUM IGNITION</span></p>
             </div>
             
             <div class="card">
-                <h3><span><span class="indicator combat"></span>🦅 SQUADRA_DELTA</span> <span class="tag" style="color:var(--neon-red)">ENGAGED</span></h3>
-                <p><span>> MISSION:</span> <span class="highlight">ORDER FLOW ANALYSIS</span></p>
-                <p><span>> WIN RATE:</span> <span class="good">71.2%</span></p>
-                <p><span>> ACTIVE VECTORS:</span> <span class="warn">3 (LNG: BTC, ETH | SHT: SOL)</span></p>
-                <p><span>> BOOK IMBALANCE:</span> <span class="good">DETECTED</span></p>
+                <h3><span><span class="indicator combat"></span>🦅 SQUADRA_DELTA</span> <span class="tag" style="color:var(--neon-red); box-shadow: 0 0 5px var(--neon-red);">ENGAGED</span></h3>
+                <p><span>> TACTIC:</span> <span class="highlight">ORDER FLOW ANALYSIS</span></p>
+                <p><span>> WIN RATE:</span> <span class="good">74.8%</span></p>
+                <p><span>> VECTORS:</span> <span class="warn">3 (LNG: BTC, ETH | SHT: SOL)</span></p>
+                <p><span>> IMBALANCE:</span> <span class="good">DETECTED [BID SIDE]</span></p>
             </div>
             
             <div class="card">
-                <h3><span><span class="indicator standby"></span>🐍 SQUADRA_GAMMA</span> <span class="tag" style="color:var(--neon-yellow)">STANDBY</span></h3>
-                <p><span>> MISSION:</span> <span class="highlight">PAIRS TRADING BITGET</span></p>
-                <p><span>> SPREAD TARGET:</span> <span class="highlight">> 0.5%</span></p>
-                <p><span>> PAIRS LOCKED:</span> <span class="highlight">14</span></p>
-                <p><span>> STATUS:</span> <span class="warn">AWAITING VOLATILITY SPIKE</span></p>
+                <h3><span><span class="indicator active"></span>🐍 SQUADRA_GAMMA</span> <span class="tag" style="color:var(--matrix-green); box-shadow: 0 0 5px var(--matrix-green);">ARBITRAGE</span></h3>
+                <p><span>> TACTIC:</span> <span class="highlight">PAIRS TRADING BITGET</span></p>
+                <p><span>> SPREAD TARGET:</span> <span class="highlight">> 0.45%</span></p>
+                <p><span>> PAIRS LOCKED:</span> <span class="highlight">18</span></p>
+                <p><span>> STATUS:</span> <span class="good">EXECUTING MEAN REVERSION</span></p>
             </div>
         </div>
 
         <!-- PANEL 2: TRINITY PROTOCOL -->
         <div class="panel trinity">
-            <h2>🔺 TRINITY PROTOCOL <span class="tag" style="color:var(--neon-pink); border-color:var(--neon-pink);">CORE OPS</span></h2>
+            <h2>🔺 PROTOCOLLO TRINITY <span class="tag" style="color:var(--neon-purple); border-color:var(--neon-purple);">CORE OPS</span></h2>
             
             <div class="card">
-                <h3><span><span class="indicator active" style="background:var(--neon-pink); box-shadow:0 0 10px var(--neon-pink);"></span>🕴️ LO STROZZINO</span> <span class="tag" style="color:var(--neon-pink)">YIELDING</span></h3>
-                <p><span>> DIRECTIVE:</span> <span class="highlight">FUNDING ARBITRAGE</span></p>
+                <h3><span><span class="indicator active" style="background:var(--neon-purple); box-shadow:0 0 12px var(--neon-purple);"></span>🕴️ LO STROZZINO</span> <span class="tag" style="color:var(--neon-purple)">YIELDING</span></h3>
+                <p><span>> DIRECTIVE:</span> <span class="highlight">FUNDING ARB</span></p>
                 <p><span>> NET EXPOSURE:</span> <span class="good">DELTA NEUTRAL</span></p>
-                <p><span>> CURRENT APR:</span> <span class="highlight" style="color:var(--neon-pink); text-shadow: 0 0 5px var(--neon-pink);">18.4%</span></p>
-                <p><span>> CAPITAL DEPLOYED:</span> <span class="highlight">84%</span></p>
+                <p><span>> CURRENT APR:</span> <span class="highlight" style="color:var(--neon-purple); text-shadow: 0 0 8px var(--neon-purple);">22.1%</span></p>
+                <p><span>> CAPITAL DEPLOYED:</span> <span class="highlight">89%</span></p>
             </div>
             
             <div class="card">
-                <h3><span><span class="indicator active" style="background:var(--neon-pink); box-shadow:0 0 10px var(--neon-pink);"></span>🧮 IL CONTABILE</span> <span class="tag" style="color:var(--neon-pink)">ACCUMULATING</span></h3>
-                <p><span>> DIRECTIVE:</span> <span class="highlight">DCA ENGINE</span></p>
+                <h3><span><span class="indicator active" style="background:var(--neon-purple); box-shadow:0 0 12px var(--neon-purple);"></span>🧮 IL CONTABILE</span> <span class="tag" style="color:var(--neon-purple)">ACCUMULATING</span></h3>
+                <p><span>> DIRECTIVE:</span> <span class="highlight">SMART DCA ENGINE</span></p>
                 <p><span>> ASSET:</span> <span class="highlight">BTC/ETH MATRIX</span></p>
                 <p><span>> NEXT EXECUTION:</span> <span class="warn" id="dca-timer">04:12:05</span></p>
                 <p><span>> EFFICIENCY:</span> <span class="good">OPTIMAL</span></p>
             </div>
             
             <div class="card">
-                <h3><span><span class="indicator active" style="background:var(--neon-pink); box-shadow:0 0 10px var(--neon-pink);"></span>🛡️ L'ANGELO CUSTODE</span> <span class="tag" style="color:var(--neon-pink)">GUARDING</span></h3>
+                <h3><span><span class="indicator active" style="background:var(--neon-purple); box-shadow:0 0 12px var(--neon-purple);"></span>🛡️ L'ANGELO CUSTODE</span> <span class="tag" style="color:var(--neon-purple)">GUARDING</span></h3>
                 <p><span>> DIRECTIVE:</span> <span class="highlight">MEV PROTECTION (ARBITRUM)</span></p>
-                <p><span>> MEMPOOL SCAN:</span> <span class="highlight">ACTIVE (50ms INT)</span></p>
-                <p><span>> TX SHIELDED (30D):</span> <span class="good">17</span></p>
-                <p><span>> THREAT LEVEL:</span> <span class="good">LOW</span></p>
+                <p><span>> MEMPOOL SCAN:</span> <span class="highlight">ACTIVE (30ms INT)</span></p>
+                <p><span>> TX SHIELDED (30D):</span> <span class="good">24</span></p>
+                <p><span>> THREAT LEVEL:</span> <span class="good">MINIMAL</span></p>
             </div>
         </div>
 
         <!-- PANEL 3: MARKET METRICS -->
         <div class="panel market">
-            <h2>📡 MARKET INTELLIGENCE <span class="tag" style="color:var(--neon-blue); border-color:var(--neon-blue);">DATA LINK</span></h2>
+            <h2>📡 METRICHE DI MERCATO <span class="tag" style="color:var(--neon-blue); border-color:var(--neon-blue);">DATA LINK</span></h2>
             
             <div class="card">
-                <h3>👁️ THE ORACLE <span style="font-size:0.6em; color:#888;">(BINANCE SENTIMENT)</span></h3>
+                <h3>👁️ THE ORACLE <span style="font-size:0.6em; color:#aaa;">[BINANCE SENTIMENT]</span></h3>
                 <div class="oracle-grid">
                     <div class="oracle-box">
-                        <div style="font-size:0.7em; color:#aaa;">GLOBAL TREND</div>
-                        <div class="val" style="color:var(--matrix-green); text-shadow:0 0 5px var(--matrix-green);">BULLISH</div>
+                        <div style="font-size:0.7em; color:#aaa; letter-spacing:1px;">GLOBAL TREND</div>
+                        <div class="val" style="color:var(--matrix-green); text-shadow:0 0 8px var(--matrix-green);">BULLISH</div>
                     </div>
                     <div class="oracle-box">
-                        <div style="font-size:0.7em; color:#aaa;">FEAR & GREED</div>
-                        <div class="val">74</div>
+                        <div style="font-size:0.7em; color:#aaa; letter-spacing:1px;">FEAR & GREED</div>
+                        <div class="val" style="color:var(--neon-yellow); text-shadow:0 0 8px var(--neon-yellow);">78</div>
                     </div>
                     <div class="oracle-box">
-                        <div style="font-size:0.7em; color:#aaa;">L/S RATIO</div>
-                        <div class="val" id="ls-ratio">1.45</div>
+                        <div style="font-size:0.7em; color:#aaa; letter-spacing:1px;">L/S RATIO</div>
+                        <div class="val" id="ls-ratio">1.52</div>
                     </div>
                     <div class="oracle-box">
-                        <div style="font-size:0.7em; color:#aaa;">VOLATILITY</div>
-                        <div class="val" style="color:var(--neon-red); text-shadow:0 0 5px var(--neon-red);">HIGH</div>
+                        <div style="font-size:0.7em; color:#aaa; letter-spacing:1px;">VOLATILITY</div>
+                        <div class="val" style="color:var(--neon-red); text-shadow:0 0 8px var(--neon-red);">EXTREME</div>
                     </div>
                 </div>
             </div>
             
             <div class="card">
-                <h3>🐋 WHALE TRACKER <span style="font-size:0.6em; color:#888;">(LIVE FEED)</span></h3>
+                <h3>🐋 WHALE TRACKER <span style="font-size:0.6em; color:#aaa;">[LIVE ON-CHAIN FEED]</span></h3>
                 <div class="terminal" id="whale-feed">
-                    <p class="alert">[16:54:12] ALERT: 1,500 BTC -> Coinbase</p>
-                    <p class="info">[16:50:05] INFO: 12,000 ETH -> Unknown</p>
-                    <p class="alert">[16:42:33] ALERT: 50M USDT -> Binance</p>
-                    <p class="info">[16:30:10] INFO: 400 BTC -> Bitfinex</p>
-                    <p class="info">[16:15:22] INFO: 8M USDC -> Kraken</p>
-                    <p class="alert">[15:59:01] ALERT: 2,100 BTC -> Unknown</p>
+                    <p class="alert">[17:01:12] ALERT: 2,500 BTC -> Coinbase</p>
+                    <p class="info">[16:58:05] INFO: 18,000 ETH -> Unknown DEX</p>
+                    <p class="alert">[16:52:33] ALERT: 100M USDT -> Binance</p>
+                    <p class="info">[16:45:10] INFO: 800 BTC -> Bitfinex</p>
+                    <p class="warn">[16:35:22] WARN: 15M USDC -> Kraken (Anomalous)</p>
+                    <p class="alert">[16:29:01] ALERT: 4,100 BTC -> Unknown Cold Wallet</p>
                 </div>
             </div>
         </div>
@@ -398,12 +418,12 @@ HTML_CONTENT = """
     <script>
         // LS Ratio fluttuante
         setInterval(() => {
-            const ratios = ["1.45", "1.46", "1.44", "1.47", "1.43", "1.48"];
+            const ratios = ["1.52", "1.54", "1.51", "1.55", "1.50", "1.56"];
             document.getElementById('ls-ratio').innerText = ratios[Math.floor(Math.random() * ratios.length)];
-        }, 2500);
+        }, 1800);
 
         // DCA Timer decrement
-        let dcaSeconds = 4 * 3600 + 12 * 60 + 5;
+        let dcaSeconds = 3 * 3600 + 45 * 60 + 12;
         setInterval(() => {
             if(dcaSeconds > 0) dcaSeconds--;
             let h = Math.floor(dcaSeconds / 3600).toString().padStart(2, '0');
@@ -414,11 +434,13 @@ HTML_CONTENT = """
 
         // Finto terminale Whale Tracker
         const whaleLogs = [
-            { type: 'alert', msg: "ALERT: 500 BTC -> Binance" },
-            { type: 'info', msg: "INFO: 10M USDT -> OKX" },
-            { type: 'alert', msg: "CRITICAL: 3,000 ETH -> Kraken" },
-            { type: 'info', msg: "INFO: 15M USDC -> Bybit" },
-            { type: 'alert', msg: "ALERT: 1,200 BTC -> Unknown Wallet" }
+            { type: 'alert', msg: "ALERT: 850 BTC -> Binance" },
+            { type: 'info', msg: "INFO: 20M USDT -> OKX" },
+            { type: 'alert', msg: "CRITICAL: 5,000 ETH -> Kraken" },
+            { type: 'info', msg: "INFO: 25M USDC -> Bybit" },
+            { type: 'alert', msg: "ALERT: 3,200 BTC -> Unknown Wallet" },
+            { type: 'warn', msg: "WARN: Large slippage detected on UNI pool" },
+            { type: 'info', msg: "INFO: 1,000 WBTC -> Aave Vault" }
         ];
 
         setInterval(() => {
@@ -432,10 +454,10 @@ HTML_CONTENT = """
             p.innerText = `[${timeStr}] ${log.msg}`;
             
             feed.prepend(p);
-            if(feed.children.length > 8) {
+            if(feed.children.length > 7) {
                 feed.removeChild(feed.lastChild);
             }
-        }, 5000);
+        }, 3500);
     </script>
 </body>
 </html>
