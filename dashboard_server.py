@@ -198,13 +198,15 @@ HTML_TEMPLATE = """
 
     <div class="container">
         <!-- PATRIMONIO & STATO -->
-        <!-- Update Trinity Protocol Status -->
         <div class="panel" style="border-color: var(--neon-green); box-shadow: 0 0 15px rgba(57, 255, 20, 0.2) inset;">
             <h2 class="glow-text-green">💰 PATRIMONIO & STATO</h2>
+            <div style="background: rgba(57, 255, 20, 0.1); border: 1px solid var(--neon-green); padding: 15px; margin-bottom: 15px; text-align: center; animation: pulse 2s infinite;">
+                <h3 style="color: var(--neon-green); margin: 0; font-size: 1.1em;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</h3>
+            </div>
             <div class="status-row" style="border-color: var(--neon-green);">
                 <div>
-                    <strong style="color: var(--neon-green);">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</strong><br>
-                    <span style="font-size: 0.8em; color: #888;">[Sistemi Autonomi Attivi]</span>
+                    <strong style="color: var(--neon-green);">Sistemi Autonomi Attivi</strong><br>
+                    <span style="font-size: 0.8em; color: #888;">[DCA, Funding Arbitrage, MEV Protection]</span>
                 </div>
                 <span class="status-badge badge-online">ACTIVE</span>
             </div>
