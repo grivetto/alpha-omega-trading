@@ -4,7 +4,7 @@ from flask import Flask, render_template_string
 
 app = Flask(__name__)
 
-# Template HTML con stile Cyberpunk / Neon
+# Template HTML con stile Cyberpunk / Neon molto dettagliato
 HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="it">
@@ -13,32 +13,48 @@ HTML_TEMPLATE = """
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>⚡ NUVOLA ORBITAL COMMAND ⚡</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@500;700&display=swap');
         
         :root {
-            --neon-blue: #0ff;
-            --neon-pink: #f0f;
-            --neon-green: #0f0;
-            --neon-red: #f00;
-            --bg-color: #050505;
-            --panel-bg: rgba(10, 20, 30, 0.85);
-            --border-color: rgba(0, 255, 255, 0.3);
+            --neon-blue: #00f3ff;
+            --neon-pink: #ff003c;
+            --neon-green: #39ff14;
+            --neon-red: #ff2a2a;
+            --neon-yellow: #fcee0a;
+            --bg-color: #030305;
+            --panel-bg: rgba(5, 10, 15, 0.75);
+            --border-color: rgba(0, 243, 255, 0.4);
+            --scanline: rgba(0, 243, 255, 0.05);
         }
         
+        * { box-sizing: border-box; }
+
         body {
             background-color: var(--bg-color);
             color: var(--neon-blue);
             font-family: 'Share Tech Mono', monospace;
             margin: 0;
-            padding: 20px;
+            padding: 2vh 2vw;
             background-image: 
-                linear-gradient(rgba(0, 255, 255, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 255, 255, 0.03) 1px, transparent 1px);
-            background-size: 30px 30px;
+                linear-gradient(var(--scanline) 1px, transparent 1px),
+                linear-gradient(90deg, var(--scanline) 1px, transparent 1px);
+            background-size: 20px 20px;
             overflow-x: hidden;
         }
 
-        h1, h2, h3 {
+        body::after {
+            content: " ";
+            display: block;
+            position: fixed;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 2;
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+        }
+
+        h1, h2, h3, .title {
+            font-family: 'Orbitron', sans-serif;
             text-transform: uppercase;
             text-shadow: 0 0 10px var(--neon-blue);
             letter-spacing: 2px;
@@ -47,46 +63,76 @@ HTML_TEMPLATE = """
 
         .header {
             text-align: center;
-            border-bottom: 2px solid var(--neon-blue);
-            padding-bottom: 20px;
-            margin-bottom: 30px;
-            box-shadow: 0 10px 20px -10px var(--neon-blue);
-            animation: pulse 2s infinite alternate;
+            border: 1px solid var(--neon-blue);
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: inset 0 0 20px rgba(0, 243, 255, 0.2), 0 0 15px rgba(0, 243, 255, 0.4);
+            background: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0, 243, 255, 0.05) 10px, rgba(0, 243, 255, 0.05) 20px);
+            position: relative;
         }
 
-        @keyframes pulse {
-            0% { text-shadow: 0 0 5px var(--neon-blue); }
-            100% { text-shadow: 0 0 20px var(--neon-blue), 0 0 30px var(--neon-blue); }
+        .header::before, .header::after {
+            content: '[ O C ]';
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--neon-pink);
+            font-size: 1.5em;
+            text-shadow: 0 0 10px var(--neon-pink);
+        }
+        .header::before { left: 20px; }
+        .header::after { right: 20px; }
+
+        .glitch {
+            animation: glitch 1.5s infinite;
+        }
+
+        @keyframes glitch {
+            0% { text-shadow: 0.05em 0 0 rgba(255,0,0,.75), -0.05em -0.025em 0 rgba(0,255,0,.75), -0.025em 0.05em 0 rgba(0,0,255,.75); }
+            14% { text-shadow: 0.05em 0 0 rgba(255,0,0,.75), -0.05em -0.025em 0 rgba(0,255,0,.75), -0.025em 0.05em 0 rgba(0,0,255,.75); }
+            15% { text-shadow: -0.05em -0.025em 0 rgba(255,0,0,.75), 0.025em 0.025em 0 rgba(0,255,0,.75), -0.05em -0.05em 0 rgba(0,0,255,.75); }
+            49% { text-shadow: -0.05em -0.025em 0 rgba(255,0,0,.75), 0.025em 0.025em 0 rgba(0,255,0,.75), -0.05em -0.05em 0 rgba(0,0,255,.75); }
+            50% { text-shadow: 0.025em 0.05em 0 rgba(255,0,0,.75), 0.05em 0 0 rgba(0,255,0,.75), 0 -0.05em 0 rgba(0,0,255,.75); }
+            99% { text-shadow: 0.025em 0.05em 0 rgba(255,0,0,.75), 0.05em 0 0 rgba(0,255,0,.75), 0 -0.05em 0 rgba(0,0,255,.75); }
+            100% { text-shadow: -0.025em 0 0 rgba(255,0,0,.75), -0.025em -0.025em 0 rgba(0,255,0,.75), -0.025em -0.05em 0 rgba(0,0,255,.75); }
         }
 
         .grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
             gap: 20px;
+            z-index: 10;
+            position: relative;
         }
 
         .panel {
             background: var(--panel-bg);
             border: 1px solid var(--border-color);
-            border-radius: 5px;
             padding: 20px;
-            box-shadow: inset 0 0 15px rgba(0, 255, 255, 0.1), 0 0 10px rgba(0, 0, 0, 0.5);
+            box-shadow: inset 0 0 15px rgba(0, 243, 255, 0.1), 0 0 10px rgba(0, 0, 0, 0.8);
             position: relative;
-            overflow: hidden;
         }
+
+        .panel.alert { border-color: var(--neon-pink); box-shadow: inset 0 0 20px rgba(255,0,60,0.15), 0 0 10px rgba(255,0,60,0.3); }
+        .panel.alert h2 { color: var(--neon-pink); text-shadow: 0 0 10px var(--neon-pink); }
+        
+        .panel.trinity { border-color: var(--neon-green); box-shadow: inset 0 0 20px rgba(57,255,20,0.1), 0 0 10px rgba(57,255,20,0.2); }
+        .panel.trinity h2 { color: var(--neon-green); text-shadow: 0 0 10px var(--neon-green); }
 
         .panel::before {
             content: '';
             position: absolute;
-            top: 0; left: 0; width: 100%; height: 2px;
-            background: linear-gradient(90deg, transparent, var(--neon-blue), transparent);
-            animation: scanline 3s linear infinite;
+            top: 0; left: 0; width: 15px; height: 15px;
+            border-top: 2px solid var(--neon-blue); border-left: 2px solid var(--neon-blue);
         }
-
-        @keyframes scanline {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
+        .panel::after {
+            content: '';
+            position: absolute;
+            bottom: 0; right: 0; width: 15px; height: 15px;
+            border-bottom: 2px solid var(--neon-blue); border-right: 2px solid var(--neon-blue);
         }
+        .panel.alert::before, .panel.alert::after { border-color: var(--neon-pink); }
+        .panel.trinity::before, .panel.trinity::after { border-color: var(--neon-green); }
 
         .status-dot {
             display: inline-block;
@@ -95,151 +141,192 @@ HTML_TEMPLATE = """
             background-color: var(--neon-green);
             box-shadow: 0 0 10px var(--neon-green);
             margin-right: 10px;
+            animation: pulse 1.5s infinite alternate;
         }
-
+        .status-dot.standby { background-color: var(--neon-yellow); box-shadow: 0 0 10px var(--neon-yellow); }
         .status-dot.offline { background-color: var(--neon-red); box-shadow: 0 0 10px var(--neon-red); }
-        .status-dot.standby { background-color: var(--neon-pink); box-shadow: 0 0 10px var(--neon-pink); }
 
-        ul { list-style-type: none; padding: 0; }
-        li {
+        @keyframes pulse { 0% { opacity: 0.5; box-shadow: 0 0 5px; } 100% { opacity: 1; box-shadow: 0 0 15px; } }
+
+        .list-item {
             margin-bottom: 15px;
-            padding: 10px;
-            background: rgba(0,0,0,0.5);
-            border-left: 3px solid var(--neon-blue);
+            padding: 12px;
+            background: rgba(0,0,0,0.6);
+            border-left: 4px solid var(--neon-blue);
             transition: all 0.3s ease;
         }
-        li:hover {
+        .list-item:hover {
+            background: rgba(0,243,255,0.1);
             border-left-color: var(--neon-pink);
-            transform: translateX(5px);
-            box-shadow: inset 50px 0 50px -50px var(--neon-pink);
+            transform: scale(1.02);
         }
+        .panel.alert .list-item { border-left-color: var(--neon-pink); }
+        .panel.trinity .list-item { border-left-color: var(--neon-green); }
 
-        .metric-row { display: flex; justify-content: space-between; border-bottom: 1px dashed rgba(0,255,255,0.2); padding: 5px 0; }
-        .metric-value { color: var(--neon-pink); font-weight: bold; text-shadow: 0 0 5px var(--neon-pink); }
+        .metric-row { display: flex; justify-content: space-between; border-bottom: 1px dotted rgba(255,255,255,0.2); padding: 6px 0; margin-top: 5px; }
+        .metric-value { font-weight: bold; }
+        .val-up { color: var(--neon-green); text-shadow: 0 0 5px var(--neon-green); }
+        .val-down { color: var(--neon-pink); text-shadow: 0 0 5px var(--neon-pink); }
+        .val-neutral { color: var(--neon-yellow); text-shadow: 0 0 5px var(--neon-yellow); }
+
+        .bar-container { width: 100%; background: #111; height: 10px; margin-top: 5px; border: 1px solid #333; position: relative; }
+        .bar-fill { height: 100%; background: var(--neon-blue); width: 0%; transition: width 0.5s; box-shadow: 0 0 10px var(--neon-blue); }
 
         .terminal {
             background: #000;
-            color: #0f0;
+            color: var(--neon-green);
             padding: 15px;
-            border: 1px solid #0f0;
-            border-radius: 3px;
+            border: 1px solid var(--neon-green);
             font-size: 0.9em;
-            height: 150px;
+            height: 200px;
             overflow-y: hidden;
-            box-shadow: 0 0 10px rgba(0,255,0,0.2);
+            box-shadow: inset 0 0 20px rgba(0,255,0,0.1);
             position: relative;
         }
-        
-        .terminal-line { margin: 5px 0; animation: typing 0.5s steps(40, end); }
+        .terminal-line { margin: 3px 0; }
+        .terminal-line::before { content: "> "; opacity: 0.5; }
 
-        .footer { text-align: center; margin-top: 40px; font-size: 0.8em; color: rgba(0,255,255,0.5); }
+        .crosshair {
+            position: absolute; width: 40px; height: 40px;
+            border: 1px solid rgba(255,0,60,0.3); pointer-events: none;
+            animation: rotate 10s linear infinite;
+            top: 10px; right: 10px;
+        }
+        .crosshair::before { content: ''; position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: rgba(255,0,60,0.5); }
+        .crosshair::after { content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: rgba(255,0,60,0.5); }
+        @keyframes rotate { 100% { transform: rotate(360deg); } }
+
+        .footer { text-align: center; margin-top: 30px; font-size: 0.8em; color: rgba(0,243,255,0.4); border-top: 1px solid rgba(0,243,255,0.2); padding-top: 10px;}
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <h1>🛰️ NUVOLA ORBITAL COMMAND 🛰️</h1>
-        <p>[ SISTEMA CENTRALE DI CONTROLLO HFT QUANTITATIVO - V3.0 ]</p>
+    <div class="header glitch">
+        <h1>🛰️ ORBITAL COMMAND // NUVOLA</h1>
+        <p>[ CENTRAL QUANTITATIVE HFT SYSTEM - MILITARY GRADE ]</p>
+        <p style="color: var(--neon-green); font-weight: bold; text-shadow: 0 0 10px var(--neon-green);">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</p>
     </div>
 
     <div class="grid">
         <!-- SEZIONE 1: SQUADRE D'ASSALTO -->
-        <div class="panel">
+        <div class="panel alert">
+            <div class="crosshair"></div>
             <h2>⚔️ SQUADRE D'ASSALTO (HFT)</h2>
-            <ul>
-                <li>
-                    <div><span class="status-dot"></span> <b>SQUADRA_ALPHA</b> [Scalper Binance]</div>
-                    <div style="font-size:0.8em; color:gray; margin-top:5px;">Target: BTC/USDT, ETH/USDT | Latenza: 12ms</div>
-                    <div class="metric-row"><span>Trades/min:</span> <span class="metric-value">42</span></div>
-                </li>
-                <li>
-                    <div><span class="status-dot standby"></span> <b>SQUADRA_DELTA</b> [Order Flow]</div>
-                    <div style="font-size:0.8em; color:gray; margin-top:5px;">Analisi Liquidity Pools & Spoofing Detection</div>
-                    <div class="metric-row"><span>Status:</span> <span class="metric-value" style="color:var(--neon-pink);">ANALISI IN CORSO...</span></div>
-                </li>
-                <li>
-                    <div><span class="status-dot"></span> <b>SQUADRA_GAMMA</b> [Pairs Trading Bitget]</div>
-                    <div style="font-size:0.8em; color:gray; margin-top:5px;">Cointegration Arb: L1 vs L2 Tokens</div>
-                    <div class="metric-row"><span>Spread Arb:</span> <span class="metric-value">+1.24%</span></div>
-                </li>
-            </ul>
+            
+            <div class="list-item">
+                <div class="title"><span class="status-dot"></span> <b>SQUADRA_ALPHA</b> <span style="font-size:0.7em; color:var(--neon-pink);">[ENGAGED]</span></div>
+                <div style="font-size:0.8em; color:#888;">Binance Scalper | Target: BTC/USDT</div>
+                <div class="metric-row"><span>Execution Latency:</span> <span class="metric-value" id="alpha-lat">12ms</span></div>
+                <div class="metric-row"><span>Win Rate (1h):</span> <span class="metric-value val-up">68.4%</span></div>
+                <div class="bar-container"><div class="bar-fill" style="background:var(--neon-pink); width:68.4%;"></div></div>
+            </div>
+
+            <div class="list-item">
+                <div class="title"><span class="status-dot standby"></span> <b>SQUADRA_DELTA</b> <span style="font-size:0.7em; color:var(--neon-yellow);">[SCANNING]</span></div>
+                <div style="font-size:0.8em; color:#888;">Order Flow & Spoofing Detection | ETH/USDT</div>
+                <div class="metric-row"><span>Orderbook Imbalance:</span> <span class="metric-value val-neutral" id="delta-imb">-4.2%</span></div>
+                <div class="metric-row"><span>Spoofing Alerts:</span> <span class="metric-value val-down">2 ACTIVE</span></div>
+            </div>
+
+            <div class="list-item">
+                <div class="title"><span class="status-dot"></span> <b>SQUADRA_GAMMA</b> <span style="font-size:0.7em; color:var(--neon-blue);">[ENGAGED]</span></div>
+                <div style="font-size:0.8em; color:#888;">Pairs Trading | Bitget L1 vs L2</div>
+                <div class="metric-row"><span>Current Spread:</span> <span class="metric-value val-up" id="gamma-spread">+1.05%</span></div>
+                <div class="metric-row"><span>Z-Score:</span> <span class="metric-value val-up">2.41 σ</span></div>
+            </div>
         </div>
 
         <!-- SEZIONE 2: PROTOCOLLO TRINITY -->
-        <div class="panel">
+        <div class="panel trinity">
             <h2>💠 PROTOCOLLO TRINITY</h2>
-            <div style="margin-bottom: 15px; padding: 10px; border: 1px solid var(--neon-green); background: rgba(0,255,0,0.1); color: var(--neon-green); text-align: center; font-weight: bold; text-shadow: 0 0 5px var(--neon-green); border-radius: 3px;">
-                ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)
+            <div style="margin-bottom: 15px; padding: 10px; border: 1px solid var(--neon-green); background: rgba(57,255,20,0.05); text-align: center; text-shadow: 0 0 5px var(--neon-green);">
+                SYSTEM STATUS: BACKGROUND PROCESSES ACTIVE
             </div>
-            <ul>
-                <li>
-                    <div><span class="status-dot"></span> <b>LO STROZZINO</b> [Funding Arb]</div>
-                    <div style="font-size:0.8em; color:gray; margin-top:5px;">Spot vs Perp Arbitrage sui mercati Degen</div>
-                    <div class="metric-row"><span>Yield Stimato (APR):</span> <span class="metric-value">34.5%</span></div>
-                </li>
-                <li>
-                    <div><span class="status-dot"></span> <b>IL CONTABILE</b> [Smart DCA]</div>
-                    <div style="font-size:0.8em; color:gray; margin-top:5px;">Accumulo aggressivo su ritracciamenti > 15%</div>
-                    <div class="metric-row"><span>Fondi Allocati:</span> <span class="metric-value">$12,450.00</span></div>
-                </li>
-                <li>
-                    <div><span class="status-dot"></span> <b>L'ANGELO CUSTODE</b> [MEV Arbitrum]</div>
-                    <div style="font-size:0.8em; color:gray; margin-top:5px;">Sandwich & Backrun Protections Dex Aggregators</div>
-                    <div class="metric-row"><span>Tx Salvate:</span> <span class="metric-value">1,402</span></div>
-                </li>
-            </ul>
+
+            <div class="list-item">
+                <div class="title"><span class="status-dot"></span> <b>LO STROZZINO</b> <span style="font-size:0.7em;">[ONLINE]</span></div>
+                <div style="font-size:0.8em; color:#888;">Funding Arb (Spot vs Perp) | Aggressive</div>
+                <div class="metric-row"><span>Aggregated APR:</span> <span class="metric-value val-up" id="strozzino-apr">22.4%</span></div>
+                <div class="metric-row"><span>Capital Deployed:</span> <span class="metric-value">$45,200</span></div>
+            </div>
+
+            <div class="list-item">
+                <div class="title"><span class="status-dot"></span> <b>IL CONTABILE</b> <span style="font-size:0.7em;">[ONLINE]</span></div>
+                <div style="font-size:0.8em; color:#888;">Smart DCA | Target: Altcoins Top 20</div>
+                <div class="metric-row"><span>Next Execution in:</span> <span class="metric-value val-neutral">02:14:33</span></div>
+                <div class="metric-row"><span>Dip Threshold:</span> <span class="metric-value val-down">-15.0%</span></div>
+            </div>
+
+            <div class="list-item">
+                <div class="title"><span class="status-dot"></span> <b>L'ANGELO CUSTODE</b> <span style="font-size:0.7em;">[ONLINE]</span></div>
+                <div style="font-size:0.8em; color:#888;">MEV Arbitrum | Sandwich & Backrun Protection</div>
+                <div class="metric-row"><span>Blocks Sniped (24h):</span> <span class="metric-value val-up">142</span></div>
+                <div class="metric-row"><span>Total Value Saved:</span> <span class="metric-value val-up">3.4 ETH</span></div>
+            </div>
         </div>
 
         <!-- SEZIONE 3: METRICHE DI MERCATO -->
         <div class="panel">
-            <h2>📊 THE ORACLE & METRICHE</h2>
-            <div style="margin-bottom: 15px;">
-                <div class="metric-row"><span>👁️ Binance Sentiment Index:</span> <span class="metric-value">EXTREME GREED (88)</span></div>
-                <div class="metric-row"><span>🐋 Whale Tracker Alarms (1h):</span> <span class="metric-value">14 Trovati</span></div>
-                <div class="metric-row"><span>⚡ Rete Arbitrum Gas:</span> <span class="metric-value">0.012 Gwei</span></div>
-                <div class="metric-row"><span>🔥 PnL Giornaliero Stimato:</span> <span class="metric-value" style="color:var(--neon-green);">+$420.69</span></div>
+            <h2>📊 MARKET INTELLIGENCE</h2>
+
+            <div class="list-item">
+                <div class="title">👁️ THE ORACLE</div>
+                <div style="font-size:0.8em; color:#888;">Binance Sentiment & NLP AI Analysis</div>
+                <div class="metric-row"><span>Index Score:</span> <span class="metric-value val-up" id="oracle-score">82 [EXTREME GREED]</span></div>
+                <div class="bar-container"><div class="bar-fill" style="background:var(--neon-green); width:82%;"></div></div>
             </div>
-            
-            <h3>> SYSTEM LOGS _</h3>
-            <div class="terminal">
-                <div class="terminal-line">[SYS] Connessione a WebSocket Binance... OK</div>
-                <div class="terminal-line">[HFT] SQUADRA_ALPHA ordine eseguito a 64,210.50 USDT</div>
-                <div class="terminal-line">[MEV] Angelo Custode bypassa mempool congestion...</div>
-                <div class="terminal-line">[SYS] Heartbeat SQUADRA_GAMMA ricevuto. Latency 24ms.</div>
-                <div class="terminal-line blink" style="color:var(--neon-pink);">[WARN] Whale spotted moving 5000 ETH to Coinbase...</div>
+
+            <div class="list-item">
+                <div class="title">🐋 WHALE TRACKER</div>
+                <div style="font-size:0.8em; color:#888;">On-Chain Net Flow & Big Order Blocks</div>
+                <div class="metric-row"><span>Net Flow (1h):</span> <span class="metric-value val-down" id="whale-flow">-$12.4M [OUTFLOW]</span></div>
+                <div class="metric-row"><span>Block Alerts:</span> <span class="metric-value val-down">5 DETECTED</span></div>
+            </div>
+
+            <h3 style="margin-top:20px; font-size:1em; border-bottom:1px solid var(--neon-blue); padding-bottom:5px;">TERMINAL LOGS</h3>
+            <div class="terminal" id="terminal">
+                <div class="terminal-line">SYSTEM INITIALIZED. ORBITAL COMMAND V3.0</div>
+                <div class="terminal-line">CONNECTING TO SECURE SOCKETS... OK</div>
             </div>
         </div>
     </div>
 
     <div class="footer">
-        © 2026 NUVOLA CAPITAL. RESTRICTED ACCESS. UNAUTHORIZED CONNECTIONS WILL BE TRACED AND TERMINATED.
+        © 2026 NUVOLA CAPITAL // SECURE ENCLAVE ACTIVE // UNAUTHORIZED ACCESS WILL BE TERMINATED.
     </div>
 
     <script>
-        // Effetto blink per il warning nel terminale
+        // Simulazione aggiornamenti dati
         setInterval(() => {
-            const warn = document.querySelector('.blink');
-            if(warn) warn.style.opacity = warn.style.opacity === '0' ? '1' : '0';
-        }, 500);
-        
-        // Simula log dinamici
-        const logs = [
-            "[HFT] Scalping micro-profit: +0.02%",
-            "[SYS] Rebalancing pool liquidity...",
-            "[TRINITY] Lo Strozzino ha incassato funding rate 0.01%",
-            "[WARN] Elevata volatilità rilevata su SOL/USDT",
-            "[HFT] Ping server Tokyo: 145ms. Switching to Frankfurt (18ms)..."
+            document.getElementById('alpha-lat').innerText = Math.floor(Math.random() * 5 + 10) + 'ms';
+            document.getElementById('delta-imb').innerText = (Math.random() * 10 - 5).toFixed(2) + '%';
+            document.getElementById('gamma-spread').innerText = '+' + (Math.random() * 2 + 0.5).toFixed(2) + '%';
+            document.getElementById('strozzino-apr').innerText = (Math.random() * 5 + 20).toFixed(1) + '%';
+        }, 1500);
+
+        // Simulazione Terminal Logs
+        const logMessages = [
+            "[HFT-ALPHA] Executed LIMIT BUY 0.5 BTC @ 64,102.50",
+            "[HFT-DELTA] Warning: Spoofing detected on ETH orderbook. Cancelling orders.",
+            "[HFT-GAMMA] Rebalancing SOL/ETH pair hedge.",
+            "[TRINITY-STROZZINO] Collecting funding fees on Bybit Perp (+0.015%).",
+            "[TRINITY-CUSTODE] Front-running malicious sandwich bot on Arbitrum DEX.",
+            "[ORACLE] Twitter NLP sentiment shifted +5% bullish in last 10m.",
+            "[WHALE] Alert: 2000 ETH transferred from unknown wallet to Binance.",
+            "[SYS] Neural latency check: 14ms average."
         ];
-        const terminal = document.querySelector('.terminal');
+
+        const terminal = document.getElementById('terminal');
         setInterval(() => {
             const newLine = document.createElement('div');
             newLine.className = 'terminal-line';
-            newLine.textContent = logs[Math.floor(Math.random() * logs.length)];
+            newLine.innerText = logMessages[Math.floor(Math.random() * logMessages.length)];
             terminal.appendChild(newLine);
-            if(terminal.children.length > 6) {
+            if (terminal.children.length > 8) {
                 terminal.removeChild(terminal.firstChild);
             }
-        }, 3500);
+            terminal.scrollTop = terminal.scrollHeight;
+        }, 2200);
     </script>
 </body>
 </html>
@@ -250,5 +337,5 @@ def dashboard():
     return render_template_string(HTML_TEMPLATE)
 
 if __name__ == '__main__':
-    # Esegue sulla porta 5000
+    # Esegue sulla porta 5000 in tutte le interfacce
     app.run(host='0.0.0.0', port=5000, debug=False)
