@@ -1,4 +1,6 @@
 from flask import Flask, render_template_string
+import threading
+import time
 
 app = Flask(__name__)
 
@@ -7,169 +9,168 @@ HTML_TEMPLATE = """
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <title>Nuvola Orbital Command</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NUVOLA ORBITAL COMMAND</title>
     <style>
+        :root {
+            --neon-blue: #0ff;
+            --neon-pink: #f0f;
+            --neon-green: #0f0;
+            --dark-bg: #050505;
+            --panel-bg: rgba(10, 20, 30, 0.8);
+        }
         body {
-            background-color: #0b0b12;
-            color: #00ffcc;
+            background-color: var(--dark-bg);
+            color: var(--neon-blue);
             font-family: 'Courier New', Courier, monospace;
             margin: 0;
-            padding: 30px;
+            padding: 20px;
+            background-image: linear-gradient(rgba(0, 255, 255, 0.05) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(0, 255, 255, 0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+            overflow-x: hidden;
+        }
+        h1, h2, h3 {
             text-transform: uppercase;
+            text-shadow: 0 0 10px var(--neon-blue);
+            margin-top: 0;
         }
-        h1 {
-            text-align: center;
-            color: #ff007f;
-            text-shadow: 0 0 10px #ff007f, 0 0 20px #ff007f, 0 0 40px #ff007f;
-            font-size: 3em;
-            margin-bottom: 40px;
-            border-bottom: 2px solid #ff007f;
-            padding-bottom: 15px;
-            letter-spacing: 5px;
-        }
-        .grid-container {
+        .container {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 30px;
+            gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
         }
         .panel {
-            border: 1px solid #00ffcc;
+            background: var(--panel-bg);
+            border: 1px solid var(--neon-blue);
             padding: 20px;
-            background: rgba(0, 255, 204, 0.03);
-            box-shadow: 0 0 20px rgba(0, 255, 204, 0.15) inset, 0 0 10px rgba(0, 255, 204, 0.2);
-            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.2), inset 0 0 10px rgba(0, 255, 255, 0.1);
+            border-radius: 5px;
             position: relative;
+            overflow: hidden;
         }
         .panel::before {
             content: '';
             position: absolute;
-            top: -2px; left: -2px; right: -2px; bottom: -2px;
-            background: linear-gradient(45deg, #00ffcc, #ff007f, #ffff00);
-            z-index: -1;
-            filter: blur(10px);
-            opacity: 0.3;
+            top: 0; left: 0; right: 0; height: 2px;
+            background: var(--neon-blue);
+            box-shadow: 0 0 10px var(--neon-blue);
         }
-        .panel h2 {
-            color: #ffff00;
-            text-shadow: 0 0 8px #ffff00;
-            border-bottom: 1px dashed #ffff00;
-            padding-bottom: 10px;
-            margin-top: 0;
-            font-size: 1.5em;
-        }
-        .status-online {
-            color: #00ff00;
-            text-shadow: 0 0 8px #00ff00;
-            animation: blinker 1.2s cubic-bezier(0.5, 0, 1, 1) infinite alternate;
-            font-weight: bold;
-        }
-        @keyframes blinker {
-            from { opacity: 1; }
-            to { opacity: 0.3; }
-        }
-        .item { margin: 15px 0; font-size: 1.2em; display: flex; align-items: center; justify-content: space-between; }
-        .item-label { display: flex; align-items: center; }
-        .emoji { margin-right: 15px; font-size: 1.4em; }
-        .market-grid {
+        .status-online { color: var(--neon-green); text-shadow: 0 0 5px var(--neon-green); }
+        .status-active { color: var(--neon-pink); text-shadow: 0 0 5px var(--neon-pink); }
+        .grid-data {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr 1fr;
-            gap: 15px;
-            margin-top: 20px;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            font-size: 0.9em;
         }
-        .market-stat {
-            background: rgba(255, 0, 127, 0.05);
-            border: 1px solid #ff007f;
-            padding: 20px;
+        .data-box {
+            border: 1px dashed rgba(0, 255, 255, 0.5);
+            padding: 10px;
             text-align: center;
-            box-shadow: 0 0 15px rgba(255, 0, 127, 0.2) inset;
-            border-radius: 5px;
-            transition: all 0.3s ease;
+            background: rgba(0,0,0,0.5);
         }
-        .market-stat:hover {
-            transform: scale(1.05);
-            box-shadow: 0 0 25px rgba(255, 0, 127, 0.4) inset;
+        .data-value { font-size: 1.5em; font-weight: bold; margin-top: 5px; color: #fff; text-shadow: 0 0 5px #fff; }
+        .blink { animation: blinker 1.5s linear infinite; }
+        @keyframes blinker { 50% { opacity: 0; } }
+        .scanline {
+            width: 100%; height: 100px; z-index: 9999; position: absolute; pointer-events: none;
+            background: linear-gradient(0deg, rgba(0,0,0,0) 0%, rgba(0,255,255,0.2) 50%, rgba(0,0,0,0) 100%);
+            opacity: 0.1; animation: scanline 6s linear infinite;
         }
-        .glitch {
-            animation: glitch 2s linear infinite;
-        }
-        @keyframes glitch {
-            2%, 64% { transform: translate(2px,0) skew(0deg); }
-            4%, 60% { transform: translate(-2px,0) skew(0deg); }
-            62% { transform: translate(0,0) skew(5deg); text-shadow: -2px 0 #00ffcc, 2px 2px #ffff00; }
-        }
+        @keyframes scanline { 0% { top: -100px; } 100% { top: 100%; } }
+        ul { list-style-type: none; padding: 0; }
+        li { margin-bottom: 10px; padding-left: 15px; border-left: 2px solid var(--neon-pink); }
+        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid var(--neon-blue); padding-bottom: 10px; }
     </style>
 </head>
 <body>
-    <h1 class="glitch">🛰️ ORBITAL COMMAND - NUVOLA 🛰️</h1>
-
-    <div class="grid-container">
-        <!-- SQUADRE D'ASSALTO -->
+    <div class="scanline"></div>
+    <div class="header">
+        <h1>🛰️ ORBITAL COMMAND 🛰️</h1>
+        <p>NUVOLA TACTICAL QUANTITATIVE DASHBOARD <span class="blink status-online">[SYSTEM ONLINE]</span></p>
+        <p style="font-size: 1.2em; border: 1px solid var(--neon-pink); padding: 5px; display: inline-block; color: var(--neon-pink); box-shadow: 0 0 10px var(--neon-pink);">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</p>
+    </div>
+    
+    <div class="container">
+        <!-- SQUADRE D'ASSALTO (HFT) -->
         <div class="panel">
             <h2>⚔️ SQUADRE D'ASSALTO (HFT)</h2>
-            <div class="item">
-                <span class="item-label"><span class="emoji">🐺</span> SQUADRA_ALPHA [Binance Scalper]</span> 
-                <span class="status-online">ENGAGED</span>
-            </div>
-            <div class="item">
-                <span class="item-label"><span class="emoji">🌊</span> SQUADRA_DELTA [Order Flow]</span> 
-                <span class="status-online">MONITORING</span>
-            </div>
-            <div class="item">
-                <span class="item-label"><span class="emoji">⚖️</span> SQUADRA_GAMMA [Bitget Pairs]</span> 
-                <span class="status-online">SYNCED</span>
-            </div>
+            <ul>
+                <li><strong>SQUADRA_ALPHA</strong> [Scalper @ Binance] <br> <span class="status-active">▶ ENGAGED</span> | Latency: 12ms | PnL: +$145.20</li>
+                <li><strong>SQUADRA_DELTA</strong> [Order Flow] <br> <span class="status-online">▶ STANDBY</span> | Scanning Order Books...</li>
+                <li><strong>SQUADRA_GAMMA</strong> [Pairs Trading @ Bitget] <br> <span class="status-active">▶ ENGAGED</span> | Target: BTC/ETH Spread | Delta: 0.045</li>
+            </ul>
         </div>
 
         <!-- PROTOCOLLO TRINITY -->
         <div class="panel">
             <h2>🔺 PROTOCOLLO TRINITY</h2>
-            <div style="background: rgba(0, 255, 0, 0.1); border: 1px solid #00ff00; padding: 10px; text-align: center; margin-bottom: 15px; border-radius: 5px; box-shadow: 0 0 10px rgba(0,255,0,0.2);">
-                <span class="status-online" style="text-shadow: 0 0 10px #00ff00;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</span>
-            </div>
-            <div class="item">
-                <span class="item-label"><span class="emoji">🦈</span> Lo Strozzino [Funding Arb]</span> 
-                <span class="status-online">SYS_BACKGROUND</span>
-            </div>
-            <div class="item">
-                <span class="item-label"><span class="emoji">🧮</span> Il Contabile [DCA]</span> 
-                <span class="status-online">SYS_BACKGROUND</span>
-            </div>
-            <div class="item">
-                <span class="item-label"><span class="emoji">🛡️</span> L'Angelo Custode [MEV Arbitrum]</span> 
-                <span class="status-online">SYS_BACKGROUND</span>
-            </div>
+            <p>Background Operations: <span class="status-online">NOMINAL</span></p>
+            <ul>
+                <li>🕵️ <strong>Lo Strozzino</strong> (Funding Arb)<br> <span class="status-online">▶ ACTIVE</span> | APY: 18.4% | Margin: $12,400</li>
+                <li>🧮 <strong>Il Contabile</strong> (DCA Accumulation)<br> <span class="status-online">▶ ACTIVE</span> | Next Buy: 04:00 UTC | Asset: BTC</li>
+                <li>👼 <strong>L'Angelo Custode</strong> (MEV @ Arbitrum)<br> <span class="status-online">▶ ACTIVE</span> | Mempool Scanning | Flashbots Connected</li>
+            </ul>
         </div>
-        
-        <!-- METRICHE DI MERCATO -->
-        <div class="panel" style="grid-column: span 2;">
-            <h2>📊 METRICHE DI MERCATO & INTEL</h2>
-            <div class="market-grid">
-                <div class="market-stat">
-                    <div>🔮 THE ORACLE<br>(Binance Sentiment)</div>
-                    <div style="font-size: 1.8em; color: #00ffcc; margin-top: 15px; text-shadow: 0 0 10px #00ffcc;">BULLISH 78%</div>
+
+        <!-- THE ORACLE (Sentiment) -->
+        <div class="panel">
+            <h2>👁️ THE ORACLE (Sentiment Data)</h2>
+            <div class="grid-data">
+                <div class="data-box">
+                    <div>Fear & Greed</div>
+                    <div class="data-value status-active" id="fg-index">74</div>
                 </div>
-                <div class="market-stat">
-                    <div>🐋 WHALE TRACKER<br>(On-Chain Flows)</div>
-                    <div style="font-size: 1.8em; color: #ff007f; margin-top: 15px; text-shadow: 0 0 10px #ff007f;">+1.4K BTC</div>
+                <div class="data-box">
+                    <div>Binance L/S Ratio</div>
+                    <div class="data-value" id="ls-ratio">1.45</div>
                 </div>
-                <div class="market-stat">
-                    <div>🔥 LIQUIDATION MAP<br>(Heat Zones)</div>
-                    <div style="font-size: 1.8em; color: #ffff00; margin-top: 15px; text-shadow: 0 0 10px #ffff00;">SQUEEZE IMMINENT</div>
+                <div class="data-box">
+                    <div>Social Volume</div>
+                    <div class="data-value status-online">HIGH</div>
                 </div>
-                <div class="market-stat">
-                    <div>⚡ NETWORK CONGESTION<br>(Gas Monitor)</div>
-                    <div style="font-size: 1.8em; color: #00ff00; margin-top: 15px; text-shadow: 0 0 10px #00ff00;">LOW (12 GWEI)</div>
+            </div>
+            <p style="margin-top: 15px; font-size: 0.8em; color: #888;">[Live Feed Intercepted] Predicting local top in 4 hours.</p>
+        </div>
+
+        <!-- WHALE TRACKER -->
+        <div class="panel">
+            <h2>🐋 WHALE TRACKER (On-Chain)</h2>
+            <div class="grid-data" style="grid-template-columns: 1fr;">
+                <div class="data-box" style="text-align: left;">
+                    <div>⚠️ ALERT: 1,500 BTC moved to Coinbase (Tx: 0x8a9f...4b2a)</div>
+                    <div style="font-size: 0.8em; color: var(--neon-pink);">Probability of Dump: 68%</div>
+                </div>
+                <div class="data-box" style="text-align: left;">
+                    <div>🟢 ALERT: 50M USDT minted at Tether Treasury</div>
+                    <div style="font-size: 0.8em; color: var(--neon-green);">Inflow detected. Bullish divergence.</div>
                 </div>
             </div>
         </div>
     </div>
+    
+    <script>
+        // Simulate minor data fluctuations for effect
+        setInterval(() => {
+            const fg = document.getElementById('fg-index');
+            const ls = document.getElementById('ls-ratio');
+            let currentFg = parseInt(fg.innerText);
+            let currentLs = parseFloat(ls.innerText);
+            
+            fg.innerText = currentFg + (Math.random() > 0.5 ? 1 : -1);
+            ls.innerText = (currentLs + (Math.random() * 0.02 - 0.01)).toFixed(2);
+        }, 3000);
+    </script>
 </body>
 </html>
 """
 
 @app.route('/')
-def index():
+def dashboard():
     return render_template_string(HTML_TEMPLATE)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5000, debug=False)
