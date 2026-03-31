@@ -9,207 +9,176 @@ HTML_TEMPLATE = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ORBITAL COMMAND // NUVOLA</title>
+    <title>ORBITAL COMMAND | NUVOLA</title>
     <style>
         :root {
-            --neon-green: #0f0;
-            --neon-red: #f00;
-            --neon-cyan: #0ff;
-            --neon-purple: #f0f;
-            --bg-color: #050505;
-            --panel-bg: rgba(10, 20, 10, 0.8);
+            --neon-green: #39ff14;
+            --neon-cyan: #00ffff;
+            --neon-red: #ff003c;
+            --dark-bg: #050505;
+            --panel-bg: #0a0f0a;
         }
         body {
-            background-color: var(--bg-color);
+            background-color: var(--dark-bg);
             color: var(--neon-green);
             font-family: 'Courier New', Courier, monospace;
             margin: 0;
             padding: 20px;
-            text-transform: uppercase;
-            background-image: 
-                linear-gradient(0deg, transparent 24%, rgba(0, 255, 0, .05) 25%, rgba(0, 255, 0, .05) 26%, transparent 27%, transparent 74%, rgba(0, 255, 0, .05) 75%, rgba(0, 255, 0, .05) 76%, transparent 77%, transparent), 
-                linear-gradient(90deg, transparent 24%, rgba(0, 255, 0, .05) 25%, rgba(0, 255, 0, .05) 26%, transparent 27%, transparent 74%, rgba(0, 255, 0, .05) 75%, rgba(0, 255, 0, .05) 76%, transparent 77%, transparent);
-            background-size: 50px 50px;
+            overflow-x: hidden;
         }
         h1, h2, h3 {
-            text-shadow: 0 0 5px var(--neon-green), 0 0 10px var(--neon-green);
-            margin-top: 0;
-            letter-spacing: 2px;
+            text-shadow: 0 0 10px var(--neon-green);
+            text-transform: uppercase;
         }
         .header {
             text-align: center;
-            border-bottom: 2px solid var(--neon-green);
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-            box-shadow: 0 10px 10px -10px var(--neon-green);
+            border-bottom: 2px solid var(--neon-cyan);
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 20px -10px var(--neon-cyan);
         }
         .container {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
             gap: 20px;
-            max-width: 1200px;
-            margin: 0 auto;
         }
         .panel {
-            background: var(--panel-bg);
+            background-color: var(--panel-bg);
             border: 1px solid var(--neon-green);
-            padding: 15px;
-            box-shadow: inset 0 0 15px rgba(0, 255, 0, 0.2);
+            border-radius: 5px;
+            padding: 20px;
+            box-shadow: inset 0 0 15px rgba(57, 255, 20, 0.1), 0 0 10px rgba(57, 255, 20, 0.2);
             position: relative;
         }
         .panel::before {
             content: '';
             position: absolute;
             top: 0; left: 0; right: 0; height: 2px;
-            background: var(--neon-green);
-            box-shadow: 0 0 10px var(--neon-green);
+            background: linear-gradient(90deg, transparent, var(--neon-cyan), transparent);
+            animation: scanline 3s linear infinite;
+        }
+        @keyframes scanline {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
         }
         .status-online { color: var(--neon-cyan); text-shadow: 0 0 5px var(--neon-cyan); }
-        .status-active { color: var(--neon-red); text-shadow: 0 0 8px var(--neon-red); animation: blink 1s infinite; }
-        .status-idle { color: #ff0; text-shadow: 0 0 5px #ff0; }
+        .status-active { color: var(--neon-green); text-shadow: 0 0 5px var(--neon-green); animation: blink 2s infinite; }
+        .status-warning { color: var(--neon-red); text-shadow: 0 0 5px var(--neon-red); }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
         
-        @keyframes blink { 
-            0% { opacity: 1; } 
-            50% { opacity: 0.3; } 
-            100% { opacity: 1; } 
-        }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #1f3f1f; padding: 8px; text-align: left; }
+        th { background-color: #112211; color: var(--neon-cyan); }
         
-        ul { list-style-type: none; padding: 0; }
-        li { margin-bottom: 15px; border-bottom: 1px dashed rgba(0,255,0,0.3); padding-bottom: 10px; }
-        
-        .grid-data { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); 
-            gap: 15px; 
-            font-size: 0.9em; 
-            margin-top: 15px;
-        }
-        .data-box { 
-            border: 1px solid var(--neon-cyan); 
-            padding: 15px; 
-            text-align: center; 
-            background: rgba(0, 255, 255, 0.05);
-            box-shadow: inset 0 0 10px rgba(0, 255, 255, 0.1), 0 0 5px rgba(0, 255, 255, 0.2); 
-        }
-        .data-box strong {
-            display: block;
-            margin-bottom: 8px;
-            font-size: 1.1em;
-            color: var(--neon-cyan);
-            text-shadow: 0 0 5px var(--neon-cyan);
-        }
-        .val {
-            display: block;
-            margin-top: 10px;
-            font-size: 1.2em;
-            font-weight: bold;
-        }
-        .glitch { animation: glitch 4s infinite; display: inline-block; }
-        @keyframes glitch {
-            0% { transform: translate(0) }
-            2% { transform: translate(-2px, 2px) }
-            4% { transform: translate(-2px, -2px) }
-            6% { transform: translate(2px, 2px) }
-            8% { transform: translate(2px, -2px) }
-            10% { transform: translate(0) }
-            100% { transform: translate(0) }
-        }
+        .hud-line { display: flex; justify-content: space-between; border-bottom: 1px dashed #1f3f1f; margin: 5px 0; padding: 2px 0; }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1 class="glitch">🛰️ ORBITAL COMMAND // NUVOLA_OS v9.4 🛰️</h1>
-        <p>SISTEMA DI CONTROLLO QUANTITATIVO GLOBALE - ACCESSO AUTORIZZATO</p>
-        <h3 style="color: var(--neon-cyan); text-shadow: 0 0 10px var(--neon-cyan); margin-top: 10px;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</h3>
+        <h1>🛰️ ORBITAL COMMAND - NUVOLA NODE 🛰️</h1>
+        <p>SYSTEM STATUS: <span class="status-online">FULLY OPERATIONAL</span> | UPTIME: 99.99% | SECURE CONNECTION</p>
+        <p style="font-size: 1.2em; font-weight: bold; margin-top: 10px;">⚙️ PROTOCOLLO TRINITY: <span class="status-active">Online (DCA, Funding, MEV)</span></p>
     </div>
 
     <div class="container">
+        <!-- SQUADRE D'ASSALTO -->
         <div class="panel">
             <h2>⚔️ SQUADRE D'ASSALTO (HFT)</h2>
-            <ul>
-                <li>
-                    <strong>🐺 SQUADRA ALPHA</strong> [Scalping: Binance] <br>
-                    <span class="status-active">▶ ENGAGED</span> <br> 
-                    <small>Target: BTC/USDT | Freq: 120ms | WinRate: 64.2%</small>
-                </li>
-                <li>
-                    <strong>⚡ SQUADRA DELTA</strong> [Order Flow] <br>
-                    <span class="status-online">▶ STANDBY</span> <br> 
-                    <small>Analisi Book: Attiva | Spoofing detection: ON</small>
-                </li>
-                <li>
-                    <strong>🦂 SQUADRA GAMMA</strong> [Pairs Trading: Bitget] <br>
-                    <span class="status-active">▶ ENGAGED</span> <br> 
-                    <small>Spread ETH/SOL: 0.045 | Z-Score: 2.1 | Posizione: Inverted</small>
-                </li>
-            </ul>
+            <div class="hud-line">
+                <span>🐺 SQUADRA_ALPHA (Scalper Binance)</span>
+                <span class="status-active">[ ENGAGED ]</span>
+            </div>
+            <div class="hud-line">
+                <span>🎯 SQUADRA_DELTA (Order Flow)</span>
+                <span class="status-active">[ MONITORING ]</span>
+            </div>
+            <div class="hud-line">
+                <span>⚖️ SQUADRA_GAMMA (Pairs Bitget)</span>
+                <span class="status-active">[ ARBITRAGE ]</span>
+            </div>
+            <p style="font-size: 0.8em; margin-top:15px; color:#aaa;">&gt; Executing sub-millisecond strikes on liquidity pockets...</p>
         </div>
 
+        <!-- PROTOCOLLO TRINITY -->
         <div class="panel">
             <h2>🛡️ PROTOCOLLO TRINITY</h2>
-            <ul>
-                <li>
-                    <strong>🧛‍♂️ LO STROZZINO</strong> [Funding Arb] <br>
-                    <span class="status-online">▶ ONLINE - BACKGROUND</span> <br> 
-                    <small>Long Spot / Short Perp | Yield Corrente: +18.4% APY</small>
-                </li>
-                <li>
-                    <strong>🧮 IL CONTABILE</strong> [Accumulo DCA] <br>
-                    <span class="status-idle">▶ IDLE - WAITING SCHEDULE</span> <br> 
-                    <small>Prossimo acquisto: 14:00 UTC | Asset Target: BTC, SOL</small>
-                </li>
-                <li>
-                    <strong>👼 L'ANGELO CUSTODE</strong> [MEV: Arbitrum] <br>
-                    <span class="status-online">▶ ONLINE - SCANNING</span> <br> 
-                    <small>Mempool watcher attivo | Snipe gas: 0.05 Gwei | Sandwich: Off</small>
-                </li>
-            </ul>
+            <div class="hud-line">
+                <span>🏦 Lo Strozzino (Funding Arb)</span>
+                <span class="status-online">[ BACKGROUND ]</span>
+            </div>
+            <div class="hud-line">
+                <span>🧮 Il Contabile (DCA Matrix)</span>
+                <span class="status-online">[ ACTIVE ]</span>
+            </div>
+            <div class="hud-line">
+                <span>👼 L'Angelo Custode (MEV Arbitrum)</span>
+                <span class="status-online">[ SHIELDED ]</span>
+            </div>
+            <p style="font-size: 0.8em; margin-top:15px; color:#aaa;">&gt; Core wealth preservation protocols running silently.</p>
         </div>
 
+        <!-- METRICHE DI MERCATO -->
+        <div class="panel">
+            <h2>👁️ METRICHE DI MERCATO (THE ORACLE)</h2>
+            <table>
+                <tr>
+                    <th>METRIC</th>
+                    <th>VALUE</th>
+                    <th>STATUS</th>
+                </tr>
+                <tr>
+                    <td>Binance Sentiment</td>
+                    <td>68.4 (GREED)</td>
+                    <td class="status-active">LONG BIAS</td>
+                </tr>
+                <tr>
+                    <td>Whale Tracker</td>
+                    <td>+4500 BTC</td>
+                    <td class="status-online">ACCUMULATION</td>
+                </tr>
+                <tr>
+                    <td>Orderbook Imbalance</td>
+                    <td>-12.5%</td>
+                    <td class="status-warning">DEFENSIVE</td>
+                </tr>
+            </table>
+        </div>
+        
+        <!-- TERMINAL FEED -->
         <div class="panel" style="grid-column: 1 / -1;">
-            <h2>📊 METRICHE DI MERCATO & INTEL</h2>
-            <div class="grid-data">
-                <div class="data-box">
-                    <strong>👁️ THE ORACLE</strong>
-                    Binance Sentiment Index<br>
-                    <span class="val status-active">EXTREME GREED (88)</span>
-                </div>
-                <div class="data-box">
-                    <strong>🐋 WHALE TRACKER</strong>
-                    Inflow/Outflow 24h<br>
-                    <span class="val status-online">+4,250 BTC (Cold Storage)</span>
-                </div>
-                <div class="data-box">
-                    <strong>🩸 LIQUIDATION MAP</strong>
-                    Cluster a rischio critico<br>
-                    <span class="val" style="color:var(--neon-red); text-shadow: 0 0 8px var(--neon-red);">$72,400 (Shorts)</span>
-                </div>
+            <h2>💻 LIVE TERMINAL FEED</h2>
+            <div id="terminal" style="font-size: 0.9em; height: 100px; overflow-y: hidden; color: var(--neon-cyan);">
+                &gt; Initializing quant models... OK<br>
+                &gt; Connecting to Binance API... OK<br>
+                &gt; Loading Arbitrum mempool scanners... OK<br>
+                &gt; ALL SYSTEMS NOMINAL. AWAITING ORDERS.
             </div>
         </div>
     </div>
     <script>
-        // Random tech noise effect on numbers
+        const terminal = document.getElementById('terminal');
+        const logs = [
+            "&gt; Alpha squad identified micro-inefficiency in BTC/USDT...",
+            "&gt; Executing flash-fill... Success.",
+            "&gt; The Oracle detects anomalous volume on ETH derivatives.",
+            "&gt; Shielding capital against downside volatility spike.",
+            "&gt; Recalculating funding rates... Arb opportunity: 0.045%."
+        ];
         setInterval(() => {
-            const elements = document.querySelectorAll('.val');
-            if (Math.random() > 0.9) {
-                elements.forEach(el => {
-                    if(Math.random() > 0.5) {
-                        el.style.opacity = Math.random() * 0.5 + 0.5;
-                        setTimeout(() => el.style.opacity = 1, 150);
-                    }
-                });
+            const newLog = logs[Math.floor(Math.random() * logs.length)];
+            terminal.innerHTML += '<br>' + newLog;
+            if (terminal.innerHTML.split('<br>').length > 6) {
+                terminal.innerHTML = terminal.innerHTML.substring(terminal.innerHTML.indexOf('<br>') + 4);
             }
-        }, 300);
+        }, 3500);
     </script>
 </body>
 </html>
 """
 
 @app.route('/')
-def index():
+def home():
     return render_template_string(HTML_TEMPLATE)
 
 if __name__ == '__main__':
-    # Ensure directory exists just in case
-    os.makedirs(os.path.dirname(os.path.abspath(__file__)), exist_ok=True)
     app.run(host='0.0.0.0', port=5000)
