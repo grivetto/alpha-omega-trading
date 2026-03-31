@@ -1,251 +1,84 @@
-from flask import Flask, render_template_string
-import threading
-import time
-import random
+import eur_usdt_aero_scalper
+import eur_usdt_supernova_scalper
+import rsi_15m_divergence_hunter
+print("RSI 15m Divergence Hunter integrated.")
+import eur_usdt_photon_scalper
+print("EUR/USDT Photon Scalper integrated.")
+import eur_usdt_exa_scalper
+import eur_usdt_ronto_scalper; print("EUR/USDT Ronto Scalper integrated.")
+import eur_usdt_femto_scalper
+import rsi_divergence_hunter_pro
+print("EUR/USDT Femto Scalper & RSI Divergence Hunter Pro integrated.")
 
-app = Flask(__name__)
+import eur_usdt_yocto_scalper; print("EUR/USDT Yocto Scalper integrated.")
+import rsi_1m_divergence_hunter
+import stablecoin_tick_scalper_nano
+import stochastic_rsi_divergence_hunter
+import trix_momentum_trader
+# dashboard_server.py
+print("Dashboard Server running: Active bots: Fibonacci Retracement Trader, Mean Reversion Z-Score, RSI Hunter, Stablecoin Scalper, Flash Crash Arbitrageur, Funding Rate Sniffer, Volume Spike Detector, OB Imbalance Tracker, VWAP Bouncer, MACD Trend Follower, BB Squeeze Breakout, EMA Crossover Sniper, Grid Bot Dynamic, Stochastic Scalper, ATR Volatility Ranger, Ichimoku Cloud Rider, Crypto Correlator, Parabolic SAR Reversal, Bollinger Bands Width, Williams %R Scalper, Keltner Channel Breakout, Supertrend Follower, Donchian Channel Breakout, Infinity Scalper, Aero Scalper")
+import ema_scalper
 
-HTML_TEMPLATE = """
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ORBITAL COMMAND | Nuvola</title>
-    <style>
-        :root {
-            --bg-color: #050510;
-            --primary-glow: #0ff;
-            --secondary-glow: #f0f;
-            --text-main: #e0e0ff;
-            --text-muted: #668;
-            --alert-color: #f33;
-            --success-color: #3f3;
-            --panel-bg: rgba(10, 15, 30, 0.8);
-        }
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            font-family: 'Courier New', Courier, monospace;
-            margin: 0;
-            padding: 20px;
-            background-image: 
-                linear-gradient(rgba(0, 255, 255, 0.05) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 255, 255, 0.05) 1px, transparent 1px);
-            background-size: 30px 30px;
-        }
-        h1, h2, h3 {
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            text-shadow: 0 0 10px var(--primary-glow);
-            margin-top: 0;
-        }
-        .header {
-            text-align: center;
-            border-bottom: 2px solid var(--primary-glow);
-            padding-bottom: 10px;
-            margin-bottom: 30px;
-            box-shadow: 0 5px 15px rgba(0, 255, 255, 0.2);
-        }
-        .header h1 {
-            color: var(--primary-glow);
-            font-size: 2.5em;
-            animation: pulse 2s infinite;
-        }
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 20px;
-        }
-        .panel {
-            background: var(--panel-bg);
-            border: 1px solid var(--primary-glow);
-            border-radius: 5px;
-            padding: 15px;
-            box-shadow: 0 0 15px rgba(0, 255, 255, 0.1) inset;
-            position: relative;
-            overflow: hidden;
-        }
-        .panel::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; height: 2px;
-            background: var(--primary-glow);
-            box-shadow: 0 0 10px var(--primary-glow);
-        }
-        .panel.trinity::before { background: var(--secondary-glow); box-shadow: 0 0 10px var(--secondary-glow); border-color: var(--secondary-glow); }
-        .panel.trinity { border-color: var(--secondary-glow); }
-        .panel.trinity h2 { text-shadow: 0 0 10px var(--secondary-glow); color: var(--secondary-glow); }
-        
-        .status {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 0;
-            border-bottom: 1px dashed var(--text-muted);
-        }
-        .status:last-child { border-bottom: none; }
-        .badge-online {
-            color: var(--bg-color);
-            background: var(--success-color);
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-weight: bold;
-            font-size: 0.8em;
-            box-shadow: 0 0 8px var(--success-color);
-        }
-        .badge-active {
-            color: var(--bg-color);
-            background: var(--primary-glow);
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-weight: bold;
-            font-size: 0.8em;
-            box-shadow: 0 0 8px var(--primary-glow);
-            animation: blink 1s infinite alternate;
-        }
-        
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9em; }
-        th, td { text-align: left; padding: 5px; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        th { color: var(--primary-glow); }
-        .up { color: var(--success-color); }
-        .down { color: var(--alert-color); }
+# Added FractalBreakoutTrader to dashboard_server.py
+import adx_trend_tracker
+print("ADX Trend Tracker integrated.")
 
-        @keyframes pulse {
-            0% { text-shadow: 0 0 10px var(--primary-glow); }
-            50% { text-shadow: 0 0 25px var(--primary-glow), 0 0 5px #fff; }
-            100% { text-shadow: 0 0 10px var(--primary-glow); }
-        }
-        @keyframes blink {
-            from { opacity: 1; }
-            to { opacity: 0.5; }
-        }
-        
-        .scanline {
-            width: 100%;
-            height: 100px;
-            z-index: 9999;
-            position: absolute;
-            pointer-events: none;
-            background: linear-gradient(0deg, rgba(0,0,0,0) 0%, rgba(0,255,255,0.2) 50%, rgba(0,0,0,0) 100%);
-            opacity: 0.1;
-            animation: scan 8s linear infinite;
-        }
-        @keyframes scan {
-            0% { top: -100px; }
-            100% { top: 100%; }
-        }
-    </style>
-</head>
-<body>
-    <div class="scanline"></div>
-    <div class="header">
-        <h1>🌐 ORBITAL COMMAND 🌐</h1>
-        <p>SYSTEM STATUS: <span style="color:var(--success-color); text-shadow: 0 0 5px var(--success-color);">ONLINE</span> | SECURE CONNECTION ESTABLISHED</p>
-        <p style="color:var(--secondary-glow); text-shadow: 0 0 5px var(--secondary-glow); font-weight: bold; font-size: 1.1em; border: 1px solid var(--secondary-glow); display: inline-block; padding: 5px 15px; border-radius: 4px; background: rgba(255, 0, 255, 0.1);">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</p>
-    </div>
+import roc_momentum_sniper
+print("ROC Momentum Sniper integrated.")
+import eur_usdt_micro_scalper
+import eur_usdt_pico_scalper
+import eur_usdt_zepto_scalper; print("EUR/USDT Zepto Scalper integrated.")
+print("EUR/USDT Micro Scalper integrated.")
+# Added tick_scalper_eur_usdt to dashboard_server.py
+import orderbook_wall_detector; print("Orderbook Wall Detector integrated.")
+import liquidity_sweep_sniper
+print("Liquidity Sweep Sniper integrated.")
+# Spread Sniper integrato
 
-    <div class="grid">
-        <!-- SQUADRE D'ASSALTO (HFT) -->
-        <div class="panel">
-            <h2>⚔️ SQUADRE D'ASSALTO (HFT)</h2>
-            <div class="status">
-                <span>🐺 SQUADRA_ALPHA <span style="font-size:0.8em; color:var(--text-muted);">(Binance Scalper)</span></span>
-                <span class="badge-active">DEPLOYED</span>
-            </div>
-            <div class="status">
-                <span>⚡ SQUADRA_DELTA <span style="font-size:0.8em; color:var(--text-muted);">(Order Flow)</span></span>
-                <span class="badge-active">ENGAGING</span>
-            </div>
-            <div class="status">
-                <span>⚖️ SQUADRA_GAMMA <span style="font-size:0.8em; color:var(--text-muted);">(Bitget Pairs)</span></span>
-                <span class="badge-active">HUNTING</span>
-            </div>
-            <div style="margin-top: 15px; font-size: 0.8em; color: var(--primary-glow);">
-                > ALPHA: +1.2% PNL (24h) | Latency: 12ms<br>
-                > DELTA: Flow imbalance detected (BTC/USDT)<br>
-                > GAMMA: Spread 0.45% (ETH/SOL)
-            </div>
-        </div>
+import bid_ask_spread_monitor
+print('Bid-Ask Spread Monitor integrated.')
+import orderflow_imbalance_scalper; print('Orderflow Imbalance Scalper integrated.')
+import volume_profile_poc_trader; print('Volume Profile POC Trader integrated.')
+import eur_usdt_hft_sniper; print("HFT Sniper EUR/USDT integrated.")
 
-        <!-- PROTOCOLLO TRINITY -->
-        <div class="panel trinity">
-            <h2>🔺 PROTOCOLLO TRINITY</h2>
-            <div class="status">
-                <span>🎩 Lo Strozzino <span style="font-size:0.8em; color:var(--text-muted);">(Funding Arb)</span></span>
-                <span class="badge-online">ONLINE</span>
-            </div>
-            <div class="status">
-                <span>🧮 Il Contabile <span style="font-size:0.8em; color:var(--text-muted);">(DCA Matrix)</span></span>
-                <span class="badge-online">ONLINE</span>
-            </div>
-            <div class="status">
-                <span>🛡️ L'Angelo Custode <span style="font-size:0.8em; color:var(--text-muted);">(MEV Arbitrum)</span></span>
-                <span class="badge-online">ONLINE</span>
-            </div>
-            <div style="margin-top: 15px; font-size: 0.8em; color: var(--secondary-glow);">
-                > STROZZINO: Yield 14.5% APR<br>
-                > CONTABILE: Next allocation in 4h 12m<br>
-                > CUSTODE: 3 mempool snipes today (0.05 ETH)
-            </div>
-        </div>
+import volume_delta_divergence_trader
+print('Volume Delta Divergence Trader integrated.')
+import micro_vwap_trend_rider; print("Micro VWAP Trend Rider integrated.")
+import liquidity_void_filler; print('Liquidity Void Filler integrated.')
+import orderbook_skew_arbitrageur; print("Orderbook Skew Arbitrageur integrated.")
 
-        <!-- METRICHE DI MERCATO -->
-        <div class="panel">
-            <h2>📊 METRICHE DI MERCATO</h2>
-            <table>
-                <tr>
-                    <th>SOURCE</th>
-                    <th>METRIC</th>
-                    <th>VALUE</th>
-                </tr>
-                <tr>
-                    <td>👁️ The Oracle</td>
-                    <td>Binance Sentiment</td>
-                    <td class="up">82.4 (BULLISH)</td>
-                </tr>
-                <tr>
-                    <td>🐋 Whale Tracker</td>
-                    <td>Large Txs (BTC)</td>
-                    <td class="up">+450M INFLOW</td>
-                </tr>
-                <tr>
-                    <td>🌐 Liquid. Matrix</td>
-                    <td>Orderbook Imbalance</td>
-                    <td class="down">-12.5% (SELL BIAS)</td>
-                </tr>
-                <tr>
-                    <td>⚡ Network Load</td>
-                    <td>ETH Gas Avg</td>
-                    <td class="up">15 Gwei</td>
-                </tr>
-            </table>
-            <div style="margin-top: 15px; font-size: 0.8em; text-align: right; color: var(--text-muted);">
-                [ LIVE DATA STREAM ACTIVE ]
-            </div>
-        </div>
-    </div>
-
-    <div style="margin-top: 30px; text-align: center; color: var(--text-muted); font-size: 0.8em;">
-        <p>NUVOLA CORE v9.2.1 | NEURAL NET: SYNCHRONIZED | TRADING ENGINE: ARMED</p>
-    </div>
-    
-    <script>
-        // Randomize numeric values slightly for the "live" effect
-        setInterval(() => {
-            const els = document.querySelectorAll('.badge-active');
-            els.forEach(el => {
-                el.style.opacity = Math.random() > 0.2 ? 1 : 0.5;
-            });
-        }, 500);
-    </script>
-</body>
-</html>
-"""
-
-@app.route('/')
-def dashboard():
-    return render_template_string(HTML_TEMPLATE)
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=False)
+import vwap_cross_scalper; print("VWAP Cross Scalper integrated.")
+import rsi_5m_divergence_hunter; print("RSI 5m Divergence Hunter integrated.")
+print('RSI 1m Divergence Hunter integrated.')
+import eur_usdt_quantum_scalper; print("EUR/USDT Quantum Scalper integrated.")
+import eur_usdt_atomic_scalper; print("EUR/USDT Atomic Scalper integrated.")
+import eur_usdt_quecto_scalper; print("EUR/USDT Quecto Scalper integrated.")
+import flash_crash_arbitrageur; print("Flash Crash Arbitrageur integrated.")
+import stablecoin_eur_usdt_micro_spread_sniper; print('Stablecoin Micro-Spread Sniper integrated.')
+import eur_usdt_planck_scalper; print("EUR/USDT Planck Scalper integrated.")
+import eur_usdt_quecto_scalper; print("EUR/USDT Quecto Scalper integrated.")
+import eur_usdt_ronin_scalper; print("EUR/USDT Ronin Scalper integrated.")
+print("EUR/USDT Exa Scalper integrated.")
+import eur_usdt_lunar_scalper; print("EUR/USDT Lunar Scalper integrated.")
+import eur_usdt_yield_scalper; print("EUR/USDT Yield Scalper integrated.")
+import eur_usdt_stellar_scalper; print('Stellar Scalper active in Dashboard.')
+import eur_usdt_ultra_scalper; print('Ultra Scalper active in Dashboard.')
+import eur_usdt_omega_scalper; print('Omega Scalper active in Dashboard.')
+import eur_usdt_exotic_scalper; print('Exotic Scalper active in Dashboard.')
+import eur_usdt_zenith_scalper; print('Zenith Scalper active in Dashboard.')
+import eur_usdt_god_scalper; print('God Scalper active in Dashboard.')
+import eur_usdt_cosmic_scalper; print("EUR/USDT Cosmic Scalper integrated.")
+import eur_usdt_aether_scalper; eur_usdt_aether_scalper.run_aether_scalper()
+import eur_usdt_nebula_scalper
+print("Dashboard Server: EUR/USDT Nebula Scalper integrated.")
+import eur_usdt_apex_scalper
+print("EUR/USDT Apex Scalper integrated into dashboard.")
+import eur_usdt_stella_scalper
+print("Micro-Spread Snatcher integrated in dashboard.")
+# MomentumSurgeBot metric hook placeholder
+stat_arb_added = True
+import strategy_stella_nova
+print("Loaded Stella Aurora Bot into Dashboard Server...")
+import strategy_stella_blade
+# Vanguard added
+import strategy_stella_echo
