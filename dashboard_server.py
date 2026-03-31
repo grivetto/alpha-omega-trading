@@ -328,7 +328,7 @@ HTML_TEMPLATE = """
             [ UPLINK SECURE ] 📡 <span id="clock">00:00:00</span> UTC // AES-256 GCM ENCRYPTED
         </div>
         <div style="margin-top: 15px; font-size: 1.2rem; color: #00ffcc; text-shadow: 0 0 10px #00ffcc; font-weight: bold; border: 1px solid #00ffcc; display: inline-block; padding: 5px 15px; background: rgba(0, 255, 204, 0.1);">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)
+            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) <!-- Active -->
         </div>
     </header>
 
