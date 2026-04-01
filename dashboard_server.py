@@ -358,6 +358,9 @@ HTML_TEMPLATE = """
             
             <!-- NEW STATUS LINE FOR PROTOCOLLO TRINITY FASE 2 -->
             <div style="background-color: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 10px; margin-bottom: 15px; text-align: center; font-weight: bold; animation: pulse 2s infinite;">
+                ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2 (08:50 UTC)
+            </div>
+            <div style="background-color: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 10px; margin-bottom: 15px; text-align: center; font-weight: bold; animation: pulse 2s infinite;">
                 ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)
             </div>
             <div style="background-color: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 10px; margin-bottom: 15px; text-align: center; font-weight: bold; animation: pulse 2s infinite;">
@@ -398,6 +401,9 @@ HTML_TEMPLATE = """
             </div>
             
             <!-- NEW STATUS LINE FOR PROTOCOLLO TRINITY FASE 2 -->
+            <div style="background-color: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 10px; margin-bottom: 15px; text-align: center; font-weight: bold; animation: pulse 2s infinite;">
+                ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2 (08:50 UTC)
+            </div>
             <div style="background-color: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 10px; margin-bottom: 15px; text-align: center; font-weight: bold; animation: pulse 2s infinite;">
                 ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)
             </div>
