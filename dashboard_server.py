@@ -199,7 +199,7 @@ HTML_TEMPLATE = """
     <div class="container">
         <!-- PROTOCOLLO TRINITY STATUS -->
         <div style="grid-column: 1 / -1; background: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 15px; text-align: center; font-weight: bold; font-size: 1.2em; box-shadow: 0 0 15px var(--neon-green); text-shadow: 0 0 5px var(--neon-green); margin-bottom: 20px;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 05:12 UTC
+            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 05:15 UTC
         </div>
         <!-- PROTOCOLLO TRINITY STATUS BANNER -->
         <div style="grid-column: 1 / -1; background: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 15px; text-align: center; font-weight: bold; font-size: 1.2em; box-shadow: 0 0 15px var(--neon-green); text-shadow: 0 0 5px var(--neon-green); margin-bottom: 20px;">
@@ -504,4 +504,5 @@ if __name__ == '__main__':
 # ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 05:02 UTC
 # ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 05:05 UTC
 # ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 05:09 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 05:12 UTC
+# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 05:15 UTC
+# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 05:15 UTC
