@@ -56,7 +56,7 @@ def get_full_status():
                 locked = float(vdata.get("LOCKED_EUR", 0))
                 gariban = float(vdata.get("GARIBAN_TRACKER", 0))
         except: pass
-        return f"💰 *IL FONDO DEI 5 SOCI (The Dark Pool)*\n------------------------------------\n⚔️ Capitale in Azione: €{tot_investito:.2f}\n📥 Cifra di Partenza: €500.00\n🎯 Obiettivo Giornaliero: +€10.00\n------------------------------------\n📈 DRAWDOWN STORICO: {profit_operativo:+.2f} €\n------------------------------------\n🔐 Cassaforte (Sicurezza): €{locked:.2f}\n🤲 Gariban/Elemosina: €{gariban:.2f}\n------------------------------------"
+        return f"💰 *ESPERIMENTI DI SERGIO (The Dark Pool)*\n------------------------------------\n⚔️ Capitale in Azione: €{tot_investito:.2f}\n📥 Cifra di Partenza: €500.00\n🎯 Obiettivo Giornaliero: +€10.00\n------------------------------------\n📈 DRAWDOWN STORICO: {profit_operativo:+.2f} €\n------------------------------------\n🔐 Cassaforte (Sicurezza): €{locked:.2f}\n🤲 Gariban/Elemosina: €{gariban:.2f}\n------------------------------------"
     except Exception as e: return f"Errore: {e}"
 def old_get_full_status():
     try:
@@ -133,7 +133,7 @@ def old_get_full_status():
         profit_operativo = capitale_operativo - base_operativa
         
         msg = (
-            f"💰 *IL FONDO DEI 5 SOCI (The Dark Pool)*\n"
+            f"💰 *ESPERIMENTI DI SERGIO (The Dark Pool)*\n"
             f"------------------------------------\n"
             f"⚔️ Capitale in Azione: €{capitale_operativo:.2f}\n"
             f"📥 Cifra di Partenza: €{base_operativa:.2f}\n"
