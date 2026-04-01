@@ -679,6 +679,7 @@ HTML_TEMPLATE = """
         <!-- PROTOCOLLO TRINITY -->
         <div class="panel purple">
             <h2 class="glow-text-purple">🔺 PROTOCOLLO TRINITY</h2>
+            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
             <p style="font-size: 0.8em; color: #aaa; margin-top: -10px;">CORE BACKGROUND PROCESSES</p>
             <div class="status-row purple">
                 <div>
