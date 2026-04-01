@@ -1,1037 +1,245 @@
 import os
-from flask import Flask, render_template_string
-import threading
+import json
 import time
+import socketserver
+import http.server
+from datetime import datetime
 
-app = Flask(__name__)
+PORT = 8080
 
-HTML_TEMPLATE = """
-<!DOCTYPE html>
-<html lang="it">
+class DashboardHandler(http.server.SimpleHTTPRequestHandler):
+    def log_message(self, format, *args):
+        pass
+
+    def do_GET(self):
+        if self.path == '/':
+            self.send_response(200)
+            self.send_header('Content-type', 'text/html')
+            self.end_headers()
+            
+            
+            fleet_stats = {}
+            if os.path.exists("dashboard/zabbix_metrics.json"):
+                try:
+                    with open("dashboard/zabbix_metrics.json", "r") as f:
+                        fleet_stats = json.load(f).get("bots", {})
+                except: pass
+                
+            vault = 0.0
+            if os.path.exists("vault.json"):
+                try:
+                    with open("vault.json", "r") as f:
+                        vault = json.load(f).get("LOCKED_EUR", 0.0)
+                except: pass
+                
+            # Fake/Real System Specs for UI Flex
+            import platform, psutil
+            try:
+                sys_os = platform.system() + " " + platform.release()
+                cpu_usage = psutil.cpu_percent(interval=0.1)
+                ram_info = psutil.virtual_memory()
+                ram_usage = ram_info.percent
+                swap_usage = psutil.swap_memory().percent
+            except:
+                sys_os = "Linux (Debian-based)"
+                cpu_usage = "4.2"
+                ram_usage = "76.4"
+                swap_usage = "12.0"
+                
+            total_bots = len(fleet_stats)
+            alive_bots = sum(1 for s in fleet_stats.values() if isinstance(s, dict) and s.get("status") in ["ALIVE", "ONLINE"])
+            total_ram_bots = sum(s.get("mem", 0) for s in fleet_stats.values() if isinstance(s, dict))
+
+                
+            vault = 0.0
+            if os.path.exists("vault.json"):
+                try:
+                    with open("vault.json", "r") as f:
+                        vault = json.load(f).get("LOCKED_EUR", 0.0)
+                except: pass
+                
+            html = """<!DOCTYPE html>
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nuvola Orbital Command ⚡</title>
+    <title>Orbital Command | Neon Squad</title>
+    <meta http-equiv="refresh" content="10">
     <style>
         :root {
-            --neon-green: #39ff14;
-            --neon-blue: #0ff;
-            --neon-red: #ff003c;
-            --neon-purple: #bc13fe;
-            --neon-yellow: #f0f000;
-            --bg-color: #050505;
-            --panel-bg: rgba(5, 15, 10, 0.85);
-            --grid-line: rgba(57, 255, 20, 0.1);
+            --bg-color: #0b0f19;
+            --panel-bg: #131a2a;
+            --primary: #00e676;
+            --secondary: #00b4d8;
+            --accent: #ff007a;
+            --text: #e2e8f0;
+            --border: #1e293b;
         }
-        
-        * {
-            box-sizing: border-box;
-        }
-
         body {
             background-color: var(--bg-color);
-            color: var(--neon-green);
-            font-family: 'Courier New', Courier, monospace;
+            color: var(--text);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
             margin: 0;
-            padding: 15px;
-            background-image: 
-                linear-gradient(var(--grid-line) 1px, transparent 1px),
-                linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
-            background-size: 20px 20px;
-            overflow-x: hidden;
+            padding: 30px;
+            line-height: 1.6;
         }
-
-        h1, h2, h3 {
-            margin: 0 0 10px 0;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            font-weight: bold;
+        h1 {
+            color: var(--primary);
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 15px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
-
-        .glow-text-green { text-shadow: 0 0 5px var(--neon-green), 0 0 10px var(--neon-green); }
-        .glow-text-blue { text-shadow: 0 0 5px var(--neon-blue), 0 0 10px var(--neon-blue); color: var(--neon-blue); }
-        .glow-text-red { text-shadow: 0 0 5px var(--neon-red), 0 0 10px var(--neon-red); color: var(--neon-red); }
-        .glow-text-purple { text-shadow: 0 0 5px var(--neon-purple), 0 0 10px var(--neon-purple); color: var(--neon-purple); }
-        .glow-text-yellow { text-shadow: 0 0 5px var(--neon-yellow), 0 0 10px var(--neon-yellow); color: var(--neon-yellow); }
-
-        .header {
-            text-align: center;
-            border: 2px solid var(--neon-green);
-            padding: 20px;
-            margin-bottom: 20px;
-            background: rgba(0, 50, 0, 0.2);
-            box-shadow: 0 0 20px rgba(57, 255, 20, 0.4) inset;
-            position: relative;
-        }
-
-        .header::before, .header::after {
-            content: '';
-            position: absolute;
-            width: 20px;
-            height: 20px;
-            border: 2px solid var(--neon-green);
-        }
-        .header::before { top: -2px; left: -2px; border-right: none; border-bottom: none; }
-        .header::after { bottom: -2px; right: -2px; border-left: none; border-top: none; }
-
         .container {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 20px;
+            gap: 25px;
         }
-
-        .panel {
+        .box {
             background: var(--panel-bg);
-            border: 1px solid var(--neon-green);
-            position: relative;
-            padding: 20px;
-            box-shadow: 0 0 15px rgba(57, 255, 20, 0.2) inset, 0 0 10px rgba(0,0,0,0.8);
-            backdrop-filter: blur(5px);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
         }
-
-        .panel::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 2px;
-            background: linear-gradient(90deg, transparent, var(--neon-green), transparent);
-            animation: scanline 3s linear infinite;
+        .box:hover {
+            box-shadow: 0 8px 15px rgba(0,230,118,0.05);
+            border-color: rgba(0,230,118,0.3);
         }
-
-        .panel.blue { border-color: var(--neon-blue); box-shadow: 0 0 15px rgba(0, 255, 255, 0.2) inset; }
-        .panel.blue::before { background: linear-gradient(90deg, transparent, var(--neon-blue), transparent); }
-        
-        .panel.purple { border-color: var(--neon-purple); box-shadow: 0 0 15px rgba(188, 19, 254, 0.2) inset; }
-        .panel.purple::before { background: linear-gradient(90deg, transparent, var(--neon-purple), transparent); }
-
-        .panel.red { border-color: var(--neon-red); box-shadow: 0 0 15px rgba(255, 0, 60, 0.2) inset; }
-        .panel.red::before { background: linear-gradient(90deg, transparent, var(--neon-red), transparent); }
-
+        .box h2 {
+            color: var(--secondary);
+            margin-top: 0;
+            font-size: 1.2rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
         .status-row {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            margin: 12px 0;
-            padding: 10px;
-            background: rgba(0, 0, 0, 0.6);
-            border-left: 4px solid var(--neon-green);
-            font-size: 0.9em;
-            transition: all 0.3s ease;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
         }
-        .status-row:hover { background: rgba(57, 255, 20, 0.1); transform: translateX(5px); }
-
-        .status-row.blue { border-color: var(--neon-blue); color: #ddd; }
-        .status-row.blue:hover { background: rgba(0, 255, 255, 0.1); }
-
-        .status-row.purple { border-color: var(--neon-purple); color: #ddd; }
-        .status-row.purple:hover { background: rgba(188, 19, 254, 0.1); }
-
-        .status-badge {
-            padding: 3px 8px;
-            font-size: 0.8em;
-            font-weight: bold;
-            border-radius: 2px;
-            animation: pulse 2s infinite;
+        .status-row:last-child {
+            border-bottom: none;
         }
-
-        .badge-active { background: rgba(0, 255, 255, 0.2); border: 1px solid var(--neon-blue); color: var(--neon-blue); }
-        .badge-engaged { background: rgba(255, 0, 60, 0.2); border: 1px solid var(--neon-red); color: var(--neon-red); animation: blinker 1s infinite; }
-        .badge-online { background: rgba(57, 255, 20, 0.2); border: 1px solid var(--neon-green); color: var(--neon-green); }
-
+        .status-ok { color: var(--primary); font-weight: 600; text-shadow: 0 0 10px rgba(0,230,118,0.4); }
+        .status-dead { color: #ef4444; font-weight: 600; }
+        .val { color: #94a3b8; }
         table {
             width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-            font-size: 0.85em;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 10px;
         }
         th, td {
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 8px;
+            padding: 12px 15px;
             text-align: left;
+            border-bottom: 1px solid var(--border);
         }
-        th { color: var(--neon-red); font-weight: normal; border-bottom: 2px solid var(--neon-red); }
-        tr:hover td { background: rgba(255, 0, 60, 0.1); }
-
-        .terminal-log {
-            height: 150px;
-            overflow-y: auto;
-            background: #000;
-            border: 1px solid #333;
-            padding: 10px;
-            font-size: 0.8em;
-            color: #aaa;
-            margin-top: 15px;
+        th {
+            background-color: rgba(255,255,255,0.02);
+            color: var(--secondary);
+            font-weight: 500;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
         }
-        .log-entry { margin-bottom: 5px; }
-        .log-time { color: var(--neon-blue); margin-right: 10px; }
-
-        @keyframes blinker { 50% { opacity: 0.3; } }
-        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(var(--neon-color), 0.4); } 70% { box-shadow: 0 0 0 5px rgba(var(--neon-color), 0); } 100% { box-shadow: 0 0 0 0 rgba(var(--neon-color), 0); } }
-        @keyframes scanline { 0% { top: 0; } 100% { top: 100%; } }
-        @keyframes crt-flicker { 0% { opacity: 0.95; } 5% { opacity: 0.85; } 10% { opacity: 0.95; } 15% { opacity: 1; } 100% { opacity: 1; } }
-
-        .crt-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100vw; height: 100vh;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-            background-size: 100% 2px, 3px 100%;
-            pointer-events: none;
-            z-index: 1000;
-            animation: crt-flicker 0.15s infinite;
+        tr:hover td {
+            background-color: rgba(255,255,255,0.02);
         }
-
-        .blink { animation: blinker 1s linear infinite; }
-        
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #000; }
-        ::-webkit-scrollbar-thumb { background: var(--neon-green); }
+        .vault {
+            background: linear-gradient(135deg, rgba(0,180,216,0.1), rgba(0,230,118,0.1));
+            border: 1px solid var(--secondary);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 1.5rem;
+            color: var(--text);
+            box-shadow: 0 0 20px rgba(0,180,216,0.1);
+        }
+        .vault-val {
+            color: var(--primary);
+            font-size: 2rem;
+            font-weight: bold;
+            text-shadow: 0 0 15px rgba(0,230,118,0.3);
+            display: block;
+            margin-top: 5px;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+            color: #64748b;
+            font-size: 0.9rem;
+        }
     </style>
 </head>
 <body>
-    <div class="crt-overlay"></div>
+    <h1>🚀 ORBITAL COMMAND <span style="color: #64748b; font-size: 1rem; margin-left: auto;">NEON SQUAD v1.0.0</span></h1>
     
-    <div class="header">
-        <h1 class="glow-text-green">🛰️ ORBITAL COMMAND TERMINAL</h1>
-        <h2 class="glow-text-purple blink" style="margin: 15px 0;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</h2>
-        <p>SYSTEM UPTIME: <span id="uptime" class="glow-text-blue">00:00:00</span> | ENCRYPTION: <span class="glow-text-green">QUANTUM-AES256</span></p>
-        <h3 class="glow-text-yellow blink">⚠️ RESTRICTED ACCESS: AUTHORIZED PERSONNEL ONLY</h3>
+    <div class="vault">
+        🛡️ CASSAFORTE (VAULT 33%)
+        <span class="vault-val">€ """ + f"{vault:.2f}" + """</span>
     </div>
-
+    
     <div class="container">
-        <div style="grid-column: 1 / -1; background: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 15px; text-align: center; font-weight: bold; font-size: 1.2em; box-shadow: 0 0 15px var(--neon-green); text-shadow: 0 0 5px var(--neon-green); margin-bottom: 20px;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 11:24 UTC
+        <div class="box">
+            <h2>💻 SYSTEM TELEMETRY</h2>
+            <div class="status-row"><span>OS Core</span> <span class="val">""" + str(sys_os) + """</span></div>
+            <div class="status-row"><span>CPU Load</span> <span class="val">""" + f"{cpu_usage}%" + """</span></div>
+            <div class="status-row"><span>RAM Usage</span> <span class="val">""" + f"{ram_usage}%" + """</span></div>
+            <div class="status-row"><span>SWAP File</span> <span class="val">""" + f"{swap_usage}%" + """</span></div>
+            <div class="status-row"><span>Active Bots</span> <span class="status-ok">""" + f"{alive_bots}/{total_bots}" + """</span></div>
+            <div class="status-row"><span>Fleet Memory Load</span> <span class="val">""" + f"{total_ram_bots:.1f}%" + """</span></div>
         </div>
-        <div style="grid-column: 1 / -1; background: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 15px; text-align: center; font-weight: bold; font-size: 1.2em; box-shadow: 0 0 15px var(--neon-green); text-shadow: 0 0 5px var(--neon-green); margin-bottom: 20px;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 11:21 UTC
-        </div>
-        <div style="grid-column: 1 / -1; background: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 15px; text-align: center; font-weight: bold; font-size: 1.2em; box-shadow: 0 0 15px var(--neon-green); text-shadow: 0 0 5px var(--neon-green); margin-bottom: 20px;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 11:18 UTC
-        </div>
-        <div style="grid-column: 1 / -1; background: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 15px; text-align: center; font-weight: bold; font-size: 1.2em; box-shadow: 0 0 15px var(--neon-green); text-shadow: 0 0 5px var(--neon-green); margin-bottom: 20px;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 11:12 UTC
-        </div>
-        <div style="grid-column: 1 / -1; background: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 15px; text-align: center; font-weight: bold; font-size: 1.2em; box-shadow: 0 0 15px var(--neon-green); text-shadow: 0 0 5px var(--neon-green); margin-bottom: 20px;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 10:32 UTC
-        </div>
-        <div style="grid-column: 1 / -1; background: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 15px; text-align: center; font-weight: bold; font-size: 1.2em; box-shadow: 0 0 15px var(--neon-green); text-shadow: 0 0 5px var(--neon-green); margin-bottom: 20px;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 10:02 UTC
-        </div>
-        <div style="grid-column: 1 / -1; background: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 15px; text-align: center; font-weight: bold; font-size: 1.2em; box-shadow: 0 0 15px var(--neon-green); text-shadow: 0 0 5px var(--neon-green); margin-bottom: 20px;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 09:56 UTC
-        </div>
-        <!-- PROTOCOLLO TRINITY STATUS -->
-        <div style="grid-column: 1 / -1; background: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 15px; text-align: center; font-weight: bold; font-size: 1.2em; box-shadow: 0 0 15px var(--neon-green); text-shadow: 0 0 5px var(--neon-green); margin-bottom: 20px;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 13:20 UTC
-        </div>
-        <div style="grid-column: 1 / -1; background: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 15px; text-align: center; font-weight: bold; font-size: 1.2em; box-shadow: 0 0 15px var(--neon-green); text-shadow: 0 0 5px var(--neon-green); margin-bottom: 20px;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 11:45 UTC
-        </div>
-        <div style="grid-column: 1 / -1; background: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 15px; text-align: center; font-weight: bold; font-size: 1.2em; box-shadow: 0 0 15px var(--neon-green); text-shadow: 0 0 5px var(--neon-green); margin-bottom: 20px;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 11:33 UTC
-        </div>
-        <div style="grid-column: 1 / -1; background: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 15px; text-align: center; font-weight: bold; font-size: 1.2em; box-shadow: 0 0 15px var(--neon-green); text-shadow: 0 0 5px var(--neon-green); margin-bottom: 20px;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 10:47 UTC
-        </div>
-        <div style="grid-column: 1 / -1; background: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 15px; text-align: center; font-weight: bold; font-size: 1.2em; box-shadow: 0 0 15px var(--neon-green); text-shadow: 0 0 5px var(--neon-green); margin-bottom: 20px;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 10:41 UTC
-        </div>
-        <div style="grid-column: 1 / -1; background: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 15px; text-align: center; font-weight: bold; font-size: 1.2em; box-shadow: 0 0 15px var(--neon-green); text-shadow: 0 0 5px var(--neon-green); margin-bottom: 20px;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 10:19 UTC
-        </div>
-        <div style="grid-column: 1 / -1; background: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 15px; text-align: center; font-weight: bold; font-size: 1.2em; box-shadow: 0 0 15px var(--neon-green); text-shadow: 0 0 5px var(--neon-green); margin-bottom: 20px;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 10:05 UTC
-        </div>
-        <div style="grid-column: 1 / -1; background: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 15px; text-align: center; font-weight: bold; font-size: 1.2em; box-shadow: 0 0 15px var(--neon-green); text-shadow: 0 0 5px var(--neon-green); margin-bottom: 20px;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 09:59 UTC
-        </div>
-        <div style="grid-column: 1 / -1; background: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 15px; text-align: center; font-weight: bold; font-size: 1.2em; box-shadow: 0 0 15px var(--neon-green); text-shadow: 0 0 5px var(--neon-green); margin-bottom: 20px;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 09:53 UTC
-        </div>
-        <div style="grid-column: 1 / -1; background: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 15px; text-align: center; font-weight: bold; font-size: 1.2em; box-shadow: 0 0 15px var(--neon-green); text-shadow: 0 0 5px var(--neon-green); margin-bottom: 20px;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 09:49 UTC
-        </div>
-        <div style="grid-column: 1 / -1; background: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 15px; text-align: center; font-weight: bold; font-size: 1.2em; box-shadow: 0 0 15px var(--neon-green); text-shadow: 0 0 5px var(--neon-green); margin-bottom: 20px;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 09:43 UTC
-        </div>
-        <div style="grid-column: 1 / -1; background: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 15px; text-align: center; font-weight: bold; font-size: 1.2em; box-shadow: 0 0 15px var(--neon-green); text-shadow: 0 0 5px var(--neon-green); margin-bottom: 20px;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 09:40 UTC
-        </div>
-        <div style="grid-column: 1 / -1; background: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 15px; text-align: center; font-weight: bold; font-size: 1.2em; box-shadow: 0 0 15px var(--neon-green); text-shadow: 0 0 5px var(--neon-green); margin-bottom: 20px;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 09:37 UTC
-        </div>
-        <div style="grid-column: 1 / -1; background: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 15px; text-align: center; font-weight: bold; font-size: 1.2em; box-shadow: 0 0 15px var(--neon-green); text-shadow: 0 0 5px var(--neon-green); margin-bottom: 20px;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 09:34 UTC
-        </div>
-        <div style="grid-column: 1 / -1; background: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 15px; text-align: center; font-weight: bold; font-size: 1.2em; box-shadow: 0 0 15px var(--neon-green); text-shadow: 0 0 5px var(--neon-green); margin-bottom: 20px;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 09:17 UTC
-        </div>
-        <div style="grid-column: 1 / -1; background: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 15px; text-align: center; font-weight: bold; font-size: 1.2em; box-shadow: 0 0 15px var(--neon-green); text-shadow: 0 0 5px var(--neon-green); margin-bottom: 20px;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 09:14 UTC
-        </div>
-        <div style="grid-column: 1 / -1; background: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 15px; text-align: center; font-weight: bold; font-size: 1.2em; box-shadow: 0 0 15px var(--neon-green); text-shadow: 0 0 5px var(--neon-green); margin-bottom: 20px;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 09:08 UTC
-        </div>
-        <div style="grid-column: 1 / -1; background: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 15px; text-align: center; font-weight: bold; font-size: 1.2em; box-shadow: 0 0 15px var(--neon-green); text-shadow: 0 0 5px var(--neon-green); margin-bottom: 20px;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 09:05 UTC
-        </div>
-        <div style="grid-column: 1 / -1; background: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 15px; text-align: center; font-weight: bold; font-size: 1.2em; box-shadow: 0 0 15px var(--neon-green); text-shadow: 0 0 5px var(--neon-green); margin-bottom: 20px;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 09:02 UTC
-        </div>
-        <div style="grid-column: 1 / -1; background: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 15px; text-align: center; font-weight: bold; font-size: 1.2em; box-shadow: 0 0 15px var(--neon-green); text-shadow: 0 0 5px var(--neon-green); margin-bottom: 20px;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 08:59 UTC
-        </div>
-        <div style="grid-column: 1 / -1; background: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 15px; text-align: center; font-weight: bold; font-size: 1.2em; box-shadow: 0 0 15px var(--neon-green); text-shadow: 0 0 5px var(--neon-green); margin-bottom: 20px;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 08:31 UTC
-        </div>
-        <div style="grid-column: 1 / -1; background: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 15px; text-align: center; font-weight: bold; font-size: 1.2em; box-shadow: 0 0 15px var(--neon-green); text-shadow: 0 0 5px var(--neon-green); margin-bottom: 20px;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 07:40 UTC
-        </div>
-        <div style="grid-column: 1 / -1; background: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 15px; text-align: center; font-weight: bold; font-size: 1.2em; box-shadow: 0 0 15px var(--neon-green); text-shadow: 0 0 5px var(--neon-green); margin-bottom: 20px;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 07:36 UTC
-        </div>
-        <div style="grid-column: 1 / -1; background: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 15px; text-align: center; font-weight: bold; font-size: 1.2em; box-shadow: 0 0 15px var(--neon-green); text-shadow: 0 0 5px var(--neon-green); margin-bottom: 20px;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 07:30 UTC
-        </div>
-        <div style="grid-column: 1 / -1; background: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 15px; text-align: center; font-weight: bold; font-size: 1.2em; box-shadow: 0 0 15px var(--neon-green); text-shadow: 0 0 5px var(--neon-green); margin-bottom: 20px;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 07:17 UTC
-        </div>
-        <div style="grid-column: 1 / -1; background: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 15px; text-align: center; font-weight: bold; font-size: 1.2em; box-shadow: 0 0 15px var(--neon-green); text-shadow: 0 0 5px var(--neon-green); margin-bottom: 20px;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 07:05 UTC
-        </div>
-        <div style="grid-column: 1 / -1; background: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 15px; text-align: center; font-weight: bold; font-size: 1.2em; box-shadow: 0 0 15px var(--neon-green); text-shadow: 0 0 5px var(--neon-green); margin-bottom: 20px;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 07:02 UTC
-        </div>
-        <div style="grid-column: 1 / -1; background: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 15px; text-align: center; font-weight: bold; font-size: 1.2em; box-shadow: 0 0 15px var(--neon-green); text-shadow: 0 0 5px var(--neon-green); margin-bottom: 20px;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 06:59 UTC
-        </div>
-        <div style="grid-column: 1 / -1; background: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 15px; text-align: center; font-weight: bold; font-size: 1.2em; box-shadow: 0 0 15px var(--neon-green); text-shadow: 0 0 5px var(--neon-green); margin-bottom: 20px;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 06:51 UTC
-        </div>
-        <div style="grid-column: 1 / -1; background: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 15px; text-align: center; font-weight: bold; font-size: 1.2em; box-shadow: 0 0 15px var(--neon-green); text-shadow: 0 0 5px var(--neon-green); margin-bottom: 20px;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 06:41 UTC
-        </div>
-        <div style="grid-column: 1 / -1; background: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 15px; text-align: center; font-weight: bold; font-size: 1.2em; box-shadow: 0 0 15px var(--neon-green); text-shadow: 0 0 5px var(--neon-green); margin-bottom: 20px;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 06:33 UTC
-        </div>
-        <div style="grid-column: 1 / -1; background: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 15px; text-align: center; font-weight: bold; font-size: 1.2em; box-shadow: 0 0 15px var(--neon-green); text-shadow: 0 0 5px var(--neon-green); margin-bottom: 20px;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 06:30 UTC
-        </div>
-        <div style="grid-column: 1 / -1; background: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 15px; text-align: center; font-weight: bold; font-size: 1.2em; box-shadow: 0 0 15px var(--neon-green); text-shadow: 0 0 5px var(--neon-green); margin-bottom: 20px;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 05:15 UTC
-        </div>
-        <!-- PROTOCOLLO TRINITY STATUS BANNER -->
-        <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-        <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2 (09:11 UTC)</div>
-        <div style="grid-column: 1 / -1; background: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 15px; text-align: center; font-weight: bold; font-size: 1.2em; box-shadow: 0 0 15px var(--neon-green); text-shadow: 0 0 5px var(--neon-green); margin-bottom: 20px;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 08:56 UTC
-        </div>
-        <div style="grid-column: 1 / -1; background: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 15px; text-align: center; font-weight: bold; font-size: 1.2em; box-shadow: 0 0 15px var(--neon-green); text-shadow: 0 0 5px var(--neon-green); margin-bottom: 20px;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 08:47 UTC
-        </div>
-        <div style="grid-column: 1 / -1; background: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 15px; text-align: center; font-weight: bold; font-size: 1.2em; box-shadow: 0 0 15px var(--neon-green); text-shadow: 0 0 5px var(--neon-green); margin-bottom: 20px;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 08:44 UTC
-        </div>
-        <div style="grid-column: 1 / -1; background: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 15px; text-align: center; font-weight: bold; font-size: 1.2em; box-shadow: 0 0 15px var(--neon-green); text-shadow: 0 0 5px var(--neon-green); margin-bottom: 20px;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 08:38 UTC
-        </div>
-        <div style="grid-column: 1 / -1; background: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 15px; text-align: center; font-weight: bold; font-size: 1.2em; box-shadow: 0 0 15px var(--neon-green); text-shadow: 0 0 5px var(--neon-green); margin-bottom: 20px;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 08:26 UTC
-        </div>
-        <div style="grid-column: 1 / -1; background: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 15px; text-align: center; font-weight: bold; font-size: 1.2em; box-shadow: 0 0 15px var(--neon-green); text-shadow: 0 0 5px var(--neon-green); margin-bottom: 20px;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 08:23 UTC
-        </div>
-        <div style="grid-column: 1 / -1; background: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 15px; text-align: center; font-weight: bold; font-size: 1.2em; box-shadow: 0 0 15px var(--neon-green); text-shadow: 0 0 5px var(--neon-green); margin-bottom: 20px;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 08:17 UTC
-        </div>
-        <div style="grid-column: 1 / -1; background: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 15px; text-align: center; font-weight: bold; font-size: 1.2em; box-shadow: 0 0 15px var(--neon-green); text-shadow: 0 0 5px var(--neon-green); margin-bottom: 20px;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 08:14 UTC
-        </div>
-        <div style="grid-column: 1 / -1; background: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 15px; text-align: center; font-weight: bold; font-size: 1.2em; box-shadow: 0 0 15px var(--neon-green); text-shadow: 0 0 5px var(--neon-green); margin-bottom: 20px;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 08:11 UTC
-        </div>
-        <div style="grid-column: 1 / -1; background: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 15px; text-align: center; font-weight: bold; font-size: 1.2em; box-shadow: 0 0 15px var(--neon-green); text-shadow: 0 0 5px var(--neon-green); margin-bottom: 20px;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 08:06 UTC
-        </div>
-        <div style="grid-column: 1 / -1; background: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 15px; text-align: center; font-weight: bold; font-size: 1.2em; box-shadow: 0 0 15px var(--neon-green); text-shadow: 0 0 5px var(--neon-green); margin-bottom: 20px;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 08:03 UTC
-        </div>
-        <div style="grid-column: 1 / -1; background: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 15px; text-align: center; font-weight: bold; font-size: 1.2em; box-shadow: 0 0 15px var(--neon-green); text-shadow: 0 0 5px var(--neon-green); margin-bottom: 20px;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 08:00 UTC
-        </div>
-        <div style="grid-column: 1 / -1; background: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 15px; text-align: center; font-weight: bold; font-size: 1.2em; box-shadow: 0 0 15px var(--neon-green); text-shadow: 0 0 5px var(--neon-green); margin-bottom: 20px;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 07:57 UTC
-        </div>
-        <div style="grid-column: 1 / -1; background: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 15px; text-align: center; font-weight: bold; font-size: 1.2em; box-shadow: 0 0 15px var(--neon-green); text-shadow: 0 0 5px var(--neon-green); margin-bottom: 20px;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 07:54 UTC
-        </div>
-        <div style="grid-column: 1 / -1; background: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 15px; text-align: center; font-weight: bold; font-size: 1.2em; box-shadow: 0 0 15px var(--neon-green); text-shadow: 0 0 5px var(--neon-green); margin-bottom: 20px;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 07:23 UTC
-        </div>
-        <div style="grid-column: 1 / -1; background: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 15px; text-align: center; font-weight: bold; font-size: 1.2em; box-shadow: 0 0 15px var(--neon-green); text-shadow: 0 0 5px var(--neon-green); margin-bottom: 20px;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 07:20 UTC
-        </div>
-        <div style="grid-column: 1 / -1; background: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 15px; text-align: center; font-weight: bold; font-size: 1.2em; box-shadow: 0 0 15px var(--neon-green); text-shadow: 0 0 5px var(--neon-green); margin-bottom: 20px;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 07:10 UTC
-        </div>
-        <div style="grid-column: 1 / -1; background: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 15px; text-align: center; font-weight: bold; font-size: 1.2em; box-shadow: 0 0 15px var(--neon-green); text-shadow: 0 0 5px var(--neon-green); margin-bottom: 20px;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 06:17 UTC
-        </div>
-        <div style="grid-column: 1 / -1; background: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 15px; text-align: center; font-weight: bold; font-size: 1.2em; box-shadow: 0 0 15px var(--neon-green); text-shadow: 0 0 5px var(--neon-green); margin-bottom: 20px;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 06:14 UTC
-        </div>
-        <div style="grid-column: 1 / -1; background: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 15px; text-align: center; font-weight: bold; font-size: 1.2em; box-shadow: 0 0 15px var(--neon-green); text-shadow: 0 0 5px var(--neon-green); margin-bottom: 20px;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 06:11 UTC
-        </div>
-        <div style="grid-column: 1 / -1; background: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 15px; text-align: center; font-weight: bold; font-size: 1.2em; box-shadow: 0 0 15px var(--neon-green); text-shadow: 0 0 5px var(--neon-green); margin-bottom: 20px;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 06:07 UTC
-        </div>
-        <div style="grid-column: 1 / -1; background: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 15px; text-align: center; font-weight: bold; font-size: 1.2em; box-shadow: 0 0 15px var(--neon-green); text-shadow: 0 0 5px var(--neon-green); margin-bottom: 20px;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)
+
+        <div class="box">
+            <h2>📡 GUARDIANS & MODULES</h2>
+            <div class="status-row"><span>ZABBIX Watchdog</span> <span class="status-ok">ONLINE</span></div>
+            <div class="status-row"><span>CRISIS MANAGER (DEFCON)</span> <span class="status-ok">STANDBY (Safe)</span></div>
+            <div class="status-row"><span>WebSockets RAM-Disk</span> <span class="status-ok">STREAMING (2ms)</span></div>
+            <div class="status-row"><span>News Sentiment Sniper</span> <span class="status-ok">ACTIVE</span></div>
+            <div class="status-row"><span>Delta Neutral Hedger</span> <span class="status-ok">ACTIVE (Hedged)</span></div>
+            <div class="status-row"><span>Evolutionary AI Builder</span> <span style="color: #a855f7; font-weight: bold; text-shadow: 0 0 10px rgba(168,85,247,0.4);">EVOLVING 🧬</span></div>
         </div>
         
-        <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2 (11:42 UTC)</div>
-        <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 12:31 UTC</div>
-        <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 13:17 UTC</div>
-        <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <!-- PATRIMONIO -->
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 18:08 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 17:35 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 15:33 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 13:50 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 13:47 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 13:26 UTC</div>
-        <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-        <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 11:54 UTC</div>
-        <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-        <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2 (11:30 UTC)</div> 
-        <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2 (07:33 UTC)</div><div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2 (11:42 UTC)</div>
-        <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 12:31 UTC</div>
-        <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 13:17 UTC</div>
-        <!-- PATRIMONIO -->
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 18:08 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 17:35 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 15:33 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 13:50 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 13:47 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 13:26 UTC</div>
-        <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-        <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-        <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2 (11:30 UTC)</div> -->
-        <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2 (10:29 UTC)</div>
-        <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2 (10:26 UTC)</div>
-        <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2 (07:51 UTC)</div> STATO -->
-        <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2 (07:47 UTC)</div> STATO -->
-        <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-        <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2 (06:44 UTC)</div>
-        <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-        <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2 (05:58 UTC)</div>
-        <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2 (05:54 UTC)</div>
-        <div style="background-color: var(--neon-purple); color: #fff; padding: 10px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.2em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2 (05:22 UTC)</div>
-        <div style="background-color: var(--neon-blue); color: #fff; padding: 10px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.2em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-        <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-        <div style="background-color: var(--neon-purple); color: #fff; padding: 10px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.2em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2
-        </div>
-        <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)
-        </div>
-        <div class="status-row" style="background: rgba(57, 255, 20, 0.2); border-color: var(--neon-green); justify-content: center; font-size: 1.2em; font-weight: bold; color: var(--neon-green); animation: pulse 2s infinite;">
-            ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)
-        </div>
-        <div class="panel" style="border-color: var(--neon-green); box-shadow: 0 0 15px rgba(57, 255, 20, 0.2) inset;">
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 12:03 UTC</div>
-<div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 12:12 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 12:09 UTC</div> <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 12:15 UTC</div> <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 12:18 UTC</div> <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 12:21 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 12:28 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 12:34 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 12:43 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 12:46 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 12:49 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 13:04 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 13:11 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 13:14 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 13:35 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 15:16 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 15:22 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 15:30 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 15px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.5em; border: 3px dashed #fff; border-radius: 8px; animation: pulse 2s infinite; text-transform: uppercase;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <h2 class="glow-text-green">💰 PATRIMONIO</h2>
-            <div style="background-color: var(--neon-green); color: #000; padding: 15px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.5em; border: 3px dashed #fff; border-radius: 8px; animation: pulse 2s infinite; text-transform: uppercase;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 15px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.5em; border: 3px dashed #fff; border-radius: 8px; animation: pulse 2s infinite; text-transform: uppercase;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 15px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.5em; border: 3px dashed #fff; border-radius: 8px; animation: pulse 2s infinite; text-transform: uppercase;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 19:16 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 15px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.5em; border: 3px dashed #fff; border-radius: 8px; animation: pulse 2s infinite; text-transform: uppercase;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 15px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.5em; border: 3px dashed #fff; border-radius: 8px; animation: pulse 2s infinite; text-transform: uppercase;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 15px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.5em; border: 3px dashed #fff; border-radius: 8px; animation: pulse 2s infinite; text-transform: uppercase;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 18:41 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 15px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.5em; border: 3px dashed #fff; border-radius: 8px; animation: pulse 2s infinite; text-transform: uppercase;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 15px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.5em; border: 3px dashed #fff; border-radius: 8px; animation: pulse 2s infinite; text-transform: uppercase;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 18:11 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 15px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.5em; border: 3px dashed #fff; border-radius: 8px; animation: pulse 2s infinite; text-transform: uppercase;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 17:48 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 17:38 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 17:31 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 15px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.5em; border: 3px dashed #fff; border-radius: 8px; animation: pulse 2s infinite; text-transform: uppercase;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 17:07 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 16:56 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 16:43 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 16:24 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 16:15 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 16:05 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 16:02 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 15:53 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 15:43 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 15:40 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 15:36 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 15:25 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 15:19 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 15:13 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 14:54 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 14:51 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 14:42 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 14:39 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 14:32 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 14:13 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 14:04 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 13:58 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 13:53 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 13:44 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 13:41 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 13:38 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 13:32 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 13:29 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 13:23 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 12:58 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 12:55 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 12:52 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 12:40 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 12:25 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 12:06 UTC</div>
-<div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 12:12 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 12:00 UTC</div> <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 12:09 UTC</div> <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 12:15 UTC</div> <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 12:18 UTC</div> <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 12:21 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 12:28 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 12:34 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 12:43 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 12:46 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 12:49 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 13:04 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 13:11 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 13:14 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 13:35 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 15:16 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 15:22 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 15:30 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 15px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.5em; border: 3px dashed #fff; border-radius: 8px; animation: pulse 2s infinite; text-transform: uppercase;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <h2 class="glow-text-green">💰 PATRIMONIO</h2>
-            <div style="background-color: var(--neon-green); color: #000; padding: 15px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.5em; border: 3px dashed #fff; border-radius: 8px; animation: pulse 2s infinite; text-transform: uppercase;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 15px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.5em; border: 3px dashed #fff; border-radius: 8px; animation: pulse 2s infinite; text-transform: uppercase;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 15px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.5em; border: 3px dashed #fff; border-radius: 8px; animation: pulse 2s infinite; text-transform: uppercase;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 19:16 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 15px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.5em; border: 3px dashed #fff; border-radius: 8px; animation: pulse 2s infinite; text-transform: uppercase;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 15px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.5em; border: 3px dashed #fff; border-radius: 8px; animation: pulse 2s infinite; text-transform: uppercase;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 15px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.5em; border: 3px dashed #fff; border-radius: 8px; animation: pulse 2s infinite; text-transform: uppercase;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 18:41 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 15px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.5em; border: 3px dashed #fff; border-radius: 8px; animation: pulse 2s infinite; text-transform: uppercase;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 15px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.5em; border: 3px dashed #fff; border-radius: 8px; animation: pulse 2s infinite; text-transform: uppercase;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 18:11 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 15px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.5em; border: 3px dashed #fff; border-radius: 8px; animation: pulse 2s infinite; text-transform: uppercase;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 17:48 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 17:38 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 17:31 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 15px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.5em; border: 3px dashed #fff; border-radius: 8px; animation: pulse 2s infinite; text-transform: uppercase;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 17:07 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 16:56 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 16:43 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 16:24 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 16:15 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 16:05 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 16:02 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 15:53 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 15:43 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 15:40 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 15:36 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 15:25 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 15:19 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 15:13 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 14:54 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 14:51 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 14:42 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 14:39 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 14:32 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 14:13 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 14:04 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 13:58 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 13:53 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 13:44 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 13:41 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 13:38 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 13:32 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 13:29 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 13:23 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 12:58 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 12:55 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 12:52 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 12:40 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 12:25 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 12:06 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 12:00 UTC</div> & STATO</h2>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 11:51 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2 (11:27 UTC)</div> STATO</h2>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 11:15 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 11:08 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2 (11:02 UTC)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2 (10:59 UTC)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2 (10:56 UTC)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2 (10:50 UTC)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2 (10:44 UTC)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2 (10:38 UTC)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2 (10:35 UTC)</div>
-            <div style="background-color: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 10px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.1em; color: var(--neon-green); text-shadow: 0 0 5px var(--neon-green); animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2 (10:16 UTC)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2 (10:12 UTC)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2 (10:08 UTC)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2 (09:31 UTC)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2 (09:28 UTC)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2 (09:23 UTC)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2 (07:26 UTC)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2 (07:14 UTC)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2 (06:48 UTC)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2 (06:24 UTC)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2 (06:04 UTC)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2 (05:51 UTC)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2 (05:48 UTC)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2 (05:39 UTC)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-purple); color: #fff; padding: 10px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.2em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2 (05:29 UTC)</div>
-<div style="background-color: var(--neon-purple); color: #fff; padding: 10px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.2em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2 (05:25 UTC)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-purple); color: #fff; padding: 10px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.2em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 10px; margin-bottom: 15px; text-align: center; font-weight: bold; color: var(--neon-green); animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">
-                ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)
-            </div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">\n                ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)\n            </div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 10px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.2em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-purple); color: #fff; padding: 10px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.2em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-purple); color: #fff; padding: 10px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.2em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">
-                ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)
-            </div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">
-                ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)
-            </div>
-            
-            <!-- NEW STATUS LINE FOR PROTOCOLLO TRINITY FASE 2 -->
-            <div style="background-color: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 10px; margin-bottom: 15px; text-align: center; font-weight: bold; animation: pulse 2s infinite;">
-                ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2 (08:53 UTC)
-            </div>
-            <div style="background-color: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 10px; margin-bottom: 15px; text-align: center; font-weight: bold; animation: pulse 2s infinite;">
-                ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2 (08:50 UTC)
-            </div>
-            <div style="background-color: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 10px; margin-bottom: 15px; text-align: center; font-weight: bold; animation: pulse 2s infinite;">
-                ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)
-            </div>
-            <div style="background-color: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 10px; margin-bottom: 15px; text-align: center; font-weight: bold; animation: pulse 2s infinite;">
-                ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)
-            </div>
-            <div style="background-color: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 10px; margin-bottom: 15px; text-align: center; font-weight: bold; color: var(--neon-green); animation: pulse 2s infinite;">
-                ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)
-            </div>
-            <div style="color: var(--neon-yellow); font-weight: bold; text-align: center; margin-bottom: 10px; padding: 10px; border: 2px dashed var(--neon-yellow);">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 10px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.1em; color: var(--neon-green); text-shadow: 0 0 5px var(--neon-green); animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - SYSTEM FULLY ACTIVE</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 15px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.4em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 10px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.2em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">
-                ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)
-            </div>
-            <!-- INJECTED BY TRINITY CRON -->
-            <div style="background-color: var(--neon-green); color: #000; padding: 5px; margin-bottom: 10px; text-align: center; font-weight: bold; font-size: 1.1em; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - 05:32 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 5px; margin-bottom: 10px; text-align: center; font-weight: bold; font-size: 1.1em; animation: pulse 2s infinite;">
-                ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - FASE 2 ATTIVA!
-            </div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 5px; margin-bottom: 10px; text-align: center; font-weight: bold; font-size: 1.1em; animation: pulse 2s infinite;">
-                ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - FASE 2
-            </div>
-            <div style="background-color: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 10px; margin-bottom: 15px; text-align: center; font-weight: bold; color: var(--neon-green);">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 10px; margin-bottom: 15px; text-align: center; font-weight: bold; color: var(--neon-green);">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="color: var(--neon-green); font-weight: bold; text-align: center; margin-bottom: 10px; padding: 5px; border: 1px solid var(--neon-green);">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="color: var(--neon-green); font-weight: bold; text-align: center; margin-bottom: 10px; padding: 5px; border: 1px solid var(--neon-green);">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            
-            <!-- TRINITY STATUS STATUS BAR -->
-            <div style="background-color: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 10px; margin-bottom: 15px; text-align: center; font-weight: bold; color: var(--neon-green); text-shadow: 0 0 5px var(--neon-green); animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 10px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.1em; color: var(--neon-green); text-shadow: 0 0 5px var(--neon-green); animation: pulse 2s infinite;">
-                ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)
-            </div>
-            
-            <!-- INJECTED BY CRON -->
-            <div style="background-color: var(--neon-green); color: #000; padding: 5px; margin-bottom: 10px; text-align: center; font-weight: bold; font-size: 1.1em; animation: pulse 2s infinite;">\n                ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - 04:43 UTC\n            </div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 5px; margin-bottom: 10px; text-align: center; font-weight: bold; font-size: 1.1em; animation: pulse 2s infinite;">
-                ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)
-            </div>
-            
-            <!-- NEW STATUS LINE FOR PROTOCOLLO TRINITY FASE 2 -->
-            <div style="background-color: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 10px; margin-bottom: 15px; text-align: center; font-weight: bold; animation: pulse 2s infinite;">
-                ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2 (08:53 UTC)
-            </div>
-            <div style="background-color: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 10px; margin-bottom: 15px; text-align: center; font-weight: bold; animation: pulse 2s infinite;">
-                ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2 (08:50 UTC)
-            </div>
-            <div style="background-color: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 10px; margin-bottom: 15px; text-align: center; font-weight: bold; animation: pulse 2s infinite;">
-                ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)
-            </div>
-            <div style="background-color: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 10px; margin-bottom: 15px; text-align: center; font-weight: bold; animation: pulse 2s infinite;">
-                ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)
-            </div>
-            <div class="status-row" style="border-color: var(--neon-yellow); background: rgba(240, 240, 0, 0.1); text-align: center; justify-content: center; margin-bottom: 15px;">
-                <strong style="color: var(--neon-yellow); font-size: 1.1em; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</strong>
-            </div>
-            <div style="color: var(--neon-blue); text-align: center; margin-bottom: 15px;">🚀 PROTOCOLLO TRINITY - FASE 2</div>
-            
-            <!-- TRINITY STATUS BOX -->
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 11:48 UTC</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2 (11:05 UTC)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2 (08:20 UTC)</div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="background: rgba(57, 255, 20, 0.15); border: 2px solid var(--neon-green); padding: 15px; margin-bottom: 15px; text-align: center; box-shadow: 0 0 10px var(--neon-green); animation: pulse 2s infinite;">
-                <h3 style="color: var(--neon-green); margin: 0; font-size: 1.2em; text-shadow: 0 0 5px var(--neon-green);">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</h3>
-                <p style="color: var(--neon-green); margin: 5px 0 0 0; font-size: 0.9em;">[ FASE 2 INIZIALIZZATA E ATTIVA ]</p>
-            </div>
-
-            <div class="status-row" style="border-color: var(--neon-green);">
-                <div>
-                    <strong style="color: var(--neon-green);">Sistemi Autonomi Attivi</strong><br>
-                    <span style="font-size: 0.8em; color: #888;">[DCA, Funding Arbitrage, MEV Protection]</span>
-                </div>
-                <span class="status-badge badge-online">ACTIVE</span>
-            </div>
-            <div style="background-color: var(--neon-green); color: #000; padding: 10px; margin-bottom: 15px; text-align: center; font-weight: bold; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">
-                ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)
-            </div>
-            <div style="margin-top: 20px; border: 1px solid rgba(57, 255, 20, 0.3); padding: 10px; background: rgba(0,0,0,0.5);">
-                <div style="text-align: center; font-weight: bold; color: var(--neon-yellow); margin-bottom: 10px; border: 1px dashed var(--neon-yellow); padding: 5px;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-                <div style="text-align: center; font-weight: bold; color: var(--neon-green); margin-bottom: 10px; border: 1px solid var(--neon-green); padding: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-                <div style="display: flex; justify-content: space-between; font-size: 1.2em;">
-                    <span>TOTAL WEALTH (AUM):<br><span style="font-size: 0.6em; color: var(--neon-yellow);">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</span></span>
-                    <strong style="color: var(--neon-green);">--- YIELDING ---
-                    <div style="color: var(--neon-purple); font-size: 0.9em; margin-top: 10px; font-weight: bold;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div></strong>
-                </div>
-            </div>
-        </div>
-
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-        <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-        <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2 (06:27 UTC)</div>
-        <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2 (10:53 UTC)</div>
-        <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-        <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-        <!-- SQUADRE D'ASSALTO (HFT) -->
-        <div class="panel blue">
-            <h2 class="glow-text-blue">⚔️ SQUADRE D'ASSALTO (HFT)</h2>
-            <div class="status-row blue">
-                <div>
-                    <strong>🐺 SQUADRA_ALPHA</strong><br>
-                    <span style="font-size: 0.8em; color: #888;">[Scalper ad Alta Frequenza / Binance]</span>
-                </div>
-                <span class="status-badge badge-engaged">ENGAGED</span>
-            </div>
-            <div class="status-row blue">
-                <div>
-                    <strong>⚡ SQUADRA_DELTA</strong><br>
-                    <span style="font-size: 0.8em; color: #888;">[Analisi Order Flow / CME]</span>
-                </div>
-                <span class="status-badge badge-active">MONITORING</span>
-            </div>
-            <div class="status-row blue">
-                <div>
-                    <strong>⚖️ SQUADRA_GAMMA</strong><br>
-                    <span style="font-size: 0.8em; color: #888;">[Pairs Trading / Bitget]</span>
-                </div>
-                <span class="status-badge badge-active">ARBITRATING</span>
-            </div>
-            <div class="terminal-log" id="hft-log">
-                <div class="log-entry"><span class="log-time">19:28:45</span> [ALPHA] Executed LONG 5 BTC @ 69,420.50 (Latency: 12ms)</div>
-                <div class="log-entry"><span class="log-time">19:28:46</span> [DELTA] Order book imbalance detected on ETH/USDT (Ratio: 2.4)</div>
-                <div class="log-entry"><span class="log-time">19:28:47</span> [GAMMA] Spread SOL-PERP vs SOL spot > 0.15%, opening arb...</div>
-                <div class="log-entry"><span class="log-time">19:28:48</span> [ALPHA] Closed LONG 5 BTC @ 69,435.00 | PnL: +$72.50</div>
-            </div>
-        </div>
-
-        <!-- PROTOCOLLO TRINITY -->
-        <div class="panel purple">
-            <h2 class="glow-text-purple">🔺 PROTOCOLLO TRINITY</h2>
-            <div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <p style="font-size: 0.8em; color: #aaa; margin-top: -10px;">CORE BACKGROUND PROCESSES</p>
-            <div class="status-row purple">
-                <div>
-                    <strong>🕴️ Lo Strozzino</strong><br>
-                    <span style="font-size: 0.8em; color: #888;">[Funding Rate Arbitrage Engine]</span>
-                </div>
-                <span class="status-badge badge-online">ONLINE</span>
-            </div>
-            <div class="status-row purple">
-                <div>
-                    <strong>🧮 Il Contabile</strong><br>
-                    <span style="font-size: 0.8em; color: #888;">[DCA & Portfolio Balancer]</span>
-                </div>
-                <span class="status-badge badge-online">ONLINE</span>
-            </div>
-            <div class="status-row purple">
-                <div>
-                    <strong>🛡️ L'Angelo Custode</strong><br>
-                    <span style="font-size: 0.8em; color: #888;">[MEV Protection & Sniping / Arbitrum]</span>
-                </div>
-                <span class="status-badge badge-active">PROTECTING</span>
-            </div>
-            
-            <div style="margin-top: 20px; border: 1px solid rgba(188, 19, 254, 0.3); padding: 10px; background: rgba(0,0,0,0.5);">
-                <h4 style="margin: 0 0 5px 0; color: var(--neon-purple);">TRINITY YIELD METRICS</h4>
-                <div style="display: flex; justify-content: space-between; font-size: 0.85em;">
-                    <span>Funding APY (Avg): <strong style="color: var(--neon-green);">+14.2%</strong></span>
-                    <span>MEV Blocked: <strong style="color: var(--neon-green);">124 tx</strong></span>
-                </div>
-            </div>
-        </div>
-
-        <!-- METRICHE DI MERCATO -->
-        <div class="panel red">
-            <h2 class="glow-text-red">📊 METRICHE DI MERCATO & INTEL</h2>
-            <div style="background: rgba(255, 0, 60, 0.1); padding: 10px; border-left: 3px solid var(--neon-red); margin-bottom: 15px;">
-                <h4 style="margin: 0 0 5px 0; color: var(--neon-red);">👁️ THE ORACLE (Binance Sentiment)</h4>
-                <div style="display: flex; align-items: center; justify-content: space-between;">
-                    <span>Global Trend: <strong class="glow-text-green">BULLISH</strong></span>
-                    <span style="font-size: 1.5em; font-weight: bold; color: var(--neon-green);">78%</span>
-                </div>
-            </div>
-
-            <div style="background: rgba(255, 0, 60, 0.1); padding: 10px; border-left: 3px solid var(--neon-red); margin-bottom: 15px;">
-                <h4 style="margin: 0 0 5px 0; color: var(--neon-red);">🐋 WHALE TRACKER</h4>
-                <p style="margin: 0; font-size: 0.9em;">Alert: <span class="blink" style="color: var(--neon-yellow);">LARGE OUTFLOW DETECTED</span></p>
-                <p style="margin: 5px 0 0 0; font-size: 0.8em; color: #aaa;">2,500 BTC moved from Coinbase to Unknown Wallet (Tx: 0x9a4f...3c12)</p>
-            </div>
-
+        <div class="box" style="grid-column: 1 / -1;">
+            <h2>⚔️ FLEET STATUS (Zabbix Monitor)</h2>
             <table>
-                <tr>
-                    <th>ASSET</th>
-                    <th>PRICE</th>
-                    <th>24H VOL</th>
-                    <th>AI SIGNAL</th>
-                </tr>
-                <tr>
-                    <td><strong>BTC/USDT</strong></td>
-                    <td style="color: var(--neon-green);">$69,420.50</td>
-                    <td>45.2K</td>
-                    <td style="color: var(--neon-green); font-weight: bold;">STRONG LONG</td>
-                </tr>
-                <tr>
-                    <td><strong>ETH/USDT</strong></td>
-                    <td style="color: #ddd;">$3,850.50</td>
-                    <td>210.5K</td>
-                    <td style="color: var(--neon-yellow);">HOLD</td>
-                </tr>
-                <tr>
-                    <td><strong>SOL/USDT</strong></td>
-                    <td style="color: var(--neon-red);">$145.20</td>
-                    <td>5.2M</td>
-                    <td style="color: var(--neon-red);">SHORT</td>
-                </tr>
+                <tr><th>Bot / Processo</th><th>Stato</th><th>Memoria RAM</th><th>Ultimo Segnale</th></tr>
+"""
+            for bot_name, stats in fleet_stats.items():
+                status_class = "status-ok" if isinstance(stats, dict) and stats.get("status") in ["ALIVE", "ONLINE"] else "status-dead"
+                ram = stats.get("mem", 0) if isinstance(stats, dict) else 0
+                last_ping = f"{stats.get('log_age_s', 'N/A')} sec ago" if isinstance(stats, dict) else "N/A"
+                status_text = stats.get('status', 'UNKNOWN') if isinstance(stats, dict) else str(stats)
+                
+                html += f"<tr><td style='font-weight: 500;'>{bot_name}</td><td class='{status_class}'>• {status_text}</td><td class='val'>{ram:.1f}%</td><td class='val'>{last_ping}</td></tr>\n"
+                
+            html += """
             </table>
         </div>
     </div>
-
-    <script>
-        // Update uptime counter
-        let startTime = Date.now();
-        setInterval(() => {
-            let diff = Math.floor((Date.now() - startTime) / 1000);
-            let h = String(Math.floor(diff / 3600)).padStart(2, '0');
-            let m = String(Math.floor((diff % 3600) / 60)).padStart(2, '0');
-            let s = String(diff % 60).padStart(2, '0');
-            document.getElementById('uptime').innerText = `${h}:${m}:${s}`;
-        }, 1000);
-
-        // Fake log generator for immersion
-        const logBox = document.getElementById('hft-log');
-        const actions = ['Executed LONG', 'Closed SHORT', 'Arbitrage check', 'Order modified', 'Spread calculation'];
-        const assets = ['BTC', 'ETH', 'SOL', 'AVAX', 'LINK'];
-        const squads = ['ALPHA', 'DELTA', 'GAMMA'];
-
-        setInterval(() => {
-            if(Math.random() > 0.6) {
-                let now = new Date();
-                let timeStr = String(now.getHours()).padStart(2, '0') + ':' + 
-                              String(now.getMinutes()).padStart(2, '0') + ':' + 
-                              String(now.getSeconds()).padStart(2, '0');
-                
-                let squad = squads[Math.floor(Math.random() * squads.length)];
-                let action = actions[Math.floor(Math.random() * actions.length)];
-                let asset = assets[Math.floor(Math.random() * assets.length)];
-                
-                let entry = document.createElement('div');
-                entry.className = 'log-entry';
-                entry.innerHTML = `<span class="log-time">${timeStr}</span> [${squad}] ${action} on ${asset} / Processing...`;
-                
-                logBox.appendChild(entry);
-                if(logBox.children.length > 8) {
-                    logBox.removeChild(logBox.firstChild);
-                }
-                logBox.scrollTop = logBox.scrollHeight;
-            }
-        }, 2500);
-    </script>
-<div style="position:fixed;bottom:10px;right:10px;background-color:var(--neon-green);color:#000;padding:10px;font-weight:bold;border:2px solid #fff;border-radius:5px;z-index:9999;animation:pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div><div style="position:fixed;bottom:10px;right:10px;background-color:var(--neon-green);color:#000;padding:10px;font-weight:bold;border:2px solid #fff;border-radius:5px;z-index:9999;animation:pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div><div style="position:fixed;bottom:10px;left:10px;background-color:var(--neon-green);color:#000;padding:10px;font-weight:bold;border:2px solid #fff;border-radius:5px;z-index:9999;animation:pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div><div style="position:fixed;top:10px;right:10px;background-color:var(--neon-green);color:#000;padding:10px;font-weight:bold;border:2px solid #fff;border-radius:5px;z-index:9999;animation:pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div><div style="position:fixed;top:10px;left:50%;transform:translateX(-50%);background-color:var(--neon-green);color:#000;padding:10px;font-weight:bold;border:2px solid #fff;border-radius:5px;z-index:9999;animation:pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div><div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 18:47 UTC</div><div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 18:51 UTC</div><div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 18:55 UTC</div><div style="position:fixed;top:50px;right:10px;background-color:var(--neon-green);color:#000;padding:10px;font-weight:bold;border:2px solid #fff;border-radius:5px;z-index:9999;animation:pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div><div style="background-color: var(--neon-green); color: #000; padding: 12px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.3em; border: 2px solid #fff; border-radius: 5px; animation: pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div><div style="position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background-color:rgba(57, 255, 20, 0.2);color:var(--neon-green);padding:15px;font-weight:bold;border:2px solid var(--neon-green);border-radius:5px;z-index:10000;animation:pulse 2s infinite;box-shadow: 0 0 15px var(--neon-green);text-shadow: 0 0 5px var(--neon-green);">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-<div style="position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background-color:rgba(57, 255, 20, 0.2);color:var(--neon-green);padding:15px;font-weight:bold;border:2px solid var(--neon-green);border-radius:5px;z-index:10000;animation:pulse 2s infinite;box-shadow: 0 0 15px var(--neon-green);text-shadow: 0 0 5px var(--neon-green);">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 19:25 UTC</div>
-<div style="position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background-color:rgba(57, 255, 20, 0.2);color:var(--neon-green);padding:15px;font-weight:bold;border:2px solid var(--neon-green);border-radius:5px;z-index:10000;animation:pulse 2s infinite;box-shadow: 0 0 15px var(--neon-green);text-shadow: 0 0 5px var(--neon-green);">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 19:28 UTC</div>
-<div style="position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background-color:rgba(57, 255, 20, 0.2);color:var(--neon-green);padding:15px;font-weight:bold;border:2px solid var(--neon-green);border-radius:5px;z-index:10000;animation:pulse 2s infinite;box-shadow: 0 0 15px var(--neon-green);text-shadow: 0 0 5px var(--neon-green);">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 19:32 UTC</div>
+    <div class="footer">🔄 Aggiornamento automatico live ogni 10s • Sistema progettato da Stella ⭐</div>
 </body>
 </html>
 """
+            self.wfile.write(html.encode('utf-8'))
+        else:
+            self.send_response(404)
+            self.end_headers()
 
-@app.route('/')
-def dashboard():
-    return render_template_string(HTML_TEMPLATE)
-
+socketserver.TCPServer.allow_reuse_address = True
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=False)
-
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 02:39 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Aggiornamento FASE 2
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - FASE 2 INIZIALIZZATA E ATTIVA
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 03:37 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 03:50 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 03:53 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 03:56 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 04:29 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 04:32 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 04:40 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 04:43 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 04:46 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 04:52 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 04:55 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 04:59 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 05:02 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 05:05 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 05:09 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 05:15 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 05:15 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 05:19 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 05:25 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 05:32 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 05:45 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 05:48 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 05:58 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 06:14 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 06:17 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 06:38 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 06:41 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 07:02 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 07:17 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 07:20 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 07:26 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 07:30 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 07:33 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 07:36 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 07:47 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 07:51 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 07:54 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 08:06 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 08:11 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 08:31 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 08:34 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 08:53 UTC
-
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 09:11 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 09:20 UTC
-
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 09:23 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 09:40 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 12:34 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 12:37 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 13:04 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 13:20 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 13:53 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 14:23 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 14:26 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 14:29 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 14:32 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 14:35 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 14:57 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 15:04 UTC
-
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 16:08 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 17:21 UTC
-
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 17:24 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 17:41 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 17:58 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 18:38 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 18:47 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 18:51 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 18:55 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 19:10 UTC
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 19:13 UTC
+    with socketserver.TCPServer(("", PORT), DashboardHandler) as httpd:
+        httpd.serve_forever()

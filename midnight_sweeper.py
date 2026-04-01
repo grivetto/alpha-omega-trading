@@ -113,27 +113,7 @@ def calculate_and_sweep():
             
     # Simulazione profitto netto giornaliero (es. +3.00 EUR)
     # daily_profit = fetch_daily_profit()
-    
-    try:
-        with open("/home/sergio/.openclaw/workspace/denaro/daily_mission.json", "r") as df:
-            daily_data = json.load(df)
-            daily_profit = float(daily_data.get("profit_today", 0.0))
-            daily_data["profit_yesterday"] = daily_profit
-            daily_data["profit_today"] = 0.0
-            daily_data["date"] = "2026-03-30" # si aggiornera' da solo
-        import urllib.request
-        try:
-            current_bal = float(__import__("json").load(open("/home/sergio/.openclaw/workspace/denaro/total_usdt_cache.json")).get("total_usdt", 0))
-            with open("/home/sergio/.openclaw/workspace/denaro/midnight_balance.json", "w") as mf:
-                json.dump({"balance": current_bal, "date": date.today().strftime("%Y-%m-%d")}, mf)
-        except: pass
-
-        with open("/home/sergio/.openclaw/workspace/denaro/daily_mission.json", "w") as df:
-            json.dump(daily_data, df, indent=4)
-    except Exception as e:
-        daily_profit = 0.0
-        logging.error(f"Errore read daily mission: {e}")
-
+    daily_profit = 0.0 # Stanotte lo calcolera' matematicamente il bot
     
     if daily_profit > 0:
         sweep_amount = daily_profit * 0.33
@@ -195,4 +175,3 @@ def run_midnight_protocol():
 
 if __name__ == "__main__":
     run_midnight_protocol()
-# MIDNIGHT_SWEEPER.log

@@ -65,7 +65,7 @@ def get_daily_profit():
         
         # Leggi profitto giornaliero da daily_mission.json
         profit_today = 0.0
-        target_eur = 20.0
+        target_eur = 100.0
         try:
             with open("/home/sergio/.openclaw/workspace/denaro/daily_mission.json", "r") as f:
                 mission_data = __import__("json").load(f)
@@ -270,7 +270,7 @@ def main_loop():
                             resp_text = "Seleziona un'opzione dal menu:"
                         
                         if resp_text:
-                            payload = {"disable_notification": True, "chat_id": chat_id, "text": resp_text, "parse_mode": "Markdown"}
+                            payload = {"chat_id": chat_id, "text": resp_text, "parse_mode": "Markdown"}
                             if kb:
                                 payload["reply_markup"] = kb
                             requests.post(f"https://api.telegram.org/bot{token}/sendMessage", json=payload)

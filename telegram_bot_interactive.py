@@ -14,51 +14,10 @@ from datetime import datetime
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')
 
 # --- CONFIGURAZIONE COSTANTI ---
-CAPITALE_VERSATO_TOTALE = 722.0 # 500.0 Operativo + 222.0 Cassaforte0 
+CAPITALE_VERSATO_TOTALE = 722.00 
 TRADING_SYMBOLS = ['EURUSDT', 'BTCEUR', 'SOLEUR', 'BNBEUR', 'ETHEUR', 'AVAXBTC', 'DOGEBTC', 'ETHBTC', 'SOLBTC']
 
-import ccxt
-import json
 def get_full_status():
-    try:
-        import ccxt
-        import os
-        from dotenv import load_dotenv
-        # Binance
-        load_dotenv("/home/sergio/.openclaw/workspace/denaro/.env")
-        binance = ccxt.binance({"apiKey": os.getenv("BINANCE_API_KEY"), "secret": os.getenv("BINANCE_API_SECRET")})
-        b_bal = binance.fetch_balance()
-        b_tot = sum([a for c, a in b_bal.get("total", {}).items() if c in ["EUR","USDT","USDC"]])
-        for c, a in b_bal.get("total", {}).items():
-            if a > 0 and c not in ["EUR","USDT","USDC"]:
-                try: b_tot += a * binance.fetch_ticker(f"{c}/USDT")["last"]
-                except: pass
-        # Bitget
-        load_dotenv("/home/sergio/.openclaw/workspace/denaro/.env.bitget")
-        bitget = ccxt.bitget({"apiKey": os.getenv("BITGET_API_KEY"), "secret": os.getenv("BITGET_API_SECRET"), "password": os.getenv("BITGET_PASSWORD"), "options": {"defaultType": "swap"}})
-        bg_tot = bitget.fetch_balance().get("USDT", {}).get("total", 0)
-        # MEXC
-        load_dotenv("/home/sergio/.openclaw/workspace/denaro/.env.mexc")
-        mexc = ccxt.mexc({"apiKey": os.getenv("MEXC_API_KEY"), "secret": os.getenv("MEXC_API_SECRET")})
-        m_bal = mexc.fetch_balance()
-        m_tot = sum([float(a) for c, a in m_bal.get("total", {}).items() if c in ["USDT"]])
-        for c, a in m_bal.get("total", {}).items():
-            if float(a) > 0 and c not in ["USDT"]:
-                try: m_tot += float(a) * float(mexc.fetch_ticker(f"{c}/USDT")["last"])
-                except: pass
-        tot_investito = b_tot + bg_tot + m_tot
-        profit_operativo = tot_investito - 500.0
-        locked = 0.0
-        gariban = 0.0
-        try:
-            with open("/home/sergio/.openclaw/workspace/denaro/vault.json", "r") as vf:
-                vdata = json.load(vf)
-                locked = float(vdata.get("LOCKED_EUR", 0))
-                gariban = float(vdata.get("GARIBAN_TRACKER", 0))
-        except: pass
-        return f"💰 *ESPERIMENTI DI SERGIO (The Dark Pool)*\n------------------------------------\n⚔️ Capitale in Azione: €{tot_investito:.2f}\n📥 Cifra di Partenza: €500.00\n🎯 Obiettivo Giornaliero: +€{target_giornaliero:.2f}\n------------------------------------\n📈 DRAWDOWN STORICO: {profit_operativo:+.2f} €\n------------------------------------\n🔐 Cassaforte (Sicurezza): €{locked:.2f}\n🤲 Gariban/Elemosina: €{gariban:.2f}\n------------------------------------"
-    except Exception as e: return f"Errore: {e}"
-def old_get_full_status():
     try:
         load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env')
         client = Client(os.getenv('BINANCE_API_KEY'), os.getenv('BINANCE_API_SECRET'))
@@ -125,26 +84,16 @@ def old_get_full_status():
         
         main_vault = locked - gariban if locked >= gariban else locked
         
-        total_eur_lordo = total_eur
-        capitale_operativo = total_eur_lordo - locked
-        # Fix if operative drops below base to avoid fake math (actually keep it real)
-        base_operativa = 500.00
-        try:
-            with open("/home/sergio/.openclaw/workspace/denaro/daily_mission.json", "r") as f: target_giornaliero = float(__import__("json").load(f).get("target_eur", 10.0))
-        except: target_giornaliero = 10.00
-        profit_operativo = capitale_operativo - base_operativa
-        
         msg = (
-            f"💰 *ESPERIMENTI DI SERGIO (The Dark Pool)*\n"
+            f"💰 *SITUAZIONE CAPITALE*\n"
             f"------------------------------------\n"
-            f"⚔️ Capitale in Azione: €{capitale_operativo:.2f}\n"
-            f"📥 Cifra di Partenza: €{base_operativa:.2f}\n"
-            f"🎯 Obiettivo Giornaliero: +€{target_giornaliero:.2f}\n"
+            f"🏦 Valore Attuale: €{total_eur:.2f}\n"
+            f"📥 Cifra Investita: €{CAPITALE_VERSATO_TOTALE:.2f}\n"
+            f"📈 Profitto Totale: {profit:+.2f} €\n"
             f"------------------------------------\n"
-            f"📈 DRAWDOWN STORICO: {profit_operativo:+.2f} €\n"
-            f"------------------------------------\n"
-            f"🔐 Cassaforte (Sicurezza): €{main_vault:.2f}\n"
-            f"🤲 Gariban/Elemosina: €{gariban:.2f}\n"
+            f"🔐 Cassaforte (33%): €{main_vault:.2f}\n"
+            f"🤲 Elemosina Gariban: €{gariban:.2f}\n"
+            f"🛡️ **TOTALE PROTETTO**: €{locked:.2f}\n"
             f"------------------------------------"
         )
         return msg
@@ -178,11 +127,11 @@ def get_daily_profit():
         
         # Leggi profitto giornaliero da daily_mission.json
         profit_today = 0.0
-        target_eur = 20.0
+        target_eur = 100.0
         try:
             with open("/home/sergio/.openclaw/workspace/denaro/daily_mission.json", "r") as f:
                 mission_data = __import__("json").load(f)
-                profit_today = float(__import__("json").load(open("/home/sergio/.openclaw/workspace/denaro/total_usdt_cache.json")).get("total_usdt", 0)) - float(__import__("json").load(open("/home/sergio/.openclaw/workspace/denaro/midnight_balance.json")).get("balance", 0))
+                profit_today = float(mission_data.get("profit_today", 0))
                 target_eur = float(mission_data.get("target_eur", 100.0))
         except Exception as e: logging.error(f'ERRORE INCASSO MEDIO: {e}')
         
@@ -294,7 +243,7 @@ def get_dynamic_kb():
         profit_today = 0.0
         try:
             with open("/home/sergio/.openclaw/workspace/denaro/daily_mission.json", "r") as f:
-                profit_today = float(__import__("json").load(open("/home/sergio/.openclaw/workspace/denaro/total_usdt_cache.json")).get("total_usdt", 0)) - float(__import__("json").load(open("/home/sergio/.openclaw/workspace/denaro/midnight_balance.json")).get("balance", 0))
+                profit_today = float(json.load(f).get("profit_today", 0))
         except Exception as e: logging.error(f'ERRORE INCASSO MEDIO: {e}')
         
         from __main__ import CAPITALE_VERSATO_TOTALE
@@ -308,7 +257,7 @@ def get_dynamic_kb():
             [{"text": btn_text}, {"text": "Dashboard Web"}],
             [{"text": "MEXC Laboratorio"}, {"text": "Stato Squadre"}],
             [{"text": "Andamento Ricavi"}, {"text": "Elemosina Gariban"}],
-            [{"text": "Incasso Medio"}, {"text": "🏛️ Architettura Macchina"}]
+            [{"text": "Incasso Medio Giornaliero"}, {"text": "🏛️ Architettura Macchina"}]
         ],
         "resize_keyboard": True
     }
@@ -364,7 +313,7 @@ def main_loop():
                     if "message" in update and "text" in update["message"]:
                         text = update["message"]["text"].upper()
                         chat_id = str(update["message"]["chat"]["id"])
-                        if str(update["message"].get("from", {}).get("id", "")) != sergio_id:
+                        if chat_id != sergio_id:
                             # MODALITÀ OSPITE
                             logging.info(f"GUEST USER: {chat_id}")
                             guest_kb = {
@@ -374,9 +323,9 @@ def main_loop():
                                 ],
                                 "resize_keyboard": True
                             }
-                            if text == "/start" or text == "/START":
+                            if text == "/START":
                                 msg = "Benvenuto nell'Orbital Command di Sergio. Sono l'AI Assistant che gestisce il suo Hedge Fund Algoritmico.\n\nSeleziona una voce per saperne di più sul progetto:"
-                                requests.post(send_url, json={"chat_id": chat_id, "text": msg, "reply_markup": guest_kb, "disable_notification": True})
+                                requests.post(send_url, json={"chat_id": chat_id, "text": msg, "reply_markup": guest_kb})
                             elif "ARCHITETTURA" in text:
                                 arch = (
                                     "🏛️ *L'ECOSISTEMA ASSOLUTO (ORBITAL COMMAND)* 🏛️\n\n"
@@ -397,13 +346,13 @@ def main_loop():
                                     " 🛡️ TIER 4: Bitget Hedge (Delta Neutral Rischio Zero)\n"
                                     " ⚖️ TIER 5: Statistical Arbitrage (Pairs Trading BTC/ETH)\n"
                                 )
-                                requests.post(send_url, json={"chat_id": chat_id, "text": arch, "parse_mode": "Markdown", "reply_markup": guest_kb, "disable_notification": True})
+                                requests.post(send_url, json={"chat_id": chat_id, "text": arch, "parse_mode": "Markdown", "reply_markup": guest_kb})
                             elif text == "ANDAMENTO CAPITALE":
                                 msg = "🏦 *Andamento Capitale (Pubblico)*\n\nIl fondo algoritmico è strutturato su un portafoglio protetto. \nLe cifre esatte e il bilancio dal vivo sono crittografati e accessibili solo al Comandante.\n\n*Strategia attuale:* Conservativa / Hedging attivo."
-                                requests.post(send_url, json={"chat_id": chat_id, "text": msg, "parse_mode": "Markdown", "reply_markup": guest_kb, "disable_notification": True})
+                                requests.post(send_url, json={"chat_id": chat_id, "text": msg, "parse_mode": "Markdown", "reply_markup": guest_kb})
                             elif text == "INCASSO GIORNALIERO":
-                                msg = "🎯 *Incasso Giornaliero (Pubblico)*\n\n*Target di Sistema:* " + str(target_giornaliero) + " € / giorno\n*Protocollo Cassaforte:* 33% degli utili viene sigillato quotidianamente.\n\n*(I dati sui ricavi netti in tempo reale sono riservati).*\n\nL'ecosistema è automatizzato 24/7."
-                                requests.post(send_url, json={"chat_id": chat_id, "text": msg, "parse_mode": "Markdown", "reply_markup": guest_kb, "disable_notification": True})
+                                msg = "🎯 *Incasso Giornaliero (Pubblico)*\n\n*Target di Sistema:* 100.00 € / giorno\n*Protocollo Cassaforte:* 33% degli utili viene sigillato quotidianamente.\n\n*(I dati sui ricavi netti in tempo reale sono riservati).*\n\nL'ecosistema è automatizzato 24/7."
+                                requests.post(send_url, json={"chat_id": chat_id, "text": msg, "parse_mode": "Markdown", "reply_markup": guest_kb})
                             elif text == "SQUADRE ALL'OPERA":
                                 msg = "🚀 *Forze Algoritmiche all'opera*\n\nL'infrastruttura è divisa in distaccamenti strategici d'assalto (oltre 40 algoritmi in esecuzione parallela):\n\n"
                                 msg += "🔫 *SNIPER SQUAD* (Assalto Spot)\n"
@@ -421,12 +370,12 @@ def main_loop():
                                 msg += "🚨 *CRISIS MGR* (Circuit Breaker DEFCON)\n"
                                 msg += "👁️ *ZABBIX* (Watchdog di Auto-Guarigione)\n\n"
                                 msg += "*Un ecosistema quantitativo inarrestabile e autonomo.*"
-                                requests.post(send_url, json={"chat_id": chat_id, "text": msg, "parse_mode": "Markdown", "reply_markup": guest_kb, "disable_notification": True})
+                                requests.post(send_url, json={"chat_id": chat_id, "text": msg, "parse_mode": "Markdown", "reply_markup": guest_kb})
                             continue
                         
                         resp_text = ""
-                        if text == "/start" or text == "/START":
-                            resp_text = "🤖 Console Operativa Aggiornata! Pronti a fare 10€."
+                        if text == "/START":
+                            resp_text = "🤖 Console Operativa Aggiornata! Pronti a fare 100€."
                         elif "STATO SQUADRE" in text:
                             resp_text = get_squad_stats()
                         
@@ -437,11 +386,7 @@ def main_loop():
                             resp_text = "🏛️ *L'ECOSISTEMA ASSOLUTO (ORBITAL COMMAND)* 🏛️\n\n📡 *CERVELLO CENTRALE*\n ├─ ⚡ RAM-Disk WebSockets\n ├─ 🐋 Proxy On-Chain Futures\n ├─ 📰 News Sentiment Sniper\n └─ 🌏 Asian Echo Sniper (MEXC/Binance)\n\n🛡️ *GUARDIANI*\n ├─ 👑 Zabbix Watchdog\n ├─ 🚨 Crisis Manager (DEFCON 2)\n ├─ 🧹 Midnight Sweeper (33% Vault)\n └─ 🧬 Evolutionary AI Builder (Ogni 5 min)\n\n⚔️ *FORZE ARMATE (4 TIER)*\n 🟢 TIER 1: Binance Spot (Sniper Squad, La Legione, Olympus Grid)\n 🔵 TIER 2: MEXC Spot (Nano Squad HFT a Zero Fee)\n 🔴 TIER 3: Bitget Futures (Blade Runner, Kamikaze)\n 🛡️ TIER 4: Lo Scudo (Bitget Hedge, Delta Neutral Rischio Zero)"
 
                         elif "CIFRA" in text or "OGGI:" in text or "INV:" in text:
-                            try:
-                                pt = float(__import__("json").load(open("/home/sergio/.openclaw/workspace/denaro/total_usdt_cache.json")).get("total_usdt", 0)) - float(__import__("json").load(open("/home/sergio/.openclaw/workspace/denaro/midnight_balance.json")).get("balance", 0))
-                            except:
-                                pt = 0.0
-                            resp_text = f"📥 *SITUAZIONE CAPITALE E RICAVI*\n------------------------------------\n💰 Versato Storico: *€{CAPITALE_VERSATO_TOTALE:.2f}*\n\n📈 Incasso di oggi (Netto): *+€{pt:.2f}*\n------------------------------------\n_(Questo è il conteggio reale e netto da mezzanotte)_."
+                            resp_text = f"📥 *CIFRA INVESTITA ALL'INIZIO*\n------------------------------------\nTotale versato storicamente: *€{CAPITALE_VERSATO_TOTALE:.2f}*\n(Questo è il tuo capitale di partenza usato come riferimento per i profitti globali)."
                         elif "RICAVO GIORNALIERO" in text:
                             resp_text = get_daily_profit()
                         elif "ANDAMENTO RICAVI" in text:
@@ -458,7 +403,7 @@ def main_loop():
                                 load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env')
                                 # Per ora mettiamo un placeholder per la media
                                 profit_str = get_daily_profit()
-                                resp_text = f"📊 *Medie e Statistiche (PRIVATO)*\n\n🎯 Target Fissato: 10.00 €\n\n{profit_str}\n*Dato in aggiornamento...*"
+                                resp_text = f"📊 *Medie e Statistiche (PRIVATO)*\n\n🎯 Target Fissato: 100.00 €\n\n{profit_str}\n*Dato in aggiornamento...*"
                             except Exception as e: logging.error(f'ERRORE INCASSO MEDIO: {e}')
                         elif "ELEMOSINA" in text or "GARIBAN" in text:
                             resp_text = get_gariban_stats()
@@ -500,4 +445,3 @@ def main_loop():
 
 if __name__ == '__main__':
     main_loop()
-# TG-BOT.log

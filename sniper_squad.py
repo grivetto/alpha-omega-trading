@@ -24,8 +24,8 @@ VAULT_FILE = "/home/sergio/.openclaw/workspace/denaro/vault.json"
 MISSION_FILE = "/home/sergio/.openclaw/workspace/denaro/daily_mission.json"
 
 # Filosofia Compound: x% al giorno di target.
-TARGET_PERCENT = 0.022
-TARGET_FIXED_EUR = 0.0  # Se > 0, usa questo invece della percentuale
+TARGET_PERCENT = 0.04
+TARGET_FIXED_EUR = 100.0  # Se > 0, usa questo invece della percentuale
 
 def get_vault_locked():
     try:
@@ -68,7 +68,7 @@ def get_daily_mission():
     if usable_eur < 0: usable_eur = 0
     
     # L'interesse composto calcola il nuovo target sul capitale libero aggiornato
-    target_eur = usable_eur * TARGET_PERCENT if TARGET_FIXED_EUR <= 0 else TARGET_FIXED_EUR
+    target_eur = 100.0  # OBIETTIVO FISSO A 100€ DA MEZZANOTTE
     
     new_mission = {
         "date": today_str,
