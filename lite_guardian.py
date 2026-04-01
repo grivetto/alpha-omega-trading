@@ -14,6 +14,7 @@ BOT_REGISTRY = {
     "TG-BOT": "telegram_bot_interactive.py",
     "DASHBOARD": "dashboard_cyberpunk.py",
     "AUTO_HEALER": "auto_healer.py",
+    "ROGUE_KILLER": "rogue_killer.py",
     "AI_RISK_ENGINE": "ai_risk_engine.py",
     "BOT_STATUS_CACHE": "update_bot_status.py",
     "CACHE_UPD": "update_cache.py",
