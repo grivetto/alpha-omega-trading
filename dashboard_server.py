@@ -265,6 +265,7 @@ HTML_TEMPLATE = """
             </div>
             
             <!-- INJECTED BY CRON -->
+            <div style="background-color: var(--neon-green); color: #000; padding: 5px; margin-bottom: 10px; text-align: center; font-weight: bold; font-size: 1.1em; animation: pulse 2s infinite;">\n                ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - 04:43 UTC\n            </div>
             <div style="background-color: var(--neon-green); color: #000; padding: 5px; margin-bottom: 10px; text-align: center; font-weight: bold; font-size: 1.1em; animation: pulse 2s infinite;">
                 ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)
             </div>
@@ -479,3 +480,4 @@ if __name__ == '__main__':
 # ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 04:29 UTC
 # ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 04:32 UTC
 # ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 04:40 UTC
+# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 04:43 UTC
