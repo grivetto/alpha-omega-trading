@@ -209,6 +209,7 @@ HTML_TEMPLATE = """
         <div class="panel" style="border-color: var(--neon-green); box-shadow: 0 0 15px rgba(57, 255, 20, 0.2) inset;">
             <h2 class="glow-text-green">💰 PATRIMONIO & STATO</h2>
             <div style="color: var(--neon-green); font-weight: bold; text-align: center; margin-bottom: 10px; padding: 5px; border: 1px solid var(--neon-green);">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
+            <div style="color: var(--neon-green); font-weight: bold; text-align: center; margin-bottom: 10px; padding: 5px; border: 1px solid var(--neon-green);">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
             
             <!-- TRINITY STATUS STATUS BAR -->
             <div style="background-color: rgba(57, 255, 20, 0.2); border: 2px solid var(--neon-green); padding: 10px; margin-bottom: 15px; text-align: center; font-weight: bold; font-size: 1.1em; color: var(--neon-green); text-shadow: 0 0 5px var(--neon-green); animation: pulse 2s infinite;">
