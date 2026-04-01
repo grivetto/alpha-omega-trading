@@ -912,7 +912,7 @@ HTML_TEMPLATE = """
             }
         }, 2500);
     </script>
-<div style="position:fixed;bottom:10px;right:10px;background-color:var(--neon-green);color:#000;padding:10px;font-weight:bold;border:2px solid #fff;border-radius:5px;z-index:9999;animation:pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div><div style="position:fixed;bottom:10px;right:10px;background-color:var(--neon-green);color:#000;padding:10px;font-weight:bold;border:2px solid #fff;border-radius:5px;z-index:9999;animation:pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div><div style="position:fixed;bottom:10px;left:10px;background-color:var(--neon-green);color:#000;padding:10px;font-weight:bold;border:2px solid #fff;border-radius:5px;z-index:9999;animation:pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div></body>
+<div style="position:fixed;bottom:10px;right:10px;background-color:var(--neon-green);color:#000;padding:10px;font-weight:bold;border:2px solid #fff;border-radius:5px;z-index:9999;animation:pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div><div style="position:fixed;bottom:10px;right:10px;background-color:var(--neon-green);color:#000;padding:10px;font-weight:bold;border:2px solid #fff;border-radius:5px;z-index:9999;animation:pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div><div style="position:fixed;bottom:10px;left:10px;background-color:var(--neon-green);color:#000;padding:10px;font-weight:bold;border:2px solid #fff;border-radius:5px;z-index:9999;animation:pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div><div style="position:fixed;top:10px;right:10px;background-color:var(--neon-green);color:#000;padding:10px;font-weight:bold;border:2px solid #fff;border-radius:5px;z-index:9999;animation:pulse 2s infinite;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div></body>
 </html>
 """
 
@@ -992,3 +992,4 @@ if __name__ == '__main__':
 
 # ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 17:24 UTC
 # ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 17:41 UTC
+# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 17:58 UTC
