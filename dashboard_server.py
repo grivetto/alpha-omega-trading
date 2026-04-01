@@ -418,4 +418,4 @@ def dashboard():
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=False)
 
-# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 02:33 UTC
+# ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV) - Fase 2: 2026-04-01 02:39 UTC
