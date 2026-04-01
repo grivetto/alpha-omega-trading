@@ -56,7 +56,7 @@ def get_full_status():
                 locked = float(vdata.get("LOCKED_EUR", 0))
                 gariban = float(vdata.get("GARIBAN_TRACKER", 0))
         except: pass
-        return f"💰 *IL FONDO DEI 5 SOCI (The Dark Pool)*\n------------------------------------\n⚔️ Capitale in Azione: €{tot_investito:.2f}\n📥 Cifra di Partenza: €500.00\n🎯 Obiettivo Giornaliero: +€20.00\n------------------------------------\n📈 DRAWDOWN STORICO: {profit_operativo:+.2f} €\n------------------------------------\n🔐 Cassaforte (Sicurezza): €{locked:.2f}\n🤲 Gariban/Elemosina: €{gariban:.2f}\n------------------------------------"
+        return f"💰 *IL FONDO DEI 5 SOCI (The Dark Pool)*\n------------------------------------\n⚔️ Capitale in Azione: €{tot_investito:.2f}\n📥 Cifra di Partenza: €500.00\n🎯 Obiettivo Giornaliero: +€10.00\n------------------------------------\n📈 DRAWDOWN STORICO: {profit_operativo:+.2f} €\n------------------------------------\n🔐 Cassaforte (Sicurezza): €{locked:.2f}\n🤲 Gariban/Elemosina: €{gariban:.2f}\n------------------------------------"
     except Exception as e: return f"Errore: {e}"
 def old_get_full_status():
     try:
@@ -129,7 +129,7 @@ def old_get_full_status():
         capitale_operativo = total_eur_lordo - locked
         # Fix if operative drops below base to avoid fake math (actually keep it real)
         base_operativa = 500.00
-        target_giornaliero = 20.00
+        target_giornaliero = 10.00
         profit_operativo = capitale_operativo - base_operativa
         
         msg = (
@@ -400,7 +400,7 @@ def main_loop():
                                 msg = "🏦 *Andamento Capitale (Pubblico)*\n\nIl fondo algoritmico è strutturato su un portafoglio protetto. \nLe cifre esatte e il bilancio dal vivo sono crittografati e accessibili solo al Comandante.\n\n*Strategia attuale:* Conservativa / Hedging attivo."
                                 requests.post(send_url, json={"chat_id": chat_id, "text": msg, "parse_mode": "Markdown", "reply_markup": guest_kb, "disable_notification": True})
                             elif text == "INCASSO GIORNALIERO":
-                                msg = "🎯 *Incasso Giornaliero (Pubblico)*\n\n*Target di Sistema:* 20.00 € / giorno\n*Protocollo Cassaforte:* 33% degli utili viene sigillato quotidianamente.\n\n*(I dati sui ricavi netti in tempo reale sono riservati).*\n\nL'ecosistema è automatizzato 24/7."
+                                msg = "🎯 *Incasso Giornaliero (Pubblico)*\n\n*Target di Sistema:* 10.00 € / giorno\n*Protocollo Cassaforte:* 33% degli utili viene sigillato quotidianamente.\n\n*(I dati sui ricavi netti in tempo reale sono riservati).*\n\nL'ecosistema è automatizzato 24/7."
                                 requests.post(send_url, json={"chat_id": chat_id, "text": msg, "parse_mode": "Markdown", "reply_markup": guest_kb, "disable_notification": True})
                             elif text == "SQUADRE ALL'OPERA":
                                 msg = "🚀 *Forze Algoritmiche all'opera*\n\nL'infrastruttura è divisa in distaccamenti strategici d'assalto (oltre 40 algoritmi in esecuzione parallela):\n\n"
@@ -424,7 +424,7 @@ def main_loop():
                         
                         resp_text = ""
                         if text == "/start" or text == "/START":
-                            resp_text = "🤖 Console Operativa Aggiornata! Pronti a fare 20€."
+                            resp_text = "🤖 Console Operativa Aggiornata! Pronti a fare 10€."
                         elif "STATO SQUADRE" in text:
                             resp_text = get_squad_stats()
                         
@@ -452,7 +452,7 @@ def main_loop():
                                 load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env')
                                 # Per ora mettiamo un placeholder per la media
                                 profit_str = get_daily_profit()
-                                resp_text = f"📊 *Medie e Statistiche (PRIVATO)*\n\n🎯 Target Fissato: 20.00 €\n\n{profit_str}\n*Dato in aggiornamento...*"
+                                resp_text = f"📊 *Medie e Statistiche (PRIVATO)*\n\n🎯 Target Fissato: 10.00 €\n\n{profit_str}\n*Dato in aggiornamento...*"
                             except Exception as e: logging.error(f'ERRORE INCASSO MEDIO: {e}')
                         elif "ELEMOSINA" in text or "GARIBAN" in text:
                             resp_text = get_gariban_stats()
