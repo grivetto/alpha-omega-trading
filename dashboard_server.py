@@ -216,8 +216,6 @@ HTML_TEMPLATE = """
             </div>
             
             <!-- INJECTED BY CRON -->
-            <div style="color: var(--neon-green); font-weight: bold; text-align: center; margin-bottom: 10px;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
-            <div style="color: var(--neon-green); font-weight: bold; text-align: center; margin-bottom: 10px;">⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)</div>
             <div style="background-color: var(--neon-green); color: #000; padding: 5px; margin-bottom: 10px; text-align: center; font-weight: bold; font-size: 1.1em; animation: pulse 2s infinite;">
                 ⚙️ PROTOCOLLO TRINITY: Online (DCA, Funding, MEV)
             </div>
