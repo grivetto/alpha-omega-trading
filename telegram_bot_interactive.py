@@ -56,7 +56,7 @@ def get_full_status():
                 locked = float(vdata.get("LOCKED_EUR", 0))
                 gariban = float(vdata.get("GARIBAN_TRACKER", 0))
         except: pass
-        return f"💰 *IL FONDO DEI 5 SOCI (The Dark Pool)*\n------------------------------------\n⚔️ Capitale in Azione: €{tot_investito:.2f}\n📥 Cifra di Partenza: €500.00\n🎯 Obiettivo Giornaliero: +€100.00\n------------------------------------\n📈 DRAWDOWN STORICO (PER NOI AMICI): {profit_operativo:+.2f} €\n------------------------------------\n🔐 Cassaforte (Sicurezza): €{locked:.2f}\n🤲 Gariban/Elemosina: €{gariban:.2f}\n------------------------------------"
+        return f"💰 *IL FONDO DEI 5 SOCI (The Dark Pool)*\n------------------------------------\n⚔️ Capitale in Azione: €{tot_investito:.2f}\n📥 Cifra di Partenza: €500.00\n🎯 Obiettivo Giornaliero: +€100.00\n------------------------------------\n📈 DRAWDOWN STORICO: {profit_operativo:+.2f} €\n------------------------------------\n🔐 Cassaforte (Sicurezza): €{locked:.2f}\n🤲 Gariban/Elemosina: €{gariban:.2f}\n------------------------------------"
     except Exception as e: return f"Errore: {e}"
 def old_get_full_status():
     try:
@@ -139,7 +139,7 @@ def old_get_full_status():
             f"📥 Cifra di Partenza: €{base_operativa:.2f}\n"
             f"🎯 Obiettivo Giornaliero: +€{target_giornaliero:.2f}\n"
             f"------------------------------------\n"
-            f"📈 DRAWDOWN STORICO (PER NOI AMICI): {profit_operativo:+.2f} €\n"
+            f"📈 DRAWDOWN STORICO: {profit_operativo:+.2f} €\n"
             f"------------------------------------\n"
             f"🔐 Cassaforte (Sicurezza): €{main_vault:.2f}\n"
             f"🤲 Gariban/Elemosina: €{gariban:.2f}\n"
@@ -305,8 +305,8 @@ def get_dynamic_kb():
         "keyboard": [
             [{"text": btn_text}, {"text": "Dashboard Web"}],
             [{"text": "MEXC Laboratorio"}, {"text": "Stato Squadre"}],
-            [{"text": "Andamento Ricavi (Per noi Amici)"}, {"text": "Elemosina Gariban"}],
-            [{"text": "Incasso Medio (Per noi Amici)"}, {"text": "🏛️ Architettura Macchina"}]
+            [{"text": "Andamento Ricavi"}, {"text": "Elemosina Gariban"}],
+            [{"text": "Incasso Medio"}, {"text": "🏛️ Architettura Macchina"}]
         ],
         "resize_keyboard": True
     }
@@ -438,7 +438,7 @@ def main_loop():
                             resp_text = f"📥 *CIFRA INVESTITA ALL'INIZIO*\n------------------------------------\nTotale versato storicamente: *€{CAPITALE_VERSATO_TOTALE:.2f}*\n(Questo è il tuo capitale di partenza usato come riferimento per i profitti globali)."
                         elif "RICAVO GIORNALIERO" in text:
                             resp_text = get_daily_profit()
-                        elif "ANDAMENTO RICAVI (PER NOI AMICI)" in text:
+                        elif "ANDAMENTO RICAVI" in text:
                             resp_text = get_full_status()
                             try:
                                 os.system("/home/sergio/.openclaw/workspace/denaro/trading_bot_env/bin/python3 /home/sergio/.openclaw/workspace/denaro/generate_profit_chart.py")
