@@ -121,6 +121,13 @@ def calculate_and_sweep():
             daily_data["profit_yesterday"] = daily_profit
             daily_data["profit_today"] = 0.0
             daily_data["date"] = "2026-03-30" # si aggiornera' da solo
+        import urllib.request
+        try:
+            current_bal = float(__import__("json").load(open("/home/sergio/.openclaw/workspace/denaro/total_usdt_cache.json")).get("total_usdt", 0))
+            with open("/home/sergio/.openclaw/workspace/denaro/midnight_balance.json", "w") as mf:
+                json.dump({"balance": current_bal, "date": date.today().strftime("%Y-%m-%d")}, mf)
+        except: pass
+
         with open("/home/sergio/.openclaw/workspace/denaro/daily_mission.json", "w") as df:
             json.dump(daily_data, df, indent=4)
     except Exception as e:

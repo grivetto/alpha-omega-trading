@@ -182,7 +182,7 @@ def get_daily_profit():
         try:
             with open("/home/sergio/.openclaw/workspace/denaro/daily_mission.json", "r") as f:
                 mission_data = __import__("json").load(f)
-                profit_today = float(mission_data.get("profit_today", 0))
+                profit_today = float(__import__("json").load(open("/home/sergio/.openclaw/workspace/denaro/total_usdt_cache.json")).get("total_usdt", 0)) - float(__import__("json").load(open("/home/sergio/.openclaw/workspace/denaro/midnight_balance.json")).get("balance", 0))
                 target_eur = float(mission_data.get("target_eur", 100.0))
         except Exception as e: logging.error(f'ERRORE INCASSO MEDIO: {e}')
         
@@ -294,7 +294,7 @@ def get_dynamic_kb():
         profit_today = 0.0
         try:
             with open("/home/sergio/.openclaw/workspace/denaro/daily_mission.json", "r") as f:
-                profit_today = float(json.load(f).get("profit_today", 0))
+                profit_today = float(__import__("json").load(open("/home/sergio/.openclaw/workspace/denaro/total_usdt_cache.json")).get("total_usdt", 0)) - float(__import__("json").load(open("/home/sergio/.openclaw/workspace/denaro/midnight_balance.json")).get("balance", 0))
         except Exception as e: logging.error(f'ERRORE INCASSO MEDIO: {e}')
         
         from __main__ import CAPITALE_VERSATO_TOTALE
@@ -437,7 +437,11 @@ def main_loop():
                             resp_text = "🏛️ *L'ECOSISTEMA ASSOLUTO (ORBITAL COMMAND)* 🏛️\n\n📡 *CERVELLO CENTRALE*\n ├─ ⚡ RAM-Disk WebSockets\n ├─ 🐋 Proxy On-Chain Futures\n ├─ 📰 News Sentiment Sniper\n └─ 🌏 Asian Echo Sniper (MEXC/Binance)\n\n🛡️ *GUARDIANI*\n ├─ 👑 Zabbix Watchdog\n ├─ 🚨 Crisis Manager (DEFCON 2)\n ├─ 🧹 Midnight Sweeper (33% Vault)\n └─ 🧬 Evolutionary AI Builder (Ogni 5 min)\n\n⚔️ *FORZE ARMATE (4 TIER)*\n 🟢 TIER 1: Binance Spot (Sniper Squad, La Legione, Olympus Grid)\n 🔵 TIER 2: MEXC Spot (Nano Squad HFT a Zero Fee)\n 🔴 TIER 3: Bitget Futures (Blade Runner, Kamikaze)\n 🛡️ TIER 4: Lo Scudo (Bitget Hedge, Delta Neutral Rischio Zero)"
 
                         elif "CIFRA" in text or "OGGI:" in text or "INV:" in text:
-                            resp_text = f"📥 *CIFRA INVESTITA ALL'INIZIO*\n------------------------------------\nTotale versato storicamente: *€{CAPITALE_VERSATO_TOTALE:.2f}*\n(Questo è il tuo capitale di partenza usato come riferimento per i profitti globali)."
+                            try:
+                                pt = float(__import__("json").load(open("/home/sergio/.openclaw/workspace/denaro/total_usdt_cache.json")).get("total_usdt", 0)) - float(__import__("json").load(open("/home/sergio/.openclaw/workspace/denaro/midnight_balance.json")).get("balance", 0))
+                            except:
+                                pt = 0.0
+                            resp_text = f"📥 *SITUAZIONE CAPITALE E RICAVI*\n------------------------------------\n💰 Versato Storico: *€{CAPITALE_VERSATO_TOTALE:.2f}*\n\n📈 Incasso di oggi (Netto): *+€{pt:.2f}*\n------------------------------------\n_(Questo è il conteggio reale e netto da mezzanotte)_."
                         elif "RICAVO GIORNALIERO" in text:
                             resp_text = get_daily_profit()
                         elif "ANDAMENTO RICAVI" in text:
