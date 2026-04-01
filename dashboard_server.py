@@ -192,6 +192,10 @@ class DashboardHandler(http.server.SimpleHTTPRequestHandler):
         <span class="vault-val">€ """ + f"{vault:.2f}" + """</span>
     </div>
     
+    <div class="vault" style="background: linear-gradient(135deg, rgba(168,85,247,0.1), rgba(0,230,118,0.1)); padding: 15px; font-size: 1.2rem; border-color: #a855f7;">
+        ⚙️ PROTOCOLLO TRINITY: <span style="color: var(--primary); font-weight: bold; text-shadow: 0 0 10px rgba(0,230,118,0.4);">Online (DCA, Funding, MEV)</span>
+    </div>
+    
     <div class="container">
         <div class="box">
             <h2>💻 SYSTEM TELEMETRY</h2>
