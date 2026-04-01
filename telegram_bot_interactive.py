@@ -176,7 +176,7 @@ def get_daily_profit():
         
         # Leggi profitto giornaliero da daily_mission.json
         profit_today = 0.0
-        target_eur = 100.0
+        target_eur = 20.0
         try:
             with open("/home/sergio/.openclaw/workspace/denaro/daily_mission.json", "r") as f:
                 mission_data = __import__("json").load(f)

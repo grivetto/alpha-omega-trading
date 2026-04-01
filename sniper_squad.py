@@ -25,7 +25,7 @@ MISSION_FILE = "/home/sergio/.openclaw/workspace/denaro/daily_mission.json"
 
 # Filosofia Compound: x% al giorno di target.
 TARGET_PERCENT = 0.04
-TARGET_FIXED_EUR = 100.0  # Se > 0, usa questo invece della percentuale
+TARGET_FIXED_EUR = 20.0  # Se > 0, usa questo invece della percentuale
 
 def get_vault_locked():
     try:
