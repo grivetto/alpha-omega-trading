@@ -11,6 +11,7 @@ WORKSPACE = "/home/sergio/.openclaw/workspace/denaro"
 BOT_REGISTRY = {
     "TG-BOT": "telegram_bot_interactive.py",
     "DASHBOARD": "dashboard_cyberpunk.py",
+    "ORBITAL_WS": "orbital_websocket.py",
     "AUTO_HEALER": "auto_healer.py",
     "ROGUE_KILLER": "rogue_killer.py",
     "TARGET_ENFORCER": "target_enforcer.py",

@@ -48,3 +48,4 @@ if __name__ == "__main__":
         TMP_FILE = "/tmp/binance_prices_tmp.json"
     
     asyncio.run(listen_binance())
+# ORBITAL_WS.log

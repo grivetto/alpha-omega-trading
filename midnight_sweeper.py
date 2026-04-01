@@ -195,3 +195,4 @@ def run_midnight_protocol():
 
 if __name__ == "__main__":
     run_midnight_protocol()
+# MIDNIGHT_SWEEPER.log
