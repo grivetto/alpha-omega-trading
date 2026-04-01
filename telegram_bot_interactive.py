@@ -56,7 +56,7 @@ def get_full_status():
                 locked = float(vdata.get("LOCKED_EUR", 0))
                 gariban = float(vdata.get("GARIBAN_TRACKER", 0))
         except: pass
-        return f"💰 *ESPERIMENTI DI SERGIO (The Dark Pool)*\n------------------------------------\n⚔️ Capitale in Azione: €{tot_investito:.2f}\n📥 Cifra di Partenza: €500.00\n🎯 Obiettivo Giornaliero: +€10.00\n------------------------------------\n📈 DRAWDOWN STORICO: {profit_operativo:+.2f} €\n------------------------------------\n🔐 Cassaforte (Sicurezza): €{locked:.2f}\n🤲 Gariban/Elemosina: €{gariban:.2f}\n------------------------------------"
+        return f"💰 *ESPERIMENTI DI SERGIO (The Dark Pool)*\n------------------------------------\n⚔️ Capitale in Azione: €{tot_investito:.2f}\n📥 Cifra di Partenza: €500.00\n🎯 Obiettivo Giornaliero: +€{target_giornaliero:.2f}\n------------------------------------\n📈 DRAWDOWN STORICO: {profit_operativo:+.2f} €\n------------------------------------\n🔐 Cassaforte (Sicurezza): €{locked:.2f}\n🤲 Gariban/Elemosina: €{gariban:.2f}\n------------------------------------"
     except Exception as e: return f"Errore: {e}"
 def old_get_full_status():
     try:
@@ -129,7 +129,9 @@ def old_get_full_status():
         capitale_operativo = total_eur_lordo - locked
         # Fix if operative drops below base to avoid fake math (actually keep it real)
         base_operativa = 500.00
-        target_giornaliero = 10.00
+        try:
+            with open("/home/sergio/.openclaw/workspace/denaro/daily_mission.json", "r") as f: target_giornaliero = float(__import__("json").load(f).get("target_eur", 10.0))
+        except: target_giornaliero = 10.00
         profit_operativo = capitale_operativo - base_operativa
         
         msg = (
@@ -400,7 +402,7 @@ def main_loop():
                                 msg = "🏦 *Andamento Capitale (Pubblico)*\n\nIl fondo algoritmico è strutturato su un portafoglio protetto. \nLe cifre esatte e il bilancio dal vivo sono crittografati e accessibili solo al Comandante.\n\n*Strategia attuale:* Conservativa / Hedging attivo."
                                 requests.post(send_url, json={"chat_id": chat_id, "text": msg, "parse_mode": "Markdown", "reply_markup": guest_kb, "disable_notification": True})
                             elif text == "INCASSO GIORNALIERO":
-                                msg = "🎯 *Incasso Giornaliero (Pubblico)*\n\n*Target di Sistema:* 10.00 € / giorno\n*Protocollo Cassaforte:* 33% degli utili viene sigillato quotidianamente.\n\n*(I dati sui ricavi netti in tempo reale sono riservati).*\n\nL'ecosistema è automatizzato 24/7."
+                                msg = "🎯 *Incasso Giornaliero (Pubblico)*\n\n*Target di Sistema:* " + str(target_giornaliero) + " € / giorno\n*Protocollo Cassaforte:* 33% degli utili viene sigillato quotidianamente.\n\n*(I dati sui ricavi netti in tempo reale sono riservati).*\n\nL'ecosistema è automatizzato 24/7."
                                 requests.post(send_url, json={"chat_id": chat_id, "text": msg, "parse_mode": "Markdown", "reply_markup": guest_kb, "disable_notification": True})
                             elif text == "SQUADRE ALL'OPERA":
                                 msg = "🚀 *Forze Algoritmiche all'opera*\n\nL'infrastruttura è divisa in distaccamenti strategici d'assalto (oltre 40 algoritmi in esecuzione parallela):\n\n"
