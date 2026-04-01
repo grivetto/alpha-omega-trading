@@ -68,7 +68,7 @@ def get_daily_mission():
     if usable_eur < 0: usable_eur = 0
     
     # L'interesse composto calcola il nuovo target sul capitale libero aggiornato
-    target_eur = 100.0  # OBIETTIVO FISSO A 100€ DA MEZZANOTTE
+    target_eur = 20.0  # OBIETTIVO FISSO A 100€ DA MEZZANOTTE
     
     new_mission = {
         "date": today_str,

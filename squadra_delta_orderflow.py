@@ -25,8 +25,8 @@ binance = ccxt.binance({
 SYMBOLS = ['BTC/EUR', 'ETH/EUR', 'SOL/EUR', 'DOGE/EUR', 'XRP/EUR']
 TRADE_EUR = 200.0
 IMBALANCE_RATIO = 3.5  # Bids devono essere 3.5x gli Asks nei primi 10 livelli
-TAKE_PROFIT = 1.004    # +0.4%
-STOP_LOSS = 0.995      # -0.5% (Se il muro sparisce, tagliamo le perdite)
+TAKE_PROFIT = 1.002    # +0.4%
+STOP_LOSS = 0.997      # -0.5% (Se il muro sparisce, tagliamo le perdite)
 
 VAULT_FILE = "/home/sergio/.openclaw/workspace/denaro/vault.json"
 
