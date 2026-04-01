@@ -362,7 +362,7 @@ def main_loop():
                     if "message" in update and "text" in update["message"]:
                         text = update["message"]["text"].upper()
                         chat_id = str(update["message"]["chat"]["id"])
-                        if chat_id != sergio_id:
+                        if str(update["message"].get("from", {}).get("id", "")) != sergio_id:
                             # MODALITÀ OSPITE
                             logging.info(f"GUEST USER: {chat_id}")
                             guest_kb = {
