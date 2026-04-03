@@ -22,7 +22,7 @@ logging.basicConfig(
 class DailyTargetTracker:
     def __init__(self):
         self.tg_token = os.getenv('TELEGRAM_BOT_TOKEN')
-        self.tg_chat = os.getenv('TELEGRAM_CHAT_ID', '277954993')
+        self.tg_chat = os.getenv('TELEGRAM_CHAT_ID', '8183973303')
         self.state_file = '/home/sergio/.openclaw/workspace/denaro/daily_target_state.json'
         self.capital_file = '/home/sergio/.openclaw/workspace/denaro/capital_state.json'
         

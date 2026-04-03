@@ -30,7 +30,7 @@ class RealisticGridBot:
         
         # Configurazione REALISTICA
         self.pair = 'BTC/EUR'
-        self.investment = 35  # €90 in EUR
+        self.investment = 190  # €190 in EUR (massimo ottimizzato)
         self.grid_levels = 6  # 6 livelli = 3 sopra, 3 sotto
         self.profit_target = 0.003  # 0.3% per trade (realistico)
         
