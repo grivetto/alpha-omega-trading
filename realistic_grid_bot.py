@@ -30,8 +30,8 @@ class RealisticGridBot:
         
         # Configurazione REALISTICA
         self.pair = 'BTC/EUR'
-        self.investment = 200  # €200 su €425 (47%)
-        self.grid_levels = 10  # 10 livelli = 5 sopra, 5 sotto
+        self.investment = 90  # €90 in EUR
+        self.grid_levels = 6  # 6 livelli = 3 sopra, 3 sotto
         self.profit_target = 0.003  # 0.3% per trade (realistico)
         
         self.daily_profit = 0
@@ -77,8 +77,20 @@ class RealisticGridBot:
     def place_grid_orders(self, lower, upper, current):
         """Piazza ordini grid"""
         try:
+            # Verifica bilancio prima
+            bal = self.exchange.fetch_balance()
+            eur_available = bal.get('EUR', {}).get('free', 0)
+            
+            if eur_available < self.investment:
+                logging.error(f"Fondi insufficienti: €{eur_available:.2f} < €{self.investment}")
+                return 0
+            
             # Cancella ordini precedenti
-            self.exchange.cancel_all_orders(self.pair)
+            try:
+                self.exchange.cancel_all_orders(self.pair)
+                logging.info("Ordini precedenti cancellati")
+            except Exception as e:
+                logging.warning(f"Nessun ordine da cancellare: {e}")
             
             step = (upper - lower) / self.grid_levels
             eur_per_order = self.investment / (self.grid_levels / 2)
@@ -91,31 +103,41 @@ class RealisticGridBot:
                 if price > 0:
                     amount = (eur_per_order / price) * 0.995  # -0.5% fee
                     try:
-                        self.exchange.create_limit_buy_order(
-                            self.pair, amount, price
+                        order = self.exchange.create_order(
+                            symbol=self.pair,
+                            type='limit',
+                            side='buy',
+                            amount=round(amount, 6),
+                            price=round(price, 2)
                         )
+                        logging.info(f"Ordine BUY piazzato: {self.pair} @ {price:.2f} EUR, amount: {amount:.6f}")
                         orders_placed += 1
-                    except:
-                        pass
+                    except Exception as e:
+                        logging.error(f"Errore ordine BUY {self.pair} @ {price}: {e}")
             
             # Sell orders sopra prezzo attuale
             for i in range(int(self.grid_levels/2)):
                 price = current + (step * (i + 1))
                 amount = (eur_per_order / current) * 0.995
                 try:
-                    self.exchange.create_limit_sell_order(
-                        self.pair, amount, price
+                    order = self.exchange.create_order(
+                        symbol=self.pair,
+                        type='limit',
+                        side='sell',
+                        amount=round(amount, 6),
+                        price=round(price, 2)
                     )
+                    logging.info(f"Ordine SELL piazzato: {self.pair} @ {price:.2f} EUR, amount: {amount:.6f}")
                     orders_placed += 1
-                except:
-                    pass
+                except Exception as e:
+                    logging.error(f"Errore ordine SELL {self.pair} @ {price}: {e}")
             
-            logging.info(f"📊 Grid piazzato: {orders_placed} ordini | "
-                        f"Range: €{lower:,.0f} - €{upper:,.0f}")
+            logging.info(f"📊 Grid piazzato: {orders_placed} ordini | Range: €{lower:,.0f} - €{upper:,.0f}")
             return orders_placed
             
         except Exception as e:
-            logging.error(f"Errore piazzamento: {e}")
+            logging.error(f"Errore piazzamento grid: {e}")
+            return 0
             return 0
     
     def check_and_rebalance(self):
