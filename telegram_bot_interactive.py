@@ -1,5 +1,8 @@
-import gc
-import gc
+#!/usr/bin/env python3
+"""
+DENARO TELEGRAM BOT — @Sergiotrdxbot
+Console operativa REALISTICA per Sergio
+"""
 import gc
 import os
 import json
@@ -7,444 +10,366 @@ import logging
 import requests
 import time
 import subprocess
-from binance.client import Client
 from dotenv import load_dotenv
 from datetime import datetime
+import ccxt
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')
 
-# --- CONFIGURAZIONE COSTANTI ---
-CAPITALE_VERSATO_TOTALE = 722.00 
-TRADING_SYMBOLS = ['EURUSDT', 'BTCEUR', 'SOLEUR', 'BNBEUR', 'ETHEUR', 'AVAXBTC', 'DOGEBTC', 'ETHBTC', 'SOLBTC']
+# Costanti reali
+CAPITALE_VERSATO = 722.00
 
-def get_full_status():
+def get_binance_client():
+    load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env')
+    return ccxt.binance({
+        'apiKey': os.getenv('BINANCE_API_KEY'),
+        'secret': os.getenv('BINANCE_API_SECRET'),
+        'enableRateLimit': True,
+    })
+
+def get_balance_binance():
+    """Bilancio Binance completo, calcolato bene"""
     try:
-        load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env')
-        client = Client(os.getenv('BINANCE_API_KEY'), os.getenv('BINANCE_API_SECRET'))
-        balances = client.get_account()['balances']
-        assets = {b['asset']: float(b['free']) + float(b['locked']) for b in balances if float(b['free']) > 0 or float(b['locked']) > 0}
-        tickers = client.get_all_tickers()
-        prices = {t['symbol']: float(t['price']) for t in tickers}
+        ex = get_binance_client()
+        bal = ex.fetch_balance()
         
-        total_eur = assets.get('EUR', 0) + assets.get('USDT', 0)
-        for asset, qty in assets.items():
-            if asset in ['EUR', 'USDT']: continue
-            symbol = f"{asset}EUR"
-            if symbol in prices: total_eur += qty * prices[symbol]
-            elif f"{asset}BTC" in prices and "BTCEUR" in prices: total_eur += qty * prices[f"{asset}BTC"] * prices["BTCEUR"]
+        eur_free = bal.get('EUR', {}).get('free', 0)
+        eur_used = bal.get('EUR', {}).get('used', 0)
+        usdt_free = bal.get('USDT', {}).get('free', 0)
+        usdt_used = bal.get('USDT', {}).get('used', 0)
+        btc_free = bal.get('BTC', {}).get('free', 0)
+        btc_used = bal.get('BTC', {}).get('used', 0)
         
-        try:
-            import ccxt
-            load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env.mexc')
-            
-            if os.getenv('MEXC_API_KEY'):
-                mexc = ccxt.mexc({'apiKey': os.getenv('MEXC_API_KEY'), 'secret': os.getenv('MEXC_API_SECRET'), 'options': {'defaultType': 'spot'}})
-                m_bal = mexc.fetch_balance()
-                usdt_mexc = 0
-                for m_asset, m_qty in m_bal['total'].items():
-                    if m_qty > 0:
-                        if m_asset == 'USDT': usdt_mexc += m_qty
-                        else:
-                            try:
-                                t = mexc.fetch_ticker(f"{m_asset}/USDT")
-                                usdt_mexc += m_qty * t['last']
-                            except: pass
-                total_eur += usdt_mexc * 0.92
-
-        except Exception as e: logging.error(f'ERRORE INCASSO MEDIO: {e}')
+        # Prezzo BTC/EUR
+        ticker = ex.fetch_ticker('BTC/EUR')
+        btc_price = ticker['last']
         
-        try:
-            import ccxt
-            load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env.bitget')
-            if os.getenv('BITGET_API_KEY'):
-                bitget = ccxt.bitget({'apiKey': os.getenv('BITGET_API_KEY'), 'secret': os.getenv('BITGET_API_SECRET'), 'password': os.getenv('BITGET_PASSWORD')})
-                b_bal = bitget.fetch_balance({'type': 'swap'})
-                total_eur += float(b_bal.get('USDT', {}).get('total', 0.0)) * 0.92  # Approx EUR conversion
-        except Exception as e: logging.error(f'ERRORE INCASSO MEDIO: {e}')
+        # Valore totale in EUR
+        total_eur = (eur_free + eur_used) + (usdt_free + usdt_used) + ((btc_free + btc_used) * btc_price)
         
-        profit = total_eur - CAPITALE_VERSATO_TOTALE
-        
-        locked = 0.0
-        gariban = 0.0
-        try:
-            with open("/home/sergio/.openclaw/workspace/denaro/vault.json", "r") as vf:
-                vdata = __import__("json").load(vf)
-                locked = float(vdata.get("LOCKED_EUR", 0))
-                gariban = float(vdata.get("GARIBAN_TRACKER", 0))
-        except Exception as e: logging.error(f'ERRORE INCASSO MEDIO: {e}')
-        
-        # Fallback reading directly from GARIBAN.log
-        if gariban == 0.0 and os.path.exists("/home/sergio/.openclaw/workspace/denaro/GARIBAN.log"):
-            try:
-                with open("/home/sergio/.openclaw/workspace/denaro/GARIBAN.log", "r") as gf:
-                    for line in gf:
-                        if "ELEMOSINA ACQUISITA!" in line:
-                            gariban += float(line.split("ELEMOSINA ACQUISITA! ")[1].split("€")[0])
-            except Exception as e: logging.error(f'ERRORE INCASSO MEDIO: {e}')
-        
-        main_vault = locked - gariban if locked >= gariban else locked
-        
-        msg = (
-            f"💰 *SITUAZIONE CAPITALE*\n"
-            f"------------------------------------\n"
-            f"🏦 Valore Attuale: €{total_eur:.2f}\n"
-            f"📥 Cifra Investita: €{CAPITALE_VERSATO_TOTALE:.2f}\n"
-            f"📈 Profitto Totale: {profit:+.2f} €\n"
-            f"------------------------------------\n"
-            f"🔐 Cassaforte (33%): €{main_vault:.2f}\n"
-            f"🤲 Elemosina Gariban: €{gariban:.2f}\n"
-            f"🛡️ TOTALE PROTETTO: €{locked:.2f}\n"
-            f"------------------------------------"
-        )
-        return msg
-    except Exception as e: return f"⚠️ Errore bilancio: {str(e)}"
-
-def get_daily_profit():
-    try:
-        load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env')
-        client = Client(os.getenv('BINANCE_API_KEY'), os.getenv('BINANCE_API_SECRET'))
-        balances = client.get_account()['balances']
-        eur = float([b['free'] for b in balances if b['asset'] == 'EUR'][0])
-        
-        locked = 0.0
-        gariban_tracker = 0.0
-        try:
-            with open("/home/sergio/.openclaw/workspace/denaro/vault.json", "r") as f:
-                data = __import__("json").load(f)
-                locked = float(data.get("LOCKED_EUR", 0))
-                gariban_tracker = float(data.get("GARIBAN_TRACKER", 0))
-        except Exception as e: logging.error(f'ERRORE INCASSO MEDIO: {e}')
-        
-        if gariban_tracker == 0.0 and os.path.exists("/home/sergio/.openclaw/workspace/denaro/GARIBAN.log"):
-            try:
-                with open("/home/sergio/.openclaw/workspace/denaro/GARIBAN.log", "r") as gf:
-                    for line in gf:
-                        if "ELEMOSINA ACQUISITA!" in line:
-                            gariban_tracker += float(line.split("ELEMOSINA ACQUISITA! ")[1].split("€")[0])
-            except Exception as e: logging.error(f'ERRORE INCASSO MEDIO: {e}')
-        
-        main_vault = locked - gariban_tracker if locked >= gariban_tracker else locked
-        
-        # Leggi profitto giornaliero da daily_mission.json
-        profit_today = 0.0
-        target_eur = 100.0
-        try:
-            profit_today = float(__import__("json").load(open("/home/sergio/.openclaw/workspace/denaro/total_usdt_cache.json")).get("total_usdt", 0)) - float(__import__("json").load(open("/home/sergio/.openclaw/workspace/denaro/midnight_balance.json")).get("balance", 0))
-            with open("/home/sergio/.openclaw/workspace/denaro/daily_mission.json", "r") as f:
-                mission_data = __import__("json").load(f)
-                target_eur = float(mission_data.get("target_eur", 100.0))
-        except Exception as e: logging.error(f'ERRORE INCASSO MEDIO: {e}')
-        
-        return f"""📅 *RICAVO GIORNALIERO*
-------------------------------------
-🎯 Profitto di Oggi: €{profit_today:.2f} / €{target_eur:.2f}
-💸 Liquidità Libera: €{eur:.2f}
-🔐 *Fondo Sicurezza (33%)*: €{main_vault:.2f}
-🤲 *Elemosina Gariban*: €{gariban_tracker:.2f}
-------------------------------------"""
-    except:
-        return "⚠️ Errore calcolo giornaliero."
-
-def add_squads():
-    return "⚠️ *FUNZIONE DISABILITATA*\nL'aggiunta di vecchie squadre (es. Flash Surge Unit) è stata bloccata per prevenire problemi di memoria (OOM) sul server.\nAttualmente è attiva solo la *Sniper Squad*, ottimizzata per basso consumo.\nSe vuoi comunque forzare l'avvio, contattami in chat."
-
-def get_gariban_stats():
-    try:
-        log_file = "/home/sergio/.openclaw/workspace/denaro/GARIBAN.log"
-        total_elemosina = 0.0
-        if os.path.exists(log_file):
-            with open(log_file, "r") as f:
-                for line in f:
-                    if "ELEMOSINA ACQUISITA!" in line:
-                        try:
-                            parts = line.split("ELEMOSINA ACQUISITA! ")[1]
-                            amount = float(parts.split("€")[0])
-                            total_elemosina += amount
-                        except Exception as e: logging.error(f'ERRORE INCASSO MEDIO: {e}')
-        return f"🤲 *CASSA DEL GARIBAN*\n------------------------------------\n🪙 Totale Elemosina Raccolta: *€{total_elemosina:.2f}*\n(Questo importo è stato interamente donato al Vault di Sicurezza)\n------------------------------------"""
+        return {
+            'eur_free': eur_free,
+            'eur_used': eur_used,
+            'usdt_free': usdt_free,
+            'usdt_used': usdt_used,
+            'btc_free': btc_free,
+            'btc_price': btc_price,
+            'total_eur': total_eur,
+        }
     except Exception as e:
-        return "⚠️ Errore lettura cassa Gariban."
+        logging.error(f"Errore Binance: {e}")
+        return None
 
-def get_squad_stats():
+def cmd_balance():
+    """📊 Bilancio Cluster"""
+    bal = get_balance_binance()
+    if not bal:
+        return "⚠️ Errore connessione Binance."
+    
+    profit = bal['total_eur'] - CAPITALE_VERSATO
+    profit_pct = (profit / CAPITALE_VERSATO) * 100
+    
+    msg = f"💰 <b>BILANCIO BINANCE</b>\n"
+    msg += f"─────────────────\n"
+    msg += f"📅 Ora: {datetime.now().strftime('%d/%m %H:%M')}\n"
+    msg += f"💶 EUR: <b>€{bal['eur_free']:.2f}</b> (€{bal['eur_used']:.2f} in ordini)\n"
+    msg += f"💵 USDT: ${bal['usdt_free']:.2f}\n"
+    msg += f"₿ BTC: {bal['btc_free']:.6f}\n"
+    msg += f"─────────────────\n"
+    msg += f"💰 <b>TOTALE: €{bal['total_eur']:.2f}</b>\n"
+    msg += f"📈 Profitto: <b>{profit:+.2f}€ ({profit_pct:+.1f}%)</b>\n"
+    msg += f"📉 Da versato: €{CAPITALE_VERSATO:.2f}"
+    
+    return msg
+
+def cmd_grid_status():
+    """🤖 Stato Grid Bot"""
+    try:
+        # Leggi ultimi log
+        log_file = '/home/sergio/.openclaw/workspace/denaro/REALISTIC_GRID.log'
+        last_lines = ""
+        if os.path.exists(log_file):
+            result = subprocess.run(['tail', '-n', '10', log_file], capture_output=True, text=True)
+            last_lines = result.stdout.strip()
+        
+        # Controlla se il servizio è attivo
+        status = subprocess.run(['systemctl', 'is-active', 'denaro-realistic-grid'], capture_output=True, text=True)
+        grid_active = status.stdout.strip() == 'active'
+        
+        # Leggi configurazione
+        config_investment = 95  # default
+        try:
+            with open('/home/sergio/.openclaw/workspace/denaro/realistic_grid_bot.py', 'r') as f:
+                for line in f:
+                    if 'self.investment' in line and '=' in line:
+                        try:
+                            config_investment = int(line.split('=')[1].split()[0])
+                        except:
+                            pass
+        except:
+            pass
+        
+        msg = f"📊 <b>GRID BOT BTC/EUR</b>\n"
+        msg += f"─────────────────\n"
+        msg += f"Stato: {'✅ ATTIVO' if grid_active else '❌ INATTIVO'}\n"
+        msg += f"Capitale: <b>€{config_investment}</b>\n"
+        msg += f"Coppia: BTC/EUR | Livelli: 6\n"
+        msg += f"─────────────────\n"
+        if last_lines:
+            # Mostra le ultime 3 righe significative
+            lines = last_lines.split('\n')[-3:]
+            for line in lines:
+                if 'Ordine' in line or 'Grid' in line or 'Profit' in line:
+                    # Pulisci il log
+                    parts = line.split(' - ', 2)
+                    if len(parts) >= 3:
+                        msg += f"📝 {parts[2]}\n"
+        return msg
+    except Exception as e:
+        return f"⚠️ Errore: {e}"
+
+def cmd_mc2_status():
+    """🎯 Stato Rebound Sniper MC2"""
+    try:
+        status = subprocess.run(['ssh', '-o', 'ConnectTimeout=3', '-o', 'StrictHostKeyChecking=no', '-p', '2222', '-i', os.path.expanduser('~/.ssh/id_ed25519'), 'sergio@93.43.252.114', 'sudo systemctl is-active denaro-rebound-sniper'], capture_output=True, text=True, timeout=10)
+        sniper_active = status.stdout.strip() == 'active'
+        
+        # Ultimi log
+        log_result = subprocess.run(['ssh', '-o', 'ConnectTimeout=3', '-o', 'StrictHostKeyChecking=no', '-p', '2222', '-i', os.path.expanduser('~/.ssh/id_ed25519'), 'sergio@93.43.252.114', 'tail -n 5 ~/denaro/logs/rebound_sniper.log'], capture_output=True, text=True, timeout=10)
+        
+        msg = f"🎯 <b>REBOUND SNIPER — MC2</b>\n"
+        msg += f"─────────────────\n"
+        msg += f"Stato: {'✅ ATTIVO' if sniper_active else '❌ INATTIVO'}\n"
+        msg += f"Strategia: RSI < 32 (ipervenduto)\n"
+        msg += f"Coppie: ETH, SOL, BNB, LINK, AVAX /BTC\n"
+        
+        if log_result.returncode == 0 and log_result.stdout.strip():
+            lines = log_result.stdout.strip().split('\n')[-2:]
+            for line in lines:
+                if 'RSI:' in line:
+                    parts = line.split(' - ', 2)
+                    if len(parts) >= 3:
+                        msg += f"📝 {parts[2]}\n"
+        
+        return msg
+    except Exception as e:
+        return f"⚠️ Errore connessione MC2: {str(e)[:100]}"
+
+def cmd_services():
+    """🛡️ Stato Servizi"""
+    services = [
+        ('denaro-realistic-grid', 'Grid Bot BTC/EUR'),
+        ('denaro-rebound-sniper', 'Rebound MC2'), # su NUVOLA non c'è, ma controlliamo lo stesso
+        ('denaro-target-tracker', 'Daily Tracker'),
+        ('denaro-ai-risk', 'AI Risk Engine'),
+        ('denaro-crisis', 'Crisis Manager'),
+        ('denaro-delta-neutral', 'Delta Hedge'),
+        ('denaro-dashboard-v2', 'Dashboard Web'),
+        ('denaro-telegram', 'Bot Telegram'),
+    ]
+    
+    msg = f"🛡️ <b>SERVIZI DENARO</b>\n"
+    msg += f"─────────────────\n"
+    
+    for svc, name in services:
+        try:
+            status = subprocess.run(['systemctl', 'is-active', svc], capture_output=True, text=True)
+            active = status.stdout.strip() == 'active'
+            icon = "✅" if active else "❌"
+            msg += f"{icon} {name}\n"
+        except:
+            msg += f"❓ {name}\n"
+    
+    # Check MC2
+    try:
+        status = subprocess.run(['ssh', '-o', 'ConnectTimeout=3', '-o', 'StrictHostKeyChecking=no', '-p', '2222', '-i', os.path.expanduser('~/.ssh/id_ed25519'), 'sergio@93.43.252.114', 'sudo systemctl is-active denaro-rebound-sniper'], capture_output=True, text=True, timeout=10)
+        icon = "✅" if status.stdout.strip() == 'active' else "❌"
+        msg += f"{icon} MC2 Rebound Sniper\n"
+    except:
+        msg += f"❌ MC2 (non raggiungibile)\n"
+    
+    return msg
+
+def cmd_dca():
+    """💰 Stato DCA"""
+    try:
+        log_file = '/home/sergio/.openclaw/workspace/denaro/logs/dca.log'
+        last_log = ""
+        if os.path.exists(log_file):
+            result = subprocess.run(['tail', '-n', '5', log_file], capture_output=True, text=True)
+            lines = result.stdout.strip().split('\n')[-3:]
+            for line in lines:
+                if 'DCA' in line or 'acquisto' in line.lower() or 'fermo' in line.lower() or 'skipped' in line.lower():
+                    last_log += f"📝 {line.split(' - ', 2)[-1]}\n"
+        
+        # Check cron
+        cron_result = subprocess.run(['crontab', '-l'], capture_output=True, text=True)
+        dca_active = 'dca_daily' in cron_result.stdout if cron_result.returncode == 0 else False
+        
+        msg = f"💰 <b>DCA DAILY</b>\n"
+        msg += f"─────────────────\n"
+        msg += f"Stato: {'✅ ATTIVO' if dca_active else '❌ INATTIVO'}\n"
+        msg += f"Importo: €1.00 BTC/giorno alle 09:00\n"
+        msg += f"Stop se EUR < €3\n"
+        msg += f"─────────────────\n"
+        if last_log:
+            msg += last_log
+        return msg
+    except Exception as e:
+        return f"⚠️ Errore: {e}"
+
+def cmd_vault():
+    """🔐 Cassaforte"""
+    try:
+        vault_file = '/home/sergio/.openclaw/workspace/denaro/cassaforte.json'
+        if os.path.exists(vault_file):
+            with open(vault_file, 'r') as f:
+                data = json.load(f)
+            
+            total = data.get('totale_cassaforte', 0)
+            days = len(data.get('giorni_chiusi', []))
+            
+            msg = f"🔐 <b>CASSAFORTE GIORNALIERA</b>\n"
+            msg += f"─────────────────\n"
+            msg += f"Totale accumulato: <b>€{total:.2f}</b>\n"
+            msg += f"Giorni monitorati: {days}\n"
+            msg += f"📅 Report: ogni giorno alle 23:59"
+            return msg
+        else:
+            return "🔐 Cassaforte non ancora inizializzata.\nPrimo report alle 23:59."
+    except Exception as e:
+        return f"⚠️ Errore: {e}"
+
+def cmd_dashboard():
+    return "🌐 <b>DASHBOARD WEB LIVE</b>\nAccedi da qui:\n👉 https://sgrivett.ddns.net:8443"
+
+def cmd_system():
+    """🖥️ Stato sistema NUVOLA"""
     try:
         import psutil
-        cpu = psutil.cpu_percent()
-        ram = psutil.virtual_memory().percent
+        cpu = psutil.cpu_percent(interval=1)
+        ram = psutil.virtual_memory()
+        disk = psutil.disk_usage('/')
         
-        msg = "⚔️ *ORBITAL COMMAND - FLEET STATUS* ⚔️\n"
-        msg += f"🖥️ *TELEMETRY:* CPU {cpu}% | RAM {ram}%\n"
-        msg += "------------------------------------\n"
-        msg += "🏛️ *1. LA CITTADELLA (L'Ecosistema a Rischio Zero)*\n"
-        msg += "🔫 *SNIPER SQUAD* (15 Bot Dip-Buyer): `ONLINE`\n"
-        msg += "🐝 *LA LEGIONE* (28 Micro-Accumulatori): `ONLINE`\n"
-        msg += "🕸️ *OLYMPUS GRID* (Scalping Laterale): `ONLINE`\n"
-        msg += "⚡ *NANO SQUAD* (HFT Zero Fee su MEXC): `ONLINE`\n"
-        msg += "------------------------------------\n"
-        msg += "🩸 *2. FORZE SPECIALI (Guerriglia Futures)*\n"
-        msg += "🗡️ *BLADE RUNNER* (Leva 10x Momentum): `ONLINE`\n"
-        msg += "------------------------------------\n"
-        msg += "👹 *3. I MOSTRI PREDATORI (Asimmetria Totale)*\n"
-        msg += "⚖️ *STATISTICAL ARBITRAGE* (Pairs Trading): `CALCULATING...`\n"
-        msg += "🧨 *KAMIKAZE* (Breakout a Leva 20x): `TRAPPED`\n"
-        msg += "🔪 *DUMPING KNIFE* (Il Cacciatore di Flash Crash): `SNIPING`\n"
-        msg += "🏦 *FUNDING ARB* (L'Estrattore di Interessi): `SHORTING`\n"
-        msg += "🌏 *ASIAN ECHO* (Lo Speculatore di Latenza): `ONLINE`\n"
-        msg += "🦊 *MEV BRAIN* (L'Hacker delle Mempool): `SNIFFING`\n"
-        msg += "------------------------------------\n"
-        msg += "📡 *4. INTELLIGENCE E RADAR (Gli Occhi del Server)*\n"
-        msg += "🔭 *ALPHA STRIKE* (HFT EMA Scanner): `ONLINE`\n"
-        msg += "🔭 *NEWS SNIPER* (Il Lettore di RSS): `SCANNING`\n"
-        msg += "------------------------------------\n"
-        msg += "⚙️ *5. GUARDIANI DI SISTEMA (L'Auto-Guarigione)*\n"
-        msg += "🛡️ *DELTA NEUTRAL HEDGER* (Lo Scudo): `ACTIVE (On)`\n"
-        msg += "🚨 *CRISIS MANAGER* (Il DEFCON 2): `STANDBY`\n"
-        msg += "👁️ *ZABBIX WATCHDOG* (Il Ressuscitatore): `ALIVE`\n"
-        msg += "🧬 *EVOLUTIONARY A.G.I.* (Il Programmatore): `LEARNING...`\n\n"
-        msg += "*Tutti i sistemi nominali. Nessuna breccia rilevata.*"
+        # Uptime
+        with open('/proc/uptime', 'r') as f:
+            uptime_sec = float(f.read().split()[0])
+            days = int(uptime_sec // 86400)
+            hours = int((uptime_sec % 86400) // 3600)
+        
+        msg = f"🖥️ <b>NUVOLA SYSTEM</b>\n"
+        msg += f"─────────────────\n"
+        msg += f"CPU: {cpu}%\n"
+        msg += f"RAM: {ram.percent}% ({ram.used/1024**3:.1f}/{ram.total/1024**3:.1f} GB)\n"
+        msg += f"Disk: {disk.percent}% ({disk.free/1024**3:.1f} GB liberi)\n"
+        msg += f"Uptime: {days}g {hours}h\n"
+        
+        # Processi bot
+        proc = subprocess.run(['pgrep', '-f', 'denaro'], capture_output=True, text=True)
+        bot_count = len(proc.stdout.strip().split('\n')) if proc.stdout.strip() else 0
+        msg += f"Bot attivi: {bot_count} processi"
+        
         return msg
     except Exception as e:
-        return f"Errore recupero stats: {e}"
-def send_photo(chat_id, token, photo_path):
-    try:
-        with open(photo_path, "rb") as f:
-            url = f"https://api.telegram.org/bot{token}/sendPhoto"
-            requests.post(url, data={"chat_id": chat_id}, files={"photo": f})
-    except Exception as e:
-        logging.error(f"Errore invio foto: {e}")
+        return f"⚠️ Errore: {e}"
 
-
-
-def get_dynamic_kb():
-    try:
-        from binance.client import Client
-        import os, json
-        from dotenv import load_dotenv
-        load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env')
-        client = Client(os.getenv('BINANCE_API_KEY'), os.getenv('BINANCE_API_SECRET'))
-        balances = client.get_account()['balances']
-        assets = {b['asset']: float(b['free']) + float(b['locked']) for b in balances if float(b['free']) > 0 or float(b['locked']) > 0}
-        tickers = client.get_all_tickers()
-        prices = {t['symbol']: float(t['price']) for t in tickers}
-        
-        total_eur = assets.get('EUR', 0) + assets.get('USDT', 0)
-        for asset, qty in assets.items():
-            if asset in ['EUR', 'USDT']: continue
-            symbol = f"{asset}EUR"
-            if symbol in prices: total_eur += qty * prices[symbol]
-            elif f"{asset}BTC" in prices and "BTCEUR" in prices: total_eur += qty * prices[f"{asset}BTC"] * prices["BTCEUR"]
-            
-        locked = 0.0
-        try:
-            with open("/home/sergio/.openclaw/workspace/denaro/vault.json", "r") as f:
-                data = json.load(f)
-                locked = float(data.get("LOCKED_EUR", 0))
-        except Exception as e: logging.error(f'ERRORE INCASSO MEDIO: {e}')
-        
-        profit_today = 0.0
-        try:
-            profit_today = float(__import__("json").load(open("/home/sergio/.openclaw/workspace/denaro/total_usdt_cache.json")).get("total_usdt", 0)) - float(__import__("json").load(open("/home/sergio/.openclaw/workspace/denaro/midnight_balance.json")).get("balance", 0))
-        except Exception as e: logging.error(f'ERRORE INCASSO MEDIO: {e}')
-        
-        from __main__ import CAPITALE_VERSATO_TOTALE
-        profit_total = total_eur - CAPITALE_VERSATO_TOTALE
-        
-        btn_text = f"Oggi: {profit_today:.1f}€ | Inv: {CAPITALE_VERSATO_TOTALE:.0f}€"
-    except Exception as e:
-        btn_text = "Cifra Investita"
+def get_keyboard():
     return {
         "keyboard": [
-            [{"text": btn_text}, {"text": "Dashboard Web"}],
-            [{"text": "MEXC Laboratorio"}, {"text": "Stato Squadre"}],
-            [{"text": "Andamento Ricavi"}, {"text": "Elemosina Gariban"}],
-            [{"text": "Incasso Medio Giornaliero"}, {"text": "🏛️ Architettura Macchina"}]
+            [{"text": "💰 Bilancio"}, {"text": "📊 Grid Bot"}],
+            [{"text": "🎯 MC2 Sniper"}, {"text": "🛡️ Servizi"}],
+            [{"text": "💵 DCA"}, {"text": "🔐 Cassaforte"}],
+            [{"text": "🖥️ Sistema"}, {"text": "🌐 Dashboard"}]
         ],
-        "resize_keyboard": True
+        "resize_keyboard": True,
+        "one_time_keyboard": False
     }
 
-def get_mexc_status():
-    try:
-        import ccxt
-        import os
-        from dotenv import load_dotenv
-        load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env.mexc')
-        api_key = os.getenv('MEXC_API_KEY')
-        if not api_key: return "⚠️ API MEXC non configurate."
-        
-        mexc = ccxt.mexc({'apiKey': api_key, 'secret': os.getenv('MEXC_API_SECRET'), 'options': {'defaultType': 'spot'}})
-        bal = mexc.fetch_balance()
-        free_usdt = float(bal.get('USDT', {}).get('free', 0.0))
-        total_usdt = float(bal.get('USDT', {}).get('total', 0.0))
-        
-        log_file = "/home/sergio/.openclaw/workspace/denaro/MEXC_NANO.log"
-        last_logs = ""
-        try:
-            import subprocess
-            last_logs = subprocess.check_output(["tail", "-n", "3", log_file]).decode()
-        except Exception as e: logging.error(f'ERRORE INCASSO MEDIO: {e}')
-        
-        msg = f"🧪 *LABORATORIO MEXC (0% FEE)*\n"
-        msg += f"------------------------------------\n"
-        msg += f"💰 *Capitale Libero:* {free_usdt:.2f} USDT\n"
-        msg += f"🏦 *Capitale Totale:* {total_usdt:.2f} USDT\n"
-        msg += f"------------------------------------\n"
-        msg += f"📜 *Ultimi 3 Log Operativi:*\n`{last_logs}`"
-        return msg
-    except Exception as e:
-        return f"⚠️ Errore lettura MEXC: {str(e)}"
-
 def main_loop():
-    load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env.telegram')
+    load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env')
     token = os.getenv('TELEGRAM_BOT_TOKEN')
-    sergio_id = os.getenv('TELEGRAM_CHAT_ID')
+    sergio_id = str(os.getenv('TELEGRAM_CHAT_ID', '277954993'))
+    
+    if not token:
+        logging.error("TOKEN TELEGRAM NON TROVATO!")
+        return
+    
     last_update_id = 0
+    logging.info("Denaro Bot — @Sergiotrdxbot — Avviato")
     
-    
-    
-    logging.info("Triad Bot v3.1 Started.")
-    send_url = f"https://api.telegram.org/bot{token}/sendMessage"
+    # Invia messaggio di startup
+    try:
+        url = f"https://api.telegram.org/bot{token}/sendMessage"
+        payload = {
+            "chat_id": sergio_id,
+            "text": "🚀 <b>BOT DENARO — ONLINE</b>\nSistema realistico attivo.\nUsa il menu per controllare.",
+            "parse_mode": "HTML",
+            "reply_markup": get_keyboard()
+        }
+        requests.post(url, json=payload)
+    except:
+        pass
+
     while True:
         try:
-            url = f"https://api.telegram.org/bot{token}/getUpdates?offset={last_update_id + 1}&timeout=20"
-            r = requests.get(url, timeout=25).json()
+            url = f"https://api.telegram.org/bot{token}/getUpdates?offset={last_update_id + 1}&timeout=15"
+            r = requests.get(url, timeout=20).json()
+            
             if "result" in r:
                 for update in r["result"]:
                     last_update_id = update["update_id"]
                     if "message" in update and "text" in update["message"]:
-                        text = update["message"]["text"].upper()
+                        text = update["message"]["text"].strip()
                         chat_id = str(update["message"]["chat"]["id"])
+                        
                         if chat_id != sergio_id:
-                            # MODALITÀ OSPITE
-                            logging.info(f"GUEST USER: {chat_id}")
-                            guest_kb = {
-                                "keyboard": [
-                                    [{"text": "Andamento Capitale"}, {"text": "Incasso Giornaliero"}],
-                                    [{"text": "Squadre all'opera"}, {"text": "🏛️ Architettura Macchina"}]
-                                ],
-                                "resize_keyboard": True
-                            }
-                            if text == "/START":
-                                msg = "Benvenuto nell'Orbital Command di Sergio. Sono l'AI Assistant che gestisce il suo Hedge Fund Algoritmico.\n\nSeleziona una voce per saperne di più sul progetto:"
-                                requests.post(send_url, json={"chat_id": chat_id, "text": msg, "reply_markup": guest_kb})
-                            elif "ARCHITETTURA" in text:
-                                arch = (
-                                    "🏛️ *L'ECOSISTEMA ASSOLUTO (ORBITAL COMMAND)* 🏛️\n\n"
-                                    "📡 *CERVELLO CENTRALE*\n"
-                                    " ├─ ⚡ RAM-Disk WebSockets\n"
-                                    " ├─ 🐋 Proxy On-Chain Futures\n"
-                                    " ├─ 📰 News Sentiment Sniper\n"
-                                    " └─ 🌏 Asian Echo Sniper (MEXC/Binance)\n\n"
-                                    "🛡️ *GUARDIANI*\n"
-                                    " ├─ 👑 Zabbix Watchdog\n"
-                                    " ├─ 🚨 Crisis Manager (DEFCON 2)\n"
-                                    " ├─ 🧹 Midnight Sweeper (33% Vault)\n"
-                                    " └─ 🧬 Evolutionary AI Builder (Ogni 5 min)\n\n"
-                                    "⚔️ *FORZE ARMATE (5 TIER)*\n"
-                                    " 🟢 TIER 1: Binance Spot (Sniper, Legione, Olympus)\n"
-                                    " 🔵 TIER 2: MEXC Spot (Nano Squad)\n"
-                                    " 🔴 TIER 3: Bitget Futures (Blade Runner, Kamikaze)\n"
-                                    " 🛡️ TIER 4: Bitget Hedge (Delta Neutral Rischio Zero)\n"
-                                    " ⚖️ TIER 5: Statistical Arbitrage (Pairs Trading BTC/ETH)\n"
-                                )
-                                requests.post(send_url, json={"chat_id": chat_id, "text": arch, "parse_mode": "Markdown", "reply_markup": guest_kb})
-                            elif text == "ANDAMENTO CAPITALE":
-                                msg = "🏦 *Andamento Capitale (Pubblico)*\n\nIl fondo algoritmico è strutturato su un portafoglio protetto. \nLe cifre esatte e il bilancio dal vivo sono crittografati e accessibili solo al Comandante.\n\n*Strategia attuale:* Conservativa / Hedging attivo."
-                                requests.post(send_url, json={"chat_id": chat_id, "text": msg, "parse_mode": "Markdown", "reply_markup": guest_kb})
-                            elif text == "INCASSO GIORNALIERO":
-                                msg = "🎯 *Incasso Giornaliero (Pubblico)*\n\n*Target di Sistema:* 100.00 € / giorno\n*Protocollo Cassaforte:* 33% degli utili viene sigillato quotidianamente.\n\n*(I dati sui ricavi netti in tempo reale sono riservati).*\n\nL'ecosistema è automatizzato 24/7."
-                                requests.post(send_url, json={"chat_id": chat_id, "text": msg, "parse_mode": "Markdown", "reply_markup": guest_kb})
-                            elif text == "SQUADRE ALL'OPERA":
-                                msg = "🚀 *Forze Algoritmiche all'opera*\n\nL'infrastruttura è divisa in distaccamenti strategici d'assalto (oltre 40 algoritmi in esecuzione parallela):\n\n"
-                                msg += "🔫 *SNIPER SQUAD* (Assalto Spot)\n"
-                                msg += "🧟‍♂️ *VAMPIRO* (Griglia BTC)\n"
-                                msg += "🐺 *SCIACALLO* (Meme Crash)\n"
-                                msg += "👻 *PHANTOM* (Book Maker)\n"
-                                msg += "🌊 *TSUNAMI* (Pump Rider)\n"
-                                msg += "🐝 *SCIAME* (Micro-Dips)\n"
-                                msg += "⚡ *PROJECT OLYMPUS* (Griglia HFT su SOL)\n"
-                                msg += "⚔️ *LEGION* (28 Micro-Cecchini su Altcoin)\n"
-                                msg += "📉 *MICRO-SHORTER* (Hedging su Bitget)\n"
-                                msg += "🧨 *KAMIKAZE* (Futures Momentum)\n"
-                                msg += "🌌 *SPATIAL ARB* (Arbitraggio MEXC/Binance)\n"
-                                msg += "📈 *COMPOUNDER* (Auto-Ottimizzatore Capitali)\n"
-                                msg += "🚨 *CRISIS MGR* (Circuit Breaker DEFCON)\n"
-                                msg += "👁️ *ZABBIX* (Watchdog di Auto-Guarigione)\n\n"
-                                msg += "*Un ecosistema quantitativo inarrestabile e autonomo.*"
-                                requests.post(send_url, json={"chat_id": chat_id, "text": msg, "parse_mode": "Markdown", "reply_markup": guest_kb})
                             continue
                         
-                        resp_text = ""
-                        if text == "/START":
-                            resp_text = "🤖 Console Operativa Aggiornata! Pronti a fare 100€."
-                        elif "STATO SQUADRE" in text:
-                            resp_text = get_squad_stats()
+                        resp = None
                         
-                        elif "MEXC" in text:
-                            resp_text = get_mexc_status()
-
-                        elif "ARCHITETTURA" in text:
-                            resp_text = "🏛️ *L'ECOSISTEMA ASSOLUTO (ORBITAL COMMAND)* 🏛️\n\n📡 *CERVELLO CENTRALE*\n ├─ ⚡ RAM-Disk WebSockets\n ├─ 🐋 Proxy On-Chain Futures\n ├─ 📰 News Sentiment Sniper\n └─ 🌏 Asian Echo Sniper (MEXC/Binance)\n\n🛡️ *GUARDIANI*\n ├─ 👑 Zabbix Watchdog\n ├─ 🚨 Crisis Manager (DEFCON 2)\n ├─ 🧹 Midnight Sweeper (33% Vault)\n └─ 🧬 Evolutionary AI Builder (Ogni 5 min)\n\n⚔️ *FORZE ARMATE (4 TIER)*\n 🟢 TIER 1: Binance Spot (Sniper Squad, La Legione, Olympus Grid)\n 🔵 TIER 2: MEXC Spot (Nano Squad HFT a Zero Fee)\n 🔴 TIER 3: Bitget Futures (Blade Runner, Kamikaze)\n 🛡️ TIER 4: Lo Scudo (Bitget Hedge, Delta Neutral Rischio Zero)"
-
-                        elif "CIFRA" in text or "OGGI:" in text or "INV:" in text:
-                            try:
-                                pt = float(__import__("json").load(open("/home/sergio/.openclaw/workspace/denaro/total_usdt_cache.json")).get("total_usdt", 0)) - float(__import__("json").load(open("/home/sergio/.openclaw/workspace/denaro/midnight_balance.json")).get("balance", 0))
-                            except:
-                                pt = 0.0
-                            resp_text = f"📥 *SITUAZIONE CAPITALE E RICAVI*\n------------------------------------\n💰 Versato Storico: *€{CAPITALE_VERSATO_TOTALE:.2f}*\n\n📈 Incasso di oggi (Netto): *+€{pt:.2f}*\n------------------------------------\n(Questo è il conteggio reale e netto da mezzanotte)."
-                        elif "RICAVO GIORNALIERO" in text:
-                            resp_text = get_daily_profit()
-                        elif "ANDAMENTO RICAVI" in text:
-                            resp_text = get_full_status()
-                            try:
-                                os.system("/home/sergio/.openclaw/workspace/denaro/trading_bot_env/bin/python3 /home/sergio/.openclaw/workspace/denaro/generate_profit_chart.py")
-                                send_photo(chat_id, token, "/home/sergio/.openclaw/workspace/denaro/profit_chart.png")
-                            except Exception as e:
-                                logging.error(f"Errore generazione chart: {e}")
-                        elif "dummy" == text:
-                            pass
-                        elif "INCASSO MEDIO" in text:
-                            try:
-                                load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env')
-                                # Per ora mettiamo un placeholder per la media
-                                profit_str = get_daily_profit()
-                                resp_text = f"📊 *Medie e Statistiche (PRIVATO)*\n\n🎯 Target Fissato: 100.00 €\n\n{profit_str}\n*Dato in aggiornamento...*"
-                            except Exception as e: logging.error(f'ERRORE INCASSO MEDIO: {e}')
-                        elif "ELEMOSINA" in text or "GARIBAN" in text:
-                            resp_text = get_gariban_stats()
+                        # Mappa comandi
+                        if text in ["/start", "/START"]:
+                            resp = "🤖 <b>Denaro Trading System</b>\n\nBenvenuto Sergio.\nIl sistema realistico è attivo.\nScegli cosa controllare dal menu."
                         
+                        elif "Bilancio" in text or "bilancio" in text:
+                            resp = cmd_balance()
                         
+                        elif "Grid" in text or "grid" in text:
+                            resp = cmd_grid_status()
                         
-                        elif text == "/HISTORY" or "HISTORY" in text:
-                            try:
-                                log_file = "/home/sergio/.openclaw/workspace/denaro/MEXC_NANO.log"
-                                last_logs = subprocess.check_output(["tail", "-n", "20", log_file]).decode()
-                                resp_text = f"📜 *STORICO RECENTE (MEXC NANO SQUAD)*\n`{last_logs[-3500:]}`"
-                            except Exception as e:
-                                resp_text = "Nessuno storico disponibile o errore di lettura."
-
-                        elif text == "/PING" or "PING" in text:
-                            resp_text = "🏓 *PONG!*\nTutti i sistemi operativi. Tempi di risposta ottimali."
-
-                        elif text == "/MEMORY" or "MEMORY" in text:
-                            resp_text = "🧠 *MEMORIA CENTRALE*\nLe informazioni salvate per l'infrastruttura di trading e i bot sono sincronizzate con successo."
-
-                        elif "DASHBOARD" in text:
-                            resp_text = "🌐 *DASHBOARD WEB LIVE*\nAccedi da qui:\n👉 https://sgrivett.ddns.net:8443"
+                        elif "MC2" in text or "Sniper" in text or "sniper" in text:
+                            resp = cmd_mc2_status()
+                        
+                        elif "Servizi" in text or "servizi" in text:
+                            resp = cmd_services()
+                        
+                        elif "DCA" in text or "dca" in text:
+                            resp = cmd_dca()
+                        
+                        elif "Cassaforte" in text or "cassaforte" in text:
+                            resp = cmd_vault()
+                        
+                        elif "Sistema" in text or "sistema" in text:
+                            resp = cmd_system()
+                        
+                        elif "Dashboard" in text or "dashboard" in text:
+                            resp = cmd_dashboard()
+                        
                         else:
-                            resp_text = "Seleziona un'opzione dal menu:"
+                            resp = "Seleziona un'opzione dal menu 👆"
                         
-                        if resp_text:
-                            kb = get_dynamic_kb()
-                            payload = {"chat_id": chat_id, "text": resp_text, "parse_mode": "Markdown"}
-                            if kb:
-                                payload["reply_markup"] = kb
-                            r = requests.post(f"https://api.telegram.org/bot{token}/sendMessage", json=payload)
-                            logging.info(f"INVIATO: {r.status_code} - {r.text}")
+                        if resp:
+                            payload = {"chat_id": chat_id, "text": resp, "parse_mode": "HTML", "reply_markup": get_keyboard()}
+                            r2 = requests.post(f"https://api.telegram.org/bot{token}/sendMessage", json=payload)
+                            logging.info(f"INVIATO: {r2.status_code}")
+            
             gc.collect()
-            time.sleep(0.1)
+            time.sleep(0.5)
+            
         except Exception as e:
-            logging.error(f'ERRORE MAIN LOOP: {e}')
+            logging.error(f'ERRORE LOOP: {e}')
             gc.collect()
             time.sleep(5)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main_loop()

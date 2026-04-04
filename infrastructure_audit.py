@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env')
 
 TG_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
-TG_CHAT = os.getenv('TELEGRAM_CHAT_ID', '8183973303')
+TG_CHAT = os.getenv('TELEGRAM_CHAT_ID', '277954993')
 
 def send_report(title, message):
     """Invia report Telegram"""

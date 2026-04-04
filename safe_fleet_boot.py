@@ -14,7 +14,7 @@ if not os.path.exists(VENV_PY):
     VENV_PY = "/usr/bin/python3"
 
 TG_TOKEN = "8715854678:AAEJGMqZr854HFZ__BGnyl0tHYTvMb4qlmw"
-TG_CHAT = "8183973303"
+TG_CHAT = "277954993"
 
 # Parametri base (dinamici)
 MEM_THRESHOLD = 85          # soglia RAM % per pausa

@@ -20,7 +20,7 @@ MIN_EUR_BALANCE = 3.0  # Stop se meno di €3 (abbassato per €64 free)
 DCA_LOG = '/home/sergio/.openclaw/workspace/denaro/logs/dca.log'
 
 TG_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
-TG_CHAT = os.getenv('TELEGRAM_CHAT_ID', '8183973303')
+TG_CHAT = os.getenv('TELEGRAM_CHAT_ID', '277954993')
 
 logging.basicConfig(
     filename=DCA_LOG,

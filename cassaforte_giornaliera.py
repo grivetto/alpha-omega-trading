@@ -27,7 +27,7 @@ logging.basicConfig(
 # File cassaforte
 CASSAFORTE_FILE = '/home/sergio/.openclaw/workspace/denaro/cassaforte.json'
 TG_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
-TG_CHAT = os.getenv('TELEGRAM_CHAT_ID', '8183973303')
+TG_CHAT = os.getenv('TELEGRAM_CHAT_ID', '277954993')
 
 class CassaforteGiornaliera:
     def __init__(self):

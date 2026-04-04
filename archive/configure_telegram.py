@@ -1,7 +1,7 @@
 import requests
 
 SERGIO_ID = "277954993"
-STELLA_TOKEN = "8183973303:AAFwVUK0LUlyyTby_V0O3U_uMt4V7fXgW8I"
+STELLA_TOKEN = "277954993:AAFwVUK0LUlyyTby_V0O3U_uMt4V7fXgW8I"
 TRADING_TOKEN = "8715854678:AAEJGMqZr854HFZ__BGnyl0tHYTvMb4qlmw"
 
 # 1. Rimuovi eventuale tastiera a riquadri da questa chat (Stella) e manda un messaggio

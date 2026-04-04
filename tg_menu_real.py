@@ -27,7 +27,7 @@ class DenaroRealBot:
             with open('/home/sergio/.openclaw/workspace/denaro/REALISTIC_GRID.log', 'r') as f:
                 lines = f.readlines()[-30:]
             
-            investment = 20
+            investment = 200
             orders = "0"
             
             for line in reversed(lines):
