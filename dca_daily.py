@@ -15,8 +15,8 @@ from dotenv import load_dotenv
 load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env')
 
 # Config
-DCA_AMOUNT_EUR = 1.00  # €1.00 al giorno
-MIN_EUR_BALANCE = 3.0  # Stop se meno di €3 (abbassato per €64 free)
+DCA_AMOUNT_EUR = 5.00  # €5.00 al giorno (Aggressivo)
+MIN_EUR_BALANCE = 5.0  # Riserva minima
 DCA_LOG = '/home/sergio/.openclaw/workspace/denaro/logs/dca.log'
 
 TG_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')

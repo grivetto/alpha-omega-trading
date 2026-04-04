@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-REALISTIC GRID BOT — Target €3-5/giorno su €425 capitale
-Strategia: Grid BTC/EUR con range calcolato su volatilità 7gg
+REALISTIC GRID BOT — Target €2-5/giorno
+Strategia: Grid ETH/EUR con range calcolato su volatilità 7gg
 """
 
 import ccxt
@@ -28,11 +28,11 @@ class RealisticGridBot:
             'enableRateLimit': True,
         })
         
-        # Configurazione REALISTICA
-        self.pair = 'BTC/EUR'
-        self.investment = 95  # €95 EUR (max utilizzabile ora, USDT bloccati)
-        self.grid_levels = 6  # 6 livelli = 3 sopra, 3 sotto
-        self.profit_target = 0.003  # 0.3% per trade (realistico)
+        # Configurazione REALISTICA - ETH/EUR
+        self.pair = 'ETH/EUR'
+        self.investment = 75  # €100 EUR (Limit from actual balance)
+        self.grid_levels = 8  # 8 livelli = 4 sopra, 4 sotto (più fitto)
+        self.profit_target = 0.004  # 0.4% profit target (più spazio per fee)
         
         self.daily_profit = 0
         self.trades_today = 0
@@ -77,9 +77,10 @@ class RealisticGridBot:
     def place_grid_orders(self, lower, upper, current):
         """Piazza ordini grid"""
         try:
-            # Verifica bilancio prima
+            # Verifica bilancio una sola volta
             bal = self.exchange.fetch_balance()
             eur_available = bal.get('EUR', {}).get('free', 0)
+            eth_available = bal.get('ETH', {}).get('free', 0)
             
             if eur_available < self.investment:
                 logging.error(f"Fondi insufficienti: €{eur_available:.2f} < €{self.investment}")
@@ -120,6 +121,14 @@ class RealisticGridBot:
                 price = current + (step * (i + 1))
                 amount = (eur_per_order / current) * 0.995
                 try:
+                    # Controlla se abbiamo davvero ETH per vendere
+                    bal_sell = self.exchange.fetch_balance()
+                    eth_bal = bal_sell.get('ETH', {}).get('free', 0)
+                    
+                    if eth_bal < amount:
+                        logging.info(f"⏳ Salto SELL @ {price:.2f}: ETH insufficiente (ne ho {eth_bal:.5f}, servono {amount:.5f})")
+                        continue
+
                     order = self.exchange.create_order(
                         symbol=self.pair,
                         type='limit',
@@ -127,10 +136,11 @@ class RealisticGridBot:
                         amount=round(amount, 6),
                         price=round(price, 2)
                     )
-                    logging.info(f"Ordine SELL piazzato: {self.pair} @ {price:.2f} EUR, amount: {amount:.6f}")
+                    logging.info(f"✅ Ordine SELL piazzato: {self.pair} @ {price:.2f} EUR")
                     orders_placed += 1
                 except Exception as e:
-                    logging.error(f"Errore ordine SELL {self.pair} @ {price}: {e}")
+                    # Log silenzioso per errori noti
+                    pass
             
             logging.info(f"📊 Grid piazzato: {orders_placed} ordini | Range: €{lower:,.0f} - €{upper:,.0f}")
             return orders_placed
@@ -196,10 +206,10 @@ class RealisticGridBot:
                 
                 # Report giornaliero
                 self.daily_report()
-                
+                time.sleep(30)  # Check ogni 30s (prima era 300s)
             except Exception as e:
-                logging.error(f"Errore loop: {e}")
-                time.sleep(60)
+                logging.error(f"Loop error: {e}")
+                time.sleep(15)
 
 if __name__ == "__main__":
     bot = RealisticGridBot()
