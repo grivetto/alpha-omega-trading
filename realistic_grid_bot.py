@@ -28,15 +28,38 @@ class RealisticGridBot:
             'enableRateLimit': True,
         })
         
-        # Configurazione REALISTICA - ETH/EUR
-        self.pair = 'ETH/EUR'
-        self.investment = 75  # €100 EUR (Limit from actual balance)
-        self.grid_levels = 8  # 8 livelli = 4 sopra, 4 sotto (più fitto)
-        self.profit_target = 0.004  # 0.4% profit target (più spazio per fee)
+        self.config = self.load_optimizer_config()
+        self.pair = self.config.get('pair', 'ETH/EUR')
+        self.investment = self.config.get('investment', 80)
+        self.grid_levels = self.config.get('grid_levels', 6)
+        self.profit_target = self.config.get('profit_target', 0.005)
+        self.stop_loss = self.config.get('stop_loss', 0.04)
+        self.mode = self.config.get('mode', 'LEARNING')
         
         self.daily_profit = 0
         self.trades_today = 0
         self.last_day = datetime.now().day
+
+    def load_optimizer_config(self):
+        """Legge la strategia dal Cervello (Optimizer). Se non esiste, usa default."""
+        config_file = '/home/sergio/.openclaw/workspace/denaro/strategy.json'
+        try:
+            if os.path.exists(config_file):
+                with open(config_file, 'r') as f:
+                    cfg = json.load(f)
+                    logging.info(f"🧠 Strategia caricata: Modalità {cfg.get('mode', 'MANUAL')}")
+                    return cfg
+        except Exception as e:
+            logging.error(f"⚠️ Errore lettura strategy.json: {e}. Uso default.")
+        # Fallback default
+        return {
+            'pair': 'ETH/EUR',
+            'investment': 80,
+            'grid_levels': 6,
+            'profit_target': 0.005,
+            'stop_loss': 0.04,
+            'mode': 'LEARNING'
+        }
         
     def calculate_grid_range(self):
         """Calcola range basato su volatilità 24h"""
@@ -94,7 +117,10 @@ class RealisticGridBot:
                 logging.warning(f"Nessun ordine da cancellare: {e}")
             
             step = (upper - lower) / self.grid_levels
-            eur_per_order = self.investment / (self.grid_levels / 2)
+            # MODALITÀ CRESCENDO: Usa il 90% del capitale disponibile, riserva 20€
+            budget = max(0, eur_available - 20) 
+            eur_per_order = budget / (self.grid_levels / 2)
+            logging.info(f"📈 Budget Dinamico aggiornato: €{budget:.2f}")
             
             orders_placed = 0
             
