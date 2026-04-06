@@ -66,11 +66,11 @@ def get_binance_data():
 def get_grid_status():
     """Stato Grid Bot"""
     try:
-        result = subprocess.run(['systemctl', 'is-active', 'denaro-realistic-grid'],
+        result = subprocess.run(['systemctl', 'is-active', 'grid_bot_v2'],
                               capture_output=True, text=True)
         active = result.stdout.strip() == 'active'
         
-        log_file = '/home/sergio/.openclaw/workspace/denaro/REALISTIC_GRID.log'
+        log_file = '/home/sergio/.openclaw/workspace/denaro/grid_bot_v2.log'
         last_logs = []
         if os.path.exists(log_file):
             result = subprocess.run(['tail', '-n', '5', log_file],
@@ -89,7 +89,7 @@ def get_mc2_status():
         result = subprocess.run(
             ['ssh', '-o', 'ConnectTimeout=3', '-o', 'StrictHostKeyChecking=no',
              '-p', '2222', '-i', os.path.expanduser('~/.ssh/id_ed25519'),
-             'sergio@93.43.252.114', 'tail -n 5 ~/denaro/logs/rebound_sniper.log'],
+             'sergio@93.43.252.114', 'tail -n 10 ~/denaro/logs/sniper_v2.log'],
             capture_output=True, text=True, timeout=10
         )
         logs = []
