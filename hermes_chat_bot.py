@@ -12,9 +12,9 @@ from datetime import datetime
 
 # Config
 TG_TOKEN = os.getenv('TG_BOT_TOKEN') or os.getenv('TG_TOKEN')
-API_KEY = os.getenv('OPENROUTER_API_KEY')
+API_KEY='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'
 SERGIO_ID = '277954993'
-MODEL = 'moonshotai/kimi-k2.5' # O il modello che preferisci
+MODEL = 'openai/gpt-4o-mini'
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - [STELLA] - %(message)s')
 
