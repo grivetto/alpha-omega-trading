@@ -12,6 +12,7 @@ import json
 import logging
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
+from whatsapp_notifier import send_whatsapp_alert
 
 load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env')
 
@@ -29,10 +30,10 @@ logger.addHandler(console)
 
 CONFIG = {
     'pair': 'ETH/EUR',
-    'budget': 200,           # Capitale nel grid
-    'grid_levels': 5,        # Livelli (2 buy + 2 sell) - Modalità TURBO
-    'grid_spacing_pct': 0.005,  # 0.8% tra livelli (ETH ha ~1-2%/giorno)
-    'order_size_eur': 35,    # ~€35 per ordine (era €25)
+    'budget': 240,           # Nuovo budget post-liquidazione SOL
+    'grid_levels': 6,        # Aumentati i livelli per maggiore copertura
+    'grid_spacing_pct': 0.003,  # Mantengo 0.3% per alta frequenza
+    'order_size_eur': 38,    # Calibrato a €38 per stare nel budget (6*38=228)
     'reserve_eur': 20,       # Riserva non usata nel grid
     'rebalance_trigger': 3,  # Ribilancia dopo N fill
     'profit_target': 0.007,  # 0.7% profit per livello (dopo fee)
@@ -149,6 +150,8 @@ class GridBotV2:
                     self.total_profit += profit
                     self.daily_profit += profit
                     logger.info(f"SELL fill: {fill['amount']} ETH @ €{fill['price']:.2f} (€{fill_value:.2f}, fee: €{fee_cost:.3f})")
+                    msg = f"💰 DENARO PROFIT!\nSशुल्क ETH venduto @ €{fill['price']:.2f}\nProfitto netto: €{profit:.2f}" 
+                    send_whatsapp_alert(msg)
 
             if filled:
                 logger.info(f"Totale fill da controllare: {len(filled)}, da ultimo rebalance: {self.fills_since_rebalance}")
