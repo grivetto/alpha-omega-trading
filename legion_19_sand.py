@@ -1,5 +1,5 @@
 import gc
-import os, time, logging, gc, json
+import os, time, logging, gc, json, fcntl
 from dotenv import load_dotenv
 from binance.client import Client
 
@@ -21,12 +21,19 @@ def get_vault_locked():
     return 0.0
 
 def add_to_vault(amount):
-    locked = get_vault_locked() + amount
     try:
-        with open(VAULT_FILE, 'w') as f:
-            json.dump({"LOCKED_EUR": locked}, f)
-        logger.info(f"⚖️ LEGION SAND HA VERSATO: +{amount:.2f}€ IN CASSAFORTE!")
-    except: pass
+        with open(VAULT_FILE, "r+") as f:
+            fcntl.flock(f, fcntl.LOCK_EX)
+            data = json.load(f)
+            locked = data.get("LOCKED_EUR", 0.0) + amount
+            data["LOCKED_EUR"] = locked
+            f.seek(0)
+            json.dump(data, f)
+            f.truncate()
+            fcntl.flock(f, fcntl.LOCK_UN)
+        logger.info(f"⚖️ LEGION {SYMBOL} HA VERSATO: +{amount:.2f}€ IN CASSAFORTE!")
+    except Exception as e:
+        logger.error(f"Errore vault: {e}")
 
 SYMBOL = "SANDUSDT"
 TRADE_AMOUNT_USDT = 11.0
@@ -47,7 +54,7 @@ def main():
             
             if position:
                 pnl = (price - buy_price) / buy_price
-                if pnl >= 0.02 or pnl <= -0.04: # +2% TP, -4% SL
+                if pnl >= 0.01 or pnl <= -0.06: # +2% TP, -4% SL
                     logger.info(f"⚔️ LEGION SAND CHIUDE OPERAZIONE! PNL: {pnl*100:.2f}%")
                     # Dato il capitale ridotto, simuliamo ordini o piaziamo veri se ci sono capitali
                     usdt_bal = float(client.get_asset_balance(asset='USDT')['free'])
@@ -57,7 +64,7 @@ def main():
             else:
                 if len(history) == 10:
                     drop = (history[-1] - history[0]) / history[0]
-                    if drop <= -0.035: # Crollo del 3.5% in 10 minuti
+                    if drop <= -0.02: # Crollo del 3.5% in 10 minuti
                         try:
                             usdt_bal = float(client.get_asset_balance(asset='USDT')['free'])
                             if usdt_bal >= TRADE_AMOUNT_USDT:

@@ -1,5 +1,5 @@
 import gc
-import os, time, logging, gc, json
+import os, time, logging, gc, json, fcntl
 from dotenv import load_dotenv
 from binance.client import Client
 
@@ -21,12 +21,19 @@ def get_vault_locked():
     return 0.0
 
 def add_to_vault(amount):
-    locked = get_vault_locked() + amount
     try:
-        with open(VAULT_FILE, 'w') as f:
-            json.dump({"LOCKED_EUR": locked}, f)
-        logger.info(f"⚖️ LEGION MANA HA VERSATO: +{amount:.2f}€ IN CASSAFORTE!")
-    except: pass
+        with open(VAULT_FILE, "r+") as f:
+            fcntl.flock(f, fcntl.LOCK_EX)
+            data = json.load(f)
+            locked = data.get("LOCKED_EUR", 0.0) + amount
+            data["LOCKED_EUR"] = locked
+            f.seek(0)
+            json.dump(data, f)
+            f.truncate()
+            fcntl.flock(f, fcntl.LOCK_UN)
+        logger.info(f"⚖️ LEGION {SYMBOL} HA VERSATO: +{amount:.2f}€ IN CASSAFORTE!")
+    except Exception as e:
+        logger.error(f"Errore vault: {e}")
 
 SYMBOL = "MANAUSDT"
 TRADE_AMOUNT_USDT = 11.0
