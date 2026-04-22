@@ -11,7 +11,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - [MEXC NANO] - %(me
                     handlers=[logging.FileHandler("MEXC_NANO.log"), logging.StreamHandler()])
 logger = logging.getLogger("MexcNano")
 
-load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env.mexc')
+load_dotenv('/home/sergio/denaro/.env.mexc')
 mexc = ccxt.mexc({
     'apiKey': os.getenv('MEXC_API_KEY'),
     'secret': os.getenv('MEXC_API_SECRET'),

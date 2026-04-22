@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 import json
 
 def get_binance():
-    load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env')
+    load_dotenv('/home/sergio/denaro/.env')
     exchange = ccxt.binance({'apiKey': os.getenv('BINANCE_API_KEY'), 'secret': os.getenv('BINANCE_API_SECRET')})
     bal = exchange.fetch_balance()
     t = 0
@@ -17,12 +17,12 @@ def get_binance():
     return t
 
 def get_bitget():
-    load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env.bitget')
+ load_dotenv('/home/sergio/denaro/.env.bitget')
     exchange = ccxt.bitget({'apiKey': os.getenv('BITGET_API_KEY'), 'secret': os.getenv('BITGET_API_SECRET'), 'password': os.getenv('BITGET_PASSWORD'), 'options': {'defaultType': 'swap'}})
     return exchange.fetch_balance()['USDT']['total']
 
 def get_mexc():
-    load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env.mexc')
+ load_dotenv('/home/sergio/denaro/.env.mexc')
     exchange = ccxt.mexc({'apiKey': os.getenv('MEXC_API_KEY'), 'secret': os.getenv('MEXC_API_SECRET')})
     bal = exchange.fetch_balance()
     t = 0

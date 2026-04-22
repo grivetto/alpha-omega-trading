@@ -13,7 +13,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - [IL GENERALE ðŸŽ–ï
                     handlers=[logging.FileHandler("IL_GENERALE.log"), logging.StreamHandler()])
 logger = logging.getLogger("IlGenerale")
 
-load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env')
+load_dotenv('/home/sergio/denaro/.env')
 
 binance = ccxt.binance({
     'apiKey': os.getenv('BINANCE_API_KEY'),

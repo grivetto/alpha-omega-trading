@@ -9,7 +9,7 @@ import ccxt
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - [DEFCON 🚨] - %(message)s',
                     handlers=[logging.FileHandler("DEFCON.log"), logging.StreamHandler()])
 
-load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env')
+load_dotenv('/home/sergio/denaro/.env')
 
 try:
     binance = ccxt.binance({
@@ -44,7 +44,7 @@ def activate_defcon():
     try:
         sys.path.insert(0, '/home/sergio/.openclaw/workspace/denaro')
         import requests
-        load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env.telegram')
+        load_dotenv('/home/sergio/denaro/.env.telegram')
         token = os.getenv('TELEGRAM_BOT_TOKEN')
         chat_id = os.getenv('TELEGRAM_CHAT_ID')
         msg = "🚨 *DEFCON 2 ATTIVATO (CRISIS MANAGER)* 🚨\n\nCrollo globale dei mercati rilevato (>4% su BTC). L'ecosistema è entrato in modalità Sopravvivenza:\n\n⏸️ *Bot Spot (Binance/MEXC):* Ordini di acquisto temporaneamente congelati per evitare di comprare coltelli in caduta.\n📉 *Bot Short:* Autorizzati a forzare la size massima per coprire le perdite del portafoglio (Hedging).\n\n*Il sistema si sbloccherà automaticamente non appena il crollo si arresterà.*"
@@ -86,7 +86,7 @@ def deactivate_defcon():
         try:
             import requests, sys
             sys.path.insert(0, '/home/sergio/.openclaw/workspace/denaro')
-            load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env.telegram')
+            load_dotenv('/home/sergio/denaro/.env.telegram')
             token = os.getenv('TELEGRAM_BOT_TOKEN')
             chat_id = os.getenv('TELEGRAM_CHAT_ID')
             msg = "✅ *DEFCON DISATTIVATO* ✅\n\nIl crollo dei mercati si è fermato. I bot Spot sono stati riautorizzati a comprare il fondo (Dip Buying). Ripresa delle normali operazioni di rete."

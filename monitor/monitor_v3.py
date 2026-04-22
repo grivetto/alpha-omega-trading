@@ -20,7 +20,7 @@ import requests
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 
-load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env')
+load_dotenv('/home/sergio/denaro/.env')
 
 TELEGRAM_TOKEN = os.getenv('TG_BOT_TOKEN', os.getenv('TELEGRAM_BOT_TOKEN', ''))
 CHAT_ID = os.getenv('TG_CHAT_ID', '277954993')

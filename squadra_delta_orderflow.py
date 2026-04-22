@@ -12,7 +12,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - [DELTA 🌊] - %(m
                     handlers=[logging.FileHandler("SQUADRA_DELTA.log"), logging.StreamHandler()])
 logger = logging.getLogger("SquadraDelta")
 
-load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env')
+load_dotenv('/home/sergio/denaro/.env')
 # Usiamo CCXT per Binance per comodità e velocità asincrona
 binance = ccxt.binance({
     'apiKey': os.getenv('BINANCE_API_KEY'),

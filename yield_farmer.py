@@ -8,7 +8,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s',
                     handlers=[logging.FileHandler("/home/sergio/.openclaw/workspace/denaro/YIELD_FARMER.log"), logging.StreamHandler()])
 logger = logging.getLogger("Yield_Farmer")
 
-load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env')
+load_dotenv('/home/sergio/denaro/.env')
 client = Client(os.getenv('BINANCE_API_KEY'), os.getenv('BINANCE_API_SECRET'))
 
 def get_simple_earn_product(asset):

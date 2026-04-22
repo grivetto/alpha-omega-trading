@@ -12,7 +12,7 @@ from datetime import datetime
 from flask import Flask
 from dotenv import load_dotenv
 
-load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env')
+load_dotenv('/home/sergio/denaro/.env')
 
 app = Flask(__name__)
 CAPITALE_INIZIALE = 722.00

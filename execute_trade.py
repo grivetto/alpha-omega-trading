@@ -7,7 +7,7 @@ import os
 import time
 from dotenv import load_dotenv
 
-load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env')
+load_dotenv('/home/sergio/denaro/.env')
 
 def run():
     exchange = ccxt.binance({

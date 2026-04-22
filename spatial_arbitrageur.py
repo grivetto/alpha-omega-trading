@@ -7,8 +7,8 @@ from dotenv import load_dotenv
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - [ECHO SNIPER 🌏] - %(message)s',
                     handlers=[logging.FileHandler("SPATIAL_ARBITRAGE.log"), logging.StreamHandler()])
 
-load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env')
-load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env.mexc')
+load_dotenv('/home/sergio/denaro/.env')
+load_dotenv('/home/sergio/denaro/.env.mexc')
 
 COINS = ['SOL', 'DOGE', 'AVAX', 'LINK', 'PEPE', 'WIF', 'NEAR', 'FET']
 

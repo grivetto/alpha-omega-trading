@@ -12,7 +12,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - [ALPHA STRIKE ⚡]
 sys.path.insert(0, '/home/sergio/.openclaw/workspace/denaro')
 import local_price
 
-load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env')
+load_dotenv('/home/sergio/denaro/.env')
 
 try:
     binance = ccxt.binance({

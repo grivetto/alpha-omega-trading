@@ -16,7 +16,7 @@ from datetime import datetime, timedelta
 from dotenv import load_dotenv
 import requests
 
-load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env')
+load_dotenv('/home/sergio/denaro/.env')
 
 logging.basicConfig(
     filename='/home/sergio/.openclaw/workspace/denaro/logs/cassaforte.log',

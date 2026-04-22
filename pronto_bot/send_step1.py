@@ -2,7 +2,7 @@ import os
 import requests
 from dotenv import load_dotenv
 
-load_dotenv('/home/sergio/.openclaw/workspace/denaro/pronto_bot/.env')
+load_dotenv('/home/sergio/denaro/.env.telegram')
 
 TOKEN = os.getenv('WHATSAPP_TOKEN')
 PHONE_ID = os.getenv('WHATSAPP_PHONE_ID')

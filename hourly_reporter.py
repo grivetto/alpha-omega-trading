@@ -7,7 +7,7 @@ sys.path.insert(0, '/home/sergio/.openclaw/workspace/denaro/')
 import telegram_bot_interactive as tbi
 from dotenv import load_dotenv
 
-load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env.telegram')
+load_dotenv('/home/sergio/denaro/.env.telegram')
 TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
 

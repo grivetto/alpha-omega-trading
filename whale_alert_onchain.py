@@ -9,8 +9,8 @@ import telegram_bot_interactive as tbi
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - [WHALE 🐋] - %(message)s',
                     handlers=[logging.FileHandler("WHALE_ONCHAIN.log"), logging.StreamHandler()])
 
-load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env')
-load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env.telegram')
+load_dotenv('/home/sergio/denaro/.env')
+load_dotenv('/home/sergio/denaro/.env.telegram')
 
 # Whale Alert API gratuita o scraping
 # Poiché l'API Whale Alert richiede una chiave a pagamento, simuliamo un radar su una fonte open (es. Coinglass o scraping Twitter RSS/Telegram public channels)

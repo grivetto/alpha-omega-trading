@@ -75,7 +75,7 @@ def trigger_trade(symbol, side, reason):
     # Per sicurezza in questa versione inviamo un segnale Telegram ad altissima priorità
     try:
         from dotenv import load_dotenv
-        load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env.telegram')
+load_dotenv('/home/sergio/denaro/.env')
         token = os.getenv('TELEGRAM_BOT_TOKEN')
         chat_id = os.getenv('TELEGRAM_CHAT_ID')
         

@@ -2,7 +2,7 @@ import ccxt
 import os
 from dotenv import load_dotenv
 
-load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env.bitget')
+load_dotenv('/home/sergio/denaro/.env.bitget')
 
 try:
     bitget = ccxt.bitget({

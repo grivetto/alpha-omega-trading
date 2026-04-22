@@ -26,7 +26,7 @@ CONFIG = {
     "NUVOLA": {
         "ip": "87.106.3.15",
         "user": "sergio",
-        "path": "/home/sergio/.openclaw/workspace/denaro"
+        "path": "/home/sergio/denaro"
     },
     "MARCODG1": {
         "ip": "87.106.222.123",

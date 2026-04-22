@@ -11,7 +11,7 @@ import json
 from datetime import datetime
 from dotenv import load_dotenv
 
-load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env')
+load_dotenv('/home/sergio/denaro/.env')
 
 TG_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 TG_CHAT = os.getenv('TELEGRAM_CHAT_ID', '277954993')

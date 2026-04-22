@@ -19,7 +19,7 @@ import ccxt
 from dotenv import load_dotenv
 
 # Configurazione
-load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env')
+load_dotenv('/home/sergio/denaro/.env')
 CAPITAL_FILE = '/home/sergio/.openclaw/workspace/denaro/capital_state.json'
 DAILY_LOG = '/home/sergio/.openclaw/workspace/denaro/daily_pnl.log'
 

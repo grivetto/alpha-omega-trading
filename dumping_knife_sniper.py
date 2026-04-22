@@ -11,7 +11,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - [KNIFE SNIPER 🔪
 sys.path.insert(0, '/home/sergio/.openclaw/workspace/denaro')
 import local_price
 
-load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env.bitget')
+load_dotenv('/home/sergio/denaro/.env.bitget')
 
 try:
     bitget = ccxt.bitget({
@@ -95,7 +95,7 @@ def run_knife_sniper():
                         # Manda notifica Telegram
                         try:
                             import requests
-                            load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env.telegram')
+                            load_dotenv('/home/sergio/denaro/.env.telegram')
                             tk = os.getenv('TELEGRAM_BOT_TOKEN')
                             cid = os.getenv('TELEGRAM_CHAT_ID')
                             msg = f"🔪 *DUMPING KNIFE SNIPER* 🔪\n\nHo intercettato un **Flash Crash del {drop_percent:.2f}%** su Solana.\nHo appena afferrato il coltello che cade.\n\n*Direzione:* LONG 🟢 (Leva {LEVERAGE}x)\n*Rischio:* {MARGIN_USDT} USDT\n*Prezzo Entrata:* ~{entry_price} $\n*Target Rimbalzo:* {tp_price:.2f} $\n\nOra aspettiamo il Rimbalzo del Gatto Morto. 🐈💀"

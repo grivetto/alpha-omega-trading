@@ -12,7 +12,7 @@ import logging
 from datetime import datetime
 from dotenv import load_dotenv
 
-load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env')
+load_dotenv('/home/sergio/denaro/.env')
 
 logging.basicConfig(
     filename='REALISTIC_GRID.log',

@@ -19,7 +19,7 @@ TRADING_SYMBOLS = ['EURUSDT', 'BTCEUR', 'SOLEUR', 'BNBEUR', 'ETHEUR', 'AVAXBTC',
 
 def get_full_status():
     try:
-        load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env')
+        load_dotenv('/home/sergio/denaro/.env')
         client = Client(os.getenv('BINANCE_API_KEY'), os.getenv('BINANCE_API_SECRET'))
         balances = client.get_account()['balances']
         assets = {b['asset']: float(b['free']) + float(b['locked']) for b in balances if float(b['free']) > 0 or float(b['locked']) > 0}
@@ -47,7 +47,7 @@ def get_full_status():
 
 def get_daily_profit():
     try:
-        load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env')
+        load_dotenv('/home/sergio/denaro/.env')
         client = Client(os.getenv('BINANCE_API_KEY'), os.getenv('BINANCE_API_SECRET'))
         balances = client.get_account()['balances']
         eur = float([b['free'] for b in balances if b['asset'] == 'EUR'][0])
@@ -188,7 +188,7 @@ def get_dynamic_kb():
         from binance.client import Client
         import os, json
         from dotenv import load_dotenv
-        load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env')
+        load_dotenv('/home/sergio/denaro/.env')
         client = Client(os.getenv('BINANCE_API_KEY'), os.getenv('BINANCE_API_SECRET'))
         balances = client.get_account()['balances']
         assets = {b['asset']: float(b['free']) + float(b['locked']) for b in balances if float(b['free']) > 0 or float(b['locked']) > 0}
@@ -224,7 +224,7 @@ def get_dynamic_kb():
     }
 
 def main_loop():
-    load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env.telegram')
+    load_dotenv('/home/sergio/denaro/.env.telegram')
     token = os.getenv('TELEGRAM_BOT_TOKEN')
     sergio_id = os.getenv('TELEGRAM_CHAT_ID')
     last_update_id = 0

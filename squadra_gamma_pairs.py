@@ -12,7 +12,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - [GAMMA ⚖️] - %
                     handlers=[logging.FileHandler("GAMMA_PAIRS.log"), logging.StreamHandler()])
 logger = logging.getLogger("GammaPairs")
 
-load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env.bitget')
+load_dotenv('/home/sergio/denaro/.env.bitget')
 bitget = ccxt.bitget({
     'apiKey': os.getenv('BITGET_API_KEY'),
     'secret': os.getenv('BITGET_API_SECRET'),

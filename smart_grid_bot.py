@@ -6,7 +6,7 @@ import ccxt, os, time, json, logging
 from datetime import datetime
 from dotenv import load_dotenv
 
-load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env')
+load_dotenv('/home/sergio/denaro/.env')
 
 logging.basicConfig(filename='REALISTIC_GRID.log', level=logging.INFO,
     format='%(asctime)s - [GRID SMART] - %(message)s')

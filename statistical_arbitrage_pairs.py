@@ -13,7 +13,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - [PAIRS TRADER ⚖�
 sys.path.insert(0, '/home/sergio/.openclaw/workspace/denaro')
 import local_price
 
-load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env.bitget')
+load_dotenv('/home/sergio/denaro/.env.bitget')
 
 try:
     bitget = ccxt.bitget({
@@ -111,7 +111,7 @@ def run_pairs_trading():
                             # Notifica Telegram
                             try:
                                 import requests
-                                load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env.telegram')
+                                load_dotenv('/home/sergio/denaro/.env.telegram')
                                 tk = os.getenv('TELEGRAM_BOT_TOKEN')
                                 cid = os.getenv('TELEGRAM_CHAT_ID')
                                 msg = f"⚖️ *STATISTICAL ARBITRAGE (Pairs Trader)* ⚖️\n\nHo rilevato una divergenza matematica estrema (Z-Score: {z_score:.2f}) tra Bitcoin ed Ethereum.\nL'elastico si è spezzato.\n\n*Azione Simultanea:* SHORT {SYM_A} 🔴 + LONG {SYM_B} 🟢 (Leva {LEVERAGE}x)\n*Rischio Mercato:* ZERO ASSOLUTO (Market Neutral).\n\nAttendo il ritorno alla media (Snapback) per chiudere in profitto. 🕸️"
@@ -142,7 +142,7 @@ def run_pairs_trading():
                             # Notifica Telegram
                             try:
                                 import requests
-                                load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env.telegram')
+                                load_dotenv('/home/sergio/denaro/.env.telegram')
                                 tk = os.getenv('TELEGRAM_BOT_TOKEN')
                                 cid = os.getenv('TELEGRAM_CHAT_ID')
                                 msg = f"⚖️ *STATISTICAL ARBITRAGE (Pairs Trader)* ⚖️\n\nHo rilevato una divergenza matematica estrema (Z-Score: {z_score:.2f}) tra Bitcoin ed Ethereum.\nL'elastico si è spezzato.\n\n*Azione Simultanea:* LONG {SYM_A} 🟢 + SHORT {SYM_B} 🔴 (Leva {LEVERAGE}x)\n*Rischio Mercato:* ZERO ASSOLUTO (Market Neutral).\n\nAttendo il ritorno alla media (Snapback) per chiudere in profitto. 🕸️"

@@ -8,7 +8,7 @@ import pandas as pd
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - [BLADE RUNNER 🗡️] - %(message)s',
                     handlers=[logging.FileHandler("BLADE_RUNNER.log"), logging.StreamHandler()])
 
-load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env.bitget')
+load_dotenv('/home/sergio/denaro/.env.bitget')
 
 try:
     bitget = ccxt.bitget({

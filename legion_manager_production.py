@@ -70,7 +70,7 @@ class PriceFeed:
         self.active = True
 
     async def start(self):
-        url = "wss://stream.binance.com:9443/ws/!ticker@arr"
+        streams = "/".join([f"{s}@ticker" for s in SYMBOLS_WS]); url = f"wss://stream.binance.com:9443/stream?streams={streams}"
         while self.active:
             try:
                 async with websockets.connect(
@@ -83,12 +83,13 @@ class PriceFeed:
                     logger.info("📡 WebSocket connected to Binance !ticker@arr")
                     while self.active:
                         data = await ws.recv()
-                        tickers = json.loads(data)
-                        for t in tickers:
-                            s = t['s'].lower()
-                            if s in SYMBOLS_WS:
-                                self.prices[s] = float(t['c'])
-                                self.volumes[s] = float(t['v'])
+                        payload = json.loads(data)
+                        d = payload.get('data', {})
+                        s = d.get('s', '').lower()
+                        logger.debug(f"WS tick: {s}={d.get('c')}")
+                        if s in SYMBOLS_WS:
+                            self.prices[s] = float(d.get('c', 0))
+                            self.volumes[s] = float(d.get('v', 0))
             except Exception as e:
                 logger.error(f"WebSocket Error: {e}. Reconnecting in 5s...")
                 await asyncio.sleep(5)
@@ -201,14 +202,16 @@ class LegionBot:
                 if len(self.price_history) >= 10:
                     drop = (self.price_history[-1] - self.price_history[-10]) / self.price_history[-10]
                     df_temp = pd.DataFrame({'close': self.price_history})
-                    rsi = ta.rsi(df_temp['close'], length=14).iloc[-1] if len(self.price_history) >= 14 else 50
-                    ema = ta.ema(df_temp['close'], length=50).iloc[-1] if len(self.price_history) >= 50 else price
+                    rsi_val = ta.rsi(df_temp['close'], length=14)
+                    rsi = float(rsi_val.iloc[-1]) if rsi_val is not None and not rsi_val.empty and len(self.price_history) > 14 else 50
+                    ema_val = ta.ema(df_temp['close'], length=50)
+                    ema = float(ema_val.iloc[-1]) if ema_val is not None and not ema_val.empty and len(self.price_history) > 50 else price
                     avg_vol = sum(self.vol_history[-20:]) / 20 if len(self.vol_history) >= 20 else vol
                     vol_spike = vol > avg_vol * 1.5
                     
                     if drop <= -0.01 and rsi < 35 and vol_spike and ((price > ema) or (rsi < 20)):
                         atr = self.calculate_atr()
-                        if pd.isna(atr) or atr == 0: return
+                        if atr is None or pd.isna(atr) or atr == 0: return
                         
                         sl_dist = (atr * 2.0) / price
                         risk_amount = INITIAL_CAPITAL * 0.01 

@@ -21,7 +21,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')
 CAPITALE_VERSATO = 722.00
 
 def get_binance_client():
-    load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env')
+    load_dotenv('/home/sergio/denaro/.env')
     return ccxt.binance({
         'apiKey': os.getenv('BINANCE_API_KEY'),
         'secret': os.getenv('BINANCE_API_SECRET'),
@@ -189,7 +189,7 @@ def get_keyboard():
     }
 
 def main_loop():
-    load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env')
+    load_dotenv('/home/sergio/denaro/.env')
     token = os.getenv('TELEGRAM_BOT_TOKEN')
     sergio_id = str(os.getenv('TELEGRAM_CHAT_ID'))
     

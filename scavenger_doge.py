@@ -8,7 +8,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s',
                     handlers=[logging.FileHandler("/home/sergio/.openclaw/workspace/denaro/SCAVENGER.log"), logging.StreamHandler()])
 logger = logging.getLogger("Scavenger")
 
-load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env')
+load_dotenv('/home/sergio/denaro/.env')
 client = Client(os.getenv('BINANCE_API_KEY'), os.getenv('BINANCE_API_SECRET'))
 VAULT_FILE = "/home/sergio/.openclaw/workspace/denaro/vault.json"
 

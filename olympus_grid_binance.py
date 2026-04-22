@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - [OLYMPUS ⚡] - %(message)s',
                     handlers=[logging.FileHandler("OLYMPUS.log"), logging.StreamHandler()])
 
-load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env')
+load_dotenv('/home/sergio/denaro/.env')
 
 try:
     binance = ccxt.binance({

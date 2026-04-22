@@ -4,52 +4,55 @@ import time
 import math
 import logging
 import json
+import fcntl
+import threading
 from collections import deque
 from datetime import datetime
 from dotenv import load_dotenv
 from binance.client import Client
 from binance import ThreadedWebsocketManager
 from binance.enums import *
+import vault_utils
+from utils import indicators as ind
+from utils.entry_filters import EntryFilters
+from utils.exit_strategy import ExitManager
+from utils.risk_engine import RiskManager
 
 # --- CONFIGURATION ---
 CONFIG = {
     "SYMBOLS": ["SOLEUR", "DOGEEUR", "BNBEUR", "AVAXEUR", "LINKEUR", "PEPEEUR", "ETHEUR", "DOTEUR"],
-    "MAX_TRADE_EUR": 1000.0,
-    "MAX_CONCURRENT_TRADES": 6,
+    "MAX_TRADE_EUR": 20.0,
+    "MAX_CONCURRENT_TRADES": 3,
     "TARGET_PERCENT": 0.04,
-    "TARGET_FIXED_EUR": 100.0,
-    "RSI_BUY_MIN": 45,
-    "RSI_BUY_MAX": 85,
-    "RSI_OVERSOLD": 45,
-    "TP_MIN_PNL": 0.0015,           # 0.15%
-    "TP_TRAILING_FACTOR": 0.999,    # 0.1% drop from peak
-    "TP_TRAILING_MIN_PNL": 0.0008,  # Min pnl to start trailing
-    "SL_MAX_DRAWDOWN": -0.10,       # -10%
-    "VAULT_PERCENT": 0.33,          # 33% to vault
-    "MIN_TRADE_EUR": 15.0,
+    "TARGET_FIXED_EUR": 10.0,
+    "RSI_BUY_MIN": 35,
+    "RSI_BUY_MAX": 65,
+    "RSI_OVERSOLD": 30,
+    "ATR_TP_MULT": 2.0,
+    "ATR_SL_MULT": 1.5,
+    "TP_TRAILING_FACTOR": 0.985,
+    "VAULT_PERCENT": 0.33,
+    "MIN_TRADE_EUR": 5.0,
     "LOG_FILE": "/home/sergio/denaro/sniper_squad.log",
-    "VAULT_FILE": "/home/sergio/denaro/vault.json",
+    "POSITIONS_FILE": "/home/sergio/denaro/positions_state.json",
     "MISSION_FILE": "/home/sergio/denaro/daily_mission.json",
 }
 
-# --- LOGGING SETUP ---
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler(CONFIG["LOG_FILE"]),
-        logging.StreamHandler()
-    ]
+    handlers=[logging.FileHandler(CONFIG["LOG_FILE"]), logging.StreamHandler()]
 )
 logger = logging.getLogger("Sniper")
+risk_manager = RiskManager()
+exit_manager = ExitManager(trailing_stop_pct=0.5, activation_threshold=1.0)
 
-# --- INITIALIZATION ---
 load_dotenv('/home/sergio/denaro/.env')
 API_KEY = os.getenv('BINANCE_API_KEY')
 API_SECRET = os.getenv('BINANCE_API_SECRET')
 
 if not API_KEY or not API_SECRET:
-    logger.critical("API Credentials missing in .env!")
+    logger.critical("API Credentials missing!")
     exit(1)
 
 try:
@@ -58,75 +61,83 @@ except Exception as e:
     logger.critical(f"Failed to connect to Binance: {e}")
     exit(1)
 
-klines = {s: deque(maxlen=20) for s in CONFIG["SYMBOLS"]}
+klines = {s: deque(maxlen=200) for s in CONFIG["SYMBOLS"]}
+volumes = {s: deque(maxlen=200) for s in CONFIG["SYMBOLS"]}
 positions = {}
+balance_cache = {'EUR': 0.0}
 
-# --- UTILITY FUNCTIONS ---
+# --- BALANCE CACHE THREAD ---
+def update_balances_loop():
+    global balance_cache
+    while True:
+        try:
+            bal = client.get_asset_balance(asset='EUR')
+            balance_cache['EUR'] = float(bal['free'])
+        except Exception as e:
+            logger.error(f"Balance cache update error: {e}")
+        time.sleep(10)
 
-def get_vault_locked():
+# --- STATE PERSISTENCE ---
+def save_positions():
     try:
-        if os.path.exists(CONFIG["VAULT_FILE"]):
-            with open(CONFIG["VAULT_FILE"], 'r') as f:
-                return float(json.load(f).get("LOCKED_EUR", 0.0))
+        with open(CONFIG["POSITIONS_FILE"], 'w') as f:
+            json.dump(positions, f, indent=4)
     except Exception as e:
-        logger.error(f"Error reading vault: {e}")
-    return 0.0
+        logger.error(f"Error saving positions state: {e}")
+
+def load_positions():
+    global positions
+    try:
+        if os.path.exists(CONFIG["POSITIONS_FILE"]):
+            with open(CONFIG["POSITIONS_FILE"], 'r') as f:
+                positions = json.load(f)
+            logger.info(f"✅ Loaded {len(positions)} positions from state file.")
+    except Exception as e:
+        logger.error(f"Error loading positions state: {e}")
+        positions = {}
+
+# --- VAULT UTILS (LOCKED) ---
+def get_vault_locked():
+    return vault_utils.read_vault().get("LOCKED_EUR", 0.0)
 
 def add_to_vault(amount):
-    locked = get_vault_locked() + amount
-    try:
-        with open(CONFIG["VAULT_FILE"], 'w') as f:
-            json.dump({"LOCKED_EUR": locked}, f)
-        logger.info(f"🔐 Added {amount:.2f}€ to Vault. Total Protected: {locked:.2f}€")
-    except Exception as e:
-        logger.error(f"Error writing to vault: {e}")
+    current = vault_utils.read_vault()
+    locked = current.get("LOCKED_EUR", 0.0) + amount
+    vault_utils.write_vault({"LOCKED_EUR": locked})
+    logger.info(f"🔐 Added {amount:.2f}€ to Vault. Total Protected: {locked:.2f}€")
 
+# --- MISSION LOGIC ---
 def get_daily_mission():
     today_str = datetime.now().strftime("%Y-%m-%d")
     try:
         if os.path.exists(CONFIG["MISSION_FILE"]):
             with open(CONFIG["MISSION_FILE"], 'r') as f:
                 mission = json.load(f)
-            if mission.get("date") == today_str:
-                return mission
+            if mission.get("date") == today_str: return mission
     except Exception as e:
         logger.error(f"Error reading mission: {e}")
     
-    # RESET / NEW MISSION
     try:
-        available_eur = float(client.get_asset_balance(asset='EUR')['free'])
+        available_eur = balance_cache['EUR']
     except Exception as e:
-        logger.error(f"Error getting EUR balance for mission: {e}")
         available_eur = 0.0
         
     usable_eur = max(0, available_eur - get_vault_locked())
-    target_eur = CONFIG["TARGET_FIXED_EUR"]
-    
-    new_mission = {
-        "date": today_str,
-        "start_capital": usable_eur,
-        "target_eur": target_eur,
-        "profit_today": 0.0,
-        "achieved": False
-    }
+    new_mission = {"date": today_str, "start_capital": usable_eur, "target_eur": CONFIG["TARGET_FIXED_EUR"], "profit_today": 0.0, "achieved": False}
     
     try:
         with open(CONFIG["MISSION_FILE"], 'w') as f:
             json.dump(new_mission, f)
-        logger.info(f"🕛 Midnight Reset. New Target: {target_eur:.2f}€")
     except Exception as e:
         logger.error(f"Error saving new mission: {e}")
-    
     return new_mission
 
 def update_daily_mission(pnl_amount):
     mission = get_daily_mission()
     mission["profit_today"] += pnl_amount
-    
     if mission["profit_today"] >= mission["target_eur"] and not mission["achieved"]:
         mission["achieved"] = True
-        logger.info(f"🎉 Daily Goal Reached! ({mission['target_eur']:.2f}€). Squad resting until midnight.")
-        
+        logger.info(f"🎉 Daily Goal Reached!")
     try:
         with open(CONFIG["MISSION_FILE"], 'w') as f:
             json.dump(mission, f)
@@ -134,34 +145,25 @@ def update_daily_mission(pnl_amount):
         logger.error(f"Error updating mission: {e}")
     return mission
 
-def calc_ema(prices, period=9):
-    if len(prices) < period: return prices[-1] if prices else 0
-    k = 2 / (period + 1)
-    ema = prices[0]
-    for p in list(prices)[1:]:
-        ema = (p * k) + (ema * (1 - k))
-    return ema
-
-def calc_rsi(prices, period=14):
-    prices = list(prices)
-    if len(prices) <= period: return 50.0
-    gains, losses = 0.0, 0.0
-    for i in range(1, period + 1):
-        change = prices[i] - prices[i - 1]
-        if change > 0: gains += change
-        else: losses -= change
-    if losses == 0: return 100.0
-    rs = (gains / period) / (losses / period)
-    return 100.0 - (100.0 / (1.0 + rs))
+# --- HELPER FUNCTIONS ---
+def get_btc_trend():
+    """BTC Correlation Filter: Returns BEARISH if EMA(9) < EMA(21)"""
+    try:
+        klines_data = client.get_klines(symbol='BTCEUR', interval='1m', limit=30)
+        closes = [float(k[4]) for k in klines_data]
+        ema9 = ind.calculate_ema(closes, 9)
+        ema21 = ind.calculate_ema(closes, 21)
+        return 'BEARISH' if ema9 < ema21 else 'BULLISH'
+    except Exception as e:
+        logger.error(f"Error checking BTC trend: {e}")
+        return 'UNKNOWN'
 
 def get_step_size(symbol):
     try:
         info = client.get_symbol_info(symbol)
         for f in info['filters']:
-            if f['filterType'] == 'LOT_SIZE':
-                return float(f['stepSize'])
-    except Exception as e:
-        logger.error(f"Error getting step size for {symbol}: {e}")
+            if f['filterType'] == 'LOT_SIZE': return float(f['stepSize'])
+    except: pass
     return 1.0
 
 def round_step(quantity, step_size):
@@ -172,146 +174,54 @@ def round_step(quantity, step_size):
 def init_historical_data():
     for sym in CONFIG["SYMBOLS"]:
         try:
-            hist = client.get_klines(symbol=sym, interval='1m', limit=20)
-            for k in hist: klines[sym].append(float(k[4]))
+            hist = client.get_klines(symbol=sym, interval='1m', limit=100)
+            for k in hist:
+                klines[sym].append(float(k[4]))
+                volumes[sym].append(float(k[5]))
         except Exception as e:
             logger.error(f"Error loading history for {sym}: {e}")
-    logger.info("✅ Historical data loaded.")
 
-def recover_positions():
-    for sym in CONFIG["SYMBOLS"]:
-        asset = sym.replace('EUR', '')
-        try:
-            bal = client.get_asset_balance(asset=asset)
-            qty = float(bal['free'])
-            ticker = client.get_symbol_ticker(symbol=sym)
-            price = float(ticker['price'])
-            if qty * price > 10.0:
-                positions[sym] = {'entry': price, 'qty': qty, 'highest': price}
-                logger.info(f"🔄 Recovered position: {sym} (Qty: {qty}, Val: ~{qty*price:.2f}€)")
-        except Exception as e:
-            logger.debug(f"No active position for {sym} during recovery: {e}")
 
-# --- MAIN LOOP ---
 
+# --- WEBSOCKET MESSAGE HANDLER ---
 def process_socket_msg(msg):
     if 'data' not in msg or 'e' not in msg['data']: return
     event = msg['data']
-    
-    mission = get_daily_mission()
-    
     if event['e'] == 'kline':
-        k, symbol = event['k'], event['s']
-        price, is_closed = float(k['c']), k['x']
+        symbol = event['s']
+        price = float(event['k']['c'])
+        is_closed = event['k']['x']
+        volume = float(event['k']['v'])
         
-        if symbol in positions:
-            pos = positions[symbol]
-            entry = pos['entry']
-            qty = pos['qty']
-            highest = max(pos.get('highest', entry), price)
-            pos['highest'] = highest
-            
-            pnl = (price - entry) / entry
-            
-            # Logic: Take profit if +0.15% OR (if +0.08% and drops 0.1% from peak)
-            take_profit = pnl > CONFIG["TP_MIN_PNL"] or (pnl > CONFIG["TP_TRAILING_MIN_PNL"] and price < highest * CONFIG["TP_TRAILING_FACTOR"])
-            stop_loss = pnl <= CONFIG["SL_MAX_DRAWDOWN"]
-            
-            if take_profit or stop_loss:
-                reason = "PROFIT" if take_profit else "STOP"
-                try:
-                    asset = symbol.replace('EUR', '')
-                    actual_bal = client.get_asset_balance(asset=asset)
-                    actual_qty = float(actual_bal['free'])
-                    
-                    step = get_step_size(symbol)
-                    sell_qty = round_step(actual_qty, step)
-                    
-                    if sell_qty > 0:
-                        client.create_order(symbol=symbol, side='SELL', type='MARKET', quantity=sell_qty)
-                        real_pnl = (price - entry) * qty
-                        mission = update_daily_mission(real_pnl)
-                        
-                        logger.info(f"⚡ {reason} {symbol} | Gain: {real_pnl:+.2f}€ | Progress: {mission['profit_today']:.2f}€ / {mission['target_eur']:.2f}€")
-                        
-                        if real_pnl > 0:
-                            add_to_vault(real_pnl * CONFIG["VAULT_PERCENT"])
-                    
-                    del positions[symbol]
-                except Exception as e:
-                    logger.error(f"Error exiting position {symbol}: {e}")
-
-        if is_closed:
+        # Aggiorna klines e volumes
+        if symbol in klines:
             klines[symbol].append(price)
-            if len(klines[symbol]) >= 15:
-                rsi = calc_rsi(klines[symbol], 14)
-                ema = calc_ema(klines[symbol], 9)
-                
-                # Trading conditions
-                momentum_buy = price > ema * 0.999 and CONFIG["RSI_BUY_MIN"] < rsi < CONFIG["RSI_BUY_MAX"]
-                oversold_bounce = rsi < CONFIG["RSI_OVERSOLD"]
-                
-                if mission["achieved"]: 
-                    return
-                
-                if (momentum_buy or oversold_bounce) and symbol not in positions and len(positions) < CONFIG["MAX_CONCURRENT_TRADES"]:
-                    try:
-                        available_eur = float(client.get_asset_balance(asset='EUR')['free'])
-                        usable_eur = available_eur - get_vault_locked()
-                        trade_amount = min(CONFIG["MAX_TRADE_EUR"], usable_eur)
-                        
-                        if trade_amount < CONFIG["MIN_TRADE_EUR"]: 
-                            return
-                        
-                        step = get_step_size(symbol)
-                        qty = round_step(trade_amount / price, step)
-                        
-                        if qty <= 0: return
-
-                        logger.info(f"🚀 BUY {symbol} | Price: {price} | RSI: {rsi:.1f} | Amount: {trade_amount:.2f}€")
-                        order = client.create_order(symbol=symbol, side='BUY', type='MARKET', quantity=qty)
-                        
-                        # Calculate execution price
-                        fills = order.get('fills', [])
-                        if fills:
-                            executed_qty = sum([float(f['qty']) for f in fills])
-                            avg_price = sum([float(f['price']) * float(f['qty']) for f in fills]) / executed_qty
-                        else:
-                            avg_price = price
-                            executed_qty = qty
-                        
-                        positions[symbol] = {'entry': avg_price, 'qty': executed_qty, 'highest': avg_price}
-                    except Exception as e:
-                        logger.error(f"Error entering position {symbol}: {e}")
+        if symbol in volumes:
+            volumes[symbol].append(volume)
+        
+        if is_closed:
+            logger.debug(f"[{symbol}] Price: {price}, Vol: {volume}")
 
 def main():
-    logger.info("⚡ SNIPER SQUAD (Refactored) avviata")
+    logger.info("⚡ SNIPER SQUAD (V3 - Standardized TA & Low Latency) avviata")
     
-    m = get_daily_mission()
-    logger.info(f"📅 Target di oggi: {m['target_eur']:.2f}€. Profitto attuale: {m['profit_today']:.2f}€")
+    # Start Balance Cache Thread
+    b_thread = threading.Thread(target=update_balances_loop, daemon=True)
+    b_thread.start()
     
+    load_positions()
     init_historical_data()
-    recover_positions()
-    
     twm = ThreadedWebsocketManager(api_key=API_KEY, api_secret=API_SECRET)
     twm.start()
-    
     streams = [f"{s.lower()}@kline_1m" for s in CONFIG["SYMBOLS"]]
     twm.start_multiplex_socket(callback=process_socket_msg, streams=streams)
-    
     try:
         while True:
-            # Check mission status and midnight reset
-            get_daily_mission()
             time.sleep(60)
-            logger.info("💗 Heartbeat OK. Memoria pulita.")
             gc.collect()
     except KeyboardInterrupt:
-        logger.info("Stopping Sniper Squad...")
         twm.stop()
-    except Exception as e:
-        logger.critical(f"Unexpected main loop error: {e}")
-        twm.stop()
+
 
 if __name__ == "__main__":
     main()
