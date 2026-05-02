@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Denaro Dashboard</title>
+    <style>
+        body { font-family: sans-serif; background: #121212; color: #eee; padding: 20px; }
+        .card { background: #1e1e1e; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+        h1 { color: #00ff00; }
+    </style>
+    <script>
+        async function updateStats() {
+            const resp = await fetch('stats.json');
+            const data = await resp.json();
+            document.getElementById('profit').innerText = data.total_profit.toFixed(4) + ' €';
+            document.getElementById('trades').innerText = data.total_trades;
+        }
+        setInterval(updateStats, 5000);
+    </script>
+</head>
+<body>
+    <h1>Denaro Dashboard Live</h1>
+    <div class="card">
+        <p>Profitto Totale Oggi: <b id="profit">Loading...</b></p>
+        <p>Totale Trade: <b id="trades">Loading...</b></p>
+    </div>
+</body>
+</html>
