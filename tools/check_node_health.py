@@ -184,22 +184,28 @@ if __name__ == "__main__":
         venv_python = "/home/sergio/denaro/venv/bin/python3"
         env_dir = "/home/sergio/denaro"
 
-    bal_script = "/tmp/_bal_fetch.py"
-    bal_script_content = f"""
-import ccxt, os
-from dotenv import load_dotenv
-load_dotenv('{env_dir}/.env')
-c = ccxt.binance({{'apiKey': os.getenv('BINANCE_API_KEY'), 'secret': os.getenv('BINANCE_API_SECRET'), 'enableRateLimit': True}})
-bal = c.fetch_balance()
-print(f"EUR:{{bal['free'].get('EUR', 0)}}|SOL:{{bal['free'].get('SOL', 0)}}")
-"""
+    # Inline balance fetch via Python one-liner (no temp script file, no zombies)
+    bal_cmd = (
+        f"{venv_python} - << 'EOF'\n"
+        f"import ccxt, os, sys\n"
+        f"from dotenv import load_dotenv\n"
+        f"load_dotenv('{env_dir}/.env')\n"
+        f"c = ccxt.binance({{'apiKey': os.getenv('BINANCE_API_KEY'), 'secret': os.getenv('BINANCE_API_SECRET'), 'enableRateLimit': True, 'options': {{'recvWindow': 10000}}}})\n"
+        f"import signal; signal.signal(signal.SIGALRM, lambda s,f: sys.exit(1)); signal.alarm(12)\n"
+        f"try:\n"
+        f"  b = c.fetch_balance(params={{'recvWindow': 10000}})\n"
+        f"  print(f\"EUR:{{b['free'].get('EUR', 0)}}\", end='')\n"
+        f"  print(f\"|SOL:{{b['free'].get('SOL', 0)}}\", end='')\n"
+        f"  print(f\"|BNB:{{b['free'].get('BNB', 0)}}\", end='')\n"
+        f"  print('', flush=True)\n"
+        f"except Exception as ex:\n"
+        f"  print(f\"ERR:{{ex}}\", flush=True)\n"
+        f"EOF"
+    )
     if node_type == "local":
-        with open("/tmp/_bal_fetch.py", "w") as f:
-            f.write(bal_script_content)
-        out, err, rc = ssh_check(ssh_alias, f"{venv_python} /tmp/_bal_fetch.py")
+        out, err, rc = ssh_check(ssh_alias, bal_cmd, timeout=15)
     else:
-        ssh_check(ssh_alias, f"mkdir -p /tmp && cat > /tmp/_bal_fetch.py << 'BALSCRIPT'\n{bal_script_content}BALSCRIPT", timeout=15)
-        out, err, rc = ssh_check(ssh_alias, f"{venv_python} /tmp/_bal_fetch.py", timeout=15)
+        out, err, rc = ssh_check(ssh_alias, bal_cmd, timeout=15)
     if rc == 0 and "EUR:" in out:
         try:
             parts = out.split("|")
