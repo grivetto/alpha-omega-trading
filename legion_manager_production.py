@@ -112,29 +112,41 @@ class LegionBot:
         self.load_state()
 
     def load_state(self):
+        state = self.db.load_bot_state(self.symbol_ws)
+        if state and state['is_in_position']:
+            self.position = True
+            self.buy_price = state['entry_price']
+            self.qty = state['quantity']
+            self.current_tp = state['tp']
+            self.current_sl = state['sl']
+            self.entry_time = state['entry_time']
+            logger.info(f'Restored position for {self.symbol_ccxt}: {self.qty} @ {self.buy_price}')
+        else:
+            self.position = False
+            self.buy_price = 0.0
+            self.qty = 0.0
+            self.current_tp = 0.0
+            self.current_sl = 0.0
+            self.entry_time = None
+
+    def save_state(self):
+        self.db.save_bot_state(
+            bot_name=self.symbol_ws,
+            is_in_position=self.position,
+            entry_price=self.buy_price,
+            quantity=self.qty,
+            tp=self.current_tp,
+            sl=self.current_sl,
+            entry_time=self.entry_time if self.entry_time else time.time()
+        )
+        # Remove old JSON state file if exists
         path = os.path.join(POSITION_DIR, f'{self.symbol_ws}.json')
         if os.path.exists(path):
             try:
-                with open(path, 'r') as f:
-                    data = json.load(f)
-                    self.position = True
-                    self.buy_price = data['price']
-                    self.qty = data['qty']
-                    self.current_tp = data['tp']
-                    self.current_sl = data['sl']
-                    self.entry_time = data.get('ts', time.time())
-                    logger.info(f'Restored position for {self.symbol_ccxt}: {self.qty} @ {self.buy_price}')
+                os.remove(path)
+                logger.info(f'Removed legacy state file for {self.symbol_ws}')
             except Exception as e:
-                logger.error(f'Error loading state {self.symbol_ws}: {e}')
-
-    def save_state(self):
-        path = os.path.join(POSITION_DIR, f'{self.symbol_ws}.json')
-        data = {'price': self.buy_price, 'qty': self.qty, 'tp': self.current_tp, 'sl': self.current_sl, 'ts': self.entry_time}
-        try:
-            with open(path, 'w') as f:
-                json.dump(data, f)
-        except Exception as e:
-            logger.error(f'Error saving state {self.symbol_ws}: {e}')
+                logger.error(f'Error removing legacy state file {self.symbol_ws}: {e}')
 
     async def init_indicators(self):
         try:

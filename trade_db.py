@@ -1,5 +1,6 @@
 import sqlite3
 from datetime import datetime
+import time
 
 class TradeDB:
     def __init__(self, db_path='/app/trades.db'):
@@ -8,38 +9,36 @@ class TradeDB:
 
     def _init_db(self):
         with sqlite3.connect(self.db_path) as conn:
-            conn.execute('''
-                CREATE TABLE IF NOT EXISTS trades (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    bot_name TEXT,
-                    symbol TEXT,
-                    side TEXT,
-                    entry_price REAL,
-                    exit_price REAL,
-                    quantity REAL,
-                    entry_time DATETIME,
-                    exit_time DATETIME,
-                    gross_pnl REAL,
-                    fees REAL,
-                    net_pnl REAL,
-                    exit_reason TEXT
-                )
-            ''')
-            conn.execute('''
-                CREATE TABLE IF NOT EXISTS bot_state (
-                    bot_name TEXT PRIMARY KEY,
-                    is_in_position BOOLEAN,
-                    entry_price REAL,
-                    quantity REAL,
-                    last_heartbeat DATETIME
-                )
-            ''')
+            conn.execute('''CREATE TABLE IF NOT EXISTS trades (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                bot_name TEXT,
+                symbol TEXT,
+                side TEXT,
+                entry_price REAL,
+                exit_price REAL,
+                quantity REAL,
+                entry_time DATETIME,
+                exit_time DATETIME,
+                gross_pnl REAL,
+                fees REAL,
+                net_pnl REAL,
+                exit_reason TEXT
+            )''')
+            conn.execute('''CREATE TABLE IF NOT EXISTS bot_state (
+                bot_name TEXT PRIMARY KEY,
+                is_in_position BOOLEAN,
+                entry_price REAL,
+                quantity REAL,
+                tp REAL,
+                sl REAL,
+                entry_time DATETIME,
+                last_heartbeat DATETIME
+            )''')
             conn.commit()
 
     def save_trade(self, bot_name, symbol, side, entry_price, exit_price, quantity, entry_time, exit_time, gross_pnl, fees, net_pnl, reason):
         with sqlite3.connect(self.db_path) as conn:
-            conn.execute('''
-                INSERT INTO trades (bot_name, symbol, side, entry_price, exit_price, quantity, entry_time, exit_time, gross_pnl, fees, net_pnl, exit_reason)
+            conn.execute('''INSERT INTO trades (bot_name, symbol, side, entry_price, exit_price, quantity, entry_time, exit_time, gross_pnl, fees, net_pnl, exit_reason)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''', (bot_name, symbol, side, entry_price, exit_price, quantity, entry_time, exit_time, gross_pnl, fees, net_pnl, reason))
             conn.commit()
@@ -50,11 +49,35 @@ class TradeDB:
             res = conn.execute('SELECT SUM(net_pnl) FROM trades WHERE date(exit_time) = ?', (today,)).fetchone()
             return res[0] if res[0] else 0.0
 
+    def save_bot_state(self, bot_name, is_in_position, entry_price, quantity, tp, sl, entry_time):
+        with sqlite3.connect(self.db_path) as conn:
+            conn.execute('''INSERT OR REPLACE INTO bot_state 
+                (bot_name, is_in_position, entry_price, quantity, tp, sl, entry_time, last_heartbeat)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)''',
+                (bot_name, is_in_position, entry_price, quantity, tp, sl, entry_time, time.time()))
+            conn.commit()
+
+    def load_bot_state(self, bot_name):
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.execute('''SELECT is_in_position, entry_price, quantity, tp, sl, entry_time, last_heartbeat 
+                FROM bot_state WHERE bot_name = ?''', (bot_name,))
+            row = cursor.fetchone()
+            if row:
+                return {
+                    'is_in_position': bool(row[0]),
+                    'entry_price': row[1],
+                    'quantity': row[2],
+                    'tp': row[3],
+                    'sl': row[4],
+                    'entry_time': row[5],
+                    'last_heartbeat': row[6]
+                }
+            return None
+
     def get_metrics(self):
         with sqlite3.connect(self.db_path) as conn:
             trades = conn.execute('SELECT net_pnl FROM trades').fetchall()
             if not trades: return {'win_rate': 0, 'total_profit': 0}
-            
             pnls = [t[0] for t in trades]
             win_rate = (len([p for p in pnls if p > 0]) / len(pnls)) * 100
             total_profit = sum(pnls)
