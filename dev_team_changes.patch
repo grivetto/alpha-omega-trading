@@ -1,0 +1,160 @@
+# Patch File for Denaro Trading System Improvements
+# Phase 1: Critical Fixes for Profitability Issues
+#
+# Generated: 2026-05-13
+# Applied to: denaro_strategies.py, config_supervisor.py, metrics_collector.py
+#
+# Instructions for Dev Team:
+# 1. Apply these changes to the denaro project on all servers (nuvola, mc2, MARCODG1)
+# 2. Test in staging environment first
+# 3. Ensure .tmp directory exists and is writable
+# 4. Restart affected services after deployment
+
+--- denaro_strategies.py.original	2026-05-13 23:05:59.069564535 +0200
++++ denaro_strategies.py	2026-05-13 23:12:10.518855718 +0200
+@@ -46,9 +46,9 @@
+              result = "STRONG_UP"
+          elif ema_dist > 0 and rsi < 75:
+              result = "UP"
+-         elif ema_dist < -1.0 and rsi > 30:
++         elif ema_dist < -1.0 and rsi > 40:
+              result = "STRONG_DOWN"
+-         elif ema_dist < 0 and rsi > 25:
++         elif ema_dist < 0 and rsi > 35:
+              result = "DOWN"
+          
+              self.cache = {'trend': result, 'trend_ts': now, 'ema': ema_current, 'rsi': rsi}
+@@ -155,15 +155,34 @@
+               """Real-time performance tracking and risk adjustment"""
+               
+               def __init__(self, config):
+-              self.trades = []
++              self.trades_file = Path(".tmp") / "profit_optimizer_trades.json"
++              self.trades = self._load_trades()
+               self.last_adjustment = 0
+               self.adjustment_interval = 3600  # Check hourly
++            
++            def _load_trades(self):
++              if self.trades_file.exists():
++                try:
++                  with open(self.trades_file, 'r') as f:
++                    return json.load(f)
++                except Exception as e:
++                  logger.error(f"Failed to load optimizer trades: {e}")
++              return []
++            
++            def _save_trades(self):
++              try:
++                self.trades_file.parent.mkdir(parents=True, exist_ok=True)
++                with open(self.trades_file, 'w') as f:
++                  json.dump(self.trades, f, indent=2)
++              except Exception as e:
++                logger.error(f"Failed to save optimizer trades: {e}")
+               
+               def add_trade(self, profit):
+                 self.trades.append({'profit': profit, 'time': time.time()})
+                 # Keep last 50 trades
+                 if len(self.trades) > 50:
+                   self.trades = self.trades[-50:]
++                self._save_trades()  # Persist after each addition
+               
+               def get_metrics(self):
+                 if not self.trades:
+--- config_supervisor.py.original	2026-05-13 23:05:59.069564535 +0200
++++ config_supervisor.py	2026-05-13 23:12:10.518855718 +0200
+@@ -34,28 +34,20 @@
+              json.load(f)
+          except: return None
+      
+-def get_performance():
+-  """Read grid bot log for recent profit performance"""
+-  log_file = os.path.join(BASE_DIR, "grid.log")
+-  if not os.path.exists(log_file): return None
+-  try:
+-    with open(log_file) as f:
+-      lines = f.readlines()
+-    # Parse last 20 profit-related lines
+-    profits = []
+-    for line in lines[-100:]:
+-      if 'Profit:' in line:
+-        try:
+-          # "Profit: 0.05€" or "Profit: 0.05€ |"
+-          p_str = line.split('Profit:')[1].split('€')[0].strip()
+-          profits.append(float(p_str))
+-        except: pass
+-    if not profits: return None
+-    recent = sum(profits[-10:]) if len(profits) >= 10 else sum(profits)
+-    return {
+-      'total_orders': len(profits),
+-      'recent_profit': round(recent, 4),
+-      'avg_profit_per_trade': round(recent / max(len(profits), 1), 4),
+-    }
+-  except: return None
++def get_performance():
++  """Read profit optimizer trades for performance metrics"""
++  profit_optimizer_trades_file = os.path.join(BASE_DIR, ".tmp", "profit_optimizer_trades.json")
++  if not os.path.exists(profit_optimizer_trades_file):
++    return None
++  try:
++    with open(profit_optimizer_trades_file, 'r') as f:
++      trades = json.load(f)
++    if not trades:
++      return None
++    total_trades = len(trades)
++    # Use last 10 trades for recent performance (consistent with original logic)
++    recent_trades = trades[-10:] if len(trades) >= 10 else trades
++    recent_profit = sum(t['profit'] for t in recent_trades)
++    avg_profit = recent_profit / len(recent_trades) if recent_trades else 0
++    return {
++      'total_orders': total_trades,
++      'recent_profit': round(recent_profit, 4),
++      'avg_profit_per_trade': round(avg_profit, 4)
++    }
++  except Exception as e:
++    logger.error(f"Failed to read profit optimizer trades: {e}")
++    return None
+ 
+ def get_portfolio_snapshot():
+   """Quick estimate of total portfolio from binance"""
+--- metrics_collector.py.original	2026-05-13 23:05:59.069564535 +0200
++++ metrics_collector.py	2026-05-13 23:12:10.518855718 +0200
+@@ -48,7 +48,7 @@
+   if os.path.exists(log):
+-    scp = int(subprocess.run(["pgrep","-c","-f","scalper_v1.py"], capture_output=True,text=True).stdout.strip() or "0")
++    scp = int(subprocess.run(["pgrep","-c","-f","scalper_v2.py"], capture_output=True,text=True).stdout.strip() or "0")
+     txt = open(log).read()
+     for l in txt.split("\n")[-50:]:
+       if "PnL:" in l:
+@@ -65,10 +65,20 @@
+       smem = 0
+   else:
+     sdisk = int(subprocess.run(["df","-h","/"], capture_output=True,text=True).stdout.split("\n")[1].split()[4].strip("%"))
+     smem = round(float(subprocess.run(["free","-m"], capture_output=True,text=True).stdout.split("\n")[1].split()[2]) / float(subprocess.run(["free","-m"], capture_output=True,text=True).stdout.split("\n")[1].split()[1]) * 100)
++
++  # Read cumulative profit from trade_db or profit optimizer trades
++  total_profit = 0.0
++  try:
++    from trade_db import TradeDB
++    db = TradeDB()
++    total_profit = db.get_daily_pnl()  # or get_total_pnl if we add it
++  except Exception as e:
++    # Fallback to profit optimizer trades file
++    profit_file = "/home/sergio/denaro/.tmp/profit_optimizer_trades.json"
++    if os.path.exists(profit_file):
++      try:
++        with open(profit_file, "r") as f:
++          trades = json.load(f)
++        total_profit = sum(t["profit"] for t in trades)
++      except:
++        pass
+ 
+   mc2 = {
+     "ts": time.strftime("%H:%M"), "sc": scp, "sp": round(spp,2),
+@@ -73,6 +83,7 @@
+       "sb": int(subprocess.run(["grep","-c","BUY|SELL",log], capture_output=True,text=True).stdout.strip() or "0") if os.path.exists(log) else 0,
+       "se": float(subprocess.run(["grep","-oP","EUR=\\K[0-9.]+\",log], capture_output=True,text=True).stdout.strip().split("\n")[-1] or "0") if os.path.exists(log) else 0,
+       "d": sdisk, "m": smem, "z": 1 if scp > 0 else 0,
++      "profit": round(total_profit, 2)  # Cumulative profit instead of last PnL
+   }
+ 
+   json.dump(mc2, open(f"{BASE}/mc2.json","w"))

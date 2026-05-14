@@ -201,9 +201,7 @@ class LegionBot:
                         
                         await ExposureGuard.update_exposure(self.symbol_ws, 0, 'close')
                         self.position = False
-                        pos_path = os.path.join(POSITION_DIR, f'{self.symbol_ws}.json')
-                        if os.path.exists(pos_path):
-                            os.remove(pos_path)
+                        self.save_state()
                     except Exception as e:
                         logger.error(f'Sell Error {self.symbol_ccxt}: {e}')
             else:
