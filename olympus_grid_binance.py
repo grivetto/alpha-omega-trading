@@ -1,6 +1,6 @@
 import ccxt
 import sys
-sys.path.insert(0, "/home/sergio/.openclaw/workspace/denaro")
+sys.path.insert(0, "/home/sergio/denaro")
 import local_price
 import time
 import os

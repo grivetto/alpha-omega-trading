@@ -2,7 +2,7 @@ import os, time, logging
 from lite_guardian import BOT_REGISTRY
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - [ROGUE KILLER 🧹] - %(message)s',
-                    handlers=[logging.FileHandler("/home/sergio/.openclaw/workspace/denaro/AUTO_HEALER.log")])
+                    handlers=[logging.FileHandler("/home/sergio/denaro/AUTO_HEALER.log")])
 
 ALLOWED_SCRIPTS = list(BOT_REGISTRY.values()) + [
     "lite_guardian.py", "heavy_guardian.py", "rogue_killer.py", "auto_healer.py", "update_bot_status.py", "update_cache.py", "telegram_bot_interactive.py", "generate_monitoring.py", "midnight_sweeper.py", "hourly_reporter.py", "ai_risk_engine.py", "mev_sandwich_bot.py", "auto_healer_mc2.py", "auto_healer_mc3.py"

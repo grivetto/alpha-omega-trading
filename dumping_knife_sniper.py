@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - [KNIFE SNIPER 🔪] - %(message)s',
                     handlers=[logging.FileHandler("DUMPING_KNIFE.log"), logging.StreamHandler()])
 
-sys.path.insert(0, '/home/sergio/.openclaw/workspace/denaro')
+sys.path.insert(0, '/home/sergio/denaro')
 import local_price
 
 load_dotenv('/home/sergio/denaro/.env.bitget')

@@ -5,14 +5,14 @@ from dotenv import load_dotenv
 from binance.client import Client
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s',
-                    handlers=[logging.FileHandler("/home/sergio/.openclaw/workspace/denaro/DCA_ACCUMULATOR.log"), logging.StreamHandler()])
+                    handlers=[logging.FileHandler("/home/sergio/denaro/DCA_ACCUMULATOR.log"), logging.StreamHandler()])
 logger = logging.getLogger("DCA_Accumulator")
 
-load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env')
+load_dotenv('/home/sergio/denaro/.env')
 client = Client(os.getenv('BINANCE_API_KEY'), os.getenv('BINANCE_API_SECRET'))
 
-STATE_FILE = "/home/sergio/.openclaw/workspace/denaro/dca_state.json"
-VAULT_FILE = "/home/sergio/.openclaw/workspace/denaro/vault.json"
+STATE_FILE = "/home/sergio/denaro/dca_state.json"
+VAULT_FILE = "/home/sergio/denaro/vault.json"
 
 # Compriamo 6 EUR di BTC e 6 EUR di ETH ogni 24 ore (il minimo su Binance è 5 EUR per ordine)
 ASSETS_TO_BUY = {

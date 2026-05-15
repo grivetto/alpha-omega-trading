@@ -24,7 +24,7 @@ PROFIT_TARGET = 0.015      # 2.2% rapido
 STOP_LOSS = 0.03          # 4% sicurezza
 RISK_BTC = 5.5           # 60€ per trade
 
-STATUS_FILE = '/home/sergio/.openclaw/workspace/denaro/hunter_status.json'
+STATUS_FILE = '/home/sergio/denaro/hunter_status.json'
 
 logging.basicConfig(
     level=logging.INFO,
@@ -78,7 +78,7 @@ def main():
                         eur_bal = 0.0
                     
                     try:
-                        with open("/home/sergio/.openclaw/workspace/denaro/vault.json", "r") as f:
+                        with open("/home/sergio/denaro/vault.json", "r") as f:
                             locked = float(__import__("json").load(f).get("LOCKED_EUR", 0))
                         eur_bal = max(0, eur_bal - locked)
                     except Exception:
@@ -118,7 +118,7 @@ def main():
                                 client.create_order(symbol=symbol, side='SELL', type='MARKET', quantity=bal)
                             logger.info(f"✅ {reason} {symbol} @ {price} | PnL: {pnl:.2%}")
                             del positions[symbol]
-                            with open('/home/sergio/.openclaw/workspace/denaro/strike_alert.flag', 'w') as f:
+                            with open('/home/sergio/denaro/strike_alert.flag', 'w') as f:
                                 f.write(f"{(RISK_BTC * pnl * 1.0):.2f}")
                         except Exception as e:
                             if "-2010" in str(e):

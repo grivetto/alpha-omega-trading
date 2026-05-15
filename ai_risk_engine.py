@@ -7,10 +7,10 @@ import math
 from dotenv import load_dotenv
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - [AI RISK ENGINE 🧠] - %(message)s',
-                    handlers=[logging.FileHandler("/home/sergio/.openclaw/workspace/denaro/AI_RISK.log"), logging.StreamHandler()])
+                    handlers=[logging.FileHandler("/home/sergio/denaro/AI_RISK.log"), logging.StreamHandler()])
 
 load_dotenv('/home/sergio/denaro/.env')
-CONFIG_FILE = '/home/sergio/.openclaw/workspace/denaro/trade_config.json'
+CONFIG_FILE = '/home/sergio/denaro/trade_config.json'
 
 try:
     binance = ccxt.binance({

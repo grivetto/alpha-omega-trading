@@ -25,7 +25,7 @@ DEV_THRESHOLD = 0.02 # 2% deviation
 POLL_INTERVAL = 30
 STATUS_FILE = "vwap_status.json"
 
-BASE_DIR = '/home/sergio/.openclaw/workspace/denaro'
+BASE_DIR = '/home/sergio/denaro'
 load_dotenv(os.path.join(BASE_DIR, '.env'))
 client = Client(os.getenv('BINANCE_API_KEY'), os.getenv('BINANCE_API_SECRET'))
 

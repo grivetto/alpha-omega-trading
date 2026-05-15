@@ -6,12 +6,12 @@ from binance import ThreadedWebsocketManager
 import math
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s',
-                    handlers=[logging.FileHandler("/home/sergio/.openclaw/workspace/denaro/TSUNAMI.log"), logging.StreamHandler()])
+                    handlers=[logging.FileHandler("/home/sergio/denaro/TSUNAMI.log"), logging.StreamHandler()])
 logger = logging.getLogger("Tsunami")
 
 load_dotenv('/home/sergio/denaro/.env')
 client = Client(os.getenv('BINANCE_API_KEY'), os.getenv('BINANCE_API_SECRET'))
-VAULT_FILE = "/home/sergio/.openclaw/workspace/denaro/vault.json"
+VAULT_FILE = "/home/sergio/denaro/vault.json"
 
 def get_vault_locked():
     try:

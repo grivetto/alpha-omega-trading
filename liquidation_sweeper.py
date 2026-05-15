@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - [LIQUIDATION SWEEPER 🧹] - %(message)s',
                     handlers=[logging.FileHandler("LIQUIDATION_SWEEPER.log"), logging.StreamHandler()])
 
-load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env.bitget')
+load_dotenv('/home/sergio/denaro/.env.bitget')
 
 try:
     bitget = ccxt.bitget({

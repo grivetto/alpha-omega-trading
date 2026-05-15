@@ -50,14 +50,6 @@ class DashboardHandler(http.server.SimpleHTTPRequestHandler):
             alive_bots = sum(1 for s in fleet_stats.values() if isinstance(s, dict) and s.get("status") in ["ALIVE", "ONLINE"])
             total_ram_bots = sum(s.get("mem", 0) for s in fleet_stats.values() if isinstance(s, dict))
 
-                
-            vault = 0.0
-            if os.path.exists("vault.json"):
-                try:
-                    with open("vault.json", "r") as f:
-                        vault = json.load(f).get("LOCKED_EUR", 0.0)
-                except: pass
-                
             html = """<!DOCTYPE html>
 <html>
 <head>

@@ -20,8 +20,8 @@ from dotenv import load_dotenv
 
 # Configurazione
 load_dotenv('/home/sergio/denaro/.env')
-CAPITAL_FILE = '/home/sergio/.openclaw/workspace/denaro/capital_state.json'
-DAILY_LOG = '/home/sergio/.openclaw/workspace/denaro/daily_pnl.log'
+CAPITAL_FILE = '/home/sergio/denaro/capital_state.json'
+DAILY_LOG = '/home/sergio/denaro/daily_pnl.log'
 
 logging.basicConfig(
     filename=DAILY_LOG,

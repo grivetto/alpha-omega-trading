@@ -7,7 +7,7 @@ import random
 import os
 import json
 
-LOG_FILE = "/home/sergio/.openclaw/workspace/denaro/RSI_HUNTER.log"
+LOG_FILE = "/home/sergio/denaro/RSI_HUNTER.log"
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s', filename=LOG_FILE)
 logger = logging.getLogger("RSIHunter")
 

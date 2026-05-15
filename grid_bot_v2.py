@@ -17,7 +17,7 @@ from whatsapp_notifier import send_whatsapp_alert
 load_dotenv('/home/sergio/denaro/.env')
 
 logging.basicConfig(
-    filename='/home/sergio/.openclaw/workspace/denaro/grid_bot_v2.log',
+    filename='/home/sergio/denaro/grid_bot_v2.log',
     level=logging.INFO,
     format='%(asctime)s - [GRID V2] - %(message)s'
 )

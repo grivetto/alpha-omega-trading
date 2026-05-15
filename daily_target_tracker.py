@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 from dotenv import load_dotenv
 import requests
 
-load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env.telegram')
+load_dotenv('/home/sergio/denaro/.env.telegram')
 
 logging.basicConfig(
     filename='TARGET_TRACKER.log',
@@ -23,8 +23,8 @@ class DailyTargetTracker:
     def __init__(self):
         self.tg_token = os.getenv('TELEGRAM_BOT_TOKEN')
         self.tg_chat = os.getenv('TELEGRAM_CHAT_ID', '277954993')
-        self.state_file = '/home/sergio/.openclaw/workspace/denaro/daily_target_state.json'
-        self.capital_file = '/home/sergio/.openclaw/workspace/denaro/capital_state.json'
+        self.state_file = '/home/sergio/denaro/daily_target_state.json'
+        self.capital_file = '/home/sergio/denaro/capital_state.json'
         
         # Target progressivi
         self.targets = {

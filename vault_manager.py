@@ -4,12 +4,12 @@ from binance.client import Client
 from dotenv import load_dotenv
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - VAULT - %(message)s')
-load_dotenv("/home/sergio/.openclaw/workspace/denaro/.env")
+load_dotenv("/home/sergio/denaro/.env")
 client = Client(os.getenv('BINANCE_API_KEY'), os.getenv('BINANCE_API_SECRET'))
 
 # Capitale EUR di partenza
 INITIAL_EUR = 346.54
-VAULT_FILE = "/home/sergio/.openclaw/workspace/denaro/vault.json"
+VAULT_FILE = "/home/sergio/denaro/vault.json"
 
 def get_eur_balance():
     try:

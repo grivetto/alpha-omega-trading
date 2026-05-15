@@ -1,6 +1,6 @@
 import os, glob
 
-nuvola_logs = glob.glob("/home/sergio/.openclaw/workspace/denaro/*.log")
+nuvola_logs = glob.glob("/home/sergio/denaro/*.log")
 mc2_logs = glob.glob("/home/sergio/autonomous_bot/*.log")
 
 profit_keywords = ['profit', 'gain', 'incass', 'guadagn', 'win', 'chius', 'success', 'vinto', 'targ']

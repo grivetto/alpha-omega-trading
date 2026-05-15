@@ -42,7 +42,7 @@ class RealisticGridBot:
 
     def load_optimizer_config(self):
         """Legge la strategia dal Cervello (Optimizer). Se non esiste, usa default."""
-        config_file = '/home/sergio/.openclaw/workspace/denaro/strategy.json'
+        config_file = '/home/sergio/denaro/strategy.json'
         try:
             if os.path.exists(config_file):
                 with open(config_file, 'r') as f:

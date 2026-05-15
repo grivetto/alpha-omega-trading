@@ -6,10 +6,10 @@ import logging
 import time
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - [AUTO-HEALER 🛠️] - %(message)s',
-                    handlers=[logging.FileHandler("/home/sergio/.openclaw/workspace/denaro/AUTO_HEALER.log"), logging.StreamHandler()])
+                    handlers=[logging.FileHandler("/home/sergio/denaro/AUTO_HEALER.log"), logging.StreamHandler()])
 
-LOG_DIR = "/home/sergio/.openclaw/workspace/denaro"
-VENV_PIP = "/home/sergio/.openclaw/workspace/denaro/trading_bot_env/bin/pip"
+LOG_DIR = "/home/sergio/denaro"
+VENV_PIP = "/home/sergio/denaro/trading_bot_env/bin/pip"
 
 def heal_bots():
     logs = glob.glob(os.path.join(LOG_DIR, "*.log"))

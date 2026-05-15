@@ -10,10 +10,10 @@ from dotenv import load_dotenv
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - [NIGHT PROTOCOL 🧹] - %(message)s',
                     handlers=[logging.FileHandler("MIDNIGHT_SWEEPER.log"), logging.StreamHandler()])
 
-load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env')
-load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env.bitget')
+load_dotenv('/home/sergio/denaro/.env')
+load_dotenv('/home/sergio/denaro/.env.bitget')
 
-WORKSPACE = '/home/sergio/.openclaw/workspace/denaro'
+WORKSPACE = '/home/sergio/denaro'
 VAULT_FILE = os.path.join(WORKSPACE, "vault.json")
 CONFIG_FILE = os.path.join(WORKSPACE, "trade_config.json")
 START_CAPITAL = 722.00

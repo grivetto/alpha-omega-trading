@@ -18,7 +18,7 @@ except ImportError:
     from eth_account import Account
     Account.enable_unaudited_hdwallet_features()
 
-load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env.web3')
+load_dotenv('/home/sergio/denaro/.env.web3')
 
 def build_first_stone():
     logging.info("🧠 FASE 2: Inizializzazione della Prima Pietra (Il Cervello MEV).")

@@ -63,7 +63,7 @@ def main():
     errors = []
     
     # Check servizi
-    for svc in SERVICES:
+    for svc in SERVICES_NUVOLA + SERVICES_MC2:
         if not check_service(svc):
             errors.append(f"❌ {svc} DOWN")
     

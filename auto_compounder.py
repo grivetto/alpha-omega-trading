@@ -40,7 +40,7 @@ def run_compounder():
             logging.info(f"🔄 Calcolata nuova Size ottimale per trade: {new_size} € (Risk: {RISK_FACTOR*100}%)")
             
             # Qui andrebbe l'aggiornamento automatico dei bot, per ora lo segnaliamo nel file config
-            config_path = "/home/sergio/.openclaw/workspace/denaro/trade_config.json"
+            config_path = "/home/sergio/denaro/trade_config.json"
             config_data = {}
             if os.path.exists(config_path):
                 try:

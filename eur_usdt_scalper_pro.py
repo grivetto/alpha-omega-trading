@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(message)s')
 logger = logging.getLogger("EUR_USDT_SCALPER")
 
-load_dotenv(os.path.join('/home/sergio/.openclaw/workspace/denaro', '.env'))
+load_dotenv(os.path.join('/home/sergio/denaro', '.env'))
 try:
     client = Client(os.getenv('BINANCE_API_KEY'), os.getenv('BINANCE_API_SECRET'))
 except Exception as e:

@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(message)s')
 logger = logging.getLogger("SOL_PULSE_SNIPER")
 
-WORKSPACE = "/home/sergio/.openclaw/workspace/denaro"
+WORKSPACE = "/home/sergio/denaro"
 load_dotenv(os.path.join(WORKSPACE, '.env'))
 
 API_KEY = os.getenv('BINANCE_API_KEY')

@@ -64,7 +64,7 @@ def cmd_grid():
         proc = subprocess.run(['systemctl', 'is-active', 'denaro-realistic-grid'], capture_output=True, text=True)
         is_active = proc.stdout.strip() == 'active'
         
-        log_file = '/home/sergio/.openclaw/workspace/denaro/REALISTIC_GRID.log'
+        log_file = '/home/sergio/denaro/REALISTIC_GRID.log'
         last_log = ""
         if os.path.exists(log_file):
             result = subprocess.run(['tail', '-n', '3', log_file], capture_output=True, text=True)
@@ -141,7 +141,7 @@ def cmd_services():
 
 def cmd_vault():
     """🔐 Cassaforte"""
-    vault_file = '/home/sergio/.openclaw/workspace/denaro/cassaforte.json'
+    vault_file = '/home/sergio/denaro/cassaforte.json'
     if os.path.exists(vault_file):
         try:
             with open(vault_file, 'r') as f:
@@ -187,6 +187,51 @@ def get_keyboard():
         ],
         "resize_keyboard": True
     }
+
+def get_dynamic_kb():
+    """Genera tastiera inline con dati reali da Binance"""
+    try:
+        ex = get_binance_client()
+        balances = ex.fetch_balance()
+        assets = {b['asset']: float(b['free']) + float(b['locked'])
+                  for b in balances.get('info', {}).get('balances', [])
+                  if float(b.get('free', 0)) > 0 or float(b.get('locked', 0)) > 0}
+        tickers = ex.fetch_tickers()
+
+        total_eur = assets.get('EUR', 0) + assets.get('USDT', 0)
+        for asset, qty in assets.items():
+            if asset in ('EUR', 'USDT'):
+                continue
+            sym = f"{asset}/EUR"
+            if sym in tickers:
+                total_eur += qty * tickers[sym]['last']
+            else:
+                sym_btc = f"{asset}/BTC"
+                if sym_btc in tickers and 'BTC/EUR' in tickers:
+                    total_eur += qty * tickers[sym_btc]['last'] * tickers['BTC/EUR']['last']
+
+        locked = 0.0
+        vf = '/home/sergio/denaro/cassaforte.json'
+        if os.path.exists(vf):
+            try:
+                with open(vf) as f:
+                    locked = float(__import__("json").load(f).get("totale_cassaforte", 0))
+            except:
+                pass
+
+        btn = f"Cifra: {CAPITALE_VERSATO:.0f}\u20ac | Att: {total_eur:.0f}\u20ac ({locked:.0f}\u20ac)"
+    except Exception:
+        btn = "Cifra Investita"
+
+    return {
+        "keyboard": [
+            [{"text": btn}, {"text": "Ricavo Giornaliero"}],
+            [{"text": "Andamento Ricavi"}, {"text": "Stato Squadre"}],
+            [{"text": "Dashboard Web"}, {"text": "Elemosina Gariban"}]
+        ],
+        "resize_keyboard": True
+    }
+
 
 def main_loop():
     load_dotenv('/home/sergio/denaro/.env')

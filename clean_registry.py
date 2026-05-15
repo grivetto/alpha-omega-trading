@@ -24,10 +24,10 @@ CORE_BOTS = {
     "ASIAN_ECHO": "asian_echo_sniper.py"
 }
 
-with open('/home/sergio/.openclaw/workspace/denaro/lite_guardian.py', 'r') as f:
+with open('/home/sergio/denaro/lite_guardian.py', 'r') as f:
     lines = f.readlines()
 
-with open('/home/sergio/.openclaw/workspace/denaro/lite_guardian.py', 'w') as f:
+with open('/home/sergio/denaro/lite_guardian.py', 'w') as f:
     in_registry = False
     for line in lines:
         if line.startswith("BOT_REGISTRY = {"):

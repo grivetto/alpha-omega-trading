@@ -1,7 +1,7 @@
 import time
 import logging
 
-logging.basicConfig(level=logging.INFO, filename='/home/sergio/.openclaw/workspace/denaro/lite_guardian.log', format='%(asctime)s %(message)s')
+logging.basicConfig(level=logging.INFO, filename='/home/sergio/denaro/lite_guardian.log', format='%(asctime)s %(message)s')
 
 def run_strategy():
     """

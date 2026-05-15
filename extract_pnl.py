@@ -1,6 +1,6 @@
 import os, glob, re, json
 
-nuvola_logs = glob.glob("/home/sergio/.openclaw/workspace/denaro/*.log")
+nuvola_logs = glob.glob("/home/sergio/denaro/*.log")
 mc2_logs = glob.glob("/home/sergio/autonomous_bot/*.log")
 
 bot_stats = []
@@ -64,6 +64,6 @@ for log in nuvola_logs + mc2_logs:
 # Sort by PNL descending
 bot_stats.sort(key=lambda x: x['pnl'], reverse=True)
 
-with open("/home/sergio/.openclaw/workspace/denaro/bot_pnl_cache.json", "w") as f:
+with open("/home/sergio/denaro/bot_pnl_cache.json", "w") as f:
     json.dump(bot_stats, f)
 

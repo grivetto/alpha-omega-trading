@@ -42,7 +42,7 @@ def run_whale_tracker():
                 logging.warning(f"🚨 BALENA RILEVATA SU {coin}: {reason}")
                 
                 # Se troviamo una balena in vendita, diciamo ai bot di prepararsi allo SHORT
-                config_path = "/home/sergio/.openclaw/workspace/denaro/trade_config.json"
+                config_path = "/home/sergio/denaro/trade_config.json"
                 if os.path.exists(config_path):
                     try:
                         with open(config_path, "r") as f:

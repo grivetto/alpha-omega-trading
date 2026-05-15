@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - [HEDGE 🛡️] - %(message)s',
                     handlers=[logging.FileHandler("DELTA_NEUTRAL.log"), logging.StreamHandler()])
 
-sys.path.insert(0, '/home/sergio/.openclaw/workspace/denaro')
+sys.path.insert(0, '/home/sergio/denaro')
 import local_price
 
 load_dotenv('/home/sergio/denaro/.env')

@@ -18,6 +18,7 @@ from utils.entry_filters import EntryFilters
 from utils.exit_strategy import ExitManager
 from utils.risk_engine import RiskManager
 
+
 # --- CONFIGURATION ---
 CONFIG = {
     "SYMBOLS": ["SOLEUR", "DOGEEUR", "BNBEUR", "AVAXEUR", "LINKEUR", "PEPEEUR", "ETHEUR", "DOTEUR"],
@@ -91,7 +92,7 @@ def load_positions():
         if os.path.exists(CONFIG["POSITIONS_FILE"]):
             with open(CONFIG["POSITIONS_FILE"], 'r') as f:
                 positions = json.load(f)
-            logger.info(f"✅ Loaded {len(positions)} positions from state file.")
+            logger.info(f"Loaded {len(positions)} positions from state file.")
     except Exception as e:
         logger.error(f"Error loading positions state: {e}")
         positions = {}
@@ -104,7 +105,7 @@ def add_to_vault(amount):
     current = vault_utils.read_vault()
     locked = current.get("LOCKED_EUR", 0.0) + amount
     vault_utils.write_vault({"LOCKED_EUR": locked})
-    logger.info(f"🔐 Added {amount:.2f}€ to Vault. Total Protected: {locked:.2f}€")
+    logger.info(f"Added {amount:.2f}EUR to Vault. Total Protected: {locked:.2f}EUR")
 
 # --- MISSION LOGIC ---
 def get_daily_mission():
@@ -113,18 +114,19 @@ def get_daily_mission():
         if os.path.exists(CONFIG["MISSION_FILE"]):
             with open(CONFIG["MISSION_FILE"], 'r') as f:
                 mission = json.load(f)
-            if mission.get("date") == today_str: return mission
+            if mission.get("date") == today_str:
+                return mission
     except Exception as e:
         logger.error(f"Error reading mission: {e}")
-    
+
     try:
         available_eur = balance_cache['EUR']
-    except Exception as e:
+    except Exception:
         available_eur = 0.0
-        
+
     usable_eur = max(0, available_eur - get_vault_locked())
     new_mission = {"date": today_str, "start_capital": usable_eur, "target_eur": CONFIG["TARGET_FIXED_EUR"], "profit_today": 0.0, "achieved": False}
-    
+
     try:
         with open(CONFIG["MISSION_FILE"], 'w') as f:
             json.dump(new_mission, f)
@@ -137,7 +139,7 @@ def update_daily_mission(pnl_amount):
     mission["profit_today"] += pnl_amount
     if mission["profit_today"] >= mission["target_eur"] and not mission["achieved"]:
         mission["achieved"] = True
-        logger.info(f"🎉 Daily Goal Reached!")
+        logger.info("Daily Goal Reached!")
     try:
         with open(CONFIG["MISSION_FILE"], 'w') as f:
             json.dump(mission, f)
@@ -162,12 +164,15 @@ def get_step_size(symbol):
     try:
         info = client.get_symbol_info(symbol)
         for f in info['filters']:
-            if f['filterType'] == 'LOT_SIZE': return float(f['stepSize'])
-    except: pass
+            if f['filterType'] == 'LOT_SIZE':
+                return float(f['stepSize'])
+    except Exception:
+        pass
     return 1.0
 
 def round_step(quantity, step_size):
-    if step_size == 0: return quantity
+    if step_size == 0:
+        return quantity
     precision = int(round(-math.log10(step_size), 0))
     return round(quantity - (quantity % step_size), precision)
 
@@ -182,33 +187,32 @@ def init_historical_data():
             logger.error(f"Error loading history for {sym}: {e}")
 
 
-
 # --- WEBSOCKET MESSAGE HANDLER ---
 def process_socket_msg(msg):
-    if 'data' not in msg or 'e' not in msg['data']: return
+    if msg is None or 'data' not in msg or 'e' not in msg.get('data', {}):
+        return
     event = msg['data']
-    if event['e'] == 'kline':
-        symbol = event['s']
+    if event.get('e') == 'kline':
+        symbol = event.get('s', '')
         price = float(event['k']['c'])
         is_closed = event['k']['x']
         volume = float(event['k']['v'])
-        
-        # Aggiorna klines e volumes
+
         if symbol in klines:
             klines[symbol].append(price)
         if symbol in volumes:
             volumes[symbol].append(volume)
-        
+
         if is_closed:
             logger.debug(f"[{symbol}] Price: {price}, Vol: {volume}")
 
 def main():
-    logger.info("⚡ SNIPER SQUAD (V3 - Standardized TA & Low Latency) avviata")
-    
+    logger.info("SNIPER SQUAD (V3 - Standardized TA & Low Latency) avviata")
+
     # Start Balance Cache Thread
     b_thread = threading.Thread(target=update_balances_loop, daemon=True)
     b_thread.start()
-    
+
     load_positions()
     init_historical_data()
     twm = ThreadedWebsocketManager(api_key=API_KEY, api_secret=API_SECRET)

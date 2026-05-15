@@ -6,7 +6,7 @@ import json
 import os
 
 # Zero-OOM Bollinger Bands Sniper (1m timeframe)
-LOG_FILE = "/home/sergio/.openclaw/workspace/denaro/BOLLINGER_SNIPER.log"
+LOG_FILE = "/home/sergio/denaro/BOLLINGER_SNIPER.log"
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s', filename=LOG_FILE)
 logger = logging.getLogger("BollingerSniper")
 
@@ -34,7 +34,7 @@ def main():
                     profit = execute_reversion_trade(coin, pos)
                     total_profit += profit
             
-            with open("/home/sergio/.openclaw/workspace/denaro/bollinger_status.json", "w") as f:
+            with open("/home/sergio/denaro/bollinger_status.json", "w") as f:
                 f.write(json.dumps({"total_profit_eur": total_profit, "status": "sniping", "last_check": time.time()}))
                 
             logger.info("💗 Heartbeat OK.")

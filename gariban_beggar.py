@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from binance.client import Client
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s',
-                    handlers=[logging.FileHandler("/home/sergio/.openclaw/workspace/denaro/GARIBAN.log"), logging.StreamHandler()])
+                    handlers=[logging.FileHandler("/home/sergio/denaro/GARIBAN.log"), logging.StreamHandler()])
 logger = logging.getLogger("Gariban")
 
 load_dotenv('/home/sergio/denaro/.env')
@@ -12,7 +12,7 @@ API_KEY = os.getenv('BINANCE_API_KEY')
 API_SECRET = os.getenv('BINANCE_API_SECRET')
 client = Client(API_KEY, API_SECRET)
 
-VAULT_FILE = "/home/sergio/.openclaw/workspace/denaro/vault.json"
+VAULT_FILE = "/home/sergio/denaro/vault.json"
 
 def get_vault_locked():
     try:

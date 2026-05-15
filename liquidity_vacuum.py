@@ -3,12 +3,12 @@ import os, time, logging, gc
 from dotenv import load_dotenv
 from binance.client import Client
 
-LOG_FILE = "/home/sergio/.openclaw/workspace/denaro/LIQUIDITY_VACUUM.log"
+LOG_FILE = "/home/sergio/denaro/LIQUIDITY_VACUUM.log"
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s',
                     handlers=[logging.FileHandler(LOG_FILE), logging.StreamHandler()])
 logger = logging.getLogger("LiquidityVacuum")
 
-load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env')
+load_dotenv('/home/sergio/denaro/.env')
 client = Client(os.getenv('BINANCE_API_KEY'), os.getenv('BINANCE_API_SECRET'))
 
 PAIRS = ["BTCEUR", "ETHEUR", "SOLEUR"]

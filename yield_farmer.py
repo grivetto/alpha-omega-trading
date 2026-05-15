@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from binance.client import Client
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s',
-                    handlers=[logging.FileHandler("/home/sergio/.openclaw/workspace/denaro/YIELD_FARMER.log"), logging.StreamHandler()])
+                    handlers=[logging.FileHandler("/home/sergio/denaro/YIELD_FARMER.log"), logging.StreamHandler()])
 logger = logging.getLogger("Yield_Farmer")
 
 load_dotenv('/home/sergio/denaro/.env')

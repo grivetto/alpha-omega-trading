@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - [FUNDING ARBITRAGE 🏦] - %(message)s',
                     handlers=[logging.FileHandler("FUNDING_ARBITRAGE.log"), logging.StreamHandler()])
 
-load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env.bitget')
+load_dotenv('/home/sergio/denaro/.env.bitget')
 
 try:
     bitget = ccxt.bitget({
@@ -92,7 +92,7 @@ def run_funding_arbitrage():
                         # Manda notifica
                         try:
                             import requests
-                            load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env.telegram')
+                            load_dotenv('/home/sergio/denaro/.env.telegram')
                             tk = os.getenv('TELEGRAM_BOT_TOKEN')
                             cid = os.getenv('TELEGRAM_CHAT_ID')
                             msg = f"🏦 *FUNDING ARBITRAGE ESTREMO* 🏦\n\nHo scansionato i tassi d'interesse globali e ho trovato un'anomalia esplosiva su *{target_symbol.replace(':USDT', '')}*.\n\nI trader in Leva LONG sono così disperati che pagano il **+{highest_rate * 100:.3f}% ogni 8 ore** a chiunque apra uno SHORT.\n\n*Azione:* Entrata SHORT (Leva {LEVERAGE}x)\n*Rischio:* {MARGIN_USDT} USDT\n\nOra ci faremo pagare letteralmente una rendita passiva dai fanatici, e se la moneta crolla sotto il suo stesso peso... incassiamo il Take Profit del +100%. Il banco vince sempre! 🎰"

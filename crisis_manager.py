@@ -42,7 +42,7 @@ def activate_defcon():
     
     # Invia notifica Telegram
     try:
-        sys.path.insert(0, '/home/sergio/.openclaw/workspace/denaro')
+        sys.path.insert(0, '/home/sergio/denaro')
         import requests
         load_dotenv('/home/sergio/denaro/.env.telegram')
         token = os.getenv('TELEGRAM_BOT_TOKEN')
@@ -53,12 +53,12 @@ def activate_defcon():
     except: pass
     
     # 1. Spegnere i bot Spot aggressivi (Legion) scrivendo in un file di lock
-    with open("/home/sergio/.openclaw/workspace/denaro/DEFCON.lock", "w") as f:
+    with open("/home/sergio/denaro/DEFCON.lock", "w") as f:
         f.write("DEFCON_2")
         
     # 2. Potenziare i bot SHORT (Es. Blade Runner, Micro-Shorter)
     # Scriviamo nel config per far capire ai bot che siamo in crollo
-    config_path = "/home/sergio/.openclaw/workspace/denaro/trade_config.json"
+    config_path = "/home/sergio/denaro/trade_config.json"
     if os.path.exists(config_path):
         try:
             with open(config_path, "r") as f:
@@ -69,11 +69,11 @@ def activate_defcon():
         except: pass
 
 def deactivate_defcon():
-    if os.path.exists("/home/sergio/.openclaw/workspace/denaro/DEFCON.lock"):
+    if os.path.exists("/home/sergio/denaro/DEFCON.lock"):
         logging.info("✅ [CRISIS MANAGER] - Crollo terminato. Disattivazione DEFCON. Rimozione blocchi.")
-        os.remove("/home/sergio/.openclaw/workspace/denaro/DEFCON.lock")
+        os.remove("/home/sergio/denaro/DEFCON.lock")
         
-        config_path = "/home/sergio/.openclaw/workspace/denaro/trade_config.json"
+        config_path = "/home/sergio/denaro/trade_config.json"
         if os.path.exists(config_path):
             try:
                 with open(config_path, "r") as f:
@@ -85,7 +85,7 @@ def deactivate_defcon():
             
         try:
             import requests, sys
-            sys.path.insert(0, '/home/sergio/.openclaw/workspace/denaro')
+            sys.path.insert(0, '/home/sergio/denaro')
             load_dotenv('/home/sergio/denaro/.env.telegram')
             token = os.getenv('TELEGRAM_BOT_TOKEN')
             chat_id = os.getenv('TELEGRAM_CHAT_ID')
@@ -100,7 +100,7 @@ def run_crisis_manager():
     while True:
         try:
             crashing, change = is_market_crashing()
-            is_defcon = os.path.exists("/home/sergio/.openclaw/workspace/denaro/DEFCON.lock")
+            is_defcon = os.path.exists("/home/sergio/denaro/DEFCON.lock")
             
             if crashing and not is_defcon:
                 logging.warning(f"Rilevato crollo: {change:.2f}%. Attivazione protocolli di emergenza.")

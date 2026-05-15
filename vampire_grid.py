@@ -6,12 +6,12 @@ from binance.client import Client
 from binance import ThreadedWebsocketManager
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s',
-                    handlers=[logging.FileHandler("/home/sergio/.openclaw/workspace/denaro/VAMPIRE.log"), logging.StreamHandler()])
+                    handlers=[logging.FileHandler("/home/sergio/denaro/VAMPIRE.log"), logging.StreamHandler()])
 logger = logging.getLogger("Vampire")
 
-load_dotenv('/home/sergio/.openclaw/workspace/denaro/.env')
+load_dotenv('/home/sergio/denaro/.env')
 client = Client(os.getenv('BINANCE_API_KEY'), os.getenv('BINANCE_API_SECRET'))
-VAULT_FILE = "/home/sergio/.openclaw/workspace/denaro/vault.json"
+VAULT_FILE = "/home/sergio/denaro/vault.json"
 
 # Il Vampiro succhia liquidità continua lateralizzando sul Bitcoin
 SYMBOL = "BTCEUR"

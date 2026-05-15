@@ -7,7 +7,7 @@ from binance import ThreadedWebsocketManager
 from binance.enums import *
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s',
-                    handlers=[logging.FileHandler("/home/sergio/.openclaw/workspace/denaro/HUNTER_SWARM.log"), logging.StreamHandler()])
+                    handlers=[logging.FileHandler("/home/sergio/denaro/HUNTER_SWARM.log"), logging.StreamHandler()])
 logger = logging.getLogger("Swarm")
 
 load_dotenv('/home/sergio/denaro/.env')
@@ -19,8 +19,8 @@ SYMBOLS = ["SOLEUR", "AVAXEUR", "DOTEUR", "BNBEUR", "ETHEUR", "LINKEUR", "PEPEEU
 TRADE_AMOUNT = 11.0  
 MAX_SWARM_SIZE = 10
 
-VAULT_FILE = "/home/sergio/.openclaw/workspace/denaro/vault.json"
-MISSION_FILE = "/home/sergio/.openclaw/workspace/denaro/daily_mission.json"
+VAULT_FILE = "/home/sergio/denaro/vault.json"
+MISSION_FILE = "/home/sergio/denaro/daily_mission.json"
 
 def get_vault_locked():
     try:

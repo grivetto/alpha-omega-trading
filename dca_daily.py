@@ -17,7 +17,7 @@ load_dotenv('/home/sergio/denaro/.env')
 # Config
 DCA_AMOUNT_EUR = 5.00  # €5.00 al giorno (Aggressivo)
 MIN_EUR_BALANCE = 5.0  # Riserva minima
-DCA_LOG = '/home/sergio/.openclaw/workspace/denaro/logs/dca.log'
+DCA_LOG = '/home/sergio/denaro/logs/dca.log'
 
 TG_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 TG_CHAT = os.getenv('TELEGRAM_CHAT_ID', '277954993')
@@ -98,7 +98,7 @@ def dca_buy():
         logging.info(f"DCA completato: {order['amount']:.8f} BTC @ €{avg_price}")
         
         # Salva su file tracciamento
-        dca_file = '/home/sergio/.openclaw/workspace/denaro/dca_tracking.json'
+        dca_file = '/home/sergio/denaro/dca_tracking.json'
         import json
         
         data = {'acquisti': [], 'totale_btc': 0, 'totale_eur_speso': 0}

@@ -3,7 +3,7 @@ import time
 import logging
 import random
 
-LOG_FILE = "/home/sergio/.openclaw/workspace/denaro/STABLE_SCALPER.log"
+LOG_FILE = "/home/sergio/denaro/STABLE_SCALPER.log"
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - STABLE-SCALPER - %(message)s', handlers=[logging.FileHandler(LOG_FILE), logging.StreamHandler()])
 logger = logging.getLogger(__name__)
 

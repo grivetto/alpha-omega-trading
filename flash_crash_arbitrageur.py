@@ -2,7 +2,7 @@ import gc
 import time, logging, random, os, json
 
 # Zero-OOM Flash Crash Arbitrageur
-LOG_FILE = "/home/sergio/.openclaw/workspace/denaro/FLASH_CRASH.log"
+LOG_FILE = "/home/sergio/denaro/FLASH_CRASH.log"
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s', filename=LOG_FILE)
 logger = logging.getLogger("FlashCrashArb")
 
@@ -28,7 +28,7 @@ def main():
                     profit = execute_rebound_trade(coin, drop)
                     total_profit += profit
             
-            with open("/home/sergio/.openclaw/workspace/denaro/flash_crash_status.json", "w") as f:
+            with open("/home/sergio/denaro/flash_crash_status.json", "w") as f:
                 f.write(json.dumps({"total_profit_eur": total_profit, "status": "sniping", "last_check": time.time()}))
                 
             logger.info("💗 Heartbeat OK.")
