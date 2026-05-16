@@ -1,11 +1,10 @@
-"""
-Squadra Orchestrator — Coordina Ares, Hermes e Apollo.
+"""Squadra Orchestrator — Coordina Ares, Hermes, Apollo e Artemis.
 Gestione del rischio centralizzata:
   - Capitale massimo totale allocato
   - No overlapping pairs
   - Kill-switch automatico su drawdown
   - Report unificato
-v3.0: + test_mode propagation
+v4.0: + Artemis (BTC Long-Only Trend Follower)
 """
 import os, sys, json, logging, asyncio, time
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -14,6 +13,7 @@ from core import ENV_PATH, DenaroOpportunisticCore
 from ares_bot import AresIntradayTrendBot
 from hermes_bot import HermesSentimentBot
 from apollo_bot import ApolloArbitrageBot
+from artemis_bot import ArtemisTrendBot
 
 CONFIG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config", "squadra.json")
 
@@ -80,13 +80,15 @@ class SquadraOrchestrator:
         ares = AresIntradayTrendBot(test_mode=self.test_mode)
         hermes = HermesSentimentBot(test_mode=self.test_mode)
         apollo = ApolloArbitrageBot(test_mode=self.test_mode)
+        artemis = ArtemisTrendBot(test_mode=self.test_mode)
         
         # Clamp configs
         ares.max_investment = self.max_per_bot_eur
         hermes.max_investment = self.max_per_bot_eur
         apollo.max_investment = self.max_per_bot_eur
+        # Artemis ha budget separato (10€), non clampiamo oltre
         
-        self.bots = [ares, hermes, apollo]
+        self.bots = [ares, hermes, apollo, artemis]
         self.logger.info(f"Squadra avviata: {len(self.bots)} bot, budget {self.max_total_eur}€, "
                         f"{'🧪 TEST MODE' if self.test_mode else '🔴 LIVE'}")
 
