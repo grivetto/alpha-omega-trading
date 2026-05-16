@@ -1,0 +1,12 @@
+{
+    "symbol_a": "ETH/EUR",
+    "symbol_b": "BTC/EUR",
+    "timeframe": "5m",
+    "base_order_eur": 8.0,
+    "max_investment_eur": 25.0,
+    "z_entry": 2.0,
+    "z_exit": 0.5,
+    "take_profit_pct": 0.006,
+    "stop_loss_pct": 0.004,
+    "interval_sec": 30
+}

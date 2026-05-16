@@ -1,0 +1,11 @@
+{
+    "symbol": "ETH/EUR",
+    "timeframe": "1m",
+    "fast_sma": 5,
+    "slow_sma": 20,
+    "base_order_eur": 10.0,
+    "max_investment_eur": 30.0,
+    "take_profit_pct": 0.008,
+    "stop_loss_pct": 0.004,
+    "interval_sec": 30
+}

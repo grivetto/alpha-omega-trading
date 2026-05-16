@@ -1,0 +1,9 @@
+{
+    "symbol": "SOL/EUR",
+    "timeframe": "1m",
+    "base_order_eur": 8.0,
+    "max_investment_eur": 25.0,
+    "take_profit_pct": 0.012,
+    "stop_loss_pct": 0.005,
+    "interval_sec": 30
+}
