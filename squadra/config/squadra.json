@@ -3,5 +3,5 @@
     "max_per_bot_eur": 30.0,
     "drawdown_limit_pct": 5.0,
     "initial_capital_eur": 80.0,
-    "test_mode": true
+    "test_mode": false
 }
