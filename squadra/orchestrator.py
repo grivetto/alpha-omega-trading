@@ -5,6 +5,7 @@ Gestione del rischio centralizzata:
   - No overlapping pairs
   - Kill-switch automatico su drawdown
   - Report unificato
+v3.0: + test_mode propagation
 """
 import os, sys, json, logging, asyncio, time
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -24,6 +25,7 @@ class SquadraOrchestrator:
         self.max_per_bot_eur = self.config.get("max_per_bot_eur", 30.0)
         self.drawdown_limit = self.config.get("drawdown_limit_pct", 5.0)
         self.initial_capital = self.config.get("initial_capital_eur", 80.0)
+        self.test_mode = self.config.get("test_mode", False)
         self.start_time = time.time()
         self.bots = []
         self.metrics = {}
@@ -37,6 +39,8 @@ class SquadraOrchestrator:
 
     async def check_risk(self):
         """Check if any bot needs to be stopped due to risk limits"""
+        if self.test_mode:
+            return True  # No risk checks in test mode
         total_exposure = 0.0
         for bot in self.bots:
             if hasattr(bot, 'in_position') and bot.in_position:
@@ -56,7 +60,8 @@ class SquadraOrchestrator:
         """Log unified status report"""
         lines = []
         lines.append("━" * 50)
-        lines.append(f"SQUADRA DENARO OPPORTUNISTICO — Report")
+        mode_tag = "🧪 TEST MODE" if self.test_mode else "🔴 LIVE"
+        lines.append(f"SQUADRA DENARO OPPORTUNISTICO — {mode_tag}")
         uptime = (time.time() - self.start_time) / 60
         lines.append(f"Uptime: {uptime:.0f} min | Kill Switch: {'⚠️ ON' if self.kill_switch else '✅ OFF'}")
         lines.append(f"Max allocation: {self.max_total_eur}€")
@@ -71,10 +76,10 @@ class SquadraOrchestrator:
         self.logger.info("\n".join(lines))
 
     async def run(self):
-        # Instantiate bots with overridden budgets
-        ares = AresIntradayTrendBot()
-        hermes = HermesSentimentBot()
-        apollo = ApolloArbitrageBot()
+        # Instantiate bots with test_mode
+        ares = AresIntradayTrendBot(test_mode=self.test_mode)
+        hermes = HermesSentimentBot(test_mode=self.test_mode)
+        apollo = ApolloArbitrageBot(test_mode=self.test_mode)
         
         # Clamp configs
         ares.max_investment = self.max_per_bot_eur
@@ -82,7 +87,8 @@ class SquadraOrchestrator:
         apollo.max_investment = self.max_per_bot_eur
         
         self.bots = [ares, hermes, apollo]
-        self.logger.info(f"Squadra avviata: {len(self.bots)} bot, budget {self.max_total_eur}€")
+        self.logger.info(f"Squadra avviata: {len(self.bots)} bot, budget {self.max_total_eur}€, "
+                        f"{'🧪 TEST MODE' if self.test_mode else '🔴 LIVE'}")
 
         # Run all bots + report concurrently
         async def bot_wrapper(bot):
