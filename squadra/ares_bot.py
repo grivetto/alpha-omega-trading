@@ -1,16 +1,20 @@
 """
-Ares — Intraday Trend Bot (v3).
+Ares — Intraday Trend Bot (v3.1).
 Delega la logica di strategia al modulo strategies/ares_strategy.py.
+v3.1: multi-timeframe context (MACD, long-trend confirmation).
 """
 import asyncio
 from core import DenaroOpportunisticCore
 from strategies import ares_signal
+from utils.indicators import aggregate_timeframes
 
 class AresIntradayTrendBot(DenaroOpportunisticCore):
     def __init__(self, test_mode=False):
         super().__init__(bot_name="Ares", config_file="ares.json", test_mode=test_mode)
         self.symbol = self.config.get("symbol", "ETH/EUR")
         self.timeframe = self.config.get("timeframe", "1m")
+        self.timeframe_long = self.config.get("timeframe_long", "1h")
+        self.long_candles = self.config.get("long_candles", 72)
         self.fast_period = self.config.get("fast_sma", 5)
         self.slow_period = self.config.get("slow_sma", 20)
         self.base_order_eur = self.config.get("base_order_eur", 10.0)
@@ -22,11 +26,16 @@ class AresIntradayTrendBot(DenaroOpportunisticCore):
         self.entry_amount = 0.0
 
     async def run_strategy(self):
+        # Fetch short timeframe (1m, ~50 candles) + long timeframe (1h, ~72 candles)
         ohlcv = await self.fetch_ohlcv(self.symbol, self.timeframe, limit=50)
+        ohlcv_long = await self.fetch_ohlcv(self.symbol, self.timeframe_long, limit=self.long_candles)
         if not ohlcv:
             return
 
-        signal = ares_signal(ohlcv, fast_period=self.fast_period, slow_period=self.slow_period)
+        # Build multi-timeframe context
+        ctx = aggregate_timeframes(ohlcv, ohlcv_long) if ohlcv_long else None
+
+        signal = ares_signal(ohlcv, fast_period=self.fast_period, slow_period=self.slow_period, ctx=ctx)
         action = signal["action"]
         current_price = signal["current_price"]
         atr = signal["atr"]

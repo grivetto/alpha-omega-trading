@@ -1,6 +1,8 @@
 {
     "symbol": "ETH/EUR",
     "timeframe": "1m",
+    "timeframe_long": "1h",
+    "long_candles": 72,
     "fast_sma": 5,
     "slow_sma": 20,
     "base_order_eur": 10.0,

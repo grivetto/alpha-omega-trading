@@ -1,92 +1,87 @@
-# 🏦 Denaro — Distributed Trading System
+# 🏦 Denaro - Automated Trading System
 
-Sistema di trading distribuito su 3 server, unico conto Binance. Combina grid trading classico con una squadra di bot opportunistici.
+Bot trading automatici per Binance, eseguiti su server dedicati con strategie multi-timeframe.
 
-## 📡 Architettura
+## Stato Attuale — v3.2
 
-```
-┌──────────────────────────────────────────────────┐
-│                   Binance API                     │
-│         (unico conto, 3 API key diverse)          │
-└────────┬──────────────┬──────────────┬────────────┘
-         │              │              │
-    ┌────▼────┐    ┌────▼────┐    ┌────▼────┐
-    │   mc2   │    │ Nuvola  │    │MARCODG1 │
-    │ Squadra │    │Grid SOL │    │Grid ADA │
-    └────┬────┘    └────┬────┘    └────┬────┘
-         │              │              │
-         └──────────────┴──────────────┘
-                    │
-              ┌─────▼──────┐
-              │  Dashboard │
-              │ (nuvola)   │
-              └────────────┘
-```
+Squadra attiva su **mc2** (192.168.1.116). Budget totale: **€125.58 EUR**.
 
-### 📍 Server
+| Bot | Simbolo | Timeframe | Strategia |
+|-----|---------|-----------|-----------|
+| **Ares** | ETH/EUR | 1m | Trend following |
+| **Hermes** | SOL/EUR | 1m | RSI + MACD + Social Sentiment |
+| **Apollo** | ETH/BTC | 1h | Ratio mean-reversion |
+| **Artemis** | BTC/EUR | 1d | SMA50/200 crossover |
 
-| Server | Ruolo | Bot attivi |
-|--------|-------|------------|
-| **mc2** | Orchestratore | Squadra Opportunistica (Ares, Hermes, Apollo) |
-| **Nuvola** | Grid | Grid SOL/EUR v3 |
-| **MARCODG1** | Grid | Grid ADAEUR v3 |
+### Esecuzione
+- Tmux session `squadra_bot` su mc2 (192.168.1.116)
+- Watchdog Cron via `collect_all.sh` ogni 5 minuti
+- `test_mode` flag in `squadra/config/squadra.json` per dry-run
 
-## 🤖 Bot attivi
+### Sentiment Engine (Nuovo in v3.2)
+Integrato in Hermes con peso 0.15 (15%) via `utils/sentiment.py`:
+- **Fear & Greed Index** — funzionante, API gratuita
+- **X/Twitter search** — OAuth 1.0a configurato, crediti Free tier esauriti
+- **Crypto news (CoinPaprika + CryptoCompare)** — fallback funzionante
 
-### Squadra Opportunistica (mc2)
-Tre bot coordinati dall'orchestratore, budget 80€ max:
-
-| Bot | Strumento | Strategia | Base |
-|-----|-----------|-----------|------|
-| **Ares** | ETH/EUR | Trend following | 10€ |
-| **Hermes** | SOL/EUR | Sentiment (RSI+volume) | 8€ |
-| **Apollo** | ETH/BTC | Mean reversion ratio | 8€ |
-
-Ogni bot opera in autonomia, l'orchestratore gestisce risk management centralizzato e kill switch a -5% drawdown.
-
-### Grid Bots
-Due grid bot classici su coppie separate:
-
-- **SOL/EUR** (Nuvola): Grid 3 livelli, base 5€
-- **ADAEUR** (MARCODG1): Grid 3 livelli, base 7€×3
-
-## 📊 Monitoraggio
-
-- Dashboard live: https://sgrivett.ddns.net/denaro/
-- Dati aggiornati ogni 5 min via `collect_all.sh`
-- Watchdog automatico ogni 5 min (riavvia bot se crashano)
-
-## 🛠 Struttura directory
+## Struttura
 
 ```
 denaro/
-├── squadra/                    # Squadra Opportunistica
-│   ├── ares_bot.py            # Trend ETH/EUR
-│   ├── hermes_bot.py          # Sentiment SOL/EUR
-│   ├── apollo_bot.py          # Ratio ETH/BTC
-│   ├── orchestrator.py        # Coordinatore
-│   ├── core.py                # Modello e DB
-│   ├── run_squadra.py         # Entry point
-│   ├── config/                # Configurazioni JSON
-│   └── squadra_watchdog.sh    # Watchdog tmux
-├── grid_bot_v3.py             # Grid bot template
-├── dashboard/                 # Frontend dashboard
-├── architecture/              # Procedure operative
-├── utils/                     # Moduli condivisi
-├── collect_all.sh             # Raccolta dati dashboard
-├── collect_dashboard_*.py     # Collector per server
-├── sync_dashboard.sh          # Sync su web server
-└── dashboard_server.py        # Server HTTP locale
+├── squadra/                  # Bot squadra (attivi)
+│   ├── hermes_bot.py         # Hermes v3.2 con sentiment
+│   ├── ares_bot.py           # Ares trend follower
+│   ├── apollo_bot.py         # Apollo ETH/BTC ratio
+│   ├── artemis_bot.py        # Artemis SMA crossover
+│   ├── core.py               # Core Binance API
+│   ├── orchestrator.py       # Orchestratore multi-bot
+│   ├── run_squadra.py        # Entry point squadra
+│   ├── strategies/           # Strategie per bot
+│   └── config/               # Config per bot
+├── utils/
+│   ├── indicators.py         # Indicatori tecnici
+│   ├── risk_engine.py        # Gestione rischio
+│   ├── exit_strategy.py      # Strategies di uscita
+│   ├── entry_filters.py      # Filtri di ingresso
+│   └── sentiment.py          # Social sentiment engine
+├── dashboard/
+│   ├── index.html            # Dashboard live
+│   ├── grid.html             # Grid view
+│   ├── trades.html           # Trade history view
+│   └── public/               # Dati JSON
+├── dashboard_server.py       # Server dashboard
+├── grid_bot_v3.py            # Legacy grid bot (non attivo)
+├── collect_dashboard_*.py    # Data collectors
+└── collect_all.sh            # Watchdog script
 ```
 
-## 🚀 Avvio rapido
+## Server
+
+| Server | IP | Stato | Ruolo |
+|--------|-------|-------|-------|
+| **mc2** | 192.168.1.116 | ✅ Attivo | Squadra (4 bot) |
+| **Nuvola** | 192.168.1.117 | ✅ Attivo | Grid bot legacy |
+| **MARCODG1** | 192.168.1.120 | ❌ Decommissionato | — |
+
+## Dashboard live
+https://sgrivett.ddns.net/denaro/
+
+## Comandi Rapidi
 
 ```bash
-# Squadra (mc2)
+# Avviare squadra
 cd ~/denaro && python3 squadra/run_squadra.py
 
-# Grid bot (Nuvola / MARCODG1)
-cd ~/denaro && screen -dmS grid_bot venv/bin/python3 grid_bot_v3.py
+# Test startup
+python3 squadra/test_startup.py
+
+# Collettore dati
+python3 collect_dashboard_data.py
+
+# Sentiment test (singolo simbolo)
+python3 -c "from utils.sentiment import SentimentEngine; print(SentimentEngine().analyze('BTC'))"
 ```
 
-I watchdog si occupano di mantenere i bot in esecuzione.
+## Branches
+- `refactoring` — sviluppo attuale (versione pulita)
+- `main` — stabile precedente

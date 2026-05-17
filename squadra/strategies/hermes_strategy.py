@@ -1,5 +1,8 @@
 """
-Hermes Strategy — Sentiment analysis via RSI, volume spike, VWAP divergence.
+Hermes Strategy — Sentiment analysis via RSI, volume spike, VWAP divergence + MACD + multi-timeframe.
+
+v3.1: + multi-timeframe context (MACD, divergence filter, long-trend confirmation)
+       Mantiene retrocompatibilità: se ctx non passato, funziona come v3.0.
 
 Funzione pura: prende OHLCV + parametri, restituisce signal.
 Nessuna dipendenza da exchange, DB o stato bot.
@@ -34,12 +37,18 @@ def _calc_vwap(ohlcv: list) -> Optional[float]:
     return tp_vol / vol if vol > 0 else None
 
 
-def hermes_signal(ohlcv: list) -> dict:
+def hermes_signal(ohlcv: list, ctx: Optional[dict] = None) -> dict:
     """
     Genera segnale basato su sentiment score (-1 bearish, +1 bullish).
 
+    Se ctx (da aggregate_timeframes) è fornito, integra:
+    - MACD histogram direction (momentum booster)
+    - Divergence filter: rifiuta BUY se ctx divergence='bearish'
+    - Long-term trend filter: riduce score se long RSI > 65 (ipercomprato lungo)
+
     Args:
         ohlcv: list of [timestamp, open, high, low, close, volume]
+        ctx: optional dict da aggregate_timeframes() con dati multi-timeframe
 
     Returns:
         dict con:
@@ -96,11 +105,66 @@ def hermes_signal(ohlcv: list) -> dict:
             score -= 0.2
             reasons.append(f"sopra VWAP ({dist_pct:.1f}%)")
 
+    # ── Multi-timeframe enhancements (v3.1) ───────────────────────
+    if ctx is not None:
+        short = ctx.get("short", {})
+        long_tf = ctx.get("long", {})
+
+        # MACD momentum boost
+        macd = short.get("macd", {})
+        if macd:
+            macd_hist = macd.get("histogram", 0)
+            macd_pct = macd.get("histogram_pct", 0)
+
+            # Strong positive momentum -> boost BUY
+            if macd_hist > 0 and macd_pct > 0.01:
+                score += 0.15
+                reasons.append(f"MACD+ ({macd_pct:.3f}%)")
+            # Strong negative momentum -> boost SELL
+            elif macd_hist < 0 and macd_pct < -0.01:
+                score -= 0.15
+                reasons.append(f"MACD- ({macd_pct:.3f}%)")
+
+        # Long-term RSI climate check
+        long_rsi = long_tf.get("rsi", 50)
+        if long_rsi > 65:
+            score -= 0.1  # Long-term ipercomprato = clima bearish
+            reasons.append(f"longRSI {long_rsi:.0f}")
+        elif long_rsi < 35:
+            score += 0.1  # Long-term ipervenduto = clima bullish
+            reasons.append(f"longRSI {long_rsi:.0f}")
+
+        # Divergence: veto su BUY se bearish divergence
+        divergence = ctx.get("divergence", "neutral")
+        if divergence == "bearish":
+            score = min(score, -0.1)  # non comprare, forzare HOLD/SELL
+            reasons.append("🔴 bearish diverg")
+        elif divergence == "bullish":
+            score = max(score, 0.1)  # boost minimo, non forzare SELL
+            reasons.append("🟢 bullish diverg")
+
+        # ── Social Sentiment (v3.2) ──────────────────────────────
+        sent = ctx.get("sentiment", {})
+        if sent:
+            sent_score = sent.get("score", 0)
+            sent_weight = sent.get("weight", 0.15)
+            sources = sent.get("sources", [])
+
+            if sent_score != 0:
+                # Weighted blend: final_score = tech * (1-w) + sent * w
+                # Applichiamo come delta rispetto allo score attuale
+                delta = sent_score * sent_weight * 2  # *2 per amplificare l'impatto
+                score += delta
+                direction = "🟢" if sent_score > 0 else "🔴"
+                src_str = ",".join(sources[:2])
+                reasons.append(f"{direction}social {sent_score:.2f} [{src_str}]")
+
+    # ── Final action ────────────────────────────────────────────
     score = max(-1, min(1, score))
 
-    if score >= 0.5:
+    if score >= 0.3:
         action = "BUY"
-    elif score <= -0.5:
+    elif score <= -0.3:
         action = "SELL"
     else:
         action = "HOLD"

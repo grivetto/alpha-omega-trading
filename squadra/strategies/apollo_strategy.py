@@ -13,8 +13,8 @@ def apollo_signal(
     ohlcv_a: list,
     ohlcv_b: list,
     ratio_history: list,
-    z_entry: float = 2.0,
-    z_exit: float = 0.5,
+    z_entry: float = 1.5,
+    z_exit: float = 0.3,
 ) -> dict:
     """
     Genera segnale basato su mean reversion del ratio ETH/BTC.

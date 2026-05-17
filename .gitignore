@@ -4,6 +4,7 @@
 *.pem
 *.key
 *.cert
+.x_creds.json
 
 # Logs and databases
 *.log
