@@ -1,6 +1,27 @@
-# 🏦 Denaro - Automated Trading System
+# 🏦 Denaro — Automated Trading System
 
 Bot trading automatici per Binance, eseguiti su server dedicati con strategie multi-timeframe.
+
+```
+Sopravvivenza → Protezione → Intelligenza → Professionalità
+```
+
+## 🔬 Linea di Concetto
+
+Denaro è nato come collezione di bot sparsi, poi evoluto in un sistema a ciclo chiuso:
+
+1. **Sopravvivenza** — non perdere capitale. Circuit breaker, adaptive sizing, self-healing.
+2. **Protezione** — capital preservation come priority #1. Risk engine, stop-loss sistematici.
+3. **Intelligenza** — auto-apprendimento. Sentiment engine, optimizer volatilità, feedback loop.
+4. **Professionalità** — infrastruttura production-grade. systemd, tmux, watchdog, monitoring.
+
+### Ciclo Autonomo
+
+```
+TRADING → ANALISI → OTTIMIZZAZIONE → RIDEPLOY
+```
+
+> *"Il tempo è letteralmente denaro. L'obiettivo è posizionare nodi sentinella accanto ai server delle borse per intercettare l'evento e agire prima che il resto del mondo se ne accorga."* — Progetto Orbital Strike (visione futura)
 
 ## Stato Attuale — v3.2
 
