@@ -1,17 +1,81 @@
+# Secrets
 .env
 .env.*
+*.pem
+*.key
+*.cert
+.x_creds.json
+
+# Logs and databases
 *.log
-*.out
-*.json
+*.db
+*.db-shm
+*.db-wal
+trades.db*
+
+# Build artifacts
 __pycache__/
-*env/
+*.pyc
+*.pyo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temp
+.tmp/
+/tmp/
+*.bak
+*.bak2
+*.bak4
+*.backup*
+*.bak.*
+*~
+
+# Environment
+venv/
+env/
+.venv/
+
+# Systemd services
 *.service
+*.service.template
+
+# Data exports
 *.csv
-out_scrape/
+*.json
+!dashboard/public/*.json
+!squadra/config/*.json
+
+# Images
+*.png
+*.jpg
+*.jpeg
+
+# State files
+market_state.json
+strike_alert.flag
+out_sweep.txt
+qr_*.txt
+
+# Dev patches
+*.patch
+dev_team_changes.patch
+
+# Old bot templates
 test_*.py
-add_port.py
+add_*.py
 check_*.py
 fix_*.py
 clear_*.py
 get_*.py
 update_*.py
+
+# Dashboard — runtime deps (not source)
+dashboard/node_modules/
+dashboard/extensions/
+dashboard/plugin-sdk/
+dashboard/canvas-host/
+dashboard/export-html/
+dashboard/bundled/
+dashboard/src/
