@@ -1,0 +1,16 @@
+{
+    "symbol": "SOL/EUR",
+    "timeframe": "1m",
+    "timeframe_long": "1h",
+    "long_candles": 72,
+    "base_order_eur": 8.0,
+    "max_investment_eur": 25.0,
+    "take_profit_pct": 0.035,
+    "stop_loss_pct": 0.025,
+    "interval_sec": 15,
+    "sentiment": {
+        "enabled": true,
+        "weight": 0.15,
+        "interval_cycles": 10
+    }
+}

@@ -1,1 +1,0 @@
-# ASIAN_ECHO.log

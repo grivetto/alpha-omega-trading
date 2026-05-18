@@ -78,7 +78,7 @@ class DenaroCore:
 
         self._client = ccxt.binance({
             'apiKey': dotenv.get('BINANCE_API_KEY', ''),
-            'secret': dotenv.get('BINANCE_SECRET_KEY', ''),
+            'secret': dotenv.get('BINANCE_API_SECRET', ''),
             'sandbox': False,
             'options': {
                 'defaultType': 'spot',

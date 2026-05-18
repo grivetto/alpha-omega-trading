@@ -23,7 +23,7 @@ class AdaptiveTrendFilter:
     Returns a float [0.0..1.0] indicating how aggressively to trade:
       1.0 = full aggression (strong uptrend)
       0.5 = reduced grid (ranging/mild downtrend)
-      0.2 = minimal grid (strong downtrend — but still trade!)
+      0.6 = reduced grid (downtrend — but still trade!)
     The grid bot NEVER fully pauses based on trend alone.
     """
 
@@ -40,7 +40,7 @@ class AdaptiveTrendFilter:
           0.8 = uptrend
           0.6 = neutral
           0.4 = mild downtrend
-          0.2 = strong downtrend (still trade!)
+          0.6 = reduced (still trade!)
           0.0 = extreme conditions (use as circuit breaker only)
         """
         now = time.time()
@@ -75,7 +75,7 @@ class AdaptiveTrendFilter:
 
             # Weighted combination (EMA more important for trend)
             risk = ema_component * 0.6 + rsi_component * 0.4
-            risk = max(0.2, min(1.0, risk))  # Floor at 0.2 — ALWAYS trade at least 20%
+            risk = max(0.6, min(1.0, risk))  # Floor at 0.6 — ALWAYS trade at least 60%
 
             # Floor for extreme oversold (buying opportunity)
             if rsi < 25 and ema_dist < -3.0:

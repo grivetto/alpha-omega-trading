@@ -62,12 +62,19 @@ class GridBot(DenaroCore):
             self.load_config()
             self.state['last_config_reload'] = time.time()
 
-        # Apply optimizer's adjusted base order size
+        # 6. Apply optimizer's adjusted base order size
         adj_multiplier, adjusted_base = self.optimizer.get_adjustment(self.config['base_order_eur'])
         effective_base = adjusted_base
         risk_factor = 1.0
 
-        # 2. Adaptive Trend Filter — NEVER fully pauses
+        # NEW: Kelly Criterion for position sizing
+        win_prob = 0.52  # Assumed win rate from historical RSI + ATR combo
+        payout_ratio = 0.008  # 0.8% profit target per trade
+        f_star = max(0.01, min(0.15, (payout_ratio * win_prob - (1 - win_prob)) / payout_ratio))
+        eur_free = await self.get_balance('EUR')
+        effective_base = float(f_star * eur_free)
+
+        # 7. Adaptive Trend Filter — NEVER fully pauses
         # Returns risk_factor [0.2..1.0], scales order sizes
         risk_factor = self.trend_filter.get_risk_factor(client, self.config['symbol'], price)
         trend_label = self.trend_filter.get_trend_label(risk_factor)

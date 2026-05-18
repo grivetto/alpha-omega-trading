@@ -293,7 +293,55 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 result = False
             self.wfile.write(json.dumps({'ok': result}).encode())
         
+        elif self.path.startswith('/public/'):
+            self.serve_static()
+        elif self.path == '/squadra.log':
+            self.serve_file(BASE_DIR / 'squadra' / 'squadra.log', 'text/plain')
         else:
+            self.send_response(404)
+            self.end_headers()
+    
+    def serve_static(self):
+        """Serve files from dashboard/ and dashboard/public/ directories"""
+        path = self.path.lstrip('/')
+        file_path = BASE_DIR / 'dashboard' / path
+        if not file_path.exists() or not file_path.is_file():
+            self.send_response(404)
+            self.end_headers()
+            return
+        ext = file_path.suffix.lower()
+        mime = {
+            '.json': 'application/json',
+            '.html': 'text/html',
+            '.png': 'image/png',
+            '.jpg': 'image/jpeg',
+            '.jpeg': 'image/jpeg',
+            '.gif': 'image/gif',
+            '.css': 'text/css',
+            '.js': 'application/javascript',
+            '.svg': 'image/svg+xml',
+            '.ico': 'image/x-icon',
+        }.get(ext, 'application/octet-stream')
+        self.send_response(200)
+        self.send_header('Content-Type', mime)
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Cache-Control', 'no-cache')
+        self.end_headers()
+        with open(str(file_path), 'rb') as f:
+            self.wfile.write(f.read())
+    
+    def serve_file(self, path, mime):
+        """Serve an arbitrary file with given MIME type"""
+        path_str = str(path)
+        try:
+            with open(path_str, 'rb') as f:
+                self.send_response(200)
+                self.send_header('Content-Type', mime)
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.send_header('Cache-Control', 'no-cache')
+                self.end_headers()
+                self.wfile.write(f.read())
+        except FileNotFoundError:
             self.send_response(404)
             self.end_headers()
     
@@ -301,70 +349,12 @@ class DashboardHandler(BaseHTTPRequestHandler):
         pass  # Suppress HTTP log spam
     
     def get_dashboard_html(self):
-        return '''<!DOCTYPE html>
-<html lang="it">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Denaro Core</title>
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{background:#0d1117;color:#c9d1d9;font-family:-apple-system,sans-serif;padding:20px}
-h1{color:#58a6ff;font-size:22px;margin-bottom:20px}
-.glove{color:#8b949e;font-size:13px;margin-top:-15px;margin-bottom:20px}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:20px}
-.card{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:14px}
-.card .v{font-size:20px;font-weight:bold;margin-top:2px}
-.card .l{font-size:11px;color:#8b949e;text-transform:uppercase}
-.green{color:#3fb950}.red{color:#f85149}.orange{color:#d29922}
-.bots{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:14px;margin-bottom:20px}
-.bot-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #21262d}
-.bot-row:last-child{border-bottom:none}
-.bot-name{font-size:14px;font-weight:500}
-.bot-desc{font-size:11px;color:#8b949e}
-.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
-.dot.active{background:#3fb950}.dot.inactive{background:#f85149}
-.btn{background:#21262d;border:1px solid #30363d;color:#c9d1d9;padding:4px 12px;border-radius:4px;cursor:pointer;font-size:12px;margin-left:4px}
-.btn:hover{background:#30363d}
-.alarm{background:#3d1a1a;border:1px solid #f85149;border-radius:8px;padding:10px;margin-bottom:15px;font-size:13px;color:#f85149}
-canvas{max-height:300px}
-#chart-container{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:14px;margin-bottom:20px}
-</style></head>
-<body>
-<h1>⚡ Denaro Core</h1>
-<p class="glove">Trading Orchestration Engine — Multi-Strategy Platform</p>
-<div id="alerts"></div>
-<div class="grid" id="stats"></div>
-<div id="chart-container"><canvas id="chart"></canvas></div>
-<div class="bots" id="bots"></div>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
-<script>
-let chart=null;
-function fmt(n,s){return(n>=0?'+':'')+n.toFixed(2)+s}
-function update(){
-fetch('/api/status?'+Date.now()).then(r=>r.json()).then(d=>{
-  document.getElementById('alerts').innerHTML=d.alerts.map(a=>'<div class="alarm">🚨 '+a+'</div>').join('')
-  document.getElementById('stats').innerHTML=
-    '<div class="card"><div class="l">Capitale</div><div class="v">'+d.capital+'€</div></div>'+
-    '<div class="card"><div class="l">Oggi</div><div class="v '+(d.daily_pnl>=0?'green':'red')+'">'+fmt(d.daily_pnl,'€')+'</div></div>'+
-    '<div class="card"><div class="l">Drawdown</div><div class="v '+(d.drawdown>5?'red':'green')+'">'+d.drawdown+'%</div></div>'+
-    '<div class="card"><div class="l">Peak</div><div class="v">'+d.peak+'€</div></div>'
-  
-  document.getElementById('bots').innerHTML='<h3 style="margin-bottom:10px;font-size:14px">Bot</h3>'+
-    Object.entries(d.bots).map(([k,v])=>'<div class="bot-row"><div><div class="bot-name"><span class="dot '+(v=='active'?'active':'inactive')+'"></span>'+k+'</div><div class="bot-desc">'+(v=='active'?'Attivo':'Fermo')+'</div></div><div><button class="btn" onclick="botAction(\''+k+'\',\'restart\')">🔄</button></div></div>').join('')
-  
-  if(d.growth&&d.growth.length>1){
-    if(chart)chart.destroy()
-    chart=new Chart(document.getElementById('chart'),{type:'line',data:{
-      labels:d.growth.map(g=>g.t.slice(5,16)),
-      datasets:[{label:'Capitale',data:d.growth.map(g=>g.v),borderColor:'#58a6ff',backgroundColor:'rgba(88,166,255,0.1)',fill:true,tension:0.3,pointRadius:2}]
-    },options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#8b949e',maxTicksLimit:10}},y:{ticks:{color:'#8b949e',callback:v=>v+'€'},grid:{color:'#21262d'}}}}})
-  }
-}).catch(()=>{})
-}
-function botAction(n,a){fetch('/api/bot/'+n+'/'+a).then(r=>r.json()).then(()=>setTimeout(update,2000))}
-update()
-setInterval(update,15000)
-</script>
-</body></html>'''
+        try:
+            html_file = BASE_DIR / "dashboard" / "index.html"
+            with open(str(html_file), "r") as f:
+                return f.read()
+        except Exception as e:
+            return f'<!DOCTYPE html><html><body><h1>Dashboard Error</h1><p>{e}</p></body></html>'
 
 # ── CORE ENGINE ────────────────────────────────────
 class DenaroCore:
@@ -420,8 +410,9 @@ class DenaroCore:
             total_portfolio = eur_free + sol_eur + xrp_eur
 
             # Max trade: 15% del totale, ma non più degli EUR disponibili
-            capital = self.tracker.snapshot() or total_portfolio
-            max_trade = min(round(capital * 0.15, 2), round(eur_free + sol_eur, 2))
+            # Max trade limit: 15% del solo EUR libero, mai più che EUR libero + SOL libero
+            max_trade = min(round(eur_free * 0.15, 2), round(eur_free + sol_eur, 2))
+            logger.debug(f"Capital pool: EUR libero={eur_free:.2f}€, SOL libero={sol_eur:.2f}€, max_trade={max_trade:.2f}€")
             logger.info(f"Pool: {eur_free:.2f}€ EUR free, SOL={sol_eur:.2f}€ ({sol_balance:.4f} SOL), max_trade={max_trade:.2f}€")
             pool_file = BASE_DIR / '.tmp' / 'capital_pool.json'
             pool_state = {

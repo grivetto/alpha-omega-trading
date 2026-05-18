@@ -1,2 +1,0 @@
-# Prototipo generato autonomamente dall'Evolution Engine
-# Parametri ottimizzati: RSI=40
