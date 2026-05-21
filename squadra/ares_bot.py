@@ -10,13 +10,13 @@ class AresIntradayTrendBot(DenaroOpportunisticCore):
     def __init__(self, test_mode=False):
         super().__init__(bot_name="Ares", config_file="ares.json", test_mode=test_mode)
         self.symbol = self.config.get("symbol", "ETH/EUR")
-        self.timeframe = self.config.get("timeframe", "1m")
+        self.timeframe = self.config.get("timeframe", "5m")
         self.fast_period = self.config.get("fast_sma", 5)
         self.slow_period = self.config.get("slow_sma", 20)
         self.base_order_eur = self.config.get("base_order_eur", 10.0)
         self.max_investment = self.config.get("max_investment_eur", 30.0)
-        self.tp_pct = self.config.get("take_profit_pct", 0.008)
-        self.sl_pct = self.config.get("stop_loss_pct", 0.004)
+        self.tp_pct = self.config.get("take_profit_pct", 0.015)
+        self.sl_pct = self.config.get("stop_loss_pct", 0.010)
         self.in_position = False
         self.entry_price = 0.0
         self.entry_amount = 0.0

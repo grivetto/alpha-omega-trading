@@ -98,9 +98,9 @@ def hermes_signal(ohlcv: list) -> dict:
 
     score = max(-1, min(1, score))
 
-    if score >= 0.5:
+    if score >= 0.3:
         action = "BUY"
-    elif score <= -0.5:
+    elif score <= -0.3:
         action = "SELL"
     else:
         action = "HOLD"

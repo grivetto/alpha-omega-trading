@@ -59,41 +59,26 @@ def init_db():
 
 # ── BOT MANAGER ──────────────────────────────────────
 BOTS = {
-    #'grid_spot': {               # PAUSATO — capitale concentrato sullo scalper
-    #    'script': 'grid_bot_v3.py', 'type': 'process',
-    #    'service': 'grid_bot_v3', 'capital': 100,
-    #    'description': 'Spot grid SOL/EUR'
-    #},
-    #'sell_grid': {               # PAUSATO
-    #    'script': 'sell_grid_bot.py', 'type': 'process',
-    #    'service': 'sell_grid_bot', 'capital': 0,
-    #    'description': 'Sell grid SOL'
-    #},
-    #'dca': {                     # PAUSATO
-    #    'script': 'dca_bot.py', 'type': 'process',
-    #    'service': 'dca_bot', 'capital': 10,
-    #    'description': 'DCA ETH condizionale'
-    #},
-    #'swing': {                   # PAUSATO
-    #    'script': 'swing_trader.py', 'type': 'process',
-    #    'service': 'swing_trader', 'capital': 30,
-    #    'description': 'Swing ADA/AVAX/DOT'
-    #},
-    #'grid_spot': {               # PAUSATO — insufficient EUR capital (€1.58 free)
-    #    'script': 'grid_bot_v3.py', 'type': 'process',
-    #    'service': 'grid_bot_v3', 'capital': 200,
-    #    'description': 'Spot grid SOL/EUR - v3.8'
-    #},
-    #'shadow': {    # DISABLED — capitale insufficiente, shadow in screen
-    #    'script': 'shadow_grid.py', 'type': 'process',
-    #    'service': 'shadow_grid', 'capital': 30,
-    #    'description': 'Shadow grid crash recovery'
-    #},
-    #'rebalancer': {  # DISABLED — capitale insufficiente
-    #    'script': 'flash_rebalancer.py', 'type': 'process',
-    #    'service': 'flash_rebalancer', 'capital': 20,
-    #    'description': 'Flash rebalancer SOL/ETH'
-    #},
+    'squadra': {
+        'script': 'squadra/run_squadra.py', 'type': 'process',
+        'service': 'denaro-squadra', 'capital': 125,
+        'description': 'Squadra Denaro: Ares ETH/EUR, Hermes SOL/EUR, Apollo ETH/BTC, Artemis BTC/EUR'
+    },
+    'grid_spot': {
+        'script': 'grid_bot_v3.py', 'type': 'process',
+        'service': 'grid_bot_v3', 'capital': 100,
+        'description': 'Spot grid SOL/EUR — GridBot v3.8'
+    },
+    'dca': {
+        'script': 'dca_bot.py', 'type': 'process',
+        'service': 'dca_bot', 'capital': 10,
+        'description': 'DCA ETH condizionale'
+    },
+    'swing': {
+        'script': 'swing_trader.py', 'type': 'process',
+        'service': 'swing_trader', 'capital': 30,
+        'description': 'Swing ADA/AVAX/DOT'
+    },
 }
 
 class BotManager:

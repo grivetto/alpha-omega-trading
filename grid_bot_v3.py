@@ -25,7 +25,6 @@ from denaro_strategies import AdaptiveTrendFilter, VolatilityGrid, MartingaleLit
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - GRID-PRO - %(levelname)s - %(message)s')
 logger = logging.getLogger("GridBotPro")
 
-
 class GridBot(DenaroCore):
     def __init__(self):
         super().__init__(bot_name="GridBotPro")
@@ -54,7 +53,7 @@ class GridBot(DenaroCore):
     def _config_path(self):
         return os.path.join(os.path.dirname(__file__) or ".", "grid_config.json")
 
-    async def on_tick(self, price, client):
+    async def on_tick(self, price):
         self.state['current_price'] = price
 
         # 1. Dynamic Config Reload (less frequent: 600s)
@@ -64,23 +63,18 @@ class GridBot(DenaroCore):
 
         # 6. Apply optimizer's adjusted base order size
         adj_multiplier, adjusted_base = self.optimizer.get_adjustment(self.config['base_order_eur'])
-        effective_base = adjusted_base
-        risk_factor = 1.0
-
-        # NEW: Kelly Criterion for position sizing
-        win_prob = 0.52  # Assumed win rate from historical RSI + ATR combo
-        payout_ratio = 0.008  # 0.8% profit target per trade
-        f_star = max(0.01, min(0.15, (payout_ratio * win_prob - (1 - win_prob)) / payout_ratio))
-        eur_free = await self.get_balance('EUR')
-        effective_base = float(f_star * eur_free)
 
         # 7. Adaptive Trend Filter — NEVER fully pauses
-        # Returns risk_factor [0.2..1.0], scales order sizes
-        risk_factor = self.trend_filter.get_risk_factor(client, self.config['symbol'], price)
+        risk_factor = await self.trend_filter.get_risk_factor(self, self.config['symbol'], price)
         trend_label = self.trend_filter.get_trend_label(risk_factor)
 
-        # Apply risk factor to effective base — downsize in bad conditions but NEVER zero
-        effective_base = self.config['base_order_eur'] * risk_factor * adj_multiplier
+        # Apply Kelly Criterion + risk factor to effective base
+        win_prob = 0.52
+        payout_ratio = self.config.get('profit_per_grid', 0.012)
+        f_star = max(0.01, min(0.15, (payout_ratio * win_prob - (1 - win_prob)) / payout_ratio))
+        eur_free = await self.get_balance('EUR')
+        kelly_base = float(f_star * eur_free)
+        effective_base = max(kelly_base, self.config['base_order_eur'] * risk_factor * adj_multiplier)
 
         # 3. Kill Switch — only for catastrophic price drops (>5% below lowest grid level)
         kill_threshold = 0.05  # 5% — wider than v3's 2%
@@ -93,7 +87,7 @@ class GridBot(DenaroCore):
                 # Cancel only non-fill orders, keep filled positions
                 for order_id in self.state['placed_order_ids'][:]:
                     try:
-                        await asyncio.to_thread(client.cancel_order, order_id, self.config['symbol'])
+                        await self.cancel_order(order_id, self.config['symbol'])
                     except:
                         pass
                 self.state['placed_order_ids'] = []
@@ -115,13 +109,13 @@ class GridBot(DenaroCore):
         trailing_action = self.trailing_stop_check(price)
         if trailing_action == "EXIT":
             logger.warning(f"🚨 TRAILING STOP EXIT @ {price}€")
-            await self.close_all_positions(client, price)
+            await self.close_all_positions(price)
             self.state['grid_active'] = False
             return
 
         # 7. Initial Sync
         if not self.state['sync_done']:
-            await self.sync_existing_orders(client, price)
+            await self.sync_existing_orders(price)
             self.state['sync_done'] = True
 
         # 8. Rebalance check
@@ -133,10 +127,10 @@ class GridBot(DenaroCore):
 
         # 9. Grid Initialization/Healing
         if not self.state['paused'] and not self.state['grid_active']:
-            await self.init_grid(client, price, effective_base)
+            await self.init_grid(price, effective_base)
 
         # 10. Check Fills
-        await self.check_fills(client, effective_base)
+        await self.check_fills(effective_base)
 
         # 11. Periodic status log
         if int(time.time()) % 60 < 5:
@@ -147,7 +141,7 @@ class GridBot(DenaroCore):
                 f"Base: {effective_base:.2f}€ | Trend: {trend_label}"
             )
 
-    async def init_grid(self, client, current_price, base_eur):
+    async def init_grid(self, current_price, base_eur):
         eur_free = await self.get_balance('EUR')
         num_levels = self.config['grid_levels']
 
@@ -196,12 +190,7 @@ class GridBot(DenaroCore):
 
             try:
                 amount = order_eur / bp
-                order = await asyncio.to_thread(
-                    client.create_limit_buy_order,
-                    self.config['symbol'],
-                    round(amount, 5),
-                    bp
-                )
+                order = await self.create_limit_buy(self.config['symbol'], round(amount, 5), bp)
                 # Store level index for profit calculation
                 level_idx = len(buy_prices) - 1 - i  # Reverse index
                 order['_level_idx'] = level_idx
@@ -218,24 +207,18 @@ class GridBot(DenaroCore):
 
         # ── Range Trading: also place SELL orders above market using free SOL ──
         try:
-            balances = await asyncio.to_thread(client.fetch_balance)
             asset = self.config['symbol'].split('/')[0]
-            asset_free = balances['free'].get(asset, 0)
-            if asset_free > 0.01:
+            amount = await self.get_balance(asset)
+            if amount > 0.01:
                 per_sell = 0.05  # Use 0.05 per sell level
                 sell_levels = 3
-                max_use = min(asset_free, per_sell * sell_levels)
+                max_use = min(amount, per_sell * sell_levels)
                 num_sells = int(max_use / per_sell)
                 for i in range(num_sells):
-                    sell_pct = (i + 1) * 0.004  # 0.4%, 0.8%, 1.2% above market
+                    sell_pct = (i + 1) * 0.01  # 1%, 2%, 3% above market
                     sell_price = round(current_price * (1 + sell_pct), 2)
                     try:
-                        order = await asyncio.to_thread(
-                            client.create_limit_sell_order,
-                            self.config['symbol'],
-                            round(per_sell, 5),
-                            sell_price
-                        )
+                        order = await self.create_limit_sell(self.config['symbol'], round(per_sell, 5), sell_price)
                         # Mark with clientOrderId prefix for tracking
                         self.state['placed_order_ids'].append(order['id'])
                         logger.info(f"📈 RANGE SELL @ {sell_price}€ (+{sell_pct * 100:.1f}%) {per_sell} {asset}")
@@ -281,11 +264,11 @@ class GridBot(DenaroCore):
 
         return "HOLD"
 
-    async def check_fills(self, client, effective_base=15.0):
+    async def check_fills(self, effective_base=15.0):
         """FIXED: Proper amount tracking, martingale profit calc, order cleanup"""
         for order_id in self.state['placed_order_ids'][:]:
             try:
-                status = await asyncio.to_thread(client.fetch_order, order_id, self.config['symbol'])
+                status = await self.client.fetch_order(order_id, self.config['symbol'])
                 if status.get('status') == 'closed':
                     side = status['side']
                     price = float(status.get('average', 0))
@@ -318,21 +301,15 @@ class GridBot(DenaroCore):
                                 closest = min(self.state['grid_sell_levels'], key=lambda x: abs(x - target_sell_price))
                                 sell_amount = amount_val  # Sell same amount we bought
                                 try:
-                                    sell_order = await asyncio.to_thread(
-                                        client.create_limit_sell_order,
-                                        self.config['symbol'],
-                                        round(sell_amount, 5),
-                                        closest
-                                    )
-                                    self.state['placed_order_ids'].append(sell_order['id'])
-                                    logger.info(f"📈 SELL order placed @ {closest}€ for {sell_amount:.4f}")
+                                        sell_order = await self.create_limit_sell(self.config['symbol'], round(sell_amount, 5), closest)
                                 except Exception as e:
                                     logger.error(f"Failed to place SELL order @ {closest}€: {e}")
 
                     elif side == 'sell':
-                        # FIX: Proper fee calculation — no more 'in dir()' hack
-                        fee_rate = 0.00075  # Maker fee
-                        fee = price * amount_val * fee_rate
+                        fee_rate = 0.001  # Maker fee (0.1% without BNB discount)
+                        buy_fee = price * amount_val * fee_rate  # Estimated buy-side fee
+                        sell_fee = price * amount_val * fee_rate
+                        total_fee = buy_fee + sell_fee
 
                         # FIX: Find original buy level for martingale profit calculation
                         orig_eur = effective_base  # Default
@@ -347,11 +324,12 @@ class GridBot(DenaroCore):
                             except (ValueError, IndexError):
                                 pass  # Use default effective_base
 
-                        profit = (self.config['profit_per_grid'] * orig_eur) - fee
+                        gross_profit = self.config['profit_per_grid'] * orig_eur
+                        profit = gross_profit - total_fee
                         self.state['total_profit'] += profit
                         self.log_trade(
                             self.config['symbol'], 'SELL', price, amount_val,
-                            orig_eur, fee, profit
+                            orig_eur, total_fee, profit
                         )
                         # Track for optimizer — profit may be negative
                         self.optimizer.add_trade(profit)
@@ -365,7 +343,7 @@ class GridBot(DenaroCore):
             except Exception as e:
                 logger.error(f"Fill check error for order {order_id}: {e}")
 
-    async def sync_existing_orders(self, client, current_price):
+    async def sync_existing_orders(self, current_price):
         logger.info("Syncing orders with exchange...")
         try:
             open_orders = await self.sync_orders(self.config['symbol'])
@@ -386,7 +364,7 @@ class GridBot(DenaroCore):
 
             for o in cancel_orders_e:
                 try:
-                    await asyncio.to_thread(client.cancel_order, o['id'], self.config['symbol'])
+                    await self.cancel_order(o['id'], self.config['symbol'])
                     logger.info(f"Cancelled excess buy order {o['id']} @ {o['price']}")
                 except Exception:
                     pass
@@ -405,38 +383,30 @@ class GridBot(DenaroCore):
         except Exception as e:
             logger.error(f"Sync error: {e}")
 
-    async def close_all_positions(self, client, price):
+    async def close_all_positions(self, price):
         try:
-            balances = await asyncio.to_thread(client.fetch_balance)
             asset = self.config['symbol'].split('/')[0]
-            amount = balances['free'].get(asset, 0)
+            amount = await self.get_balance(asset)
             if amount > 0.0001:
-                await asyncio.to_thread(client.create_market_sell_order, self.config['symbol'], amount)
+                await self.create_market_sell(self.config['symbol'], amount)
                 logger.info(f"Closed all {asset} positions at {price}€")
         except Exception as e:
             logger.error(f"Close error: {e}")
 
-    async def run(self):
-        client = self.client
-        try:
-            ticker = await asyncio.to_thread(client.fetch_ticker, self.config['symbol'])
-            self.state['peak_value'] = ticker['last']
-            logger.info(f"Starting {self.config['symbol']} @ {self.state['peak_value']}€")
-        except Exception as e:
-            logger.error(f"Initial price error: {e}")
-            return
-
-        # WebSocket connection with reconnection
-        ws_url = f"wss://stream.binance.com:9443/ws/{self.config.get('symbol_ws', 'soleur')}@ticker"
+    async def _websocket_loop(self, symbol_ws, ws_url):
+        """Inner WebSocket loop with reconnection logic."""
         while True:
             try:
-                async with websockets.connect(ws_url, ping_interval=30) as ws:
-                    logger.info("WebSocket connected!")
+                async with websockets.connect(ws_url, ping_interval=30, ping_timeout=10) as ws:
+                    logger.info(f"WebSocket connected! ({symbol_ws}@ticker)")
                     while True:
                         raw = await ws.recv()
                         msg = json.loads(raw) if isinstance(raw, str) else raw
-                        if msg.get('e') == '24hrTicker':
-                            await self.on_tick(float(msg['c']), client)
+                        # Combined stream wraps data in {stream, data: {...}}
+                        # Raw stream sends data directly — support both formats
+                        data = msg.get('data', msg)
+                        if data.get('e') == '24hrTicker':
+                            await self.on_tick(float(data['c']))
             except websockets.exceptions.ConnectionClosed:
                 logger.warning("WebSocket disconnected. Reconnecting in 5s...")
                 await asyncio.sleep(5)
@@ -444,6 +414,23 @@ class GridBot(DenaroCore):
                 logger.error(f"WebSocket error: {e}. Reconnecting in 10s...")
                 await asyncio.sleep(10)
 
+    async def run(self):
+        await self.init_client()
+        try:
+            ticker = await self.fetch_ticker(self.config['symbol'])
+            self.state['peak_value'] = ticker['last']
+            logger.info(f"Starting {self.config['symbol']} @ {self.state['peak_value']}€")
+        except Exception as e:
+            logger.error(f"Initial price error: {e}")
+            return
+
+        # WebSocket connection with reconnection
+        symbol_ws = self.config.get('symbol_ws', 'soleur')
+        ws_url = f"wss://stream.binance.com:9443/stream?streams={symbol_ws}@ticker"
+        try:
+            await self._websocket_loop(symbol_ws, ws_url)
+        finally:
+            await self.close_client()
 
 if __name__ == "__main__":
     bot = GridBot()

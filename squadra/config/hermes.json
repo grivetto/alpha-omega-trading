@@ -5,8 +5,8 @@
     "long_candles": 72,
     "base_order_eur": 8.0,
     "max_investment_eur": 25.0,
-    "take_profit_pct": 0.035,
-    "stop_loss_pct": 0.025,
+    "take_profit_pct": 0.020,
+    "stop_loss_pct": 0.015,
     "interval_sec": 15,
     "sentiment": {
         "enabled": true,

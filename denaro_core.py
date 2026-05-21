@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 """
-DENARO CORE v3 — Base class for Denaro trading bots.
-Provides: Binance connectivity, balance management, order sync, ATR calculation.
+DENARO CORE v4 — Base class for Denaro trading bots.
+v4: Migrated to ccxt.async_support for native async performance.
+Provides: Binance connectivity (async), balance management, order sync, ATR calculation.
 
-This module was MISSING from the project — grid_bot_v3.py imports from it
-but no file existed, causing immediate crash on startup.
+Changes from v3:
+- ALL exchange calls are now native async (no more asyncio.to_thread hacks)
+- Client is initialized via async context (await self.init_client())
+- State persistence via SQLite (unchanged)
 """
 
-import ccxt
+import ccxt.async_support as ccxt
 import time
 import logging
 import json
@@ -19,7 +22,7 @@ logger = logging.getLogger("DenaroCore")
 class DenaroCore:
     """
     Base class for all Denaro bots. Provides:
-    - Binance exchange connectivity
+    - Binance exchange connectivity (async)
     - Balance fetching and caching
     - Order synchronization
     - ATR (Average True Range) calculation for volatility
@@ -45,7 +48,6 @@ class DenaroCore:
         if path is None:
             path = Path(__file__).parent / "grid_config.json"
         if not Path(path).exists():
-            # Try alternate locations
             for alt in ["./grid_config.json", "../grid_config.json"]:
                 if Path(alt).exists():
                     path = alt
@@ -57,15 +59,12 @@ class DenaroCore:
                      f"base_order_eur={self.config.get('base_order_eur')}")
         return self.config
 
-    @property
-    def client(self):
-        """Lazy Binance client initialization"""
-        if self._client is None:
-            self._init_client()
-        return self._client
+    async def init_client(self):
+        """Initialize ccxt.async_support Binance client with API keys.
+        Must be called once before any exchange operations."""
+        if self._client is not None:
+            return self._client
 
-    def _init_client(self):
-        """Initialize ccxt Binance client with API keys"""
         env_path = Path(".env")
         dotenv = {}
         if env_path.exists():
@@ -79,52 +78,58 @@ class DenaroCore:
         self._client = ccxt.binance({
             'apiKey': dotenv.get('BINANCE_API_KEY', ''),
             'secret': dotenv.get('BINANCE_API_SECRET', ''),
-            'sandbox': False,
+            'enableRateLimit': True,
             'options': {
                 'defaultType': 'spot',
             },
         })
-        # Disable nonce to avoid sync issues
-        self._client.nonce = lambda: int(time.time() * 1000)
-        logger.info(f"Binance client initialized for bot: {self.bot_name}")
+        # Load markets to populate symbol cache
+        try:
+            await self._client.load_markets()
+        except Exception as e:
+            logger.warning(f"load_markets failed (non-fatal): {e}")
+        logger.info(f"Binance async client initialized for bot: {self.bot_name}")
+        return self._client
+
+    @property
+    def client(self):
+        """Access the underlying async client. Call init_client() first."""
+        if self._client is None:
+            raise RuntimeError("Client not initialized. Call await init_client() first.")
+        return self._client
+
+    async def close_client(self):
+        """Close the async exchange connection."""
+        if self._client:
+            await self._client.close()
+            self._client = None
 
     async def get_balance(self, asset):
-        """Get free balance for an asset (EUR, SOL, BTC, etc.)"""
+        """Get free balance for an asset (EUR, SOL, BTC, etc.) — native async"""
         now = time.time()
         if self._balances_cache and (now - self._balances_ts) < self._cache_ttl:
             return self._balances_cache.get('free', {}).get(asset, 0.0)
 
         try:
-            # ccxt's fetch_balance is sync, run in thread
-            import asyncio
-            balances = await asyncio.to_thread(self.client.fetch_balance)
+            balances = await self.client.fetch_balance()
             self._balances_cache = balances
             self._balances_ts = now
             free = balances.get('free', {})
             return free.get(asset, 0.0)
         except Exception as e:
             logger.error(f"Balance fetch error: {e}")
-            # Return cached if available
             if self._balances_cache:
                 return self._balances_cache.get('free', {}).get(asset, 0.0)
             return 0.0
 
-    def get_balance_sync(self, asset):
-        """Synchronous balance fetch"""
-        try:
-            balances = self.client.fetch_balance()
-            self._balances_cache = balances
-            self._balances_ts = time.time()
-            return balances.get('free', {}).get(asset, 0.0)
-        except Exception as e:
-            logger.error(f"Balance fetch error: {e}")
-            return 0.0
+    async def get_balance_sync(self, asset):
+        """Synchronous balance fetch (delegates to async version)"""
+        return await self.get_balance(asset)
 
     async def sync_orders(self, symbol):
-        """Fetch all open orders for a symbol"""
+        """Fetch all open orders for a symbol — native async"""
         try:
-            import asyncio
-            orders = await asyncio.to_thread(self.client.fetch_open_orders, symbol)
+            orders = await self.client.fetch_open_orders(symbol)
             return [{
                 'id': o['id'],
                 'side': o['side'],
@@ -138,12 +143,9 @@ class DenaroCore:
             return []
 
     async def get_atr(self, symbol, timeframe='1h', lookback=14):
-        """Calculate Average True Range for volatility measurement"""
+        """Calculate Average True Range for volatility measurement — native async"""
         try:
-            import asyncio
-            ohlcv = await asyncio.to_thread(
-                self.client.fetch_ohlcv, symbol, timeframe=timeframe, limit=lookback + 1
-            )
+            ohlcv = await self.client.fetch_ohlcv(symbol, timeframe=timeframe, limit=lookback + 1)
             if len(ohlcv) < 2:
                 return 0.0
 
@@ -159,6 +161,53 @@ class DenaroCore:
         except Exception as e:
             logger.error(f"ATR calculation error: {e}")
             return 0.0
+
+    async def fetch_ticker(self, symbol):
+        """Fetch current ticker — native async"""
+        return await self.client.fetch_ticker(symbol)
+
+    async def fetch_ohlcv(self, symbol, timeframe='1h', limit=100):
+        """Fetch OHLCV candles — native async"""
+        return await self.client.fetch_ohlcv(symbol, timeframe=timeframe, limit=limit)
+
+    async def create_limit_buy(self, symbol, amount, price):
+        """Place a limit buy order — native async"""
+        try:
+            order = await self.client.create_limit_buy_order(symbol, amount, price)
+            logger.info(f"BUY {symbol} {amount:.4f} @ {price:.6f} — order_id={order.get('id', '?')}")
+            return order
+        except Exception as e:
+            logger.error(f"Limit buy error {symbol}: {e}")
+            return None
+
+    async def create_limit_sell(self, symbol, amount, price):
+        """Place a limit sell order — native async"""
+        try:
+            order = await self.client.create_limit_sell_order(symbol, amount, price)
+            logger.info(f"SELL {symbol} {amount:.4f} @ {price:.6f} — order_id={order.get('id', '?')}")
+            return order
+        except Exception as e:
+            logger.error(f"Limit sell error {symbol}: {e}")
+            return None
+
+    async def cancel_order(self, order_id, symbol):
+        """Cancel an open order — native async"""
+        try:
+            result = await self.client.cancel_order(order_id, symbol)
+            return result
+        except Exception as e:
+            logger.error(f"Cancel order error {order_id}: {e}")
+            return None
+
+    async def create_market_sell(self, symbol, amount):
+        """Place a market sell order — native async"""
+        try:
+            order = await self.client.create_market_sell_order(symbol, amount)
+            logger.info(f"MARKET SELL {symbol} {amount:.4f}")
+            return order
+        except Exception as e:
+            logger.error(f"Market sell error {symbol}: {e}")
+            return None
 
     def log_trade(self, symbol, side, price, amount, eur_value, fee, profit):
         """Log a completed trade"""

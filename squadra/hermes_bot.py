@@ -13,8 +13,8 @@ class HermesSentimentBot(DenaroOpportunisticCore):
         self.timeframe = self.config.get("timeframe", "1m")
         self.base_order_eur = self.config.get("base_order_eur", 8.0)
         self.max_investment = self.config.get("max_investment_eur", 25.0)
-        self.tp_pct = self.config.get("take_profit_pct", 0.035)
-        self.sl_pct = self.config.get("stop_loss_pct", 0.025)
+        self.tp_pct = self.config.get("take_profit_pct", 0.020)
+        self.sl_pct = self.config.get("stop_loss_pct", 0.015)
         self.in_position = False
         self.entry_price = 0.0
         self.entry_amount = 0.0
@@ -79,9 +79,9 @@ class HermesSentimentBot(DenaroOpportunisticCore):
 
         score = max(-1, min(1, score))
 
-        if score >= 0.5:
+        if score >= 0.3:
             action = "BUY"
-        elif score <= -0.5:
+        elif score <= -0.3:
             action = "SELL"
         else:
             action = "HOLD"

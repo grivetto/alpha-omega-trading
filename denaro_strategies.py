@@ -33,7 +33,7 @@ class AdaptiveTrendFilter:
         self.cache = {}
         self.cache_ttl = 60
 
-    def get_risk_factor(self, client, symbol, current_price):
+    async def get_risk_factor(self, bot, symbol, current_price):
         """
         Returns float [0.0..1.0]:
           1.0 = strong buy conditions
@@ -49,7 +49,7 @@ class AdaptiveTrendFilter:
             return self.cache[cache_key]
 
         try:
-            ohlcv = client.fetch_ohlcv(symbol, timeframe='1h', limit=max(self.ema_period + 1, self.rsi_period + 1))
+            ohlcv = await bot.fetch_ohlcv(symbol, timeframe='1h', limit=max(self.ema_period + 1, self.rsi_period + 1))
             closes = [c[4] for c in ohlcv]
             if len(closes) < max(self.ema_period, self.rsi_period):
                 return 0.6  # Neutral when insufficient data
