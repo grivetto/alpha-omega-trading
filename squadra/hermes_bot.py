@@ -79,7 +79,7 @@ class HermesSentimentBot(DenaroOpportunisticCore):
 
         score = max(-1, min(1, score))
 
-        if score >= 0.3:
+        if score >= 0.2:
             action = "BUY"
         elif score <= -0.3:
             action = "SELL"

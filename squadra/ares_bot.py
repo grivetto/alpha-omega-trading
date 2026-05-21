@@ -75,6 +75,14 @@ class AresIntradayTrendBot(DenaroOpportunisticCore):
                         self.entry_amount = amount
                         self.logger.info(f"ARES ENTRY {self.symbol} @ {current_price:.2f} | reason: {signal['reason']}")
                         self.save_position_to_db()
+                        # Place TP limit order immediately
+                        tp_price = round(self.entry_price * (1 + self.tp_pct), 2)
+                        tp_amount = round(self.entry_amount * 0.997, 5)
+                        try:
+                            await self.create_limit_sell(self.symbol, tp_amount, tp_price)
+                            self.logger.info(f"ARES TP order placed @ {tp_price}€ (+{self.tp_pct*100:.1f}%)")
+                        except Exception as e:
+                            self.logger.warning(f"Failed to place TP order: {e}")
         elif action == "SELL" and self.in_position:
             if not await self.validate_balance_before_sell(base, self.entry_amount):
                 return
@@ -95,6 +103,15 @@ class AresIntradayTrendBot(DenaroOpportunisticCore):
         restored = self.load_position_from_db()
         if restored:
             await self.startup_validate_position(self.symbol.split('/')[0])
+            # Place TP order for restored position
+            if self.in_position and self.entry_price > 0:
+                tp_price = round(self.entry_price * (1 + self.tp_pct), 2)
+                tp_amount = round(self.entry_amount * 0.997, 5)
+                try:
+                    await self.create_limit_sell(self.symbol, tp_amount, tp_price)
+                    self.logger.info(f"ARES TP order placed for restored position @ {tp_price}€")
+                except Exception as e:
+                    self.logger.warning(f"Failed to place TP for restored position: {e}")
         else:
             self.logger.info(f"[STARTUP] No position found in DB, starting fresh.")
 

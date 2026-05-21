@@ -158,8 +158,8 @@ class GridBot(DenaroCore):
             else:
                 num_levels = max(1, int(eur_free / (base_eur * 1.1)))
             if num_levels == 0:
-                logger.error("Insufficient EUR for grid")
-                self.state['grid_active'] = True
+                logger.warning(f"Insufficient EUR for grid ({eur_free:.2f}€ available, need {base_eur:.2f}€ minimum)")
+                self.state['grid_active'] = False  # Allow retry on next tick
                 return
 
         # Volatility-adaptive grid spacing
@@ -191,6 +191,9 @@ class GridBot(DenaroCore):
             try:
                 amount = order_eur / bp
                 order = await self.create_limit_buy(self.config['symbol'], round(amount, 5), bp)
+                if not order:
+                    logger.warning(f"BUY returned None @ {bp}€ (insufficient balance?)")
+                    continue
                 # Store level index for profit calculation
                 level_idx = len(buy_prices) - 1 - i  # Reverse index
                 order['_level_idx'] = level_idx
@@ -219,6 +222,9 @@ class GridBot(DenaroCore):
                     sell_price = round(current_price * (1 + sell_pct), 2)
                     try:
                         order = await self.create_limit_sell(self.config['symbol'], round(per_sell, 5), sell_price)
+                        if not order:
+                            logger.warning(f"RANGE SELL returned None @ {sell_price}€")
+                            continue
                         # Mark with clientOrderId prefix for tracking
                         self.state['placed_order_ids'].append(order['id'])
                         logger.info(f"📈 RANGE SELL @ {sell_price}€ (+{sell_pct * 100:.1f}%) {per_sell} {asset}")
