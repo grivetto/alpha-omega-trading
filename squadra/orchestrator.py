@@ -12,7 +12,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from core import ENV_PATH, DenaroOpportunisticCore
 from ares_bot import AresIntradayTrendBot
 from hermes_bot import HermesSentimentBot
-from apollo_bot import ApolloArbitrageBot
+from apollo_bot import ApolloPairBot
 from artemis_bot import ArtemisTrendBot
 
 CONFIG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config", "squadra.json")
@@ -38,22 +38,63 @@ class SquadraOrchestrator:
         return {}
 
     async def check_risk(self):
-        """Check if any bot needs to be stopped due to risk limits"""
+        """Check drawdown and total exposure — activate kill-switch if breached."""
         if self.test_mode:
-            return True  # No risk checks in test mode
+            return True
+
+        current_portfolio = await self._fetch_total_portfolio()
+
+        # Skip risk check if portfolio fetch failed (0 or very low)
+        if current_portfolio <= 0:
+            self.logger.warning("Portfolio fetch returned 0 — skipping risk check this cycle")
+            return True
+
+        # Track peak capital
+        if current_portfolio > self.peak_capital:
+            self.peak_capital = current_portfolio
+            self.logger.info(f"New capital peak: {self.peak_capital:.2f}€")
+
+        # Calcola drawdown reale dal picco
+        if self.peak_capital > 0:
+            drawdown_pct = (self.peak_capital - current_portfolio) / self.peak_capital * 100
+        else:
+            drawdown_pct = 0.0
+
+        # Esposizione totale
         total_exposure = 0.0
         for bot in self.bots:
             if hasattr(bot, 'in_position') and bot.in_position:
-                total_exposure += bot.base_order_eur
-        
+                order_size = getattr(bot, 'base_order_eur', 0) or getattr(bot, 'last_order_eur', 0)
+                total_exposure += order_size
+
+        # Log
+        self.logger.info(
+            f"Risk | Portfolio={current_portfolio:.2f}€ | Peak={self.peak_capital:.2f} | "
+            f"Drawdown={drawdown_pct:.2f}%/{self.drawdown_limit:.1f}% | "
+            f"Exposure={total_exposure:.2f}€/{self.max_total_eur:.2f}€ | "
+            f"KS={'⚠️ ON' if self.kill_switch else '✅'}"
+        )
+
+        # Se drawdown supera il limite → kill-switch
+        if drawdown_pct > self.drawdown_limit:
+            self.logger.error(
+                f"🚨 DRAWDOWN {drawdown_pct:.2f}% > LIMIT {self.drawdown_limit}% — "
+                f"ATTIVO KILL-SWITCH!"
+            )
+            self.kill_switch = True
+            return False
+
+        # Se l'esposizione totale è troppo alta
         if total_exposure > self.max_total_eur:
-            self.logger.warning(f"Total exposure {total_exposure:.2f}€ > limit {self.max_total_eur}€")
+            self.logger.warning(
+                f"⚠️ Total exposure {total_exposure:.2f}€ > limit {self.max_total_eur}€"
+            )
             return False
-        
+
         if self.kill_switch:
-            self.logger.error("KILL SWITCH ACTIVE — stopping all bots")
+            self.logger.error("☠️ KILL SWITCH ACTIVE — all bots stopped")
             return False
-        
+
         return True
 
     async def report(self):
@@ -79,7 +120,7 @@ class SquadraOrchestrator:
         # Instantiate bots with test_mode
         ares = AresIntradayTrendBot(test_mode=self.test_mode)
         hermes = HermesSentimentBot(test_mode=self.test_mode)
-        apollo = ApolloArbitrageBot(test_mode=self.test_mode)
+        apollo = ApolloPairBot(test_mode=self.test_mode)
         artemis = ArtemisTrendBot(test_mode=self.test_mode)
         
         # Clamp configs

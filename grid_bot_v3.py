@@ -48,7 +48,7 @@ class GridBot(DenaroCore):
         self.vol_grid = VolatilityGrid(self.config)
         self.martingale = MartingaleLite(self.config)
         self.rebalancer = IntelligentRebalancer(self.config)
-        self.optimizer = ProfitOptimizer(self.config, config_path=self._config_path)
+        self.optimizer = ProfitOptimizer(self.config, config_path=self._config_path())
 
     def _config_path(self):
         return os.path.join(os.path.dirname(__file__) or ".", "grid_config.json")
