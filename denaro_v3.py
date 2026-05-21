@@ -35,20 +35,23 @@ class DenaroV3:
 
         # Symbol-specific optimization
         if "ADA" in self.asset:
-            self.grid_spacing = 0.004  # 0.4% - optimized for fee efficiency
-            self.profit_pct = 0.005    # 0.5% target
-            self.min_grid_levels = 3
-            self.max_grid_levels = 7
+            self.grid_spacing = 0.003  # 0.3% - tighter for more fills
+            self.profit_pct = 0.004    # 0.4% target
+            self.min_grid_levels = 5
+            self.max_grid_levels = 10
+            self.base_order_eur = 5.5  # Lower to fit more orders
         elif "SOL" in self.asset:
             self.grid_spacing = 0.003  # 0.3% - SOL has better spread
             self.profit_pct = 0.004    # 0.4% target
             self.min_grid_levels = 3
             self.max_grid_levels = 5
+            self.base_order_eur = 5.5
         else:
             self.grid_spacing = 0.003
             self.profit_pct = 0.004
             self.min_grid_levels = 3
             self.max_grid_levels = 5
+            self.base_order_eur = 5.5
 
         # Fee structure (with BNB burn 25% discount)
         self.fee_rate = 0.00075  # 0.075% per side
