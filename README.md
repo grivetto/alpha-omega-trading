@@ -1,4 +1,4 @@
-# Denaro V3 — Adaptive Grid Trading System
+# Denaro V3 — Multi-Strategy Trading System
 
 <div align="center">
 
@@ -7,98 +7,146 @@
 [![ccxt](https://img.shields.io/badge/Library-ccxt-222.svg)](https://github.com/ccxt/ccxt)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Status](https://img.shields.io/badge/Status-Production-green.svg)]()
+[![Bots](https://img.shields.io/badge/Bots-5%20Active-brightgreen.svg)]()
 
-**Adaptive grid trading with fee-aware tracking, auto-compounding, and real-time monitoring.**
+**5 specialized bots running 24/7 across 3 servers. Grid + RSI + Momentum + Micro Scalping.**
 
 </div>
 
 ---
 
-## Overview
+## Live Bot Fleet
 
-Denaro V3 is a production-grade automated trading system running on Binance spot markets. It employs an adaptive grid strategy with symbol-specific optimization, real-time fee tracking, and automatic profit compounding.
-
-The system runs across a 3-server architecture with centralized monitoring via Zabbix 7.0.
-
-| Metric | Value |
-|--------|-------|
-| **Architecture** | 3-server distributed fleet |
-| **Strategy** | Adaptive grid with dynamic spacing |
-| **Fee Discount** | BNB burn enabled (25% savings) |
-| **Monitoring** | Zabbix 7.0 with custom metrics |
-| **License** | MIT |
+| Bot | Server | Pair | Strategy | Status |
+|-----|--------|------|----------|--------|
+| **Denaro V3 Grid** | MARCODG1 | ADA/EUR | Adaptive grid (0.3%) | 🟢 Active |
+| **RSI Reversion** | MARCODG1 | ADA/EUR | Mean reversion (RSI < 25) | 🟢 Active |
+| **Micro Scalper** | MARCODG1 | ADA/EUR | Ultra-tight grid (0.15%) | 🟢 Active |
+| **Denaro V3 Grid** | nuvola | SOL/EUR | Adaptive grid (0.3%) | 🟢 Active |
+| **Momentum Breakout** | nuvola | SOL/EUR | Volume + price breakout | 🟢 Active |
 
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    DENARO V3 FLEET                          │
-│                                                             │
-│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐   │
-│  │     mc2      │    │   Nuvola     │    │   MARCODG1   │   │
-│  │  (On-Prem)   │    │  (Cloud VPS) │    │  (Cloud VPS) │   │
-│  │              │    │              │    │              │   │
-│  │ ┌──────────┐ │    │ ┌──────────┐ │    │ ┌──────────┐ │   │
-│  │ │ Zabbix  │ │    │ │ Denaro   │ │    │ │ Denaro   │ │   │
-│  │ │ Server  │ │    │ │ V3       │ │    │ │ V3       │ │   │
-│  │ │ (Hub)   │ │    │ │ SOL/EUR  │ │    │ │ ADA/EUR  │ │   │
-│  │ └──────────┘ │    │ └──────────┘ │    │ └──────────┘ │   │
-│  └──────────────┘    └──────────────┘    └──────────────┘   │
-│         │                   │                   │            │
-│         └───────────────────┼───────────────────┘            │
-│                             │                                │
-│                    ┌────────▼────────┐                       │
-│                    │    Binance      │                       │
-│                    │  Spot Markets   │                       │
-│                    └─────────────────┘                       │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────┐
+│                        DENARO V3 FLEET                              │
+│                                                                     │
+│  ┌──────────────┐        ┌──────────────┐        ┌──────────────┐   │
+│  │     mc2      │        │   Nuvola     │        │   MARCODG1   │   │
+│  │  (On-Prem)   │        │  (Cloud VPS) │        │  (Cloud VPS) │   │
+│  │              │        │              │        │              │   │
+│  │ ┌──────────┐ │        │ ┌──────────┐ │        │ ┌──────────┐ │   │
+│  │ │ Zabbix  │ │        │ │ V3 Grid  │ │        │ │ V3 Grid  │ │   │
+│  │ │ Server  │ │        │ │ SOL/EUR  │ │        │ │ ADA/EUR  │ │   │
+│  │ │ (Hub)   │ │        │ ├──────────┤ │        │ ├──────────┤ │   │
+│  │ └──────────┘ │        │ │Momentum  │ │        │ │ RSI      │ │   │
+│  └──────────────┘        │ │Breakout  │ │        │ │Reversion │ │   │
+│         │                │ └──────────┘ │        │ ├──────────┤ │   │
+│         │                └──────────────┘        │ │Micro     │ │   │
+│         │                                        │ │Scalper   │ │   │
+│         └───────────────────┬────────────────────┤ └──────────┘ │   │
+│                             │                    └──────────────┘   │
+│                    ┌────────▼────────┐                               │
+│                    │    Binance      │                               │
+│                    │  Spot Markets   │                               │
+│                    └─────────────────┘                               │
+└─────────────────────────────────────────────────────────────────────┘
 ```
 
-## Features
+## Bot Strategies
 
-### Adaptive Grid Engine
+### 1. Denaro V3 Grid (`denaro_v3.py`)
 
-| Feature | Description |
-|---------|-------------|
-| **Dynamic Spacing** | Grid spacing adapts per symbol (ADA: 0.3%, SOL: 0.3%) |
-| **Capital-Aware Levels** | 3–10 grid levels based on available EUR |
-| **Auto-Compounding** | Order size grows with net profit (cap 1.8x) |
-| **Fee-Aware Tracking** | Net profit calculated after BNB burn discount (0.075%/side) |
-| **Verified Fills** | Uses `fetch_my_trades` to prevent false fill detection |
-| **Minimum Notional Guard** | Skips orders when capital < 5.5 EUR |
+Adaptive grid trading with symbol-specific optimization and auto-compounding.
 
-### Symbol-Specific Optimization
-
-| Parameter | ADA/EUR | SOL/EUR |
-|-----------|---------|---------|
+| Feature | ADA/EUR | SOL/EUR |
+|---------|---------|---------|
 | **Grid Spacing** | 0.3% | 0.3% |
 | **Profit Target** | 0.4% | 0.4% |
 | **Grid Levels** | 5–10 | 3–5 |
 | **Base Order** | 5.5 EUR | 5.5 EUR |
-| **Max Compound** | 1.8x | 1.8x |
+| **Compound Cap** | 1.8x | 1.8x |
+
+### 2. RSI Mean Reversion (`rsi_reversion.py`)
+
+Buys when RSI drops below 25 (oversold), sells on recovery above 55.
+
+| Parameter | Value |
+|-----------|-------|
+| **RSI Period** | 14 |
+| **Buy Threshold** | RSI < 25 |
+| **Sell Threshold** | RSI > 55 |
+| **Force Sell** | RSI > 70 |
+| **Take Profit** | 1.5% |
+| **Stop Loss** | 2.0% |
+| **Max Positions** | 5 |
+| **Candle Interval** | 5m |
+
+### 3. Micro Scalper (`micro_scalper.py`)
+
+Ultra-tight grid for maximum fill frequency on ranging markets.
+
+| Parameter | Value |
+|-----------|-------|
+| **Grid Spacing** | 0.15% (ultra-tight) |
+| **Profit per Scalp** | 0.2% |
+| **Grid Levels** | 8 |
+| **Base Order** | 5.5 EUR |
+| **Max Invested** | 50 EUR |
+| **Rebalance** | Every 120 seconds |
+
+### 4. Momentum Breakout (`momentum_breakout.py`)
+
+Detects volume spikes + price breakouts, enters fast, exits on reversal.
+
+| Parameter | Value |
+|-----------|-------|
+| **Candle Interval** | 3m |
+| **Volume Multiplier** | 2.5x average |
+| **Price Change** | > 0.8% in 3 candles |
+| **RSI Confirmation** | > 55 |
+| **Take Profit** | 2.0% |
+| **Stop Loss** | 1.5% |
+| **Trailing Stop** | 1.0% |
+| **Max Positions** | 3 |
+
+## Features
+
+### Shared Across All Bots
+
+- **Fee-Aware Tracking**: Net profit calculated after BNB burn (0.075%/side)
+- **Auto-Compounding**: Profits reinvested automatically
+- **Verified Fills**: Uses `fetch_my_trades` to prevent false detections
+- **Minimum Notional Guard**: Skips orders when capital < 5.0 EUR
+- **State Persistence**: Trade history saved to JSON for recovery
+- **Real-Time Logging**: Every action logged with timestamps
 
 ### Monitoring
 
-Real-time telemetry via Zabbix 7.0:
+Zabbix 7.0 with custom metrics:
 
-- **Bot Status**: Process health, order counts, fill rates
-- **Portfolio**: EUR balance, asset holdings, total value
-- **Grid Metrics**: Buys/sells placed, invested capital, net profit
-- **System Health**: CPU load, memory usage, disk space
-- **Watchdog**: Multi-service health aggregation
+- Bot process health and order counts
+- Portfolio balances and asset holdings
+- Grid metrics (buys/sells, invested, profit)
+- System health (CPU, memory, disk)
+- Watchdog aggregation
 
 ## Project Structure
 
 ```
 denaro/
-├── denaro_v3.py              # Main V3 grid bot (adaptive, fee-aware)
+├── denaro_v3.py              # Adaptive grid bot (ADA + SOL)
+├── rsi_reversion.py          # RSI mean reversion bot (ADA)
+├── micro_scalper.py          # Ultra-tight grid scalper (ADA)
+├── momentum_breakout.py      # Volume + price breakout bot (SOL)
 ├── zabbix_metrics.py         # Unified Zabbix metric helper
-├── zabbix_grid_metric.py     # Grid-specific metric parser from logs
+├── zabbix_grid_metric.py     # Grid-specific metric parser
 ├── zabbix/
 │   ├── mc2.conf              # Zabbix config for mc2 (Hub)
 │   ├── nuvola.conf           # Zabbix config for nuvola (SOL)
 │   └── marcodg1.conf         # Zabbix config for MARCODG1 (ADA)
-└── README.md                 # This file
+├── README.md                 # This file
+└── LICENSE                   # MIT License
 ```
 
 ## Quick Start
@@ -127,15 +175,26 @@ BINANCE_API_SECRET=your_api_secret
 EOF
 ```
 
-### Running a Bot
+### Running Bots
 
 ```bash
-# Direct execution
-python3 denaro_v3.py SOL/EUR
+# Grid bot (adaptive spacing)
 python3 denaro_v3.py ADA/EUR
+python3 denaro_v3.py SOL/EUR
+
+# RSI mean reversion
+python3 rsi_reversion.py ADA/EUR
+
+# Micro scalper (ultra-tight grid)
+python3 micro_scalper.py ADA/EUR
+
+# Momentum breakout
+python3 momentum_breakout.py SOL/EUR
 
 # Production (background)
 nohup python3 denaro_v3.py ADA/EUR > denaro_v3.log 2>&1 &
+nohup python3 rsi_reversion.py ADA/EUR > rsi_reversion.log 2>&1 &
+nohup python3 micro_scalper.py ADA/EUR > micro_scalper.log 2>&1 &
 ```
 
 ### Deploying Zabbix Monitoring
