@@ -1,13 +1,14 @@
-# Denaro — Automated Crypto Trading System
+# Denaro V3 — Adaptive Grid Trading System
 
 <div align="center">
-
-**Survival → Protection → Intelligence → Professionalism**
 
 [![Python](https://img.shields.io/badge/Python-3.12+-blue.svg)](https://www.python.org/)
 [![Binance](https://img.shields.io/badge/Exchange-Binance-F0B90B.svg)](https://www.binance.com/)
 [![ccxt](https://img.shields.io/badge/Library-ccxt-222.svg)](https://github.com/ccxt/ccxt)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Status](https://img.shields.io/badge/Status-Production-green.svg)]()
+
+**Adaptive grid trading with fee-aware tracking, auto-compounding, and real-time monitoring.**
 
 </div>
 
@@ -15,105 +16,89 @@
 
 ## Overview
 
-Denaro is a multi-strategy, multi-server automated trading system designed for Binance spot markets. It runs as a fleet of independent bots coordinated by a central orchestrator, each executing a distinct strategy across different asset pairs and timeframes.
+Denaro V3 is a production-grade automated trading system running on Binance spot markets. It employs an adaptive grid strategy with symbol-specific optimization, real-time fee tracking, and automatic profit compounding.
 
-The system follows a four-phase evolution philosophy:
+The system runs across a 3-server architecture with centralized monitoring via Zabbix 7.0.
 
-| Phase | Focus | Implementation |
-|-------|-------|----------------|
-| **Survival** | Capital preservation | Circuit breakers, adaptive position sizing, self-healing |
-| **Protection** | Risk management | Stop-loss enforcement, drawdown limits, exposure guards |
-| **Intelligence** | Adaptive learning | Volatility-adaptive grids, sentiment analysis, profit optimization |
-| **Professionalism** | Production-grade ops | systemd services, structured logging, web dashboard, SQLite persistence |
+| Metric | Value |
+|--------|-------|
+| **Architecture** | 3-server distributed fleet |
+| **Strategy** | Adaptive grid with dynamic spacing |
+| **Fee Discount** | BNB burn enabled (25% savings) |
+| **Monitoring** | Zabbix 7.0 with custom metrics |
+| **License** | MIT |
 
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                        DENARO FLEET                             │
-│                                                                 │
-│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐       │
-│  │     mc2      │    │   Nuvola     │    │   MARCODG1   │       │
-│  │  (On-Prem)   │    │  (Cloud VPS) │    │  (Cloud VPS) │       │
-│  │              │    │              │    │              │       │
-│  │ ┌──────────┐ │    │ ┌──────────┐ │    │ ┌──────────┐ │       │
-│  │ │  Ares    │ │    │ │ GridBot  │ │    │ │ GridBot  │ │       │
-│  │ │ETH/EUR 5m│ │    │ │SOL/EUR   │ │    │ │ADA/EUR   │ │       │
-│  │ └──────────┘ │    │ └──────────┘ │    │ └──────────┘ │       │
-│  │ ┌──────────┐ │    └──────────────┘    └──────────────┘       │
-│  │ │  Hermes  │ │                                                │
-│  │ │SOL/EUR 1m│ │    ┌──────────────────────────────┐           │
-│  │ └──────────┘ │    │        Orchestrator           │           │
-│  │ ┌──────────┐ │    │  • Web Dashboard (:8899)      │           │
-│  │ │  Apollo  │ │    │  • Portfolio Tracker           │           │
-│  │ │ETH/BTC 5m│ │    │  • Risk Manager                │           │
-│  │ └──────────┘ │    │  • Capital Pooling             │           │
-│  │ ┌──────────┐ │    │  • Bot Health Monitoring       │           │
-│  │ │ Artemis  │ │    └──────────────────────────────┘           │
-│  │ │BTC/EUR 1d│ │                                                │
-│  │ └──────────┘ │                                                │
-│  └──────────────┘                                                │
-└─────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│                    DENARO V3 FLEET                          │
+│                                                             │
+│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐   │
+│  │     mc2      │    │   Nuvola     │    │   MARCODG1   │   │
+│  │  (On-Prem)   │    │  (Cloud VPS) │    │  (Cloud VPS) │   │
+│  │              │    │              │    │              │   │
+│  │ ┌──────────┐ │    │ ┌──────────┐ │    │ ┌──────────┐ │   │
+│  │ │ Zabbix  │ │    │ │ Denaro   │ │    │ │ Denaro   │ │   │
+│  │ │ Server  │ │    │ │ V3       │ │    │ │ V3       │ │   │
+│  │ │ (Hub)   │ │    │ │ SOL/EUR  │ │    │ │ ADA/EUR  │ │   │
+│  │ └──────────┘ │    │ └──────────┘ │    │ └──────────┘ │   │
+│  └──────────────┘    └──────────────┘    └──────────────┘   │
+│         │                   │                   │            │
+│         └───────────────────┼───────────────────┘            │
+│                             │                                │
+│                    ┌────────▼────────┐                       │
+│                    │    Binance      │                       │
+│                    │  Spot Markets   │                       │
+│                    └─────────────────┘                       │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-## Strategies
+## Features
 
-### Grid Bot (Nuvola + MARCODG1)
-
-Adaptive grid trading with volatility-aware spacing and martingale-lite position sizing.
+### Adaptive Grid Engine
 
 | Feature | Description |
 |---------|-------------|
-| **AdaptiveTrendFilter** | EMA-200 + RSI-14 continuous risk factor (0.0–1.0) |
-| **VolatilityGrid** | ATR-based grid spacing, adapts to market conditions |
-| **MartingaleLite** | Progressive sizing at lower grid levels (factor 1.12–1.15) |
-| **ProfitOptimizer** | Hourly performance review with automatic risk adjustment |
-| **Trailing Stop** | State-based with auto-breakeven on profit |
-| **Kill Switch** | Automatic pause on catastrophic drops (>5%) |
+| **Dynamic Spacing** | Grid spacing adapts per symbol (ADA: 0.3%, SOL: 0.3%) |
+| **Capital-Aware Levels** | 3–10 grid levels based on available EUR |
+| **Auto-Compounding** | Order size grows with net profit (cap 1.8x) |
+| **Fee-Aware Tracking** | Net profit calculated after BNB burn discount (0.075%/side) |
+| **Verified Fills** | Uses `fetch_my_trades` to prevent false fill detection |
+| **Minimum Notional Guard** | Skips orders when capital < 5.5 EUR |
 
-### Squadra Bots (mc2)
+### Symbol-Specific Optimization
 
-Four specialized bots sharing a capital pool with centralized risk management.
+| Parameter | ADA/EUR | SOL/EUR |
+|-----------|---------|---------|
+| **Grid Spacing** | 0.3% | 0.3% |
+| **Profit Target** | 0.4% | 0.4% |
+| **Grid Levels** | 5–10 | 3–5 |
+| **Base Order** | 5.5 EUR | 5.5 EUR |
+| **Max Compound** | 1.8x | 1.8x |
 
-| Bot | Pair | Timeframe | Strategy | Entry Signal |
-|-----|------|-----------|----------|--------------|
-| **Ares** | ETH/EUR | 5m | SMA Crossover | Fast SMA crosses above Slow SMA |
-| **Hermes** | SOL/EUR | 1m | Sentiment Score | RSI + Volume Spike + VWAP composite |
-| **Apollo** | ETH/BTC | 5m | Pair Trading | Z-score mean reversion on ratio |
-| **Artemis** | BTC/EUR | 1d | Long-Only Trend | SMA50/SMA200 golden cross |
+### Monitoring
+
+Real-time telemetry via Zabbix 7.0:
+
+- **Bot Status**: Process health, order counts, fill rates
+- **Portfolio**: EUR balance, asset holdings, total value
+- **Grid Metrics**: Buys/sells placed, invested capital, net profit
+- **System Health**: CPU load, memory usage, disk space
+- **Watchdog**: Multi-service health aggregation
 
 ## Project Structure
 
 ```
 denaro/
-├── grid_bot_v3.py              # Grid trading bot (Nuvola + MARCODG1)
-├── denaro_core.py              # Async base class: exchange, balance, orders
-├── denaro_strategies.py        # Shared strategy engine (trend, grid, optimizer)
-├── orchestrator.py             # Fleet orchestrator + web dashboard
-├── trade_db.py                 # SQLite persistence layer (WAL mode)
-├── grid_config.json            # Grid bot configuration
-├── requirements.txt            # Python dependencies
-│
-├── squadra/                    # Squadra bots (mc2)
-│   ├── run_squadra.py          # Entry point
-│   ├── orchestrator.py         # Squadra coordinator + risk loop
-│   ├── core.py                 # Async base class for squad bots
-│   ├── ares_bot.py             # ETH/EUR trend follower
-│   ├── hermes_bot.py           # SOL/EUR sentiment bot
-│   ├── apollo_bot.py           # ETH/BTC pair trading
-│   ├── artemis_bot.py          # BTC/EUR long-term trend
-│   ├── config/                 # Per-bot JSON configurations
-│   └── strategies/             # Pure strategy functions
-│
-├── dashboard/                  # Web UI
-│   ├── index.html              # Main dashboard
-│   └── public/                 # Live JSON data feeds
-│
-└── utils/                      # Shared utilities
-    ├── indicators.py           # Technical indicators
-    ├── risk_engine.py          # Risk management
-    ├── exit_strategy.py        # Exit logic
-    └── sentiment.py            # Social sentiment engine
+├── denaro_v3.py              # Main V3 grid bot (adaptive, fee-aware)
+├── zabbix_metrics.py         # Unified Zabbix metric helper
+├── zabbix_grid_metric.py     # Grid-specific metric parser from logs
+├── zabbix/
+│   ├── mc2.conf              # Zabbix config for mc2 (Hub)
+│   ├── nuvola.conf           # Zabbix config for nuvola (SOL)
+│   └── marcodg1.conf         # Zabbix config for MARCODG1 (ADA)
+└── README.md                 # This file
 ```
 
 ## Quick Start
@@ -122,7 +107,8 @@ denaro/
 
 - Python 3.12+
 - Binance API keys (spot trading)
-- systemd (for production deployment)
+- `ccxt` library (`pip install ccxt`)
+- Zabbix Agent 7.0+ (for monitoring)
 
 ### Installation
 
@@ -131,89 +117,94 @@ denaro/
 git clone https://github.com/grivetto/alpha-omega-trading.git denaro
 cd denaro
 
-# Create virtual environment
-python3 -m venv venv
-source venv/bin/activate
-
 # Install dependencies
-pip install -r requirements.txt
+pip install ccxt
 
 # Configure API keys
-cp .env.example .env
-# Edit .env with your BINANCE_API_KEY and BINANCE_API_SECRET
+cat > .env << EOF
+BINANCE_API_KEY=your_api_key
+BINANCE_API_SECRET=your_api_secret
+EOF
 ```
 
-### Running a Grid Bot
+### Running a Bot
 
 ```bash
 # Direct execution
-python3 grid_bot_v3.py
+python3 denaro_v3.py SOL/EUR
+python3 denaro_v3.py ADA/EUR
 
-# As a systemd service (production)
-sudo cp systemd/denaro-grid.service /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl enable --now denaro-grid
+# Production (background)
+nohup python3 denaro_v3.py ADA/EUR > denaro_v3.log 2>&1 &
 ```
 
-### Running the Squadra
+### Deploying Zabbix Monitoring
 
 ```bash
-# Direct execution
-python3 squadra/run_squadra.py
+# Copy config to Zabbix agent directory
+sudo cp zabbix/nuvola.conf /etc/zabbix/zabbix_agentd.d/denaro_v3.conf
+sudo systemctl restart zabbix-agent
 
-# As a systemd service (production)
-sudo cp systemd/denaro-squadra.service /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl enable --now denaro-squadra
-```
-
-### Dashboard
-
-The orchestrator serves a live web dashboard on port 8899:
-
-```
-http://<server-ip>:8899
-```
-
-## Monitoring
-
-```bash
-# Check all services
-ssh mc2     'sudo systemctl status denaro-squadra'
-ssh nuvola  'sudo systemctl status denaro-grid'
-ssh MARCODG1 'sudo systemctl status denaro-grid'
-
-# Follow logs in real-time
-ssh mc2 'sudo journalctl -fu denaro-squadra --output=cat'
-
-# Restart a bot
-ssh mc2 'sudo systemctl restart denaro-squadra'
+# Test metrics from Zabbix server
+zabbix_get -s <server> -k "denaro.v3.load.1m"
+zabbix_get -s <server> -k "denaro.v3.bot.sol_grid"
 ```
 
 ## Configuration
 
-Each bot reads its parameters from a JSON config file. Key settings:
+The bot auto-detects the symbol and applies optimized parameters. Override defaults by editing `denaro_v3.py`:
 
-| Parameter | Grid Bot | Squadra | Description |
-|-----------|----------|---------|-------------|
-| `grid_range_pct` | 0.10 (SOL), 0.08 (ADA) | — | Total grid width as % of price |
-| `grid_levels` | 7 | — | Number of buy/sell levels |
-| `base_order_eur` | 20.0 (SOL), 12.0 (ADA) | 8–10 | Base order size in EUR |
-| `take_profit_pct` | 0.015 | 0.015–0.020 | Take profit threshold |
-| `stop_loss_pct` | 0.015 | 0.010–0.015 | Stop loss threshold |
-| `martingale_factor` | 1.12–1.15 | — | Size multiplier per level |
+```python
+# Symbol-specific optimization
+if "ADA" in self.asset:
+    self.grid_spacing = 0.003     # 0.3% spacing
+    self.profit_pct = 0.004       # 0.4% profit target
+    self.min_grid_levels = 5      # Minimum grid levels
+    self.max_grid_levels = 10     # Maximum grid levels
+    self.base_order_eur = 5.5     # Base order size
+```
 
 ## Risk Management
 
-- **Circuit Breaker**: All bots halt if portfolio drawdown exceeds 15%
-- **Daily Loss Limit**: €10 maximum daily loss per bot group
-- **Exposure Cap**: Maximum €200 total allocation across all squad bots
-- **Per-Bot Limit**: €30 maximum per individual bot
-- **Phantom Position Detection**: Exchange balance validation on startup
+| Guard | Threshold | Action |
+|-------|-----------|--------|
+| **Minimum Order** | 5.5 EUR | Skip grid placement |
+| **Minimum Notional** | 5.0 EUR per order | Skip individual orders |
+| **Max Investment** | 100 EUR per grid | Cap total grid exposure |
+| **Compound Cap** | 1.8x | Limit order size growth |
+| **BNB Fee Discount** | Enabled | 25% fee reduction via API |
 
 ## License
 
-This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
+This project is licensed under the **MIT License**.
+
+```
+MIT License
+
+Copyright (c) 2026 Sergio Grivetto
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
+## History
+
+Full development history (V1 → V2 → V3): [github.com/grivetto/dollari](https://github.com/grivetto/dollari)
 
 ## Contact
 
