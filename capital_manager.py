@@ -34,33 +34,34 @@ def allocate():
         perf[bot] = {"score": score, "stats": stats}
         total_score += score
 
-    # Default equal split
-    total_eur = 220.0  # approximate total capital
+        # Minimum EUR reserve (never allocate this — keeps powder dry)
+    min_eur_reserve = 20.0
+    deployable_eur = 200.0  # 220 - 20 reserve
+
     allocations = {}
+    reserve_rationale = f"reserve={min_eur_reserve}€ kept aside"
 
     if total_score > 0:
         for bot in bots:
             weight = perf[bot]["score"] / total_score
-            # Apply regime-based caps
             if regime == "volatile":
-                weight = min(weight, 0.4)  # max 40% in volatile
+                weight = min(weight, 0.4)
             elif regime == "quiet":
-                weight = max(weight, 0.2)  # min 20% in quiet
+                weight = max(weight, 0.2)
 
-            alloc = round(total_eur * weight, 2)
-            alloc = max(5.0, min(alloc, total_eur * 0.6))  # clamp 5€ to 60%
+            alloc = round(deployable_eur * weight, 2)
+            alloc = max(5.0, min(alloc, deployable_eur * 0.6))
             allocations[bot] = alloc
     else:
-        equal = round(total_eur / len(bots), 2)
+        equal = round(deployable_eur / len(bots), 2)
         for bot in bots:
             allocations[bot] = equal
 
-    # Save allocations
     for bot, alloc in allocations.items():
-        rationale = f"score={perf[bot]['score']:.2f}, regime={regime}"
+        rationale = f"{reserve_rationale}, score={perf[bot]['score']:.2f}, regime={regime}"
         memory.save_allocation(bot, alloc, rationale)
 
-    print(f"[CAP] Allocations: {json.dumps(allocations)} (regime={regime})")
+    print(f"[CAP] Allocations: {json.dumps(allocations)} (reserve={min_eur_reserve}€, regime={regime})")
     return allocations
 
 
