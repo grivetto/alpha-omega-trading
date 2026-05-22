@@ -16,6 +16,9 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).parent
+sys.path.insert(0, str(BASE_DIR))
+from denaro_memory import DenaroMemory
+MEMORY = DenaroMemory()
 load_dotenv(BASE_DIR / '.env')
 API_KEY = os.getenv('BINANCE_API_KEY')
 API_SECRET = os.getenv('BINANCE_API_SECRET')
@@ -222,7 +225,8 @@ class RiskManager:
 # ── WEB DASHBOARD ──────────────────────────────────
 class DashboardHandler(BaseHTTPRequestHandler):
     def do_GET(self):
-        if self.path == '/api/status':
+        path = self.path.split('?')[0]
+        if path == '/api/status':
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
             self.send_header('Access-Control-Allow-Origin', '*')
@@ -255,7 +259,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
             }
             self.wfile.write(json.dumps(response).encode())
         
-        elif self.path == '/' or self.path == '/dashboard':
+        elif path == '/' or path == '/dashboard':
             self.send_response(200)
             self.send_header('Content-Type', 'text/html')
             self.end_headers()
@@ -263,7 +267,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
             self.wfile.write(html.encode())
         
         elif self.path.startswith('/api/bot/'):
-            action = self.path.split('/')[-1]
+            action = self.path.split('/')[-1].split('?')[0]
             name = self.path.split('/')[-2] if len(self.path.split('/')) > 3 else ''
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
@@ -282,6 +286,29 @@ class DashboardHandler(BaseHTTPRequestHandler):
             self.serve_static()
         elif self.path == '/squadra.log':
             self.serve_file(BASE_DIR / 'squadra' / 'squadra.log', 'text/plain')
+        elif path == '/api/regime':
+            self._api_json(MEMORY.get_current_regime())
+        elif path == '/api/regime/history':
+            limit = int(self._get_arg('limit', 48))
+            self._api_json(MEMORY.get_regime_history(limit))
+        elif self.path.startswith('/api/params/'):
+            bot = self.path.split('/')[-1].split('?')[0]
+            self._api_json(MEMORY.get_bot_params(bot))
+        elif path == '/api/memory/summary':
+            stats = MEMORY.summary()
+            trades = MEMORY.get_recent_trades(limit=200)
+            stats['recent_trades'] = trades[:20]
+            self._api_json(stats)
+        elif path == '/api/memory/trades':
+            bot = self._get_arg('bot')
+            limit = int(self._get_arg('limit', 50))
+            self._api_json(MEMORY.get_recent_trades(bot, limit))
+        elif path == '/api/memory/stats':
+            bot = self._get_arg('bot')
+            self._api_json(MEMORY.get_trade_stats(bot))
+        elif path == '/api/memory/daily':
+            days = int(self._get_arg('days', 7))
+            self._api_json(MEMORY.get_daily_pnl(days))
         else:
             self.send_response(404)
             self.end_headers()
@@ -330,6 +357,18 @@ class DashboardHandler(BaseHTTPRequestHandler):
             self.send_response(404)
             self.end_headers()
     
+    def _api_json(self, data, status=200):
+        self.send_response(status)
+        self.send_header('Content-Type', 'application/json')
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.end_headers()
+        self.wfile.write(json.dumps(data, default=str).encode())
+
+    def _get_arg(self, key, default=None):
+        from urllib.parse import urlparse, parse_qs
+        qs = parse_qs(urlparse(self.path).query)
+        return qs.get(key, [default])[0] if qs.get(key) else default
+
     def log_message(self, format, *args):
         pass  # Suppress HTTP log spam
     

@@ -6,7 +6,7 @@ Cycles: sell → buy → sell → buy → ...
 Uses existing SOL inventory + small EUR reserve.
 Minimal overlap with Stellatron (ADA grid on nuvola, same account).
 """
-import asyncio, ccxt.async_support as ccxt, logging, os, sys, time, json
+import asyncio, ccxt.async_support as ccxt, logging, os, sys, time, json, urllib.request
 from pathlib import Path
 
 BASE = Path(__file__).parent
@@ -18,6 +18,8 @@ logger = logging.getLogger("MarcoSOL")
 
 MIN_NOTIONAL = 5.0
 FEE = 0.00075  # 0.075% per side
+OPTIMIZER_API = "http://192.168.1.99:8899/api/params/marco_sol"
+PARAMS_FILE = BASE / "params_marco_sol.json"
 
 class MarcoSOL:
     def __init__(self):
@@ -33,7 +35,43 @@ class MarcoSOL:
         self.fills = 0
         self.active = True
         self.last_trade = 0
+        self.sell_raise = 0.005  # default +0.5%
+        self.buy_drop = 0.996    # default -0.4% (multiplier form)
+        self._last_params_fetch = 0
         self._load_state()
+        self._load_optimized_params()
+
+    def _load_optimized_params(self):
+        """Fetch optimized spread params from Denaro optimizer"""
+        params = None
+        try:
+            with urllib.request.urlopen(OPTIMIZER_API, timeout=5) as resp:
+                data = json.loads(resp.read().decode())
+                params = data.get("params", {})
+                if params:
+                    logger.info(f"Loaded params from API: {json.dumps(params)}")
+        except Exception as e:
+            logger.debug(f"Optimizer API fail: {e}")
+        if not params and PARAMS_FILE.exists():
+            try:
+                params = json.loads(PARAMS_FILE.read_text())
+                logger.info(f"Loaded params from {PARAMS_FILE}")
+            except Exception: pass
+        if not params:
+            return
+        sr = params.get("sell_raise")
+        bd = params.get("buy_drop")
+        if sr:
+            self.sell_raise = 1.0 + abs(sr) if abs(sr) < 1 else sr
+            logger.info(f"Spread: sell_raise -> {self.sell_raise:.4f}")
+        if bd:
+            self.buy_drop = 1.0 - abs(bd) if abs(bd) < 1 else bd
+            logger.info(f"Spread: buy_drop -> {self.buy_drop:.4f}")
+
+    def _refresh_params(self):
+        if time.time() - self._last_params_fetch > 1800:
+            self._last_params_fetch = time.time()
+            self._load_optimized_params()
 
     def _load_state(self):
         sf = BASE / ".tmp" / "marco_sol_state.json"
@@ -195,10 +233,13 @@ class MarcoSOL:
                 if not self.sell_target and not self.buy_target:
                     b = await self.bal()
                     if b["SOL"] >= 0.1 and b["EUR"] >= MIN_NOTIONAL:
-                        st = round(p * 1.005, 2)
-                        bt = round(p * 0.996, 2)
+                        st = round(p * self.sell_raise, 2)
+                        bt = round(p * self.buy_drop, 2)
                         if st > p: await self.place_sell(st)
                         if bt < p: await self.place_buy(bt)
+
+                if int(time.time()) % 1800 < 2:
+                    self._refresh_params()
 
                 if int(time.time()) % 20 < 2:
                     b = await self.bal()

@@ -13,6 +13,7 @@ import sys
 import time
 import json
 import sqlite3
+import urllib.request
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from dataclasses import dataclass, field
@@ -23,6 +24,9 @@ DB_FILE = BASE_DIR / "stellatron.db"
 STATE_DIR = BASE_DIR / ".tmp"
 STATE_FILE = STATE_DIR / "stellatron_state.json"
 CONFIG_FILE = BASE_DIR / "stellatron_config.json"
+PARAMS_FILE = BASE_DIR / "params_stellatron.json"
+
+OPTIMIZER_API = "http://192.168.1.99:8899/api/params/stellatron"
 
 logging.basicConfig(
     level=logging.INFO,
@@ -233,7 +237,69 @@ class Stellatron:
         self.last_notify = 0
         self._last_day = datetime.now().strftime("%Y-%m-%d")
         self.atr_cache = {}
+        self._last_params_fetch = 0
         self._load_state()
+        self._load_optimized_params()
+
+    # ── Optimized Params (from Denaro Memory) ──────────────────────
+    def _load_optimized_params(self):
+        """Fetch params from Denaro optimizer API, fall back to local file or defaults."""
+        params = None
+        # Try HTTP API first
+        try:
+            with urllib.request.urlopen(OPTIMIZER_API, timeout=5) as resp:
+                data = json.loads(resp.read().decode())
+                params = data.get("params", {})
+                if params:
+                    logger.info(f"Loaded optimized params from API: {json.dumps(params)}")
+        except Exception as e:
+            logger.debug(f"Optimizer API unreachable ({e}), trying local file")
+
+        # Fall back to local file
+        if not params and PARAMS_FILE.exists():
+            try:
+                params = json.loads(PARAMS_FILE.read_text())
+                logger.info(f"Loaded params from {PARAMS_FILE}")
+            except Exception as e:
+                logger.debug(f"Params file error: {e}")
+
+        if not params:
+            return
+
+        # Apply params to config
+        if "grid_spacing" in params:
+            self.cfg["grid_spacing"] = params["grid_spacing"]
+        if "base_order_eur" in params:
+            self.cfg["base_order_eur"] = params["base_order_eur"]
+        if "compound_cap" in params:
+            self.cfg["compound_cap"] = params["compound_cap"]
+        if "min_grid_levels" in params:
+            self.cfg["min_grid_levels"] = params["min_grid_levels"]
+        if "max_grid_levels" in params:
+            self.cfg["max_grid_levels"] = params["max_grid_levels"]
+
+        # Update pair_configs
+        for p in self.cfg["pair_configs"]:
+            pc = self.cfg["pair_configs"][p]
+            if "grid_spacing" in params:
+                pc["grid_spacing"] = params["grid_spacing"]
+                pc["profit_pct"] = max(0.002, params["grid_spacing"] * 1.3)
+            if "base_order_eur" in params:
+                pc["base_order"] = params["base_order_eur"]
+            if "min_grid_levels" in params:
+                pc["min_levels"] = params["min_grid_levels"]
+            if "max_grid_levels" in params:
+                pc["max_levels"] = params["max_grid_levels"]
+
+        logger.info(f"Optimized params applied: spacing={self.cfg['grid_spacing']}, "
+                    f"order={self.cfg['base_order_eur']}€")
+
+    def _refresh_params(self):
+        """Periodic refresh — called from main loop every 30 min"""
+        now = time.time()
+        if now - self._last_params_fetch > 1800:
+            self._last_params_fetch = now
+            self._load_optimized_params()
 
     # ── API Connection ──────────────────────────────────────────────
     async def connect(self):
@@ -650,6 +716,10 @@ class Stellatron:
                                     f"inv={self.total_invested:.2f} | profit={self.total_profit:.4f} | "
                                     f"fills={self.fills} | EUR_free={bal['EUR_free']:.2f} | "
                                     f"compound={self.compound:.2f}x | today={daily_pnl:+.4f}")
+
+                    # Periodic param refresh (every 30 min)
+                    if int(time.time()) % 1800 < 2:
+                        self._refresh_params()
 
                     # Periodic status notification (every 4h)
                     if int(time.time()) % 14400 < 2:

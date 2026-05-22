@@ -5,7 +5,7 @@ Manages BTC/EUR, ETH/EUR, BNB/EUR simultaneously.
 Each pair: sell crypto at +0.4%, buy back at -0.3%.
 Shares EUR pool responsibly.
 """
-import asyncio, ccxt.async_support as ccxt, json, logging, os, sys, time
+import asyncio, ccxt.async_support as ccxt, json, logging, os, sys, time, urllib.request
 from pathlib import Path
 
 BASE = Path(__file__).parent
@@ -16,11 +16,12 @@ logger = logging.getLogger("ORION")
 
 MIN_NOTIONAL = 5.0
 FEE = 0.00075
+OPTIMIZER_API = "http://localhost:8899/api/params/orion"
 
 PAIRS = {
-    "BTC/EUR": {"asset": "BTC", "sell_raise": 0.004, "buy_drop": -0.003, "sell_amt": 0.00015, "max_eur": 5, "decimals": 6},
-    "ETH/EUR": {"asset": "ETH", "sell_raise": 0.004, "buy_drop": -0.003, "sell_amt": 0.003,   "max_eur": 5, "decimals": 4},
-    "BNB/EUR": {"asset": "BNB", "sell_raise": 0.004, "buy_drop": -0.003, "sell_amt": 0.002,   "max_eur": 2, "decimals": 4},
+    "BTC/EUR": {"asset": "BTC", "sell_raise": 0.004, "buy_drop": -0.003, "sell_amt": 0.00015, "max_eur": 5, "decimals": 6, "paused": False},
+    "ETH/EUR": {"asset": "ETH", "sell_raise": 0.004, "buy_drop": -0.003, "sell_amt": 0.003,   "max_eur": 5, "decimals": 4, "paused": False},
+    "BNB/EUR": {"asset": "BNB", "sell_raise": 0.004, "buy_drop": -0.003, "sell_amt": 0.002,   "max_eur": 2, "decimals": 4, "paused": False},
 }
 
 class OrionBot:
@@ -33,7 +34,31 @@ class OrionBot:
             self.meta[s] = c
         self.profit = 0.0
         self.fills = 0
+        self._last_params_fetch = 0
         self._load()
+        self._load_optimized_params()
+
+    def _load_optimized_params(self):
+        """Fetch optimized per-symbol params from Denaro optimizer (runs locally on mc2)"""
+        try:
+            with urllib.request.urlopen(OPTIMIZER_API, timeout=5) as resp:
+                data = json.loads(resp.read().decode())
+                api_params = data.get("params", {})
+                if not api_params:
+                    return
+                logger.info(f"Loaded optimized params from API")
+                for sym, overrides in api_params.items():
+                    if sym in self.meta:
+                        for key, val in overrides.items():
+                            self.meta[sym][key] = val
+                        logger.info(f"  {sym}: {json.dumps(overrides)}")
+        except Exception as e:
+            logger.debug(f"Optimizer API fail: {e}")
+
+    def _refresh_params(self):
+        if time.time() - self._last_params_fetch > 1800:
+            self._last_params_fetch = time.time()
+            self._load_optimized_params()
 
     def _load(self):
         sf = BASE / ".tmp" / "orion_state.json"
@@ -189,7 +214,13 @@ class OrionBot:
 
         while True:
             try:
+                if int(time.time()) % 1800 < 2:
+                    self._refresh_params()
+
                 for s in PAIRS:
+                    cfg = self.meta[s]
+                    if cfg.get("paused", False):
+                        continue
                     await self.check_fills(s)
                     st = self.orders[s]
                     if not st["sell_id"] and not st["buy_id"]:
