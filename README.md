@@ -1,274 +1,246 @@
-# Denaro V3 — Multi-Strategy Trading System
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://placehold.co/600x120/0d1117/58a6ff?text=βενάρο&font=source-code-pro">
+    <img src="https://placehold.co/600x120/f0f0f0/1f1f1f?text=βενάρο&font=source-code-pro" width="480">
+  </picture>
+  <br>
+  <em>Multi‑Strategy Trading Fleet — 24/7 on Binance Spot</em>
+</p>
 
-<div align="center">
-
-[![Python](https://img.shields.io/badge/Python-3.12+-blue.svg)](https://www.python.org/)
-[![Binance](https://img.shields.io/badge/Exchange-Binance-F0B90B.svg)](https://www.binance.com/)
-[![ccxt](https://img.shields.io/badge/Library-ccxt-222.svg)](https://github.com/ccxt/ccxt)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Status](https://img.shields.io/badge/Status-Production-green.svg)]()
-[![Bots](https://img.shields.io/badge/Bots-5%20Active-brightgreen.svg)]()
-
-**5 specialized bots running 24/7 across 3 servers. Grid + RSI + Momentum + Micro Scalping.**
-
-</div>
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.12+-blue?logo=python&logoColor=white">
+  <img src="https://img.shields.io/badge/Binance-CCXT-F0B90B?logo=binance&logoColor=white">
+  <img src="https://img.shields.io/badge/Status-Production-brightgreen">
+  <img src="https://img.shields.io/badge/Bots-3+2-resilient">
+  <img src="https://img.shields.io/badge/License-MIT-3da639">
+</p>
 
 ---
 
-## Live Bot Fleet
-
-| Bot | Server | Pair | Strategy | Status |
-|-----|--------|------|----------|--------|
-| **Denaro V3 Grid** | MARCODG1 | ADA/EUR | Adaptive grid (0.3%) | 🟢 Active |
-| **RSI Reversion** | MARCODG1 | ADA/EUR | Mean reversion (RSI < 25) | 🟢 Active |
-| **Micro Scalper** | MARCODG1 | ADA/EUR | Ultra-tight grid (0.15%) | 🟢 Active |
-| **Denaro V3 Grid** | nuvola | SOL/EUR | Adaptive grid (0.3%) | 🟢 Active |
-| **Momentum Breakout** | nuvola | SOL/EUR | Volume + price breakout | 🟢 Active |
-
-## Architecture
+## Fleet Topology
 
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│                        DENARO V3 FLEET                              │
-│                                                                     │
-│  ┌──────────────┐        ┌──────────────┐        ┌──────────────┐   │
-│  │     mc2      │        │   Nuvola     │        │   MARCODG1   │   │
-│  │  (On-Prem)   │        │  (Cloud VPS) │        │  (Cloud VPS) │   │
-│  │              │        │              │        │              │   │
-│  │ ┌──────────┐ │        │ ┌──────────┐ │        │ ┌──────────┐ │   │
-│  │ │ Zabbix  │ │        │ │ V3 Grid  │ │        │ │ V3 Grid  │ │   │
-│  │ │ Server  │ │        │ │ SOL/EUR  │ │        │ │ ADA/EUR  │ │   │
-│  │ │ (Hub)   │ │        │ ├──────────┤ │        │ ├──────────┤ │   │
-│  │ └──────────┘ │        │ │Momentum  │ │        │ │ RSI      │ │   │
-│  └──────────────┘        │ │Breakout  │ │        │ │Reversion │ │   │
-│         │                │ └──────────┘ │        │ ├──────────┤ │   │
-│         │                └──────────────┘        │ │Micro     │ │   │
-│         │                                        │ │Scalper   │ │   │
-│         └───────────────────┬────────────────────┤ └──────────┘ │   │
-│                             │                    └──────────────┘   │
-│                    ┌────────▼────────┐                               │
-│                    │    Binance      │                               │
-│                    │  Spot Markets   │                               │
-│                    └─────────────────┘                               │
-└─────────────────────────────────────────────────────────────────────┘
+                          ┌──────────────────────────────────────┐
+                          │           BINANCE SPOT               │
+                          │    ADA/EUR  SOL/EUR  BTC/EUR …       │
+                          └────────────┬──────────┬──────────────┘
+                                       │          │
+              ┌────────────────────────┼──────────┼──────────────────┐
+              │                        │          │                  │
+     ┌────────▼────────┐    ┌──────────▼──┐  ┌───▼──────────┐      │
+     │     NUVOLA      │    │  MARCODG1   │  │     MC2      │      │
+     │  (Cloud VPS)    │    │ (Cloud VPS) │  │  (On‑Prem)   │      │
+     │                 │    │             │  │              │      │
+     │  Stellatron ◄───┤    │ MarcoSOL ◄──┤  │ ORION ◄─────┤      │
+     │  ADA grid       │    │ SOL reversal│  │ BTC/ETH/BNB  │      │
+     │  +0.88€ profit  │    │ +0.10€      │  │              │      │
+     │                 │    │             │  │ ◈ Denaro Mem │      │
+     │  ─ legacy ─     │    │ ─ legacy ─  │  │   DB SQLite  │      │
+     │  momentum, rsi… │    │ denaro_v3   │  │ ◈ Regime     │      │
+     └─────────────────┘    └─────────────┘  │   Detector   │      │
+                                              │ ◈ Optimizer  │      │
+                                              │ ◈ Capital    │      │
+                                              │   Allocator  │      │
+                                              │              │      │
+                                              │ ─ legacy ─   │      │
+                                              │ squadra,     │      │
+                                              │ legion…      │      │
+                                              └──────────────┘      │
+              └──────────────────────────────────────────────────────┘
 ```
 
-## Bot Strategies
+### Servers
 
-### 1. Denaro V3 Grid (`denaro_v3.py`)
+| Server  | Type         | IP / Host              | Role                     | Capital |
+|---------|-------------|------------------------|--------------------------|---------|
+| **nuvola** | Cloud VPS   | 87.106.3.15            | Stellatron (ADA grid)    | ~120€   |
+| **MARCODG1** | Cloud VPS | 87.106.222.123         | MarcoSOL (SOL reversal)  | ~20€    |
+| **mc2**     | On‑Prem     | 192.168.1.99:2222      | ORION + Memory System    | ~80€    |
 
-Adaptive grid trading with symbol-specific optimization and auto-compounding.
+---
 
-| Feature | ADA/EUR | SOL/EUR |
-|---------|---------|---------|
-| **Grid Spacing** | 0.3% | 0.3% |
-| **Profit Target** | 0.4% | 0.4% |
-| **Grid Levels** | 5–10 | 3–5 |
-| **Base Order** | 5.5 EUR | 5.5 EUR |
-| **Compound Cap** | 1.8x | 1.8x |
+## Active Bots
 
-### 2. RSI Mean Reversion (`rsi_reversion.py`)
+### 🤖 Stellatron — Adaptive Grid (nuvola)
 
-Buys when RSI drops below 25 (oversold), sells on recovery above 55.
+Grid trading su ADA/EUR con auto‑compounding e switching automatico del pair.
 
-| Parameter | Value |
-|-----------|-------|
-| **RSI Period** | 14 |
-| **Buy Threshold** | RSI < 25 |
-| **Sell Threshold** | RSI > 55 |
-| **Force Sell** | RSI > 70 |
-| **Take Profit** | 1.5% |
-| **Stop Loss** | 2.0% |
-| **Max Positions** | 5 |
-| **Candle Interval** | 5m |
+| Parametro | Valore |
+|-----------|--------|
+| **Grid spacing** | 0.12–0.30% _(adattivo)_ |
+| **Ordine base** | 5.50€ |
+| **Grid levels** | 3–6 |
+| **Compound** | fino a 1.8× |
+| **Max invested** | 50€ |
+| **Ciclo** | 30s check, 3min rebalance |
 
-### 3. Micro Scalper (`micro_scalper.py`)
+> **Stato**: 81 fills, +0.88€ cumulative profit. Parametri auto‑regolati dal Denaro Memory System in base a volatilità e win rate.
 
-Ultra-tight grid for maximum fill frequency on ranging markets.
+### 🔄 MarcoSOL — Reversal Cycle (MARCODG1)
 
-| Parameter | Value |
-|-----------|-------|
-| **Grid Spacing** | 0.15% (ultra-tight) |
-| **Profit per Scalp** | 0.2% |
-| **Grid Levels** | 8 |
-| **Base Order** | 5.5 EUR |
-| **Max Invested** | 50 EUR |
-| **Rebalance** | Every 120 seconds |
+Compra SOL in dip (-0.4%), vende in pump (+0.5%). Ciclo sell→buy→sell→buy.
 
-### 4. Momentum Breakout (`momentum_breakout.py`)
+| Parametro | Valore |
+|-----------|--------|
+| **Sell raise** | 0.32% _(adattivo)_ |
+| **Buy drop** | −0.26% _(adattivo)_ |
+| **Max buy** | 6.00€ |
+| **Ciclo** | 5s check |
 
-Detects volume spikes + price breakouts, enters fast, exits on reversal.
+> **Stato**: 1 fill completo, +0.10€ profit. Spread dinamico calibrato su fill time medio.
 
-| Parameter | Value |
-|-----------|-------|
-| **Candle Interval** | 3m |
-| **Volume Multiplier** | 2.5x average |
-| **Price Change** | > 0.8% in 3 candles |
-| **RSI Confirmation** | > 55 |
-| **Take Profit** | 2.0% |
-| **Stop Loss** | 1.5% |
-| **Trailing Stop** | 1.0% |
-| **Max Positions** | 3 |
+### 🎯 ORION — Multi‑Asset Reversal (mc2)
 
-## Features
+Tre reversal indipendenti su BTC, ETH, BNB.
 
-### Shared Across All Bots
+| Pair | Sell raise | Buy drop | Ordine |
+|------|-----------|---------|--------|
+| BTC/EUR | 0.4% | −0.3% | 0.00015 BTC |
+| ETH/EUR | 0.4% | −0.3% | 0.003 ETH |
+| BNB/EUR | 0.4% | −0.3% | 0.002 BNB |
 
-- **Fee-Aware Tracking**: Net profit calculated after BNB burn (0.075%/side)
-- **Auto-Compounding**: Profits reinvested automatically
-- **Verified Fills**: Uses `fetch_my_trades` to prevent false detections
-- **Minimum Notional Guard**: Skips orders when capital < 5.0 EUR
-- **State Persistence**: Trade history saved to JSON for recovery
-- **Real-Time Logging**: Every action logged with timestamps
+> **Stato**: 300+ trades registrati. Supporta auto‑pausa su perdite consecutive (3+ loser → PAUSED).
 
-### Monitoring
+---
 
-Zabbix 7.0 with custom metrics:
+## 🧠 Denaro Memory System
 
-- Bot process health and order counts
-- Portfolio balances and asset holdings
-- Grid metrics (buys/sells, invested, profit)
-- System health (CPU, memory, disk)
-- Watchdog aggregation
+Sistema di auto‑apprendimento centralizzato su **mc2**. Ogni bot scrive trades nel DB, il sistema analizza e restituisce parametri ottimizzati.
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│                        mc2 — MEMORY SYSTEM                       │
+│                                                                  │
+│  ┌────────────────┐    ┌──────────────┐    ┌──────────────────┐  │
+│  │  memorize_     │───▶│  denaro_     │◀───│  regime_detector │  │
+│  │  trades.py     │    │  memory.db   │    │  (ogni 5 min)    │  │
+│  │  (ogni 1 min)  │    │  (SQLite)    │    └──────────────────┘  │
+│  └────────────────┘    └──────┬───────┘                          │
+│                               │                                  │
+│                    ┌──────────▼──────────┐                       │
+│                    │  strategy_optimizer │─── params_{bot}.json  │
+│                    │    (ogni 30 min)    │─── via sync → bots    │
+│                    └─────────────────────┘                       │
+│                    ┌─────────────────────┐                       │
+│                    │  capital_manager    │─── allocazione EUR    │
+│                    │    (ogni 30 min)    │─── riserva 20€        │
+│                    └─────────────────────┘                       │
+│                                                                  │
+│  orchestrator.py ← API endpoints su :8899                       │
+│  └─ /api/regime          — regime corrente                      │
+│  └─ /api/params/<bot>    — parametri ottimizzati                │
+│  └─ /api/memory/stats    — performance trade per bot            │
+│  └─ /api/memory/trades   — storico trades                       │
+│  └─ /api/memory/summary  — riepilogo DB                         │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+### Componenti
+
+| Modulo | Frequenza | Descrizione |
+|--------|-----------|-------------|
+| `memorize_trades.py` | 1 min | Sincronizza trades da Binance myTrades, calcola PnL FIFO |
+| `regime_detector.py` | 5 min | Classifica mercato: trending / ranging / volatile / quiet |
+| `strategy_optimizer.py` | 30 min | Calibra grid_spacing, spread, order_size per ogni bot |
+| `capital_manager.py` | 30 min | Alloca EUR tra bot, tiene riserva 20€ |
+| `orchestrator.py` | sempre su :8899 | API HTTP + risk management + circuit breaker |
+
+### Esempio: ciclo di auto‑miglioramento
+
+```
+1. 🔄 memorize_trades.py → registra trade completato nel DB
+2. 📊 regime_detector.py → "mercato quieto (vol=0.17%)"
+3. ⚙️ strategy_optimizer.py → "riduci grid_spacing a 0.12%"
+4. 📨 sync_dashboard.sh → copia params_stellatron.json su nuvola
+5. 🤖 stellatron.py → carica nuovi parametri al prossimo refresh
+```
+
+---
 
 ## Project Structure
 
 ```
 denaro/
-├── denaro_v3.py              # Adaptive grid bot (ADA + SOL)
-├── rsi_reversion.py          # RSI mean reversion bot (ADA)
-├── micro_scalper.py          # Ultra-tight grid scalper (ADA)
-├── momentum_breakout.py      # Volume + price breakout bot (SOL)
-├── zabbix_metrics.py         # Unified Zabbix metric helper
-├── zabbix_grid_metric.py     # Grid-specific metric parser
-├── zabbix/
-│   ├── mc2.conf              # Zabbix config for mc2 (Hub)
-│   ├── nuvola.conf           # Zabbix config for nuvola (SOL)
-│   └── marcodg1.conf         # Zabbix config for MARCODG1 (ADA)
-├── README.md                 # This file
-└── LICENSE                   # MIT License
+│
+├── stellatron.py           # Adaptive grid (ADA/EUR) — nuvola
+├── marco_sol.py            # SOL reversal cycle — MARCODG1
+├── orion.py                # Multi‑asset reversal — mc2
+├── orchestrator.py         # Core HTTP API + risk mgmt — mc2 :8899
+│
+├── denaro_memory.py        # SQLite DB manager
+├── memorize_trades.py      # Binance → DB sync (1 min)
+├── regime_detector.py      # Market regime classifier (5 min)
+├── strategy_optimizer.py   # Self‑optimizing params (30 min)
+├── capital_manager.py      # Dynamic EUR allocation (30 min)
+│
+├── dashboard/              # Web dashboard
+│   ├── index.html
+│   └── public/
+│
+├── squadra/                # Legacy: Ares, Hermes, Apollo, Artemis
+├── zabbix/                 # Zabbix monitoring configs
+├── architecture/           # SOP docs
+│
+├── memory/                 # Daily logs
+├── .env                    # Binance API keys (gitignored)
+├── README.md
+└── LICENSE
 ```
+
+---
 
 ## Quick Start
 
-### Prerequisites
-
-- Python 3.12+
-- Binance API keys (spot trading)
-- `ccxt` library (`pip install ccxt`)
-- Zabbix Agent 7.0+ (for monitoring)
-
-### Installation
-
 ```bash
-# Clone the repository
-git clone https://github.com/grivetto/alpha-omega-trading.git denaro
-cd denaro
+# Clone
+git clone https://github.com/grivetto/dollari.git
+cd dollari
 
-# Install dependencies
-pip install ccxt
+# Install
+pip install ccxt python-dotenv
 
-# Configure API keys
-cat > .env << EOF
-BINANCE_API_KEY=your_api_key
-BINANCE_API_SECRET=your_api_secret
-EOF
+# API keys
+echo "BINANCE_API_KEY=your_key" > .env
+echo "BINANCE_API_SECRET=your_secret" >> .env
+
+# Run a bot (example: Stellatron)
+python3 stellatron.py
+
+# Memory system (on mc2)
+python3 denaro_memory.py          # init DB
+python3 regime_detector.py        # manual regime detection
+python3 strategy_optimizer.py     # manual optimization
 ```
 
-### Running Bots
+### Cron (on mc2)
 
-```bash
-# Grid bot (adaptive spacing)
-python3 denaro_v3.py ADA/EUR
-python3 denaro_v3.py SOL/EUR
-
-# RSI mean reversion
-python3 rsi_reversion.py ADA/EUR
-
-# Micro scalper (ultra-tight grid)
-python3 micro_scalper.py ADA/EUR
-
-# Momentum breakout
-python3 momentum_breakout.py SOL/EUR
-
-# Production (background)
-nohup python3 denaro_v3.py ADA/EUR > denaro_v3.log 2>&1 &
-nohup python3 rsi_reversion.py ADA/EUR > rsi_reversion.log 2>&1 &
-nohup python3 micro_scalper.py ADA/EUR > micro_scalper.log 2>&1 &
+```
+* * * * *   python3 memorize_trades.py
+*/5 * * * * python3 regime_detector.py
+*/30 * * * * python3 strategy_optimizer.py
+*/30 * * * * python3 capital_manager.py
 ```
 
-### Deploying Zabbix Monitoring
-
-```bash
-# Copy config to Zabbix agent directory
-sudo cp zabbix/nuvola.conf /etc/zabbix/zabbix_agentd.d/denaro_v3.conf
-sudo systemctl restart zabbix-agent
-
-# Test metrics from Zabbix server
-zabbix_get -s <server> -k "denaro.v3.load.1m"
-zabbix_get -s <server> -k "denaro.v3.bot.sol_grid"
-```
-
-## Configuration
-
-The bot auto-detects the symbol and applies optimized parameters. Override defaults by editing `denaro_v3.py`:
-
-```python
-# Symbol-specific optimization
-if "ADA" in self.asset:
-    self.grid_spacing = 0.003     # 0.3% spacing
-    self.profit_pct = 0.004       # 0.4% profit target
-    self.min_grid_levels = 5      # Minimum grid levels
-    self.max_grid_levels = 10     # Maximum grid levels
-    self.base_order_eur = 5.5     # Base order size
-```
+---
 
 ## Risk Management
 
-| Guard | Threshold | Action |
-|-------|-----------|--------|
-| **Minimum Order** | 5.5 EUR | Skip grid placement |
-| **Minimum Notional** | 5.0 EUR per order | Skip individual orders |
-| **Max Investment** | 100 EUR per grid | Cap total grid exposure |
-| **Compound Cap** | 1.8x | Limit order size growth |
-| **BNB Fee Discount** | Enabled | 25% fee reduction via API |
+| Guardia | Soglia | Azione |
+|---------|--------|--------|
+| **Liquidity Reserve** | 20€ EUR | Mai allocata ai bot |
+| **Daily Loss Limit** | −3% | Pausa 30 min |
+| **Max Drawdown** | −10% | Kill switch automatico |
+| **Min Notional** | 5€ per ordine | Salta ordini sotto soglia |
+| **Max Exposure** | 60% per bot | Limite allocazione |
+
+---
 
 ## License
 
-This project is licensed under the **MIT License**.
+MIT — see [LICENSE](LICENSE).
 
-```
-MIT License
-
-Copyright (c) 2026 Sergio Grivetto
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-```
-
-## History
-
-Full development history (V1 → V2 → V3): [github.com/grivetto/dollari](https://github.com/grivetto/dollari)
-
-## Contact
-
-**Sergio Grivetto** — [sergio@grivetto.eu](mailto:sergio@grivetto.eu)
-
-## Disclaimer
-
-This software is provided for educational and research purposes only. It is **not** financial advice. Cryptocurrency trading involves substantial risk of loss. Always do your own research and never trade with money you cannot afford to lose. The authors are not responsible for any financial losses incurred through the use of this software.
+<p align="center">
+  <sub>Built with Python, CCXT, and too much espresso.</sub>
+  <br>
+  <sub>Sergio Grivetto · <a href="mailto:sergio@grivetto.eu">sergio@grivetto.eu</a></sub>
+</p>
