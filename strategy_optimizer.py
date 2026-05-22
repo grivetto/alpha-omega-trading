@@ -66,6 +66,12 @@ def optimize_stellatron(memory):
         params["base_order_eur"] = max(3.0, params.get("base_order_eur", 5.5) * 0.8)
         changes.append("regime=volatile → levels ↑, order ↓")
 
+    # Fee floor: profit_pct must cover 2× fee + buffer
+    MIN_SPACING = 0.003  # 0.3% > 0.15% fee round-trip + margin
+    if params["grid_spacing"] < MIN_SPACING:
+        params["grid_spacing"] = MIN_SPACING
+        changes.append(f"fee_floor → min_spacing={MIN_SPACING}")
+
     # Round for cleanliness
     params["grid_spacing"] = round(params["grid_spacing"], 4)
     params["base_order_eur"] = round(params["base_order_eur"], 1)
@@ -93,6 +99,7 @@ def optimize_marco_sol(memory):
 
     sr = abs(params.get("sell_raise", 0.005))
     bd = abs(params.get("buy_drop", 0.004))
+    FEE_COST = 0.00075 * 2  # 0.15% round-trip fee
 
     # Adjust spread based on recent trade speed and volatility
     trades = memory.get_recent_trades("marco_sol", limit=20)
@@ -112,14 +119,14 @@ def optimize_marco_sol(memory):
                     pass
         if fill_times:
             avg_fill = sum(fill_times) / len(fill_times)
-            if avg_fill < 300:  # fills faster than 5 min
+            if avg_fill < 300:
                 sr = min(0.012, sr * 1.2)
                 bd = min(0.010, bd * 1.2)
                 changes.append(f"fast_fill={avg_fill:.0f}s → spread ↑")
-            elif avg_fill > 3600:  # fills slower than 1h
-                sr = max(0.002, sr * 0.85)
-                bd = max(0.002, bd * 0.85)
-                changes.append(f"slow_fill={avg_fill:.0f}s → spread ↓")
+            elif avg_fill > 1800:  # fills slower than 30 min → tighten for more action
+                sr = max(FEE_COST + 0.0005, sr * 0.8)
+                bd = max(FEE_COST + 0.0005, bd * 0.8)
+                changes.append(f"slow_fill={avg_fill:.0f}s (>30min) → spread ↓ for more fills")
             else:
                 changes.append(f"normal_fill={avg_fill:.0f}s → spread stable")
 
@@ -129,9 +136,18 @@ def optimize_marco_sol(memory):
         bd = min(0.012, bd * 1.2)
         changes.append(f"high_vol={volatility:.1f}% → spread ↑")
     elif volatility < 0.5:
-        sr = max(0.002, sr * 0.9)
-        bd = max(0.002, bd * 0.9)
+        sr = max(FEE_COST + 0.0005, sr * 0.85)
+        bd = max(FEE_COST + 0.0005, bd * 0.85)
         changes.append(f"low_vol={volatility:.1f}% → spread ↓")
+
+    # Fee floor: spread must always exceed round-trip fees + 0.05% buffer
+    min_spread = FEE_COST + 0.0005  # 0.20% minimum
+    if sr < min_spread:
+        sr = min_spread
+        changes.append(f"fee_floor → sr={sr:.4f}")
+    if bd < min_spread:
+        bd = min_spread
+        changes.append(f"fee_floor → bd={bd:.4f}")
 
     params["sell_raise"] = round(sr, 4)
     params["buy_drop"] = round(-bd, 4)

@@ -53,7 +53,7 @@ DEFAULT_CONFIG = {
     "base_order_eur": 5.5,
     "min_grid_levels": 3,
     "max_grid_levels": 6,
-    "max_invested_eur": 50.0,
+    "max_invested_eur": 25.0,
     "daily_loss_limit_pct": -3.0,
     "max_drawdown_pct": -10.0,
     "rebalance_interval_sec": 180,
@@ -681,10 +681,11 @@ class Stellatron:
                         daily_summary = self.db.get_daily_stats()
                         logger.info(f"📅 Day rollover — today's PnL so far: {daily_summary['pnl']:+.4f}€")
 
-                    # Check loss limits
+                    # Check loss limits — compare daily PnL against invested capital, not session PnL
                     daily_pnl = self.total_profit - self.daily_start_pnl
-                    if daily_pnl < 0 and abs(daily_pnl) > abs(self.session_start_pnl * self.cfg["daily_loss_limit_pct"] / 100):
-                        logger.warning(f"Daily loss limit hit: {daily_pnl:.2f}€ — pausing grid")
+                    loss_threshold = abs(self.total_invested * self.cfg["daily_loss_limit_pct"] / 100) if self.total_invested > 0 else 2.0
+                    if daily_pnl < 0 and abs(daily_pnl) > loss_threshold:
+                        logger.warning(f"Daily loss limit hit: {daily_pnl:.2f}€ (threshold: {loss_threshold:.2f}€) — pausing 30 min")
                         await self.tg.send(f"⚠️ <b>Daily loss limit</b>: {daily_pnl:.2f}€ — pausing 30 min")
                         await asyncio.sleep(1800)
                         self.daily_start_pnl = self.total_profit

@@ -125,15 +125,17 @@ def memorize():
             print(f"[MEM] {symbol} ({bot}): {new_count} new trades")
 
     # ── PnL Computation ──
-    # FIFO match: pair sells with previous buys for same bot+symbol
+    # Reversal pattern (marco_sol, orion): sell→buy cycle.
+    # Profit realized at BUY: profit = prior_sell_value - buy_value - fees.
+    # Grid pattern (stellatron): buy→sell cycle.
+    # Profit realized at SELL: profit = sell_value - prior_buy_value - fees.
     for bot_name in ["stellatron", "marco_sol", "orion"]:
         rows = c.execute(
-            "SELECT id, bot, symbol, side, price, amount, eur_value, fee, net_pnl, trade_id "
-            "FROM trades WHERE bot=? AND (net_pnl IS NULL OR net_pnl = 0) "
+            "SELECT id, bot, symbol, side, price, amount, eur_value, fee "
+            "FROM trades WHERE bot=? "
             "ORDER BY symbol, filled_at ASC",
             (bot_name,)).fetchall()
 
-        # Group by symbol
         by_symbol = {}
         for r in rows:
             sym = r["symbol"]
@@ -142,28 +144,45 @@ def memorize():
             by_symbol[sym].append(dict(r))
 
         for sym, trades in by_symbol.items():
-            buys = [t for t in trades if t["side"] == "buy"]
-            sells = [t for t in trades if t["side"] == "sell"]
+            open_side = None
+            open_info = None
 
-            for sell in sells:
-                sell_qty = sell["amount"]
-                sell_val = sell["eur_value"]
-                buy_cost = 0.0
-                matched_qty = 0.0
+            for t in trades:
+                side = t["side"]
+                t_fee = t.get("fee", 0) or 0
 
-                for buy in buys:
-                    if buy["amount"] <= 0 or matched_qty >= sell_qty:
-                        continue
-                    use_qty = min(buy["amount"], sell_qty - matched_qty)
-                    buy_cost += (buy["eur_value"] / buy["amount"]) * use_qty
-                    buy["amount"] -= use_qty
-                    matched_qty += use_qty
+                if open_side is None:
+                    open_side = side
+                    open_info = dict(t)
+                    continue
 
-                if matched_qty > 0:
-                    pnl = sell_val - buy_cost - (sell.get("fee", 0) or 0)
-                    c.execute("UPDATE trades SET net_pnl=? WHERE id=?",
-                              (round(pnl, 6), sell["id"]))
-                    c.commit()
+                if side == "sell" and open_side == "buy":
+                    # Grid profit: sell closes a prior buy
+                    total_fees = t_fee + (open_info.get("fee", 0) or 0)
+                    pnl = t["eur_value"] - open_info["eur_value"] - total_fees
+                    c.execute("UPDATE trades SET net_pnl=? WHERE id=?", (round(pnl, 6), t["id"]))
+                    open_side = "sell"
+                    open_info = dict(t)
+
+                elif side == "buy" and open_side == "sell":
+                    # Reversal profit: buy closes a prior sell
+                    total_fees = t_fee + (open_info.get("fee", 0) or 0)
+                    pnl = open_info["eur_value"] - t["eur_value"] - total_fees
+                    c.execute("UPDATE trades SET net_pnl=? WHERE id=?", (round(pnl, 6), t["id"]))
+                    open_side = "buy"
+                    open_info = dict(t)
+
+                elif side == "buy" and open_side == "buy":
+                    c.execute("UPDATE trades SET net_pnl=? WHERE id=?", (0.0, open_info["id"]))
+                    open_side = "buy"
+                    open_info = dict(t)
+
+                elif side == "sell" and open_side == "sell":
+                    c.execute("UPDATE trades SET net_pnl=? WHERE id=?", (0.0, open_info["id"]))
+                    open_side = "sell"
+                    open_info = dict(t)
+
+            c.commit()
 
     # Update daily PnL summary
     for bot_name in ["stellatron", "marco_sol", "orion"]:
