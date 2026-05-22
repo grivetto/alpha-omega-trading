@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DENARO ORBITAL COMMAND</title>
+    <style>
+        :root {
+            --cyan: #00f3ff;
+            --pink: #ff00ea;
+            --green: #39ff14;
+            --red: #ff003c;
+            --yellow: #fcd535;
+            --orange: #ff8c00;
+            --dark: #090a0f;
+            --panel: rgba(16, 18, 27, 0.92);
+            --panel-border: #1f2533;
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Share Tech Mono', monospace;
+            background-color: var(--dark);
+            background-image:
+                radial-gradient(circle at 50% 50%, rgba(0, 243, 255, 0.03) 0%, transparent 60%),
+                linear-gradient(rgba(0, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 100% 100%, 40px 40px, 40px 40px;
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 12px;
+        }
+
+        body::after {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: linear-gradient(rgba(18,16,16,0) 50%, rgba(0,0,0,0.15) 50%);
+            background-size: 100% 3px;
+            z-index: 9999;
+            pointer-events: none;
+            opacity: 0.4;
+        }
+
+        /* ===== HEADER ===== */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            border-bottom: 2px solid var(--cyan);
+            padding-bottom: 8px;
+            margin-bottom: 12px;
+            position: relative;
+        }
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: -4px; left: 0;
+            width: 120px; height: 2px;
+            background: var(--pink);
+            box-shadow: 0 0 8px var(--pink);
+        }
+        .title {
+            font-size: 28px;
+            color: var(--cyan);
+            letter-spacing: 3px;
+            text-shadow: 0 0 12px rgba(0,243,255,0.5);
+        }
+        .title span { color: var(--pink); text-shadow: 0 0 12px rgba(255,0,234,0.5); }
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .clock {
+            font-size: 18px;
+            color: var(--yellow);
+            text-shadow: 0 0 8px rgba(252,213,53,0.4);
+            border: 1px solid rgba(252,213,53,0.3);
+            padding: 4px 12px;
+            background: rgba(252,213,53,0.05);
+        }
+        .status-badge {
+            font-size: 11px;
+            padding: 4px 10px;
+            border: 1px solid var(--green);
+            color: var(--green);
+            background: rgba(57,255,20,0.08);
+            text-shadow: 0 0 5px rgba(57,255,20,0.3);
+            animation: blink 3s infinite;
+        }
+        .status-badge.offline {
+            border-color: var(--red);
+            color: var(--red);
+            background: rgba(255,0,60,0.08);
+        }
+
+        /* ===== TOP STATS ===== */
+        .top-stats {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .stat-box {
+            background: var(--panel);
+            border: 1px solid var(--panel-border);
+            padding: 12px;
+            text-align: center;
+            position: relative;
+        }
+        .stat-box::before {
+            content: ''; position: absolute;
+            top: 0; left: 0; width: 8px; height: 8px;
+            border-top: 2px solid var(--cyan);
+            border-left: 2px solid var(--cyan);
+        }
+        .stat-box.highlight { border-top: 2px solid var(--yellow); }
+        .stat-box.profit { border-top: 2px solid var(--green); }
+        .stat-box.loss { border-top: 2px solid var(--red); }
+        .stat-box.info { border-top: 2px solid var(--cyan); }
+        .stat-val {
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 4px;
+            text-shadow: 0 0 8px currentColor;
+        }
+        .stat-val.cyan { color: var(--cyan); }
+        .stat-val.yellow { color: var(--yellow); }
+        .stat-val.green { color: var(--green); }
+        .stat-val.red { color: var(--red); }
+        .stat-val.pink { color: var(--pink); }
+        .stat-val.orange { color: var(--orange); }
+        .stat-label { font-size: 10px; color: #777; letter-spacing: 1px; text-transform: uppercase; }
+        .stat-sub { font-size: 9px; color: #555; margin-top: 2px; }
+
+        /* ===== GRID LAYOUT ===== */
+        .grid {
+            display: grid;
+            grid-template-columns: 320px 1fr 320px;
+            gap: 12px;
+        }
+
+        /* ===== PANELS ===== */
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--panel-border);
+            padding: 12px;
+            position: relative;
+        }
+        .panel::before {
+            content: ''; position: absolute;
+            top: 0; left: 0; width: 8px; height: 8px;
+            border-top: 2px solid var(--cyan);
+            border-left: 2px solid var(--cyan);
+        }
+        .panel::after {
+            content: ''; position: absolute;
+            bottom: 0; right: 0; width: 8px; height: 8px;
+            border-bottom: 2px solid var(--cyan);
+            border-right: 2px solid var(--cyan);
+        }
+        .panel-title {
+            color: #888;
+            font-size: 11px;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            border-bottom: 1px dashed #333;
+            padding-bottom: 6px;
+        }
+
+        /* ===== PORTFOLIO ASSETS ===== */
+        .asset-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            font-size: 13px;
+        }
+        .asset-row:last-child { border-bottom: none; }
+        .asset-name { color: var(--cyan); font-weight: bold; }
+        .asset-qty { color: #888; font-size: 11px; }
+        .asset-value { color: #fff; font-weight: bold; }
+
+        /* ===== BOT STATUS ===== */
+        .bot-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            margin-bottom: 6px;
+            background: rgba(0,0,0,0.3);
+            border-left: 3px solid #333;
+            font-size: 12px;
+        }
+        .bot-row.online { border-left-color: var(--green); background: linear-gradient(90deg, rgba(57,255,20,0.06) 0%, transparent 100%); }
+        .bot-row.offline { border-left-color: #444; opacity: 0.5; }
+        .bot-row.warn { border-left-color: var(--yellow); }
+        .dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+        .dot.green { background: var(--green); box-shadow: 0 0 6px var(--green); animation: blink 2s infinite; }
+        .dot.red { background: var(--red); }
+        .dot.yellow { background: var(--yellow); animation: blink 1s infinite; }
+        .dot.gray { background: #444; }
+
+        /* ===== MARKET CARDS ===== */
+        .market-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .mcard {
+            background: rgba(0,0,0,0.4);
+            border: 1px solid #222;
+            padding: 8px;
+            text-align: center;
+        }
+        .mcard.up { border-bottom: 2px solid var(--green); }
+        .mcard.down { border-bottom: 2px solid var(--red); }
+        .mcard .sym { font-size: 11px; color: #888; }
+        .mcard .price { font-size: 16px; color: var(--cyan); margin: 4px 0; }
+        .mcard .chg { font-size: 11px; }
+        .mcard .chg.up { color: var(--green); }
+        .mcard .chg.down { color: var(--red); }
+
+        /* ===== TERMINAL ===== */
+        .terminal {
+            background: #050505;
+            border: 1px solid #222;
+            padding: 8px;
+            height: 400px;
+            overflow-y: auto;
+            font-size: 11px;
+            line-height: 1.5;
+        }
+        .terminal::-webkit-scrollbar { width: 4px; }
+        .terminal::-webkit-scrollbar-thumb { background: var(--cyan); }
+        .log-line { border-bottom: 1px solid rgba(255,255,255,0.03); padding: 1px 0; }
+        .log-time { color: var(--cyan); margin-right: 6px; }
+        .log-info { color: #ccc; }
+        .log-buy { color: var(--green); }
+        .log-sell { color: var(--pink); }
+        .log-warn { color: var(--yellow); }
+        .log-err { color: var(--red); }
+
+        /* ===== SYSTEM INFO ===== */
+        .sys-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            font-size: 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+        }
+        .sys-row:last-child { border-bottom: none; }
+        .sys-label { color: #777; }
+        .sys-val { color: var(--cyan); }
+
+        /* ===== PROGRESS BAR ===== */
+        .pbar { width: 100%; height: 3px; background: #222; margin-top: 4px; border-radius: 2px; overflow: hidden; }
+        .pbar-fill { height: 100%; transition: width 1s; }
+
+        /* ===== SCALPER DETAIL ===== */
+        .scalper-box {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid #222;
+            padding: 8px;
+            margin-bottom: 8px;
+            font-size: 11px;
+        }
+        .scalper-box .row {
+            display: flex;
+            justify-content: space-between;
+            padding: 2px 0;
+        }
+        .scalper-box .label { color: #777; }
+        .scalper-box .val { color: #fff; }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1200px) {
+            .grid { grid-template-columns: 1fr; }
+            .top-stats { grid-template-columns: repeat(3, 1fr); }
+        }
+        @media (max-width: 600px) {
+            .top-stats { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .full-width { grid-column: 1 / -1; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div>
+        <div class="title">DENARO <span>ORBITAL COMMAND</span></div>
+        <div style="font-size:10px; color:#555; margin-top:2px;">AUTONOMOUS TRADING INFRASTRUCTURE // MC2</div>
+    </div>
+    <div class="header-right">
+        <div class="clock" id="clock">--:--:-- UTC</div>
+        <div class="status-badge" id="conn-status">CONNECTING...</div>
+    </div>
+</div>
+
+<!-- TOP STATS ROW -->
+<div class="top-stats">
+    <div class="stat-box highlight">
+        <div class="stat-val yellow" id="s-total">--.--€</div>
+        <div class="stat-label">CAPITALE TOTALE</div>
+        <div class="stat-sub" id="s-assets-count">0 assets</div>
+    </div>
+    <div class="stat-box info">
+        <div class="stat-val cyan" id="s-eur">--.--€</div>
+        <div class="stat-label">EUR LIQUIDI</div>
+        <div class="stat-sub" id="s-max-trade">max trade: --€</div>
+    </div>
+    <div class="stat-box profit">
+        <div class="stat-val green" id="s-pnl">+0.00€</div>
+        <div class="stat-label">PNL SCALPER</div>
+        <div class="stat-sub" id="s-winrate">WR: --%</div>
+    </div>
+    <div class="stat-box info">
+        <div class="stat-val pink" id="s-trades">0</div>
+        <div class="stat-label">TRADES TOTALI</div>
+        <div class="stat-sub" id="s-wl">W:0 L:0</div>
+    </div>
+    <div class="stat-box profit">
+        <div class="stat-val green" id="s-bot-pnl">+0.00€</div>
+        <div class="stat-label">BOT PNL (3 BOT)</div>
+        <div class="stat-sub" id="s-bot-fills">0 fills</div>
+    </div>
+    <div class="stat-box info">
+        <div class="stat-val cyan" id="s-load">-.--</div>
+        <div class="stat-label">SYSTEM LOAD</div>
+        <div class="stat-sub" id="s-mem">RAM: --</div>
+    </div>
+</div>
+
+<div class="grid">
+    <!-- LEFT COLUMN -->
+    <div>
+        <!-- PORTFOLIO -->
+        <div class="panel" style="margin-bottom:12px;">
+            <div class="panel-title">PORTFOLIO ASSETS</div>
+            <div id="portfolio-list">
+                <div style="color:#555; font-size:12px; padding:10px;">Loading portfolio...</div>
+            </div>
+        </div>
+
+        <!-- LEGION STATUS (MC2) -->
+        <div class="panel" style="margin-bottom:12px;">
+            <div class="panel-title">LEGION STATUS (MC2)</div>
+            <div id="legion-mc2-status">
+                <div style="color:#555; font-size:12px; padding:10px;">Loading...</div>
+            </div>
+        </div>
+
+        <!-- BOT STATUS: Stellatron + MarcoSOL + ORION -->
+        <div class="panel" style="margin-bottom:12px;">
+            <div class="panel-title">BOT STATUS</div>
+            <div id="bot-status-list">
+                <div style="color:#555; font-size:12px; padding:10px;">Loading...</div>
+            </div>
+        </div>
+
+        <!-- SYSTEM INFO -->
+        <div class="panel">
+            <div class="panel-title">SYSTEM INFO</div>
+            <div id="sys-info">
+                <div class="sys-row"><span class="sys-label">Hostname</span><span class="sys-val" id="sys-host">--</span></div>
+                <div class="sys-row"><span class="sys-label">Uptime</span><span class="sys-val" id="sys-uptime">--</span></div>
+                <div class="sys-row"><span class="sys-label">CPU Load</span><span class="sys-val" id="sys-load">--</span></div>
+                <div class="sys-row"><span class="sys-label">Memory</span><span class="sys-val" id="sys-mem">--</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MIDDLE COLUMN -->
+    <div>
+        <!-- MARKET PRICES -->
+        <div class="panel" style="margin-bottom:12px;">
+            <div class="panel-title">BINANCE LIVE PRICES</div>
+            <div class="market-grid" id="market-grid">
+                <div style="color:#555; font-size:12px; padding:10px;">Connecting to Binance...</div>
+            </div>
+        </div>
+
+        <!-- NODE STATUS -->
+        <div class="panel" style="margin-bottom:12px;">
+            <div class="panel-title">NODE STATUS</div>
+            <div id="node-list">
+                <div style="color:#555; font-size:12px; padding:10px;">Loading nodes...</div>
+            </div>
+        </div>
+
+        <!-- BOT FLEET -->
+        <div class="panel">
+            <div class="panel-title">BOT FLEET (ACTIVE ONLY)</div>
+            <div id="bot-fleet">
+                <div style="color:#555; font-size:12px; padding:10px;">Scanning...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- RIGHT COLUMN: TERMINAL -->
+    <div class="panel">
+        <div class="panel-title">SYSTEM EVENT LOG</div>
+        <div class="terminal" id="terminal">
+            <div class="log-line"><span class="log-time">SYS</span><span class="log-info">Initializing dashboard...</span></div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ===== CLOCK =====
+function updateClock() {
+    const d = new Date();
+    document.getElementById('clock').innerText = d.toISOString().split('T')[1].split('.')[0] + ' UTC';
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ===== STATE =====
+let logs = [];
+function addLog(msg, type='info') {
+    const d = new Date();
+    const ts = d.toISOString().split('T')[1].split('.')[0];
+    logs.push({ts, msg, type});
+    if (logs.length > 200) logs.shift();
+    renderLogs();
+}
+function renderLogs() {
+    const term = document.getElementById('terminal');
+    term.innerHTML = logs.map(l =>
+        `<div class="log-line"><span class="log-time">${l.ts}</span> <span class="log-${l.type}">${l.msg}</span></div>`
+    ).join('');
+    term.scrollTop = term.scrollHeight;
+}
+
+// ===== FETCH MC2 DATA =====
+async function fetchMC2() {
+    try {
+        const r = await fetch('mc2.json?_=' + Date.now());
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        const d = await r.json();
+        window._mc2_data = d;
+        document.getElementById('conn-status').innerText = 'ONLINE';
+        document.getElementById('conn-status').classList.remove('offline');
+
+        // Capital
+        const total = d.portfolio && d.portfolio.total ? d.portfolio.total.toFixed(2) : '--.--';
+        document.getElementById('s-total').innerText = total + '€';
+
+        // EUR free
+        const eur = d.orchestrator && d.orchestrator.eur_free ? d.orchestrator.eur_free.toFixed(2) : '--.--';
+        document.getElementById('s-eur').innerText = eur + '€';
+        const maxTrade = d.orchestrator && d.orchestrator.max_trade ? d.orchestrator.max_trade.toFixed(2) : '--';
+        document.getElementById('s-max-trade').innerText = 'max trade: ' + maxTrade + '€';
+
+        // Bot PnL (new data from collector)
+        const botPnl = d.total_bot_pnl || 0;
+        const fills = (d.stellatron ? d.stellatron.fills : 0) + (d.marco_sol ? d.marco_sol.fills : 0) + (d.orion ? d.orion.fills : 0);
+        const pnlEl = document.getElementById('s-bot-pnl');
+        pnlEl.innerText = (botPnl >= 0 ? '+' : '') + botPnl.toFixed(2) + '€';
+        pnlEl.className = 'stat-val ' + (botPnl >= 0 ? 'green' : 'red');
+        document.getElementById('s-bot-fills').innerText = fills + ' fills';
+
+        // PnL (old scalper, keep for backwards compat)
+        const xrpPnl = d.xrp_scalper ? (d.xrp_scalper.pnl_total || 0) : 0;
+        const solPnlOld = d.sol_scalper ? (d.sol_scalper.pnl_total || 0) : 0;
+        const totalPnl = xrpPnl + solPnlOld;
+        const oldPnl = document.getElementById('s-pnl');
+        if (oldPnl) {
+            oldPnl.innerText = (totalPnl >= 0 ? '+' : '') + totalPnl.toFixed(2) + '€';
+            oldPnl.className = 'stat-val ' + (totalPnl >= 0 ? 'green' : 'red');
+        }
+
+        // Trades (old scalper)
+        const xrpTrades = d.xrp_scalper ? (d.xrp_scalper.trades || 0) : 0;
+        const solTradesOld = d.sol_scalper ? (d.sol_scalper.trades || 0) : 0;
+        const totalTrades = xrpTrades + solTradesOld;
+        const tradesEl = document.getElementById('s-trades');
+        if (tradesEl) tradesEl.innerText = totalTrades;
+
+        // Win/Loss (old scalper)
+        const wins = (d.xrp_scalper ? d.xrp_scalper.wins : 0) + (d.sol_scalper ? d.sol_scalper.wins : 0);
+        const losses = (d.xrp_scalper ? d.xrp_scalper.losses : 0) + (d.sol_scalper ? d.sol_scalper.losses : 0);
+        const wr = totalTrades > 0 ? (wins / totalTrades * 100).toFixed(1) : '--';
+        const wrEl = document.getElementById('s-winrate');
+        if (wrEl) wrEl.innerText = 'WR: ' + wr + '%';
+        const wlEl = document.getElementById('s-wl');
+        if (wlEl) wlEl.innerText = 'W:' + wins + ' L:' + losses;
+
+        // System
+        if (d.system) {
+            document.getElementById('sys-host').innerText = d.system.hostname || '--';
+            document.getElementById('sys-uptime').innerText = d.system.uptime || '--';
+            document.getElementById('sys-load').innerText = d.system.load || '--';
+            document.getElementById('sys-mem').innerText = d.system.memory || '--';
+            document.getElementById('s-load').innerText = d.system.load || '-.-';
+            document.getElementById('s-mem').innerText = 'RAM: ' + (d.system.memory || '--');
+        }
+
+        // Portfolio assets
+        if (d.portfolio && d.portfolio.assets && d.portfolio.assets.length > 0) {
+            document.getElementById('s-assets-count').innerText = d.portfolio.assets.length + ' assets';
+            document.getElementById('portfolio-list').innerHTML = d.portfolio.assets.map(a =>
+                `<div class="asset-row">
+                    <div>
+                        <span class="asset-name">${a.asset}</span>
+                        <span class="asset-qty">${a.qty}</span>
+                    </div>
+                    <span class="asset-value">${a.value_eur.toFixed(2)}€</span>
+                </div>`
+            ).join('');
+        } else {
+            document.getElementById('s-assets-count').innerText = '0 assets';
+            document.getElementById('portfolio-list').innerHTML = '<div style="color:#555; font-size:11px; padding:8px;">No assets data</div>';
+        }
+
+        // Bot status (stellatron, marco_sol, orion)
+        let botHtml = '';
+        // Stellatron
+        if (d.stellatron) {
+            const s = d.stellatron;
+            botHtml += `<div class="scalper-box" style="border-left:3px solid var(--cyan);">
+                <div style="color:var(--cyan); font-weight:bold; margin-bottom:4px;">
+                    ${s.running ? '<span class="dot green"></span>' : '<span class="dot red"></span>'}
+                    STELLATRON <span style="color:#888;font-size:10px;">nuvola</span>
+                    <span style="float:right;font-size:10px;color:#888;">ADA/EUR</span>
+                </div>
+                <div class="row"><span class="label">Grid</span><span class="val">${s.bought}B / ${s.sells}S</span></div>
+                <div class="row"><span class="label">Invested</span><span class="val">${s.invested.toFixed(2)}€</span></div>
+                <div class="row"><span class="label">PnL</span><span class="val" style="color:${s.profit>=0?'var(--green)':'var(--red)'}">${s.profit>=0?'+':''}${s.profit.toFixed(4)}€</span></div>
+                <div class="row"><span class="label">Fills</span><span class="val">${s.fills}</span></div>
+                <div class="row"><span class="label">Compound</span><span class="val">${s.compound}x</span></div>
+            </div>`;
+        }
+        // MarcoSOL
+        if (d.marco_sol) {
+            const s = d.marco_sol;
+            const side = s.sell_target ? 'SELL' : (s.buy_target ? 'BUY' : 'IDLE');
+            botHtml += `<div class="scalper-box" style="border-left:3px solid var(--pink);">
+                <div style="color:var(--pink); font-weight:bold; margin-bottom:4px;">
+                    ${s.running ? '<span class="dot green"></span>' : '<span class="dot red"></span>'}
+                    MarcoSOL <span style="color:#888;font-size:10px;">MARCODG1</span>
+                    <span style="float:right;font-size:10px;color:#888;">SOL/EUR ${side}</span>
+                </div>
+                <div class="row"><span class="label">Targets</span><span class="val">Sell: ${s.sell_target || '--'} / Buy: ${s.buy_target || '--'}</span></div>
+                <div class="row"><span class="label">SOL free</span><span class="val">${s.sol_free} SOL</span></div>
+                <div class="row"><span class="label">Cycles</span><span class="val">${s.cycles}</span></div>
+                <div class="row"><span class="label">PnL</span><span class="val" style="color:${s.profit>=0?'var(--green)':'var(--red)'}">${s.profit>=0?'+':''}${s.profit.toFixed(4)}€</span></div>
+                <div class="row"><span class="label">Fills</span><span class="val">${s.fills}</span></div>
+            </div>`;
+        }
+        // ORION
+        if (d.orion) {
+            const s = d.orion;
+            const states = [];
+            if (s.btc) states.push('BTC:' + s.btc);
+            if (s.eth) states.push('ETH:' + s.eth);
+            if (s.bnb) states.push('BNB:' + s.bnb);
+            botHtml += `<div class="scalper-box" style="border-left:3px solid var(--yellow);">
+                <div style="color:var(--yellow); font-weight:bold; margin-bottom:4px;">
+                    ${s.running ? '<span class="dot green"></span>' : '<span class="dot red"></span>'}
+                    ORION <span style="color:#888;font-size:10px;">mc2</span>
+                    <span style="float:right;font-size:10px;color:#888;">${states.join(' | ')}</span>
+                </div>
+                <div class="row"><span class="label">PnL</span><span class="val" style="color:${s.profit>=0?'var(--green)':'var(--red)'}">${s.profit>=0?'+':''}${s.profit.toFixed(4)}€</span></div>
+                <div class="row"><span class="label">Fills</span><span class="val">${s.fills}</span></div>
+                <div class="row"><span class="label">EUR free</span><span class="val">${s.eur_free.toFixed(2)}€</span></div>
+            </div>`;
+        }
+        document.getElementById('bot-status-list').innerHTML = botHtml || '<div style="color:#555; font-size:11px; padding:8px;">No bot data</div>';
+
+        // Legion MC2 status
+        if (d.legion) {
+            const l = d.legion;
+            const runEl = `<span class="dot ${l.running ? 'green' : 'red'}"></span>${l.running ? 'ONLINE' : 'OFFLINE'}`;
+            let html = `<div style="margin-bottom:8px;"><span style="font-size:14px;">${runEl}</span></div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; font-size:11px;">
+                    <div><span style="color:#777;">Positions</span><br><span style="color:var(--cyan);">${l.positions} / ${l.max_positions}</span></div>
+                    <div><span style="color:#777;">Exposure</span><br><span style="color:var(--yellow);">${l.exposure.toFixed(2)}€</span></div>
+                    <div><span style="color:#777;">Win Rate</span><br><span style="color:${l.win_rate >= 50 ? 'var(--green)' : 'var(--red)'}">${l.win_rate}%</span></div>
+                    <div><span style="color:#777;">Blocked</span><br><span style="color:var(--orange);">${l.blocked}</span></div>
+                    <div><span style="color:#777;">Boost</span><br><span style="color:var(--cyan);">${l.boost}x</span></div>
+                    <div><span style="color:#777;">Uptime</span><br><span style="color:var(--cyan);">${l.uptime}</span></div>
+                </div>
+                <div style="margin-top:8px; padding-top:6px; border-top:1px dashed #333; display:flex; justify-content:space-between; font-size:11px;">
+                    <div><span style="color:#777;">Trades</span><br><span style="color:#fff;">${l.trades_total}</span></div>
+                    <div><span style="color:#777;">Profit</span><br><span style="color:${l.profit >= 0 ? 'var(--green)' : 'var(--red)'}">${l.profit >= 0 ? '+' : ''}${l.profit.toFixed(2)}€</span></div>
+                    <div><span style="color:#777;">Symbols</span><br><span style="color:var(--cyan);">${l.symbols_active}</span></div>
+                </div>`;
+            if (l.last_trade) {
+                const lt = l.last_trade;
+                html += `<div style="margin-top:6px; padding:4px; background:rgba(0,0,0,0.3); font-size:10px; text-align:center; color:${lt.net_eur >= 0 ? 'var(--green)' : 'var(--red)'}">
+                    LAST: ${lt.pnl_pct}% (${lt.net_eur >= 0 ? '+' : ''}${lt.net_eur}€) @ ${lt.exit_price}
+                </div>`;
+            }
+            document.getElementById('legion-mc2-status').innerHTML = html;
+        }
+
+        // Bot fleet (only active)
+        if (d.legacy_bots && d.legacy_bots.length > 0) {
+            const active = d.legacy_bots.filter(b => b.active);
+            if (active.length > 0) {
+                document.getElementById('bot-fleet').innerHTML = active.map(b =>
+                    `<div class="bot-row online">
+                        <div><span class="dot green"></span><span style="color:#fff;">${b.name}</span></div>
+                        <span style="color:#666; font-size:10px;">${b.age_min < 60 ? Math.round(b.age_min) + 'm ago' : Math.round(b.age_min/60) + 'h ago'}</span>
+                    </div>`
+                ).join('');
+            } else {
+                document.getElementById('bot-fleet').innerHTML = '<div style="color:#555; font-size:11px; padding:8px;">No active bots</div>';
+            }
+        }
+
+        addLog('MC2 data refreshed', 'info');
+    } catch(e) {
+        document.getElementById('conn-status').innerText = 'OFFLINE';
+        document.getElementById('conn-status').classList.add('offline');
+        addLog('MC2 fetch error: ' + e.message, 'err');
+    }
+}
+
+// ===== FETCH NODE DATA (nuvola, marcodg1) =====
+async function fetchNodes() {
+    const nodes = [
+        {file: 'nuvola.json', name: 'NUVOLA'},
+        {file: 'marcodg1.json', name: 'MARCODG1'}
+    ];
+    let html = '';
+
+    for (const node of nodes) {
+        try {
+            const r = await fetch(node.file + '?_=' + Date.now());
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            const d = await r.json();
+            const sys = d.system || {};
+            const legion = d.legion || {};
+            const portf = d.portfolio || {};
+            const isOnline = (legion.running || false) || sys.hostname !== '--';
+
+            html += `<div class="bot-row ${isOnline ? 'online' : 'offline'}" style="margin-bottom:6px;">
+                <div>
+                    <span class="dot ${isOnline ? 'green' : 'red'}"></span>
+                    <span style="color:#fff; font-weight:bold;">${node.name}</span>
+                    <div style="color:#666; font-size:10px; margin-left:13px;">
+                        ${sys.hostname || '--'} | ${sys.uptime || '--'} | Load: ${sys.load || '--'} | ${sys.memory || '--'}
+                    </div>
+                </div>
+                <div style="text-align:right; font-size:11px;">
+                    <div style="color:var(--cyan);">Capital: ${portf.total ? portf.total.toFixed(2) + '€' : '--'}</div>
+                    <div style="color:#888;">Pos: ${legion.positions || 0}/${legion.max_positions || '--'} | Exp: ${legion.exposure ? legion.exposure.toFixed(2) + '€' : '--'}</div>
+                    <div style="color:${legion.win_rate >= 50 ? 'var(--green)' : 'var(--red)'};">WR: ${legion.win_rate || 0}% | PnL: ${legion.profit >= 0 ? '+' : ''}${legion.profit ? legion.profit.toFixed(2) + '€' : '0€'}</div>
+                </div>
+            </div>`;
+            addLog(node.name + ' data OK', 'info');
+        } catch(e) {
+            html += `<div class="bot-row offline" style="margin-bottom:6px;">
+                <div><span class="dot red"></span><span style="color:#888;">${node.name}</span></div>
+                <span style="color:var(--red); font-size:11px;">UNREACHABLE</span>
+            </div>`;
+            addLog(node.name + ' unreachable: ' + e.message, 'warn');
+        }
+    }
+
+    document.getElementById('node-list').innerHTML = html || '<div style="color:#555; font-size:11px; padding:8px;">No nodes</div>';
+}
+
+// ===== FETCH BINANCE MARKET DATA =====
+async function fetchMarket() {
+    try {
+        // Use live_prices from mc2.json instead of direct Binance API (avoids CORS)
+        const mc2 = window._mc2_data;
+        if (!mc2 || !mc2.live_prices) return;
+        const lp = mc2.live_prices;
+        const symbols = Object.keys(lp);
+        const grid = document.getElementById('market-grid');
+        grid.innerHTML = symbols.map(sym => {
+            const price = lp[sym];
+            const s = sym.replace('SOLEUR','SOL').replace('XRPEUR','XRP').replace('BTCEUR','BTC')
+                       .replace('ETHEUR','ETH').replace('BNBEUR','BNB').replace('ADAEUR','ADA')
+                       .replace('DOGEUR','DOGE').replace('DOTEUR','DOT').replace('AVAXEUR','AVAX')
+                       .replace('PEPEEUR','PEPE').replace('EUR','');
+            const fmt = price >= 100 ? price.toFixed(2) : price >= 1 ? price.toFixed(3) : price.toFixed(6);
+            return `<div class="mcard">
+                <div class="sym">${s}</div>
+                <div class="price">€${fmt}</div>
+            </div>`;
+        }).join('');
+    } catch(e) {
+        addLog('Market data error: ' + e.message, 'warn');
+    }
+}
+
+// ===== UPDATE ALL =====
+async function updateAll() {
+    await fetchMC2();
+    await Promise.all([fetchNodes(), fetchMarket()]);
+}
+
+// Init
+addLog('Dashboard initialized', 'info');
+updateAll();
+setInterval(updateAll, 15000); // refresh every 15s
+</script>
+</body>
+</html>
