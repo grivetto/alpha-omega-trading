@@ -1,0 +1,219 @@
+#!/usr/bin/env python3
+"""
+ORION — Multi-asset reversal bot for mc2 (on-prem Zabbix hub)
+Manages BTC/EUR, ETH/EUR, BNB/EUR simultaneously.
+Each pair: sell crypto at +0.4%, buy back at -0.3%.
+Shares EUR pool responsibly.
+"""
+import asyncio, ccxt.async_support as ccxt, json, logging, os, sys, time
+from pathlib import Path
+
+BASE = Path(__file__).parent
+LOG_FILE = BASE / "orion.log"
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[logging.StreamHandler(sys.stdout), logging.FileHandler(str(LOG_FILE))], force=True)
+logger = logging.getLogger("ORION")
+
+MIN_NOTIONAL = 5.0
+FEE = 0.00075
+
+PAIRS = {
+    "BTC/EUR": {"asset": "BTC", "sell_raise": 0.004, "buy_drop": -0.003, "sell_amt": 0.00015, "max_eur": 5, "decimals": 6},
+    "ETH/EUR": {"asset": "ETH", "sell_raise": 0.004, "buy_drop": -0.003, "sell_amt": 0.003,   "max_eur": 5, "decimals": 4},
+    "BNB/EUR": {"asset": "BNB", "sell_raise": 0.004, "buy_drop": -0.003, "sell_amt": 0.002,   "max_eur": 2, "decimals": 4},
+}
+
+class OrionBot:
+    def __init__(self):
+        self.ex = None
+        self.orders = {}  # symbol -> {"sell_id", "buy_id", "sell_price", "buy_price", "state"}
+        self.meta = {}    # symbol -> pair config
+        for s, c in PAIRS.items():
+            self.orders[s] = {"sell_id": None, "buy_id": None, "sell_price": None, "buy_price": None}
+            self.meta[s] = c
+        self.profit = 0.0
+        self.fills = 0
+        self._load()
+
+    def _load(self):
+        sf = BASE / ".tmp" / "orion_state.json"
+        if sf.exists():
+            try:
+                d = json.loads(sf.read_text())
+                self.profit = d.get("profit", 0.0)
+                self.fills = d.get("fills", 0)
+            except: pass
+
+    def _save(self):
+        sf = BASE / ".tmp" / "orion_state.json"
+        sf.parent.mkdir(exist_ok=True)
+        json.dump({"profit": self.profit, "fills": self.fills}, open(sf, "w"))
+
+    async def connect(self):
+        for env_path in [BASE / ".env", Path("/home/sergio/denaro/.env")]:
+            if env_path.exists():
+                lines = env_path.read_text().splitlines()
+                key = secret = ""
+                for l in lines:
+                    if l.startswith("BINANCE_API_KEY="): key = l.split("=",1)[1].strip()
+                    elif l.startswith("BINANCE_API_SECRET="): secret = l.split("=",1)[1].strip()
+                if key: break
+        if not key:
+            key = os.environ.get("BINANCE_API_KEY", "")
+            secret = os.environ.get("BINANCE_API_SECRET", "")
+        if not key:
+            logger.error("No API keys"); sys.exit(1)
+        self.ex = ccxt.binance({"apiKey":key, "secret":secret, "enableRateLimit":True, "options":{"defaultType":"spot"}})
+        await self.ex.load_markets()
+        logger.info(f"ORION connected | key={key[:8]}...")
+
+    async def bal(self, asset):
+        b = await self.ex.fetch_balance()
+        return {"free": float(b["free"].get(asset,0) or 0), "total": float(b["total"].get(asset,0) or 0)}
+
+    async def eur_free(self):
+        b = await self.ex.fetch_balance()
+        return float(b["free"].get("EUR",0) or 0)
+
+    async def price(self, symbol):
+        t = await self.ex.fetch_ticker(symbol)
+        return float(t.get("last",0) or 0)
+
+    async def cancel(self, symbol, oid=None):
+        try:
+            for o in await self.ex.fetch_open_orders(symbol):
+                if oid is None or str(o["id"]) == str(oid):
+                    await self.ex.cancel_order(o["id"], symbol)
+        except: pass
+
+    async def cancel_all_symbol(self, symbol):
+        await self.cancel(symbol, None)
+
+    async def check_order(self, symbol):
+        try:
+            os = await self.ex.fetch_open_orders(symbol)
+            return {str(o["id"]) for o in os}
+        except: return set()
+
+    async def place_reversal(self, symbol):
+        cfg = self.meta[symbol]
+        ass = cfg["asset"]
+        p = await self.price(symbol)
+        if p <= 0: return
+
+        b = await self.bal(ass)
+        ef = await self.eur_free()
+        st = self.orders[symbol]
+
+        # Cancel stale
+        await self.cancel_all_symbol(symbol)
+        st["sell_id"] = st["buy_id"] = None
+
+        sell_amt = round(min(cfg["sell_amt"], b["total"] * 0.6), cfg["decimals"])
+        if sell_amt >= 0.00001 and sell_amt * p * (1+cfg["sell_raise"]) >= MIN_NOTIONAL:
+            sell_price = round(p * (1 + cfg["sell_raise"]), 2)
+            try:
+                o = await self.ex.create_limit_sell_order(symbol, sell_amt, sell_price)
+                st["sell_id"] = str(o["id"]); st["sell_price"] = sell_price
+                st["buy_price"] = None; st["buy_id"] = None
+                logger.info(f"  SELL {sell_amt} {ass} @ {sell_price} | id={o['id'][:12]}")
+            except Exception as e:
+                logger.error(f"  SELL {ass} fail: {e}")
+
+        elif ef >= cfg["max_eur"]:
+            buy_eur = min(cfg["max_eur"], ef * 0.5)
+            buy_amt = round(buy_eur / p, cfg["decimals"])
+            if buy_amt >= 0.00001 and buy_amt * p >= MIN_NOTIONAL:
+                buy_price = round(p * (1 + cfg["buy_drop"]), 2)
+                try:
+                    o = await self.ex.create_limit_buy_order(symbol, buy_amt, buy_price)
+                    st["buy_id"] = str(o["id"]); st["buy_price"] = buy_price
+                    st["sell_price"] = None; st["sell_id"] = None
+                    logger.info(f"  BUY {buy_amt} {ass} @ {buy_price} | {buy_eur:.2f}€ | id={o['id'][:12]}")
+                except Exception as e:
+                    logger.error(f"  BUY {ass} fail: {e}")
+
+    async def check_fills(self, symbol):
+        cfg = self.meta[symbol]
+        ass = cfg["asset"]
+        st = self.orders[symbol]
+        open_ids = await self.check_order(symbol)
+        try:
+            trades = await self.ex.fetch_my_trades(symbol, limit=10)
+            filled = {str(t.get("order") or (t.get("info") or {}).get("orderId")) for t in trades}
+        except: filled = set()
+        changed = False
+
+        if st["sell_id"] and st["sell_id"] not in open_ids:
+            if st["sell_id"] in filled:
+                self.fills += 1
+                logger.info(f"  ✅ SELL filled {ass} @ {st['sell_price']}")
+                st["sell_id"] = None
+                changed = True
+            else:
+                st["sell_id"] = None
+
+        if st["buy_id"] and st["buy_id"] not in open_ids:
+            if st["buy_id"] in filled:
+                self.fills += 1
+                profit = (st["sell_price"] - st["buy_price"]) * cfg["sell_amt"] if st["sell_price"] else 0
+                self.profit += profit
+                logger.info(f"  ✅ BUY filled {ass} @ {st['buy_price']} | profit={profit:.4f}€")
+                st["buy_id"] = None
+                changed = True
+            else:
+                st["buy_id"] = None
+
+        if changed: self._save()
+
+    async def run(self):
+        await self.connect()
+        status_interval = 60
+        last_status = 0
+        logger.info("ORION — Multi-asset reversal bot v1")
+        logger.info(f"Pairs: {', '.join(PAIRS.keys())}")
+        logger.info(f"State: profit={self.profit:.4f} fills={self.fills}")
+
+        # Cancel stale ETH orders immediately
+        logger.info("Cleaning stale orders...")
+        for s in PAIRS:
+            try:
+                for o in await self.ex.fetch_open_orders(s):
+                    await self.ex.cancel_order(o["id"], s)
+            except: pass
+        logger.info("Stale orders cleared")
+
+        # Initial placement
+        for s in PAIRS:
+            await self.place_reversal(s)
+
+        while True:
+            try:
+                for s in PAIRS:
+                    await self.check_fills(s)
+                    st = self.orders[s]
+                    if not st["sell_id"] and not st["buy_id"]:
+                        await self.place_reversal(s)
+
+                now = time.time()
+                if now - last_status > status_interval:
+                    last_status = now
+                    parts = []
+                    for s in PAIRS:
+                        st = self.orders[s]
+                        action = "SELL" if st["sell_id"] else ("BUY" if st["buy_id"] else "IDLE")
+                        parts.append(f"{self.meta[s]['asset']}={action}")
+                    ef = await self.eur_free()
+                    logger.info(f"{' | '.join(parts)} | EUR={ef:.2f} | profit={self.profit:.4f} fills={self.fills}")
+
+                await asyncio.sleep(5)
+            except Exception as e:
+                logger.error(f"Loop: {e}", exc_info=True)
+                await asyncio.sleep(10)
+
+if __name__ == "__main__":
+    b = OrionBot()
+    try:
+        asyncio.run(b.run())
+    except KeyboardInterrupt:
+        asyncio.run(b.ex.close() if b.ex else None)
