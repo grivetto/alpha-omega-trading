@@ -273,6 +273,98 @@ def get_legion_status():
         print(f"Legion status error: {e}", file=sys.stderr)
     return result
 
+def get_stellatron_metrics():
+    """Read Stellatron metrics from nuvola via Zabbix agent (direct log parse)"""
+    result = {"running": False, "profit": 0, "fills": 0, "invested": 0,
+              "price": 0, "eur_free": 0, "bought": 0, "sells": 0, "compound": 1.0}
+    try:
+        from datetime import datetime, timezone
+        r = subprocess.run(
+            ["ssh", "sergio@87.106.3.15", "tail -200 /home/sergio/denaro/stellatron.log"],
+            capture_output=True, text=True, timeout=10)
+        if r.returncode != 0:
+            return result
+        lines = r.stdout.split("\n")
+        result["running"] = any("Stellatron" in l for l in lines[-5:])
+        for line in reversed(lines):
+            m = re.search(r"profit=([0-9.-]+)", line)
+            if m and not result["profit"]: result["profit"] = float(m.group(1))
+            m = re.search(r"fills=(\d+)", line)
+            if m and not result["fills"]: result["fills"] = int(m.group(1))
+            m = re.search(r"inv=([0-9.]+)", line)
+            if m and not result["invested"]: result["invested"] = float(m.group(1))
+            m = re.search(r"Price=([0-9.]+)", line)
+            if m and not result["price"]: result["price"] = float(m.group(1))
+            m = re.search(r"EUR_free=([0-9.]+)", line)
+            if m and not result["eur_free"]: result["eur_free"] = float(m.group(1))
+            m = re.search(r"B=(\d+)", line)
+            if m and not result["bought"]: result["bought"] = int(m.group(1))
+            m = re.search(r"S=(\d+)", line)
+            if m and not result["sells"]: result["sells"] = int(m.group(1))
+            m = re.search(r"compound=([0-9.]+)x", line)
+            if m and not result["compound"]: result["compound"] = float(m.group(1))
+    except: pass
+    return result
+
+def get_marco_sol_metrics():
+    """Read MarcoSOL metrics from MARCODG1 via SSH"""
+    result = {"running": False, "profit": 0, "fills": 0, "cycles": 0,
+              "price": 0, "sell_target": 0, "buy_target": 0, "eur_free": 0, "sol_free": 0}
+    try:
+        r = subprocess.run(
+            ["ssh", "marco@87.106.222.123", "tail -100 /home/sergio/denaro/marco_sol.log"],
+            capture_output=True, text=True, timeout=10)
+        if r.returncode != 0:
+            return result
+        lines = r.stdout.split("\n")
+        result["running"] = any("MarcoSOL" in l for l in lines[-5:])
+        for line in reversed(lines):
+            m = re.search(r"SOL/EUR=([0-9.]+)", line)
+            if m and not result["price"]: result["price"] = float(m.group(1))
+            m = re.search(r"SOL=([0-9.]+)", line)
+            if m and not result["sol_free"]: result["sol_free"] = float(m.group(1))
+            m = re.search(r"(?:^|\s)EUR=([0-9.]+)", line)
+            if m and not result["eur_free"]: result["eur_free"] = float(m.group(1))
+            m = re.search(r"PnL=([0-9.-]+)", line)
+            if m and not result["profit"]: result["profit"] = float(m.group(1))
+            m = re.search(r"fills=(\d+)", line)
+            if m and not result["fills"]: result["fills"] = int(m.group(1))
+            m = re.search(r"sell=([0-9.]+)", line)
+            if m and not result["sell_target"]: result["sell_target"] = float(m.group(1))
+            m = re.search(r"buy=([0-9.]+)", line)
+            if m and not result["buy_target"]: result["buy_target"] = float(m.group(1))
+            m = re.search(r"cycles=(\d+)", line)
+            if m and not result["cycles"]: result["cycles"] = int(m.group(1))
+    except: pass
+    return result
+
+def get_orion_metrics():
+    """Read ORION metrics from local orion.log"""
+    result = {"running": False, "profit": 0, "fills": 0, "eur_free": 0,
+              "btc": "IDLE", "eth": "IDLE", "bnb": "IDLE"}
+    log_file = BASE_DIR / "orion.log"
+    if not log_file.exists():
+        return result
+    try:
+        with open(log_file) as f:
+            lines = f.readlines()
+        result["running"] = any("ORION" in l for l in lines[-5:])
+        for line in reversed(lines):
+            m = re.search(r"profit=(-?[0-9.]+)", line)
+            if m and not result["profit"]: result["profit"] = float(m.group(1))
+            m = re.search(r"fills=(\d+)", line)
+            if m and not result["fills"]: result["fills"] = int(m.group(1))
+            m = re.search(r"(?:^|\s)EUR=([0-9.]+)", line)
+            if m and not result["eur_free"]: result["eur_free"] = float(m.group(1))
+            m = re.search(r"BTC=(\w+)", line)
+            if m and not result["btc"]: result["btc"] = m.group(1)
+            m = re.search(r"ETH=(\w+)", line)
+            if m and not result["eth"]: result["eth"] = m.group(1)
+            m = re.search(r"BNB=(\w+)", line)
+            if m and not result["bnb"]: result["bnb"] = m.group(1)
+    except: pass
+    return result
+
 def collect_all():
     now = datetime.utcnow()
     ts = now.strftime("%H:%M")
@@ -285,8 +377,11 @@ def collect_all():
     sys_info = get_system_info()
     legacy_bots = get_legacy_bots_status()
     legion = get_legion_status()
+    stellatron = get_stellatron_metrics()
+    marco_sol = get_marco_sol_metrics()
+    orion = get_orion_metrics()
     live_prices = {}
-    for sym in ["XRP", "SOL", "ADA", "DOGE", "ETH", "BNB"]:
+    for sym in ["XRP", "SOL", "ADA", "DOGE", "ETH", "BNB", "BTC"]:
         if sym in prices:
             live_prices[sym] = prices[sym]
     total_pnl = xrp_scalper["pnl_total"] + sol_scalper["pnl_total"]
@@ -294,6 +389,7 @@ def collect_all():
     total_wins = xrp_scalper["wins"] + sol_scalper["wins"]
     total_losses = xrp_scalper["losses"] + sol_scalper["losses"]
     win_rate = round(total_wins / max(total_trades, 1) * 100, 1)
+    total_bot_pnl = stellatron["profit"] + marco_sol["profit"] + orion["profit"]
     return {
         "ts": ts, "sc": xrp_scalper["signals"], "sp": xrp_scalper["pnl_total"],
         "spr": portfolio.get("total", 0), "sr": sol_scalper["signals"],
@@ -303,6 +399,8 @@ def collect_all():
         "orchestrator": orch, "system": sys_info, "legacy_bots": legacy_bots,
         "legion": legion,
         "live_prices": live_prices, "legacy_bots_count": len([b for b in legacy_bots if b["active"]]),
+        "stellatron": stellatron, "marco_sol": marco_sol, "orion": orion,
+        "bot_count": 3, "total_bot_pnl": round(total_bot_pnl, 4),
     }
 
 if __name__ == "__main__":
