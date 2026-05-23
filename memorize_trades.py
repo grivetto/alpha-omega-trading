@@ -129,6 +129,10 @@ def memorize():
     # Profit realized at BUY: profit = prior_sell_value - buy_value - fees.
     # Grid pattern (stellatron): buy→sell cycle.
     # Profit realized at SELL: profit = sell_value - prior_buy_value - fees.
+    # Reset all PnL first so stale values don't persist
+    c.execute("UPDATE trades SET net_pnl = NULL")
+    c.commit()
+
     for bot_name in ["stellatron", "marco_sol", "orion"]:
         rows = c.execute(
             "SELECT id, bot, symbol, side, price, amount, eur_value, fee "
