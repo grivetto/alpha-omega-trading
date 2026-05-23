@@ -91,7 +91,7 @@ class DenaroMemory:
         c = self._conn_get()
         col_names = [row[1] for row in c.execute("PRAGMA table_info(trades)")]
         cols = ", ".join(
-            f"COALESCE({c}, 0)" if c == "net_pnl" else c
+            f"COALESCE({c}, 0) AS {c}" if c == "net_pnl" else c
             for c in col_names
         )
         if bot:
