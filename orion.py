@@ -218,10 +218,27 @@ class OrionBot:
         if changed: self._save()
 
     async def run(self):
-        await self.connect()
-        status_interval = 60
-        last_status = 0
-        logger.info("ORION — Multi-asset reversal bot v1")
+        # Retry connect with backoff
+        for attempt in range(5):
+            try:
+                await self.connect()
+                logger.info("ORION — Multi-asset reversal bot v1")
+                break
+            except Exception as e:
+                logger.warning(f"Connect attempt {attempt+1}/5 failed: {str(e)[:80]}")
+                if attempt < 4:
+                    await asyncio.sleep(15 * (attempt + 1))
+                else:
+                    logger.error("All connect attempts failed, retrying in 60s")
+                    await asyncio.sleep(60)
+                    # Keep trying forever
+                    while True:
+                        try:
+                            await self.connect()
+                            logger.info("ORION — reconnected")
+                            break
+                        except:
+                            await asyncio.sleep(120)
         logger.info(f"Pairs: {', '.join(PAIRS.keys())}")
         logger.info(f"State: profit={self.profit:.4f} fills={self.fills}")
 
