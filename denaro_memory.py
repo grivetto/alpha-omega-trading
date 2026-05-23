@@ -109,7 +109,9 @@ class DenaroMemory:
             params + (n,)).fetchall()
         if not rows:
             return {"count": 0, "avg_pnl": 0, "win_rate": 0, "total_pnl": 0}
-        pnls = [r["net_pnl"] for r in rows]
+        pnls = [r["net_pnl"] for r in rows if r["net_pnl"] is not None]
+        if not pnls:
+            return {"count": 0, "avg_pnl": 0, "win_rate": 0, "total_pnl": 0}
         wins = sum(1 for p in pnls if p > 0)
         return {
             "count": len(pnls),
