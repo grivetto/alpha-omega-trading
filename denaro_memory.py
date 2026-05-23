@@ -89,7 +89,7 @@ class DenaroMemory:
 
     def get_recent_trades(self, bot=None, limit=100):
         c = self._conn_get()
-        col_names = [d[0] for d in c.execute("PRAGMA table_info(trades)").fetchall()]
+        col_names = [row[1] for row in c.execute("PRAGMA table_info(trades)")]
         cols = ", ".join(
             f"COALESCE({c}, 0)" if c == "net_pnl" else c
             for c in col_names
