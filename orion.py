@@ -30,7 +30,8 @@ class OrionBot:
         self.orders = {}  # symbol -> {"sell_id", "buy_id", "sell_price", "buy_price", "state"}
         self.meta = {}    # symbol -> pair config
         for s, c in PAIRS.items():
-            self.orders[s] = {"sell_id": None, "buy_id": None, "sell_price": None, "buy_price": None}
+            self.orders[s] = {"sell_id": None, "buy_id": None, "sell_price": None, "buy_price": None,
+                              "trail_peak": None, "trail_active": False}
             self.meta[s] = c
         self.profit = 0.0
         self.fills = 0
@@ -130,9 +131,33 @@ class OrionBot:
         ef = await self.eur_free()
         st = self.orders[symbol]
 
-        # Cancel stale
+        # ── Trailing sell: if we have an active sell and price ran up, adjust higher ──
+        if st["sell_id"] and st["sell_price"] and p > st["sell_price"]:
+            if not st.get("trail_peak") or p > st["trail_peak"]:
+                st["trail_peak"] = p
+            min_trail = st["sell_price"] * (1 + abs(cfg.get("sell_raise", 0.004)) * 0.5)
+            if st["trail_peak"] >= min_trail and not st.get("trail_active"):
+                st["trail_active"] = True
+            if st["trail_active"] and p >= st["trail_peak"] * 0.998:
+                new_price = round(p * (1 + cfg["sell_raise"]), 2)
+                if new_price > st["sell_price"]:
+                    await self.cancel(symbol, st["sell_id"])
+                    sell_amt = round(min(cfg["sell_amt"], b["total"] * 0.6), cfg["decimals"])
+                    if sell_amt >= 0.00001 and sell_amt * new_price >= MIN_NOTIONAL:
+                        try:
+                            o = await self.ex.create_limit_sell_order(symbol, sell_amt, new_price)
+                            logger.info(f"  TRAIL SELL {sell_amt} {ass} {st['sell_price']}→{new_price}")
+                            st["sell_id"] = str(o["id"]); st["sell_price"] = new_price
+                            st["trail_peak"] = p
+                        except Exception as e:
+                            logger.error(f"  TRAIL SELL fail: {e}")
+                    return
+
+        # ── Normal reversal placement ──
         await self.cancel_all_symbol(symbol)
         st["sell_id"] = st["buy_id"] = None
+        st["trail_peak"] = None
+        st["trail_active"] = False
 
         sell_amt = round(min(cfg["sell_amt"], b["total"] * 0.6), cfg["decimals"])
         if sell_amt >= 0.00001 and sell_amt * p * (1+cfg["sell_raise"]) >= MIN_NOTIONAL:
@@ -140,7 +165,8 @@ class OrionBot:
             try:
                 o = await self.ex.create_limit_sell_order(symbol, sell_amt, sell_price)
                 st["sell_id"] = str(o["id"]); st["sell_price"] = sell_price
-                st["buy_price"] = None; st["buy_id"] = None
+                st["trail_peak"] = p
+                st["trail_active"] = False
                 logger.info(f"  SELL {sell_amt} {ass} @ {sell_price} | id={o['id'][:12]}")
             except Exception as e:
                 logger.error(f"  SELL {ass} fail: {e}")
@@ -217,10 +243,26 @@ class OrionBot:
                 if int(time.time()) % 1800 < 2:
                     self._refresh_params()
 
+                # ── Regime-based throttling ──
+                quiet_mult = 1.0
+                try:
+                    reg_path = BASE / "regime.json"
+                    if reg_path.exists():
+                        reg = json.loads(reg_path.read_text())
+                        r = reg.get("regime", "ranging")
+                        if r == "quiet":
+                            quiet_mult = 0.5
+                        elif r == "volatile":
+                            quiet_mult = 0.7
+                except: pass
+
                 for s in PAIRS:
                     cfg = self.meta[s]
                     if cfg.get("paused", False):
                         continue
+                    # Apply throttled sizes
+                    cfg["sell_amt"] = max(0.00001, PAIRS[s]["sell_amt"] * quiet_mult)
+                    cfg["max_eur"] = max(2, int(PAIRS[s]["max_eur"] * quiet_mult))
                     await self.check_fills(s)
                     st = self.orders[s]
                     if not st["sell_id"] and not st["buy_id"]:

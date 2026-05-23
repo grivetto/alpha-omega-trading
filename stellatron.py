@@ -300,6 +300,29 @@ class Stellatron:
         if now - self._last_params_fetch > 1800:
             self._last_params_fetch = now
             self._load_optimized_params()
+            self._apply_regime_throttle()
+
+    def _apply_regime_throttle(self):
+        """Reduce order sizes in quiet/volatile regimes"""
+        try:
+            reg_path = BASE_DIR / "regime.json"
+            if reg_path.exists():
+                reg = json.loads(reg_path.read_text())
+                r = reg.get("regime", "ranging")
+                if r == "quiet":
+                    base = self.cfg.get("base_order_eur", 5.5)
+                    self.cfg["base_order_eur"] = max(3.0, base * 0.6)
+                    logger.info(f"regime=quiet → base_order {base}→{self.cfg['base_order_eur']}€")
+                    for p in self.cfg["pair_configs"]:
+                        self.cfg["pair_configs"][p]["base_order"] = self.cfg["base_order_eur"]
+                elif r == "volatile":
+                    base = self.cfg.get("base_order_eur", 5.5)
+                    self.cfg["base_order_eur"] = max(3.0, base * 0.75)
+                    logger.info(f"regime=volatile → base_order {base}→{self.cfg['base_order_eur']}€")
+                    for p in self.cfg["pair_configs"]:
+                        self.cfg["pair_configs"][p]["base_order"] = self.cfg["base_order_eur"]
+        except Exception as e:
+            logger.debug(f"Regime throttle error: {e}")
 
     # ── API Connection ──────────────────────────────────────────────
     async def connect(self):

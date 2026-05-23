@@ -4,13 +4,40 @@ Strategy Optimizer — Self-improving parameter engine
 Reads trade history from memory DB, analyzes performance vs market conditions,
 and outputs optimized parameters for each bot.
 """
-import json, os, sys, math
+import json, os, sys, math, urllib.request
 from pathlib import Path
 from datetime import datetime, timezone, timedelta
 
 BASE = Path(__file__).parent
 sys.path.insert(0, str(BASE))
 from denaro_memory import DenaroMemory
+
+BINANCE = "https://api.binance.com"
+
+
+def fetch_klines(symbol, interval="5m", limit=48):
+    url = f"{BINANCE}/api/v3/klines?symbol={symbol}&interval={interval}&limit={limit}"
+    try:
+        with urllib.request.urlopen(url, timeout=10) as resp:
+            data = json.loads(resp.read().decode())
+        return [{"time": k[0], "open": float(k[1]), "high": float(k[2]),
+                 "low": float(k[3]), "close": float(k[4]), "volume": float(k[5])} for k in data]
+    except Exception as e:
+        print(f"[OPT] klines error {symbol}: {e}")
+        return []
+
+
+def compute_atr(candles, period=14):
+    """ATR as % of price"""
+    if len(candles) < period + 1:
+        return 0
+    trs = []
+    for i in range(1, len(candles)):
+        h, l, pc = candles[i]["high"], candles[i]["low"], candles[i-1]["close"]
+        trs.append(max(h - l, abs(h - pc), abs(l - pc)))
+    atr = sum(trs[-period:]) / period
+    avg_price = candles[-1]["close"]
+    return atr / avg_price * 100
 
 
 # ── Stellatron Optimizer ──
@@ -34,15 +61,31 @@ def optimize_stellatron(memory):
     params = dict(current_params)
     changes = []
 
-    # Adjust grid spacing based on volatility
-    if volatility > 2.0:
-        params["grid_spacing"] = min(0.008, params.get("grid_spacing", 0.003) * 1.3)
-        changes.append(f"vol={volatility:.1f}% >2% → spacing ↑ x1.3")
-    elif volatility < 0.5:
-        params["grid_spacing"] = max(0.001, params.get("grid_spacing", 0.003) * 0.8)
-        changes.append(f"vol={volatility:.1f}% <0.5% → spacing ↓ x0.8")
+    # ATR-based dynamic grid spacing: grid_spacing = ATR * 1.5
+    candles = fetch_klines("SOLEUR", interval="5m", limit=20)
+    atr = compute_atr(candles, period=14)
+    if atr > 0:
+        atr_spacing = round(atr * 1.5 / 100, 6)
+        MIN_SPACING = 0.003
+        if atr_spacing < MIN_SPACING:
+            atr_spacing = MIN_SPACING
+        params["grid_spacing"] = atr_spacing
+        changes.append(f"ATR={atr:.3f}% ×1.5 → spacing={atr_spacing:.4f}")
     else:
-        changes.append(f"vol={volatility:.1f}% normal → spacing unchanged")
+        # Fallback to volatility-based
+        if volatility > 2.0:
+            params["grid_spacing"] = min(0.008, params.get("grid_spacing", 0.003) * 1.3)
+            changes.append(f"vol={volatility:.1f}% >2% → spacing ↑ x1.3")
+        elif volatility < 0.5:
+            params["grid_spacing"] = max(0.003, params.get("grid_spacing", 0.003) * 0.8)
+            changes.append(f"vol={volatility:.1f}% <0.5% → spacing ↓ x0.8")
+        else:
+            changes.append(f"vol={volatility:.1f}% normal → spacing unchanged")
+
+        # Fee floor
+        if params["grid_spacing"] < MIN_SPACING:
+            params["grid_spacing"] = MIN_SPACING
+            changes.append(f"fee_floor → min_spacing={MIN_SPACING}")
 
     # Adjust base order based on win rate
     win_rate = stats.get("win_rate", 50)
@@ -59,20 +102,23 @@ def optimize_stellatron(memory):
         changes.append("regime=trending → max_levels ↓")
     elif regime == "ranging":
         params["max_grid_levels"] = max(6, params.get("max_grid_levels", 6))
-        params["grid_spacing"] = max(0.002, params.get("grid_spacing", 0.003))
-        changes.append("regime=ranging → max_levels ↑, spacing ↑")
+        changes.append("regime=ranging → max_levels ↑")
     elif regime == "volatile":
         params["max_grid_levels"] = max(5, params.get("max_grid_levels", 6))
         params["base_order_eur"] = max(3.0, params.get("base_order_eur", 5.5) * 0.8)
         changes.append("regime=volatile → levels ↑, order ↓")
+    elif regime == "quiet":
+        params["base_order_eur"] = max(3.0, params.get("base_order_eur", 5.5) * 0.85)
+        params["max_grid_levels"] = min(4, params.get("max_grid_levels", 6))
+        changes.append("regime=quiet → levels ↓, order ↓")
 
-    # Fee floor: profit_pct must cover 2× fee + buffer
-    MIN_SPACING = 0.003  # 0.3% > 0.15% fee round-trip + margin
+    # Fee floor
+    MIN_SPACING = 0.003
     if params["grid_spacing"] < MIN_SPACING:
         params["grid_spacing"] = MIN_SPACING
         changes.append(f"fee_floor → min_spacing={MIN_SPACING}")
 
-    # Round for cleanliness
+    # Round
     params["grid_spacing"] = round(params["grid_spacing"], 4)
     params["base_order_eur"] = round(params["base_order_eur"], 1)
 
