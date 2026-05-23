@@ -76,7 +76,7 @@ class OrionBot:
         json.dump({"profit": self.profit, "fills": self.fills}, open(sf, "w"))
 
     async def connect(self):
-        for env_path in [BASE / ".env", Path("/home/sergio/denaro/.env")]:
+        for env_path in [BASE / ".env", Path("/home/sergio/denaro/.env"), Path("/home/sergio/dollari/.env")]:
             if env_path.exists():
                 lines = env_path.read_text().splitlines()
                 key = secret = ""
