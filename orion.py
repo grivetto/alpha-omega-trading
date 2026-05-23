@@ -241,6 +241,8 @@ class OrionBot:
                             await asyncio.sleep(120)
         logger.info(f"Pairs: {', '.join(PAIRS.keys())}")
         logger.info(f"State: profit={self.profit:.4f} fills={self.fills}")
+        status_interval = 60
+        last_status = 0
 
         # Cancel stale ETH orders immediately
         logger.info("Cleaning stale orders...")
