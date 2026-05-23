@@ -89,7 +89,7 @@ class OrionBot:
             secret = os.environ.get("BINANCE_API_SECRET", "")
         if not key:
             logger.error("No API keys"); sys.exit(1)
-        self.ex = ccxt.binance({"apiKey":key, "secret":secret, "enableRateLimit":True, "options":{"defaultType":"spot"}})
+        self.ex = ccxt.binance({"apiKey":key, "secret":secret, "enableRateLimit":True, "options":{"defaultType":"spot", "fetchCurrencies": False}})
         await self.ex.load_markets()
         logger.info(f"ORION connected | key={key[:8]}...")
 
