@@ -89,13 +89,18 @@ class DenaroMemory:
 
     def get_recent_trades(self, bot=None, limit=100):
         c = self._conn_get()
+        col_names = [d[0] for d in c.execute("PRAGMA table_info(trades)").fetchall()]
+        cols = ", ".join(
+            f"COALESCE({c}, 0)" if c == "net_pnl" else c
+            for c in col_names
+        )
         if bot:
             rows = c.execute(
-                "SELECT * FROM trades WHERE bot=? ORDER BY id DESC LIMIT ?",
+                f"SELECT {cols} FROM trades WHERE bot=? ORDER BY id DESC LIMIT ?",
                 (bot, limit)).fetchall()
         else:
             rows = c.execute(
-                "SELECT * FROM trades ORDER BY id DESC LIMIT ?",
+                f"SELECT {cols} FROM trades ORDER BY id DESC LIMIT ?",
                 (limit,)).fetchall()
         return [dict(r) for r in rows]
 
