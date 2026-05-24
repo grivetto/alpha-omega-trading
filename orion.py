@@ -19,9 +19,9 @@ FEE = 0.00075
 OPTIMIZER_API = "http://localhost:8899/api/params/orion"
 
 PAIRS = {
-    "BTC/EUR": {"asset": "BTC", "sell_raise": 0.004, "buy_drop": -0.003, "sell_amt": 0.00015, "max_eur": 5, "decimals": 6, "paused": False},
-    "ETH/EUR": {"asset": "ETH", "sell_raise": 0.004, "buy_drop": -0.003, "sell_amt": 0.003,   "max_eur": 5, "decimals": 4, "paused": False},
-    "BNB/EUR": {"asset": "BNB", "sell_raise": 0.004, "buy_drop": -0.003, "sell_amt": 0.002,   "max_eur": 2, "decimals": 4, "paused": False},
+    "BTC/EUR": {"asset": "BTC", "sell_raise": 0.004, "buy_drop": -0.003, "sell_amt": 0.00015, "max_eur": 10, "decimals": 6, "paused": False},
+    "ETH/EUR": {"asset": "ETH", "sell_raise": 0.004, "buy_drop": -0.003, "sell_amt": 0.003,   "max_eur": 10, "decimals": 4, "paused": False},
+    "BNB/EUR": {"asset": "BNB", "sell_raise": 0.004, "buy_drop": -0.003, "sell_amt": 0.002,   "max_eur": 10, "decimals": 4, "paused": False},
 }
 
 class OrionBot:
@@ -154,10 +154,7 @@ class OrionBot:
                     return
 
         # ── Normal reversal placement ──
-        await self.cancel_all_symbol(symbol)
-        st["sell_id"] = st["buy_id"] = None
-        st["trail_peak"] = None
-        st["trail_active"] = False
+        # v2: only cancel stale orders (>15 min old), don't reset on every cycle
 
         sell_amt = round(min(cfg["sell_amt"], b["total"] * 0.6), cfg["decimals"])
         if sell_amt >= 0.00001 and sell_amt * p * (1+cfg["sell_raise"]) >= MIN_NOTIONAL:
@@ -280,8 +277,8 @@ class OrionBot:
                     if cfg.get("paused", False):
                         continue
                     # Apply throttled sizes
-                    cfg["sell_amt"] = max(0.00001, PAIRS[s]["sell_amt"] * quiet_mult)
-                    cfg["max_eur"] = max(2, int(PAIRS[s]["max_eur"] * quiet_mult))
+                    cfg["sell_amt"] = PAIRS[s]["sell_amt"] * max(0.5, quiet_mult)  # floor at 50%
+                    cfg["max_eur"] = max(PAIRS[s]["max_eur"], int(PAIRS[s]["max_eur"] * max(0.5, quiet_mult)))
                     await self.check_fills(s)
                     st = self.orders[s]
                     if not st["sell_id"] and not st["buy_id"]:

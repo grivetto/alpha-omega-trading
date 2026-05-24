@@ -232,11 +232,21 @@ class MarcoSOL:
 
                 if not self.sell_target and not self.buy_target:
                     b = await self.bal()
-                    if b["SOL"] >= 0.1 and b["EUR"] >= MIN_NOTIONAL:
-                        st = round(p * self.sell_raise, 2)
-                        bt = round(p * self.buy_drop, 2)
-                        if st > p: await self.place_sell(st)
-                        if bt < p: await self.place_buy(bt)
+                    # v2: alternate sell/buy cycles, never place both simultaneously
+                    if self.cycle % 2 == 0:
+                        if b["SOL"] >= 0.05:
+                            st = round(p * self.sell_raise, 2)
+                            if st > p: await self.place_sell(st)
+                        elif b["EUR"] >= MIN_NOTIONAL:
+                            bt = round(p * self.buy_drop, 2)
+                            if bt < p: await self.place_buy(bt)
+                    else:
+                        if b["EUR"] >= MIN_NOTIONAL:
+                            bt = round(p * self.buy_drop, 2)
+                            if bt < p: await self.place_buy(bt)
+                        elif b["SOL"] >= 0.05:
+                            st = round(p * self.sell_raise, 2)
+                            if st > p: await self.place_sell(st)
 
                 if int(time.time()) % 1800 < 2:
                     self._refresh_params()
