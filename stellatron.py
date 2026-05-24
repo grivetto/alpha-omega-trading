@@ -689,6 +689,46 @@ class Stellatron:
         except Exception as e:
             logger.warning(f"State load error: {e}")
 
+    # ── v2: Local Advanced Metrics ──
+    def _local_metrics(self):
+        """Compute Sharpe, max drawdown, profit factor from local trade DB."""
+        c = self.db.conn().execute(
+            "SELECT net_pnl FROM trades WHERE net_pnl IS NOT NULL ORDER BY id"
+        )
+        pnls = [r[0] for r in c.fetchall() if r[0] is not None]
+        if len(pnls) < 3:
+            return {"sharpe": 0, "max_dd": 0, "profit_factor": 0, "count": len(pnls)}
+        
+        # Profit factor
+        gross_profit = sum(p for p in pnls if p > 0)
+        gross_loss = abs(sum(p for p in pnls if p < 0))
+        profit_factor = round(gross_profit / max(gross_loss, 0.001), 2)
+        
+        # Max drawdown (from daily PnL equity curve)
+        c2 = self.db.conn().execute("SELECT day, pnl FROM daily_pnl ORDER BY day")
+        daily = c2.fetchall()
+        max_dd = 0.0
+        equity = 0.0
+        peak_val = 0.0
+        for d in daily:
+            equity += d[1]
+            if equity > peak_val:
+                peak_val = equity
+            if peak_val > 0:
+                dd = (peak_val - equity) / peak_val
+                if dd > max_dd:
+                    max_dd = dd
+        
+        # Sharpe (annualized from per-trade returns, rough estimate)
+        n = len(pnls)
+        mean_pnl = sum(pnls) / n
+        variance = sum((p - mean_pnl) ** 2 for p in pnls) / (n - 1) if n > 1 else 0
+        std_pnl = variance ** 0.5
+        sharpe = round(mean_pnl / std_pnl, 2) if std_pnl > 0 else 0
+        
+        return {"sharpe": sharpe, "max_dd_pct": round(max_dd * 100, 2),
+                "profit_factor": profit_factor, "count": len(pnls)}
+
     # ── Notifications ────────────────────────────────────────────────
     async def send_status(self, force=False):
         now = time.time()
@@ -703,6 +743,7 @@ class Stellatron:
         asset_val = bal["asset_total"] * price
         portfolio = eur_total + asset_val
 
+        m = self._local_metrics()
         now_dt = datetime.now().strftime("%H:%M")
         msg = (
             f"🤖 <b>STELLATRON</b> | {now_dt}\n"
@@ -711,10 +752,11 @@ class Stellatron:
             f"📈 Today: {daily['pnl']:+.4f}€ ({daily['trades']} trades)\n"
             f"📊 All-time: {total['total_pnl']:+.4f}€ | {total['wins']}W/{total['losses']}L ({total['win_rate']:.0f}%)\n"
             f"🔄 Grid: {len(self.grid_buys)} buys / {len(self.grid_sells)} sells | {self.fills} fills\n"
-            f"⚡ Compound: {self.compound:.2f}x"
+            f"⚡ Compound: {self.compound:.2f}x\n"
+            f"📐 PF={m['profit_factor']} | Sharpe={m['sharpe']} | MaxDD={m['max_dd_pct']}% ({m['count']} trades)"
         )
         await self.tg.send(msg)
-        logger.info(f"Status sent: portfolio={portfolio:.2f}€ daily={daily['pnl']:+.4f}€")
+        logger.info(f"Status: portfolio={portfolio:.2f}€ daily={daily['pnl']:+.4f}€ PF={m['profit_factor']} Sharpe={m['sharpe']}")
 
     # ── Main Loop ───────────────────────────────────────────────────
     async def run(self):

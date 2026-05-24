@@ -309,6 +309,11 @@ class DashboardHandler(BaseHTTPRequestHandler):
         elif path == '/api/memory/daily':
             days = int(self._get_arg('days', 7))
             self._api_json(MEMORY.get_daily_pnl(days))
+        elif path == '/api/memory/metrics':
+            bot = self._get_arg('bot')
+            days = int(self._get_arg('days', 30))
+            metrics = MEMORY.get_advanced_metrics(bot=bot or None, days=days)
+            self._api_json(metrics)
         else:
             self.send_response(404)
             self.end_headers()

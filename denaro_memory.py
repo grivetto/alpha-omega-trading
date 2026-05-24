@@ -215,6 +215,87 @@ class DenaroMemory:
         return [dict(r) for r in rows]
 
     # ── Summary ──
+
+    # ── Advanced Metrics ──
+    def get_advanced_metrics(self, bot=None, days=30):
+        """Compute Sharpe ratio, max drawdown, and profit factor from trade history.
+        
+        Args:
+            bot: optional bot name filter
+            days: lookback period for metrics (default 30)
+        
+        Returns:
+            dict with sharpe_ratio, max_drawdown_pct, profit_factor, total_trades, total_pnl
+        """
+        c = self._conn_get()
+        
+        where = "WHERE bot=?" if bot else ""
+        params = (bot,) if bot else ()
+        
+        # ── Profit Factor ──
+        rows = c.execute(
+            f"SELECT net_pnl FROM trades {where} AND net_pnl IS NOT NULL "
+            f"ORDER BY filled_at DESC LIMIT 500",
+            params).fetchall()
+        
+        pnls = [r["net_pnl"] for r in rows if r["net_pnl"] is not None]
+        gross_profit = sum(p for p in pnls if p > 0)
+        gross_loss = abs(sum(p for p in pnls if p < 0))
+        profit_factor = round(gross_profit / max(gross_loss, 0.01), 2)
+        
+        # ── Daily PnL for Sharpe + Drawdown ──
+        where_d = "WHERE bot=?" if bot else ""
+        rows_d = c.execute(
+            f"SELECT day, pnl FROM daily_pnl {where_d} "
+            f"ORDER BY day ASC",
+            params).fetchall()
+        
+        daily_pnls = [r["pnl"] for r in rows_d if r["pnl"] is not None]
+        
+        # ── Max Drawdown ──
+        max_dd_pct = 0.0
+        peak = 0.0
+        equity = 0.0
+        for dp in daily_pnls:
+            equity += dp
+            if equity > peak:
+                peak = equity
+            if peak > 0:
+                dd = (peak - equity) / peak
+                if dd > max_dd_pct:
+                    max_dd_pct = dd
+        
+        # ── Sharpe Ratio (annualized, assuming daily returns) ──
+        sharpe = 0.0
+        if len(daily_pnls) >= 5:
+            returns = daily_pnls
+            n = len(returns)
+            mean_ret = sum(returns) / n
+            if n > 1:
+                variance = sum((r - mean_ret) ** 2 for r in returns) / (n - 1)
+                std_ret = variance ** 0.5
+                if std_ret > 0:
+                    # Daily Sharpe, annualized (sqrt 365 for crypto)
+                    sharpe_daily = mean_ret / std_ret
+                    sharpe = round(sharpe_daily * (365 ** 0.5), 2)
+        
+        # ── Win Rate ──
+        wins = sum(1 for p in pnls if p > 0)
+        total_closed = len(pnls)
+        win_rate = round(wins / total_closed * 100, 1) if total_closed > 0 else 0.0
+        
+        return {
+            "sharpe_ratio": sharpe,
+            "max_drawdown_pct": round(max_dd_pct * 100, 2),
+            "profit_factor": profit_factor,
+            "win_rate": win_rate,
+            "total_trades": total_closed,
+            "total_pnl": round(sum(pnls), 4),
+            "gross_profit": round(gross_profit, 4),
+            "gross_loss": round(-gross_loss, 4),
+            "days_analyzed": len(daily_pnls),
+        }
+
     def summary(self):
         c = self._conn_get()
         trades = c.execute("SELECT COUNT(*) FROM trades").fetchone()[0]
