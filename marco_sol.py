@@ -6,7 +6,7 @@ Cycles: sell → buy → sell → buy → ...
 Uses existing SOL inventory + small EUR reserve.
 Minimal overlap with Stellatron (ADA grid on nuvola, same account).
 """
-import asyncio, ccxt.async_support as ccxt, logging, os, sys, time, json, urllib.request
+import asyncio, ccxt.async_support as ccxt, logging, os, sys, time, json, urllib.request, math
 from pathlib import Path
 
 BASE = Path(__file__).parent
@@ -67,6 +67,13 @@ class MarcoSOL:
         if bd:
             self.buy_drop = 1.0 - abs(bd) if abs(bd) < 1 else bd
             logger.info(f"Spread: buy_drop -> {self.buy_drop:.4f}")
+        # v2: fee-floor — spread must exceed 2*fee (0.15% round-trip)
+        min_spread = 1.0 + FEE * 2
+        if self.sell_raise < min_spread:
+            self.sell_raise = min_spread
+        min_buy = 1.0 - FEE * 2
+        if self.buy_drop > min_buy:
+            self.buy_drop = min_buy
 
     def _refresh_params(self):
         if time.time() - self._last_params_fetch > 1800:
@@ -138,7 +145,7 @@ class MarcoSOL:
         b = await self.bal()
         sol_free = b["SOL"]
         if sol_free < 0.01: return None
-        sell_amt = round(min(sol_free, 0.15), 3)
+        sell_amt = math.floor(min(sol_free * 0.99, 0.15) * 1000) / 1000
         if sell_amt * price < MIN_NOTIONAL: return None
         try:
             o = await self.exchange.create_limit_sell_order(self.symbol, sell_amt, price)
@@ -155,7 +162,7 @@ class MarcoSOL:
         eur_free = b["EUR"]
         if eur_free < MIN_NOTIONAL: return None
         buy_eur = min(6.0, eur_free * 0.6)
-        buy_amt = round(buy_eur / price, 3)
+        buy_amt = math.floor(buy_eur / price * 1000) / 1000
         if buy_amt * price < MIN_NOTIONAL or buy_amt < 0.01: return None
         try:
             o = await self.exchange.create_limit_buy_order(self.symbol, buy_amt, price)

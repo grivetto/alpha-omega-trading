@@ -442,6 +442,22 @@ class Stellatron:
         return best
 
     # ── Grid Management ─────────────────────────────────────────────
+    def _min_tick(self, price):
+        """Minimum price step for EUR pairs (0.01)"""
+        return 0.01
+
+    def _sell_above_buy(self, buy_price, profit_pct):
+        """Calculate sell price guaranteed > buy_price by at least 1 tick"""
+        raw = buy_price * (1 + profit_pct)
+        tick = self._min_tick(buy_price)
+        return max(round(raw, 2), round(buy_price + tick, 2))
+
+    def _buy_below_center(self, center_price, spacing):
+        """Calculate buy price guaranteed < center by at least 1 tick"""
+        raw = center_price * (1 - spacing)
+        tick = self._min_tick(center_price)
+        return min(round(raw, 2), round(center_price - tick, 2))
+
     async def cancel_all(self):
         try:
             orders = await self.exchange.fetch_open_orders(self.symbol)
@@ -470,6 +486,26 @@ class Stellatron:
         min_lv = pc.get("min_levels", self.cfg["min_grid_levels"])
         max_lv = pc.get("max_levels", self.cfg["max_grid_levels"])
         base_order = pc.get("base_order", self.cfg["base_order_eur"]) * self.compound
+        
+        # ── v2: Fee-floor check ──
+        min_profit_for_fees = FEE_RATE * 2  # 0.15% round-trip
+        if profit < min_profit_for_fees:
+            logger.warning(f"profit_pct {profit:.4f} < 2*fee {min_profit_for_fees:.4f} — adjusting")
+            profit = min_profit_for_fees + 0.002  # add 0.2% buffer
+        
+        # ── v2: Kelly Criterion sizing ──
+        pair_stats = self.db.get_pair_performance(self.symbol, self.cfg["pair_performance_window"])
+        if pair_stats["count"] >= 5:
+            wr = pair_stats["win_rate"] / 100.0
+            if wr > 0.65:
+                kelly_mult = 1.2
+            elif wr < 0.40:
+                kelly_mult = 0.7
+            else:
+                kelly_mult = 1.0
+            base_order *= kelly_mult
+            logger.info(f"Kelly: WR={pair_stats['win_rate']:.0f}% → mult={kelly_mult:.1f}x order={base_order:.2f}€")
+        
         order_eur = max(base_order, MIN_NOTIONAL)
 
         max_possible = int(eur_free * 0.85 / order_eur)
@@ -487,7 +523,7 @@ class Stellatron:
         actual_buys = 0
 
         for i in range(1, half + 1):
-            buy_price = round(price * (1 - i * spacing), 2)
+            buy_price = self._buy_below_center(price, i * spacing)
             size_eur = order_eur * (1 + i * 0.05)
             if self.total_invested + size_eur > self.cfg["max_invested_eur"]:
                 break
@@ -516,7 +552,7 @@ class Stellatron:
         actual_sells = 0
         if asset_value >= MIN_NOTIONAL:
             for i in range(1, half + 1):
-                sell_price = round(price * (1 + i * spacing), 2)
+                sell_price = self._sell_above_buy(price, i * spacing)
                 sell_amount = round(min(asset_free * 0.2, order_eur / sell_price), 3)
                 sell_notional = sell_amount * sell_price
                 if sell_notional < MIN_NOTIONAL:
@@ -548,7 +584,9 @@ class Stellatron:
                 info = self.grid_buys.pop(oid)
                 self.total_invested -= info["eur"]
                 if oid in filled_ids:
-                    sell_price = round(info["price"] * (1 + self.cfg["profit_pct"]), 2)
+                    pair_pc = self.cfg["pair_configs"].get(self.symbol, {})
+                    profit = pair_pc.get("profit_pct", self.cfg["profit_pct"])
+                    sell_price = self._sell_above_buy(info["price"], profit)
                     sell_amount = round(info["amount"] * 0.997, 3)
                     if sell_amount * sell_price >= MIN_NOTIONAL:
                         try:
@@ -567,7 +605,9 @@ class Stellatron:
             if oid not in open_ids:
                 info = self.grid_sells.pop(oid)
                 if oid in filled_ids:
-                    buy_price = round(info["price"] * (1 - self.cfg["profit_pct"]), 2)
+                    pair_pc = self.cfg["pair_configs"].get(self.symbol, {})
+                    profit = pair_pc.get("profit_pct", self.cfg["profit_pct"])
+                    buy_price = self._buy_below_center(info["price"], profit)
                     buy_eur = self.cfg["base_order_eur"] * self.compound
                     amount = round(buy_eur / buy_price, 3)
                     notional = amount * buy_price
