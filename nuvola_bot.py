@@ -100,7 +100,7 @@ async def manage_grid(client, config, regime_params, state, current_price):
         amount = budget / bp
         o = await place_limit_order(client, "buy", symbol, bp, amount)
         if o:
-            state["trades"] = state.get("trades", 0) + 1
+            state.set("trades", state.get("trades", 0) + 1)
             total_invested += budget
             existing_buys += 1
             placed += 1
@@ -149,10 +149,10 @@ async def check_fills_and_recycle(client, config, state):
                 logger.info(f"FILL SELL {price} x {amount:.4f} = {cost:.2f}EUR")
                 pnl = cost - (cost / (1 + config.get("regime", {}).get(state.get("regime", "neutral"), {}).get("profit_pct", 0.004)))
                 profit = pnl - fee
-                state["pnl"] = state.get("pnl", 0) + profit
+                state.set("pnl", state.get("pnl", 0) + profit)
                 closed_order_ids.append(oid)
 
-        state["closed_order_ids"] = closed_order_ids[-500:]
+        state.set("closed_order_ids", closed_order_ids[-500:])
         state.save()
     except Exception as e:
         logger.debug(f"Fill check: {e}")
@@ -232,7 +232,7 @@ async def main():
                     if time.time() - last_report > config["report_interval"]:
                         pnl = state.get("pnl", 0)
                         trades = state.get("trades", 0)
-                        logger.info(f"REPORT | regime={regime} pnl={pnl:.2f} trades={trades} port={port_val:.2f} eur={eur_free:.2f} {base_asset}={crypto_free:.4f}")
+                        logger.info(f"REPORT | regime={regime} pnl={pnl:.2f} trades={trades} port={port_val:.2f} eur={eur_free:.2f}")
                         await send_telegram(logger, f"📊 Nuvola | {regime} | PnL={pnl:.2f}€ | trades={trades} | port={port_val:.2f}€")
                         last_report = time.time()
 

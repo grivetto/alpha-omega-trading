@@ -134,10 +134,10 @@ async def check_fills_and_recycle(client, config, state, symbol):
             elif side == "sell" and amount > 0:
                 pnl = cost - (cost / (1 + profit_pct))
                 profit = pnl - fee
-                state["pnl"] = state.get("pnl", 0) + profit
+                state.set("pnl", state.get("pnl", 0) + profit)
                 closed_ids.append(oid)
                 logger.info(f"  PnL: {profit:.4f}EUR | {symbol}")
-        state["closed_order_ids"] = closed_ids[-500:]
+        state.set("closed_order_ids", closed_ids[-500:])
         state.save()
     except Exception as e:
         logger.debug(f"Fill check: {e}")
