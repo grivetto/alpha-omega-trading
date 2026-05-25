@@ -204,6 +204,7 @@ async def main():
                     if port_val < floor or drawdown > max_dd:
                         logger.warning(f"KILL: port={port_val:.2f} floor={floor} dd={drawdown:.1f}%")
                         await cancel_all_orders(client, active_symbol)
+                        peak_portfolio = 0
                         await send_telegram(logger, f"🚨 KILL MARCODG1: port={port_val:.2f} dd={drawdown:.1f}%")
                         await asyncio.sleep(300)
 
