@@ -211,6 +211,8 @@ async def main():
                     if time.time() - state.get("last_grid", 0) > 60:
                         await manage_grid(client, config, rparams, state, active_symbol, current_price)
                         state.set("last_grid", time.time())
+                        port_val, eur_free, crypto_free = await get_portfolio_value(client, active_symbol)
+                        peak_portfolio = port_val
 
                     if time.time() - last_fill_check > config["fill_check_interval"]:
                         await check_fills_and_recycle(client, config, state, active_symbol)
