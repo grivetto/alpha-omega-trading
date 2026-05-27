@@ -95,11 +95,19 @@ def get_binance_balances():
         sec = os.getenv("BINANCE_API_SECRET", "")
         if not key or not sec:
             return {}
-        ts = int(time.time() * 1000)
-        q = urllib.parse.urlencode({"timestamp": ts})
+        # Sync time with Binance server to avoid timestamp drift
+        try:
+            tr = requests.get("https://api.binance.com/api/v3/time", timeout=10)
+            server_time = tr.json()["serverTime"]
+            time_offset = server_time - int(time.time() * 1000)
+        except:
+            time_offset = 0
+        ts = int(time.time() * 1000) + time_offset
+        q = urllib.parse.urlencode({"timestamp": ts, "recvWindow": 10000})
         sig = hmac.new(sec.encode(), q.encode(), hashlib.sha256).hexdigest()
-        r = requests.get("https://api1.binance.com/api/v3/account",
-            params={"timestamp": ts, "signature": sig}, headers={"X-MBX-APIKEY": key}, timeout=10)
+        r = requests.get("https://api.binance.com/api/v3/account",
+            params={"timestamp": ts, "recvWindow": 10000, "signature": sig},
+            headers={"X-MBX-APIKEY": key}, timeout=10)
         if r.status_code != 200:
             return {}
         balances = {}
@@ -246,25 +254,32 @@ def get_system_info():
     return info
 
 def get_legacy_bots_status():
-    bots = []
+    bots = {}
     now = time.time()
-    for log_file in glob.glob(str(BASE_DIR / "*.log")):
-        mtime = os.path.getmtime(log_file)
-        size = os.path.getsize(log_file)
-        name = os.path.basename(log_file).replace(".log", "")
-        last_line = "empty"
-        try:
-            with open(log_file, "r") as f:
-                f.seek(max(0, size - 2000))
-                last_lines = f.read()
-            last_line = last_lines.strip().split("\n")[-1][:200] if last_lines else "empty"
-        except: pass
-        bots.append({"name": name, "last_line": last_line,
+
+    def scan(path_glob, name_prefix=""):
+        for log_file in glob.glob(str(path_glob)):
+            mtime = os.path.getmtime(log_file)
+            size = os.path.getsize(log_file)
+            name = name_prefix + os.path.basename(log_file).replace(".log", "")
+            last_line = "empty"
+            try:
+                with open(log_file, "r") as f:
+                    f.seek(max(0, size - 2000))
+                    last_lines = f.read()
+                last_line = last_lines.strip().split("\n")[-1][:200] if last_lines else "empty"
+            except: pass
+            entry = {"name": name, "last_line": last_line,
                      "age_min": round((now - mtime) / 60, 1),
                      "size_kb": round(size / 1024, 1),
-                     "active": (now - mtime) < 300})
-    bots.sort(key=lambda x: x["size_kb"], reverse=True)
-    return bots
+                     "active": (now - mtime) < 300}
+            # Keep the most recent entry for duplicate names
+            if name not in bots or entry["age_min"] < bots[name]["age_min"]:
+                bots[name] = entry
+
+    scan(BASE_DIR / "*.log")
+    scan(BASE_DIR / "squadra" / "*.log", name_prefix="denaro-")
+    return sorted(bots.values(), key=lambda x: x["size_kb"], reverse=True)
 
 def get_legion_status():
     """Extract Legion Manager PROD status from SQLite only"""

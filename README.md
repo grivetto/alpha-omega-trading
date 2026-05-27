@@ -1,108 +1,219 @@
 # 🏦 Denaro — Automated Trading System
 
-Bot trading automatici per Binance, eseguiti su server dedicati con strategie multi-timeframe.
+> *"Sopravvivenza → Protezione → Intelligenza → Professionalità"*
+
+Sistema di trading automatico su Binance, distribuito su server dedicati con strategie multi-timeframe, grid trading adattivo e gestione production-grade via systemd.
+
+## 🏗 Architettura
+
+### Panoramica
 
 ```
-Sopravvivenza → Protezione → Intelligenza → Professionalità
+┌─────────────────────────────────────────────────────────┐
+│                    DENARO v3.3                          │
+│              Automated Trading System                   │
+├─────────────┬──────────────────┬────────────────────────┤
+│   MC2       │     NUVOLA       │      MARCODG1          │
+│  (On-Prem)  │   (Cloud VPS)    │    (Cloud VPS)         │
+│             │                  │                        │
+│ ┌─────────┐ │ ┌──────────────┐ │ ┌──────────────────┐  │
+│ │ Squadra │ │ │  Grid Bot    │ │ │   Grid Bot       │  │
+│ │ 4 bot   │ │ │  SOL/EUR     │ │ │   ADA/EUR        │  │
+│ │         │ │ │              │ │ │                  │  │
+│ │ Ares    │ │ │  Adaptive    │ │ │   Adaptive       │  │
+│ │ Hermes  │ │ │  Volatility  │ │ │   Volatility     │  │
+│ │ Apollo  │ │ │  Grid        │ │ │   Grid           │  │
+│ │ Artemis │ │ │              │ │ │                  │  │
+│ └─────────┘ │ └──────────────┘ │ └──────────────────┘  │
+│ ┌─────────┐ │                  │                        │
+│ │Dashboard│ │                  │                        │
+│ │ :8899   │ │                  │                        │
+│ └─────────┘ │                  │                        │
+└─────────────┴──────────────────┴────────────────────────┘
 ```
 
-## 🔬 Linea di Concetto
+### Flotta Server
 
-Denaro è nato come collezione di bot sparsi, poi evoluto in un sistema a ciclo chiuso:
+#### MC2 — Cacciatore HFT Isolato
+- **Host:** `mc2` (on-premise, Intel N150, 16GB RAM)
+- **Ruolo:** Squadra di 4 bot direzionali + Dashboard
+- **Porta:** 2222 (SSH), 8899 (Dashboard)
+- **API Key:** BINANCE_API_KEY / BINANCE_API_SECRET
 
-1. **Sopravvivenza** — non perdere capitale. Circuit breaker, adaptive sizing, self-healing.
-2. **Protezione** — capital preservation come priority #1. Risk engine, stop-loss sistematici.
-3. **Intelligenza** — auto-apprendimento. Sentiment engine, optimizer volatilità, feedback loop.
-4. **Professionalità** — infrastruttura production-grade. systemd, tmux, watchdog, monitoring.
-
-### Ciclo Autonomo
-
-```
-TRADING → ANALISI → OTTIMIZZAZIONE → RIDEPLOY
-```
-
-> *"Il tempo è letteralmente denaro. L'obiettivo è posizionare nodi sentinella accanto ai server delle borse per intercettare l'evento e agire prima che il resto del mondo se ne accorga."* — Progetto Orbital Strike (visione futura)
-
-## Stato Attuale — v3.2
-
-Squadra attiva su **mc2** (192.168.1.116). Budget totale: **€125.58 EUR**.
-
-| Bot | Simbolo | Timeframe | Strategia |
-|-----|---------|-----------|-----------|
-| **Ares** | ETH/EUR | 1m | Trend following |
-| **Hermes** | SOL/EUR | 1m | RSI + MACD + Social Sentiment |
-| **Apollo** | ETH/BTC | 1h | Ratio mean-reversion |
+| Bot | Copia | Timeframe | Strategia |
+|-----|-------|-----------|-----------|
+| **Ares** | ETH/EUR | 5m | Trend following |
+| **Hermes** | SOL/EUR | 15m | RSI + MACD + Sentiment |
+| **Apollo** | ETH/BTC | 1h | Ratio mean-reversion (z-score) |
 | **Artemis** | BTC/EUR | 1d | SMA50/200 crossover |
 
-### Esecuzione
-- Tmux session `squadra_bot` su mc2 (192.168.1.116)
-- Watchdog Cron via `collect_all.sh` ogni 5 minuti
-- `test_mode` flag in `squadra/config/squadra.json` per dry-run
+- **Servizio:** `denaro-squadra.service` (systemd, auto-restart)
+- **Budget:** ~€228 portfolio, capital pooling dinamico
+- **Risk Manager:** integrato con ATR-vol position sizing, SL/TP 1.5x/3x ATR
+- **Cost Model:** fee 0.1% + slippage 0.1%, round-trip ~0.4%
 
-### Sentiment Engine (Nuovo in v3.2)
-Integrato in Hermes con peso 0.15 (15%) via `utils/sentiment.py`:
-- **Fear & Greed Index** — funzionante, API gratuita
-- **X/Twitter search** — OAuth 1.0a configurato, crediti Free tier esauriti
-- **Crypto news (CoinPaprika + CryptoCompare)** — fallback funzionante
+#### Nuvola — Grid Trading SOL/EUR
+- **Host:** `nuvola` (cloud VPS)
+- **Ruolo:** Grid trading adattivo su SOL/EUR
+- **API Key:** BINANCE_API_KEY / BINANCE_API_SECRET (condivisa con MARCODG1)
 
-## Struttura
+| Parametro | Valore |
+|-----------|--------|
+| Coppia | SOL/EUR |
+| Livelli | 7 |
+| Range | 2.5% |
+| Profit | 0.5% |
+| Base order | €10 |
+| Max invested | €70 |
+
+- **Servizio:** `denaro-grid.service` (systemd, auto-restart)
+- **Strategia:** Adaptive volatility grid + martingale 1.12x
+
+#### MARCODG1 — Grid Trading ADA/EUR
+- **Host:** `MARCODG1` (cloud VPS)
+- **Ruolo:** Grid trading adattivo su ADA/EUR
+- **API Key:** BINANCE_API_KEY / BINANCE_SECRET_KEY (condivisa con Nuvola)
+
+| Parametro | Valore |
+|-----------|--------|
+| Coppia | ADA/EUR |
+| Livelli | 5 |
+| Range | 10% |
+| Profit | 0.8% |
+| Base order | €6 |
+| Max invested | €60 |
+
+- **Servizio:** `denaro-grid.service` (systemd, auto-restart)
+- **Strategia:** Adaptive volatility grid + martingale 1.15x
+
+### Componenti Condivisi
 
 ```
 denaro/
-├── squadra/                  # Bot squadra (attivi)
-│   ├── hermes_bot.py         # Hermes v3.2 con sentiment
-│   ├── ares_bot.py           # Ares trend follower
-│   ├── apollo_bot.py         # Apollo ETH/BTC ratio
-│   ├── artemis_bot.py        # Artemis SMA crossover
-│   ├── core.py               # Core Binance API
-│   ├── orchestrator.py       # Orchestratore multi-bot
-│   ├── run_squadra.py        # Entry point squadra
-│   ├── strategies/           # Strategie per bot
-│   └── config/               # Config per bot
+├── grid_bot_v3.py          # Grid bot (Nuvola + MARCODG1)
+│   ├── init_grid()         # Inizializzazione livelli con precisione adattiva
+│   ├── on_tick()           # Loop principale (5s)
+│   ├── on_fill()           # Gestione fill ordini
+│   └── trailing_stop_check() # Stop loss trailing
+├── denaro_core.py          # Core API Binance (estende DenaroCore)
+├── denaro_strategies.py    # Strategie grid
+│   ├── AdaptiveTrendFilter # Filtro trend adattivo
+│   ├── VolatilityGrid      # Calcolo spacing da ATR
+│   └── MartingaleLite      # Position sizing progressivo
+├── grid_config.json        # Config grid (per-server)
+├── orchestrator.py         # Dashboard HTTP server (:8899) + RiskManager
+│   ├── RiskManager         # Position sizing ATR-vol
+│   ├── cost_model()        # Fee + slippage filter
+│   └── kill-switch         # Drawdown protection
+├── trade_db.py             # SQLite (vault, trades, daily PnL)
+├── squadra/                # Bot direzionali (mc2)
+│   ├── ares_bot.py
+│   ├── hermes_bot.py
+│   ├── apollo_bot.py
+│   ├── artemis_bot.py
+│   ├── orchestrator.py     # SquadraOrchestrator
+│   └── run_squadra.py      # Entry point
 ├── utils/
-│   ├── indicators.py         # Indicatori tecnici
-│   ├── risk_engine.py        # Gestione rischio
-│   ├── exit_strategy.py      # Strategies di uscita
-│   ├── entry_filters.py      # Filtri di ingresso
-│   └── sentiment.py          # Social sentiment engine
-├── dashboard/
-│   ├── index.html            # Dashboard live
-│   ├── grid.html             # Grid view
-│   ├── trades.html           # Trade history view
-│   └── public/               # Dati JSON
-├── dashboard_server.py       # Server dashboard
-├── grid_bot_v3.py            # Legacy grid bot (non attivo)
-├── collect_dashboard_*.py    # Data collectors
-└── collect_all.sh            # Watchdog script
+│   ├── indicators.py       # RSI, MACD, ATR, SMA
+│   ├── risk_engine.py      # Gestione rischio
+│   ├── exit_strategy.py    # Strategie uscita
+│   ├── entry_filters.py    # Filtri ingresso
+│   └── sentiment.py        # Social sentiment engine
+└── dashboard/              # UI web (:8899)
+    ├── index.html
+    ├── grid.html
+    └── trades.html
 ```
 
-## Server
+### Ciclo di Funzionamento
 
-| Server | IP | Stato | Ruolo |
-|--------|-------|-------|-------|
-| **mc2** | 192.168.1.116 | ✅ Attivo | Squadra (4 bot) |
-| **Nuvola** | 192.168.1.117 | ✅ Attivo | Grid bot legacy |
-| **MARCODG1** | 192.168.1.120 | ❌ Decommissionato | — |
+```
+┌──────────┐     ┌──────────┐     ┌──────────┐
+│  Binance │────→│ WebSocket│────→│  on_tick │
+│  Market  │     │  Stream  │     │  (5s)    │
+└──────────┘     └──────────┘     └────┬─────┘
+                                       │
+                    ┌──────────────────┼──────────────────┐
+                    ↓                  ↓                  ↓
+              ┌──────────┐     ┌──────────┐     ┌──────────┐
+              │  Grid    │     │  Trend   │     │  Risk    │
+              │  Init    │     │  Check   │     │  Check   │
+              └────┬─────┘     └────┬─────┘     └────┬─────┘
+                   │                │                 │
+                   ↓                ↓                 ↓
+              ┌──────────┐     ┌──────────┐     ┌──────────┐
+              │  Place   │     │  Entry   │     │  Kill    │
+              │  Orders  │     │  Signal  │     │  Switch  │
+              └──────────┘     └──────────┘     └──────────┘
+```
 
-## Dashboard live
-https://sgrivett.ddns.net/denaro/
+### Sicurezza e Risk Management
 
-## Comandi Rapidi
+- **Kill Switch:** drawdown protection con soglia configurabile
+- **Stop Loss:** ATR-based, 1.5x ATR dal prezzo di entry
+- **Take Profit:** ATR-based, 3x ATR dal prezzo di entry
+- **Cost Filter:** blocca trade con profitto netto negativo (fee + slippage)
+- **Anti-duplicate:** verifica ordini esistenti prima di piazzare
+- **Precisione adattiva:** decimali dinamici per asset a basso prezzo (ADA: 4 dec)
+
+## 📊 Dashboard
+
+Servita da `orchestrator.py` su **porta 8899** (mc2):
+
+```
+http://mc2:8899
+```
+
+Mostra: vault status, bot attivi, PnL giornaliero, grafici prezzi, allocazione capitale.
+
+## 🚀 Setup
 
 ```bash
-# Avviare squadra
-cd ~/denaro && python3 squadra/run_squadra.py
+# Clone
+git clone git@github.com:grivetto/denaro.git
+cd denaro
 
-# Test startup
-python3 squadra/test_startup.py
+# Ambiente virtuale
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
 
-# Collettore dati
-python3 collect_dashboard_data.py
+# Configurazione
+cp .env.example .env
+# Editare .env con le API keys Binance
 
-# Sentiment test (singolo simbolo)
-python3 -c "from utils.sentiment import SentimentEngine; print(SentimentEngine().analyze('BTC'))"
+# Avvio
+python3 grid_bot_v3.py        # Grid bot
+python3 squadra/run_squadra.py # Squadra bot
 ```
 
-## Branches
-- `refactoring` — sviluppo attuale (versione pulita)
-- `main` — stabile precedente
+## 📋 Comandi Rapidi
+
+```bash
+# Stato servizi
+ssh mc2   'sudo systemctl status denaro-squadra denaro-dashboard'
+ssh nuvola 'sudo systemctl status denaro-grid'
+ssh MARCODG1 'sudo systemctl status denaro-grid'
+
+# Log in tempo reale
+ssh mc2 'sudo journalctl -fu denaro-squadra'
+
+# Riavvio servizio
+ssh mc2 'sudo systemctl restart denaro-squadra'
+```
+
+## 📁 Branches
+
+- `grivetto/dolari` — attuale (production, systemd, risk management)
+- `grivetto/money` — precedente (pulizia + systemd)
+- `refactoring` — legacy
+- `main` — stabile legacy
+
+## 📄 Licenza
+
+MIT License — vedi [LICENSE](LICENSE)
+
+## 📬 Contatti
+
+**Owner:** Sergio Grivetto
+**Email:** sergio@grivetto.eu

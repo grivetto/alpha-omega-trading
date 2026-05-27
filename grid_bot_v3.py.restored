@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
 """
-DENARO GRID BOT v3.9 — Multi-instance
+DENARO GRID BOT v3.8 — Core-Driven
 WebSocket-driven grid trading using DenaroCore for stability and efficiency.
-Supports --config <filename> for multiple simultaneous grid bots on the same server.
 
-Changes from v3.8:
-- --config CLI arg for multi-instance support (e.g. --config grid_config_xrp.json)
-- Bot name derived from config file for log clarity
+Changes from v3:
+- AdaptiveTrendFilter replaces binary TrendFilter (never fully pauses)
+- Trailing stop: fixed impossible condition, now state-based
+- ProfitOptimizer: actually APPLIES and PERSISTS adjustments
+- orig_level_idx: now tracked when placing orders
+- profit_pct: replaced with direct config access
+- Risk factor scales order sizes dynamically
+- Stale order cleanup on startup
 """
 
-import argparse
 import asyncio
 import json
 import logging
@@ -24,10 +27,8 @@ logger = logging.getLogger("GridBotPro")
 
 
 class GridBot(DenaroCore):
-    def __init__(self, config_file="grid_config.json"):
-        self._config_file = config_file
-        bot_name = f"GridBot-{os.path.splitext(config_file)[0]}"
-        super().__init__(bot_name=bot_name)
+    def __init__(self):
+        super().__init__(bot_name="GridBotPro")
         self.config = self.load_config()
         self.state = {
             "filled_orders": [],
@@ -51,15 +52,7 @@ class GridBot(DenaroCore):
         self.optimizer = ProfitOptimizer(self.config, config_path=self._config_path)
 
     def _config_path(self):
-        return os.path.join(os.path.dirname(__file__) or ".", self._config_file)
-
-    def load_config(self):
-        config_path = self._config_path()
-        if os.path.exists(config_path):
-            with open(config_path) as f:
-                return json.load(f)
-        logger.warning(f"Config {config_path} not found")
-        return {}
+        return os.path.join(os.path.dirname(__file__) or ".", "grid_config.json")
 
     async def on_tick(self, price, client):
         self.state['current_price'] = price
@@ -76,7 +69,7 @@ class GridBot(DenaroCore):
 
         # 2. Adaptive Trend Filter — NEVER fully pauses
         # Returns risk_factor [0.2..1.0], scales order sizes
-        risk_factor = await self.trend_filter.get_risk_factor(client, self.config['symbol'], price)
+        risk_factor = self.trend_filter.get_risk_factor(client, self.config['symbol'], price)
         trend_label = self.trend_filter.get_trend_label(risk_factor)
 
         # Apply risk factor to effective base — downsize in bad conditions but NEVER zero
@@ -93,7 +86,7 @@ class GridBot(DenaroCore):
                 # Cancel only non-fill orders, keep filled positions
                 for order_id in self.state['placed_order_ids'][:]:
                     try:
-                        await client.cancel_order(order_id, self.config['symbol'])
+                        await asyncio.to_thread(client.cancel_order, order_id, self.config['symbol'])
                     except:
                         pass
                 self.state['placed_order_ids'] = []
@@ -205,7 +198,8 @@ class GridBot(DenaroCore):
 
             try:
                 amount = order_eur / bp
-                order = await client.create_limit_buy_order(
+                order = await asyncio.to_thread(
+                    client.create_limit_buy_order,
                     self.config['symbol'],
                     round(amount, 5),
                     bp
@@ -226,7 +220,7 @@ class GridBot(DenaroCore):
 
         # ── Range Trading: also place SELL orders above market using free SOL ──
         try:
-            balances = await client.fetch_balance()
+            balances = await asyncio.to_thread(client.fetch_balance)
             asset = self.config['symbol'].split('/')[0]
             asset_free = balances['free'].get(asset, 0)
             if asset_free > 0.01:
@@ -239,7 +233,8 @@ class GridBot(DenaroCore):
                     sell_pct = (i + 1) * 0.004  # 0.4%, 0.8%, 1.2% above market
                     sell_price = round(current_price * (1 + sell_pct), 2)
                     try:
-                        order = await client.create_limit_sell_order(
+                        order = await asyncio.to_thread(
+                            client.create_limit_sell_order,
                             self.config['symbol'],
                             round(per_sell, 5),
                             sell_price
@@ -293,7 +288,7 @@ class GridBot(DenaroCore):
         """FIXED: Proper amount tracking, martingale profit calc, order cleanup"""
         for order_id in self.state['placed_order_ids'][:]:
             try:
-                status = await client.fetch_order(order_id, self.config['symbol'])
+                status = await asyncio.to_thread(client.fetch_order, order_id, self.config['symbol'])
                 if status.get('status') == 'closed':
                     side = status['side']
                     price = float(status.get('average', 0))
@@ -326,7 +321,8 @@ class GridBot(DenaroCore):
                                 closest = min(self.state['grid_sell_levels'], key=lambda x: abs(x - target_sell_price))
                                 sell_amount = amount_val  # Sell same amount we bought
                                 try:
-                                    sell_order = await client.create_limit_sell_order(
+                                    sell_order = await asyncio.to_thread(
+                                        client.create_limit_sell_order,
                                         self.config['symbol'],
                                         round(sell_amount, 5),
                                         closest
@@ -393,7 +389,7 @@ class GridBot(DenaroCore):
 
             for o in cancel_orders_e:
                 try:
-                    await client.cancel_order(o['id'], self.config['symbol'])
+                    await asyncio.to_thread(client.cancel_order, o['id'], self.config['symbol'])
                     logger.info(f"Cancelled excess buy order {o['id']} @ {o['price']}")
                 except Exception:
                     pass
@@ -414,20 +410,19 @@ class GridBot(DenaroCore):
 
     async def close_all_positions(self, client, price):
         try:
-            balances = await client.fetch_balance()
+            balances = await asyncio.to_thread(client.fetch_balance)
             asset = self.config['symbol'].split('/')[0]
             amount = balances['free'].get(asset, 0)
             if amount > 0.0001:
-                await client.create_market_sell_order(self.config['symbol'], amount)
+                await asyncio.to_thread(client.create_market_sell_order, self.config['symbol'], amount)
                 logger.info(f"Closed all {asset} positions at {price}€")
         except Exception as e:
             logger.error(f"Close error: {e}")
 
     async def run(self):
-        await self.init_client()
         client = self.client
         try:
-            ticker = await self.fetch_ticker(self.config['symbol'])
+            ticker = await asyncio.to_thread(client.fetch_ticker, self.config['symbol'])
             self.state['peak_value'] = ticker['last']
             logger.info(f"Starting {self.config['symbol']} @ {self.state['peak_value']}€")
         except Exception as e:
@@ -454,19 +449,5 @@ class GridBot(DenaroCore):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Grid Bot v3.9")
-    parser.add_argument("--config", default="grid_config.json",
-                        help="Config file (default: grid_config.json)")
-    args = parser.parse_args()
-
-    # Reconfigure logging with bot-specific name
-    config_name = os.path.splitext(os.path.basename(args.config))[0]
-    for handler in logging.getLogger().handlers[:]:
-        logging.getLogger().removeHandler(handler)
-    logging.basicConfig(
-        level=logging.INFO,
-        format=f'%(asctime)s - GRID-{config_name.upper()} - %(levelname)s - %(message)s'
-    )
-
-    bot = GridBot(config_file=args.config)
+    bot = GridBot()
     asyncio.run(bot.run())

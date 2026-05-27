@@ -1,0 +1,13 @@
+{
+    "symbol": "ADA/EUR",
+    "base_order_eur": 5.0,
+    "max_investment_eur": 30.0,
+    "grid_levels": 5,
+    "grid_spacing_pct": 0.004,
+    "take_profit_pct": 0.005,
+    "compound_factor": 1.2,
+    "max_compound_mult": 1.5,
+    "max_drawdown_eur": 12.0,
+    "max_consecutive_losses": 3,
+    "interval_sec": 5
+}

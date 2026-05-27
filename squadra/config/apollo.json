@@ -1,12 +1,22 @@
 {
     "symbol_a": "ETH/EUR",
     "symbol_b": "BTC/EUR",
+    "base_a": "ETH",
+    "base_b": "BTC",
     "timeframe": "5m",
-    "base_order_eur": 8.0,
-    "max_investment_eur": 25.0,
+    "timeframe_long": "1h",
+    "lookback_period": 96,
+    "min_sample": 48,
+    "coint_p_threshold": 0.05,
     "z_entry": 2.0,
     "z_exit": 0.5,
-    "take_profit_pct": 0.006,
-    "stop_loss_pct": 0.004,
-    "interval_sec": 30
+    "z_emergency": 3.5,
+    "base_order_eur": 10.0,
+    "max_notional_eur": 25.0,
+    "kelly_fraction": 0.05,
+    "time_stop_hours": 48,
+    "interval_sec": 30,
+    "coint_refresh_hours": 24,
+    "max_drawdown_eur": 12.0,
+    "max_consecutive_losses": 3
 }

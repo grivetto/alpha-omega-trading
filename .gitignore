@@ -70,3 +70,12 @@ fix_*.py
 clear_*.py
 get_*.py
 update_*.py
+
+# Dashboard — runtime deps (not source)
+dashboard/node_modules/
+dashboard/extensions/
+dashboard/plugin-sdk/
+dashboard/canvas-host/
+dashboard/export-html/
+dashboard/bundled/
+dashboard/src/

@@ -1,13 +1,18 @@
 {
     "symbol": "ETH/EUR",
-    "timeframe": "1m",
+    "timeframe": "5m",
     "timeframe_long": "1h",
     "long_candles": 72,
     "fast_sma": 5,
     "slow_sma": 20,
-    "base_order_eur": 10.0,
+    "base_order_eur": 12.0,
     "max_investment_eur": 30.0,
     "take_profit_pct": 0.008,
     "stop_loss_pct": 0.004,
-    "interval_sec": 30
+    "max_drawdown_eur": 12.0,
+    "max_consecutive_losses": 3,
+    "atr_period": 14,
+    "atr_sl_multiplier": 1.5,
+    "atr_tp_multiplier": 3.0,
+    "interval_sec": 60
 }

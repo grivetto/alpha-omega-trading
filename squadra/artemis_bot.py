@@ -52,6 +52,8 @@ class ArtemisTrendBot(DenaroOpportunisticCore):
             amt = self.entry_amount * 0.997
             if amt > 0:
                 await self.create_limit_sell(self.symbol, amt, current_price * 0.999)
+                pnl = (current_price - self.entry_price) / self.entry_price
+                self._record_completed_trade(pnl)
                 self.logger.info(
                     f"ARTEMIS EXIT: BTC @ {current_price:.2f} | P&L: {pnl:.2f}% | "
                     f"{signal['reason']}"
@@ -68,6 +70,7 @@ class ArtemisTrendBot(DenaroOpportunisticCore):
             if amount > 0:
                 order = await self.create_limit_buy(self.symbol, amount, current_price * 1.001)
                 if order:
+                    self._last_entry_price = current_price
                     self.in_position = True
                     self.entry_price = current_price
                     self.entry_amount = amount

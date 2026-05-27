@@ -15,6 +15,34 @@ load_dotenv(ENV_PATH)
 import sys
 sys.path.insert(0, PARENT_DIR)
 from trade_db import TradeDB
+from utils.risk_engine import RiskManager
+from risk.kill_switch import (
+    KillSwitchManager, KS_OFF, KS_BOT_STOPPED, KS_LOCKED,
+    DEFAULT_MAX_DRAWDOWN_EUR, DEFAULT_CONSECUTIVE_LOSS_LIMIT,
+)
+
+# ── Cost Model ────────────────────────────────────────────────
+BINANCE_MAKER_FEE = 0.00075   # 0.075% con BNB
+BINANCE_TAKER_FEE = 0.001     # 0.1% senza BNB
+ESTIMATED_SLIPPAGE = 0.001    # 0.1% per ordine market
+ROUND_TRIP_COST_PCT = (BINANCE_TAKER_FEE + ESTIMATED_SLIPPAGE) * 2  # ~0.4%
+
+def cost_model(symbol: str, amount: float, price: float, is_buy: bool = True) -> dict:
+    """Calcola costi espliciti per un trade: fee + slippage stimato."""
+    notional = amount * price
+    fee = notional * BINANCE_TAKER_FEE
+    slippage = notional * ESTIMATED_SLIPPAGE
+    return {
+        "notional_eur": notional,
+        "fee_eur": fee,
+        "slippage_eur": slippage,
+        "total_cost_eur": fee + slippage,
+        "total_cost_pct": BINANCE_TAKER_FEE + ESTIMATED_SLIPPAGE,
+    }
+
+def cost_filter(expected_profit_pct: float) -> bool:
+    """Filtra trade con profitto netto negativo dopo fee e slippage."""
+    return expected_profit_pct > ROUND_TRIP_COST_PCT
 
 
 # ── Fake OHLCV generator ──────────────────────────────────────────
@@ -111,8 +139,25 @@ class DenaroOpportunisticCore:
         self.positions = {}
         self.running = False
 
+        # ── Kill Switch persistente (spietato) ──
+        db_path = os.path.join(PARENT_DIR, "trades.db")
+        lock_file = os.path.join(PARENT_DIR, "bot_lock.json")
+        self.kill_switch = KillSwitchManager(db_path, lock_file)
+
+        # ── Per-bot drawdown tracking (stop-loss individuale) ──
+        self.max_drawdown_eur = self.config.get("max_drawdown_eur", DEFAULT_MAX_DRAWDOWN_EUR)
+        self.max_consecutive_losses = self.config.get("max_consecutive_losses", DEFAULT_CONSECUTIVE_LOSS_LIMIT)
+        self._initial_balance_eur = 0.0    # captured at first balance refresh
+        self._balance_snapshot_taken = False
+        self._drawdown_stopped = False      # True if this bot was killed by its own drawdown
+        self._total_pnl_eur = 0.0           # running EUR P&L since session start
+        self._peak_balance_eur = 0.0
+        # Trade-level P&L tracking
+        self._last_trade_pnl_pct = 0.0      # P&L % of last completed trade
+        self._last_entry_price = 0.0        # for trade-level SL/TP check in cycle
+
         # DB persistence
-        self.db = TradeDB(os.path.join(PARENT_DIR, "trades.db"))
+        self.db = TradeDB(db_path)
         self._phantom_cleaned = False
         self._startup_validated = False
 
@@ -134,7 +179,23 @@ class DenaroOpportunisticCore:
         try:
             bal = await self.exchange.fetch_balance()
             self.balance = bal.get("free", {})
-            self.logger.debug(f"Balance refreshed: {len(self.balance)} assets")
+
+            # Snapshot iniziale per calcolo drawdown reale
+            total_eur = float(bal.get("total", {}).get("EUR", 0) or 0)
+            if not self._balance_snapshot_taken and total_eur > 0:
+                self._initial_balance_eur = total_eur
+                self._peak_balance_eur = total_eur
+                self._balance_snapshot_taken = True
+                self.logger.info(
+                    f"📸 Balance snapshot: {self._initial_balance_eur:.2f}€ | "
+                    f"drawdown limit: {self.max_drawdown_eur:.1f}€"
+                )
+            elif self._balance_snapshot_taken:
+                self._total_pnl_eur = total_eur - self._initial_balance_eur
+                if total_eur > self._peak_balance_eur:
+                    self._peak_balance_eur = total_eur
+
+            self.logger.debug(f"Balance refreshed: {len(self.balance)} assets, EUR={total_eur:.2f}")
         except Exception as e:
             self.logger.error(f"Balance refresh error: {e}")
 
@@ -197,6 +258,49 @@ class DenaroOpportunisticCore:
             return order
         except Exception as e:
             self.logger.error(f"Sell error {symbol}: {e}")
+            return None
+
+    async def create_market_buy(self, symbol, amount):
+        if self.test_mode:
+            cost = amount * (self.config.get("last_price", 100))
+            eur = self.balance.get("EUR", 0)
+            if eur >= cost:
+                self.balance["EUR"] = eur - cost
+                base = symbol.split("/")[0]
+                self.balance[base] = self.balance.get(base, 0) + amount
+                self.logger.info(f"🧪 MARKET BUY {symbol} {amount:.4f} | EUR left: {self.balance['EUR']:.2f}")
+            return {"id": "test_fake", "status": "closed"}
+        try:
+            order = await self.exchange.create_market_buy_order(symbol, amount)
+            self.logger.info(f"MARKET BUY {symbol} {amount:.4f} @ {order.get('price', '?')}")
+            return order
+        except Exception as e:
+            self.logger.error(f"Market buy error {symbol}: {e}")
+            return None
+
+    async def create_market_sell(self, symbol, amount):
+        if self.test_mode:
+            base = symbol.split("/")[0]
+            held = self.balance.get(base, 0)
+            if held >= amount:
+                self.balance[base] = held - amount
+                self.balance["EUR"] = self.balance.get("EUR", 0) + amount * (self.config.get("last_price", 100))
+                self.logger.info(f"🧪 MARKET SELL {symbol} {amount:.4f} | EUR now: {self.balance['EUR']:.2f}")
+            return {"id": "test_fake", "status": "closed"}
+        try:
+            # Round down to LOT_SIZE step to avoid Binance precision errors
+            base = symbol.split('/')[0]
+            LOT_STEPS = {'ETH': 0.0001, 'BTC': 0.00001, 'BNB': 0.001, 'SOL': 0.001, 'DOGE': 1.0}
+            step = LOT_STEPS.get(base, 0.0001 if base not in ('DOGE',) else 1.0)
+            safe_amount = math.floor(amount / step) * step
+            if safe_amount <= 0:
+                self.logger.error(f"Market sell {symbol}: amount {amount:.8f} rounds to 0 (step={step})")
+                return None
+            order = await self.exchange.create_market_sell_order(symbol, safe_amount)
+            self.logger.info(f"MARKET SELL {symbol} {safe_amount:.4f} @ {order.get('price', '?')}")
+            return order
+        except Exception as e:
+            self.logger.error(f"Market sell error {symbol}: {e}")
             return None
 
     # ── DB persistence ────────────────────────────────
@@ -287,6 +391,85 @@ class DenaroOpportunisticCore:
         except Exception as e:
             self.logger.warning(f"Startup validation error {self.bot_name}: {e}")
 
+    # ── Per-bot drawdown / stop-loss ─────────────────────────
+    def check_drawdown(self) -> bool:
+        """
+        Controlla se questo bot ha superato il suo stop-loss individuale.
+        Returns True = still OK, False = drawdown exceeded → bot should stop.
+        """
+        if self.max_drawdown_eur <= 0 or not self._balance_snapshot_taken:
+            return True  # no limit or no snapshot yet
+
+        # P&L relativo al picco (non all'inizio): massimo drawdown storico
+        current_eur = self._initial_balance_eur + self._total_pnl_eur
+        drawdown_from_peak = self._peak_balance_eur - current_eur
+
+        if drawdown_from_peak >= self.max_drawdown_eur:
+            self.logger.error(
+                f"☠️ PER-BOT STOP-LOSS {self.bot_name}: "
+                f"drawdown {drawdown_from_peak:.2f}€ >= limit {self.max_drawdown_eur:.1f}€ | "
+                f"initial={self._initial_balance_eur:.2f} current={current_eur:.2f} peak={self._peak_balance_eur:.2f}"
+            )
+            self._drawdown_stopped = True
+            return False
+
+        if self._drawdown_stopped:
+            # Bot era già stato fermato, non riattivare
+            return False
+
+        return True
+
+    async def _emergency_close_per_bot(self):
+        """
+        Chiude la posizione di QUESTO bot (market sell) e cancella tutti gli ordini aperti.
+        """
+        if self.test_mode:
+            return
+
+        # 1. Se in posizione → market sell
+        if getattr(self, 'in_position', False):
+            symbol = getattr(self, 'symbol', None) or getattr(self, 'symbol_a', None)
+            amount = getattr(self, 'entry_amount', 0)
+            if symbol and amount > 0:
+                base = symbol.split('/')[0]
+                try:
+                    bal = await self.exchange.fetch_balance()
+                    actual_amount = float(bal.get(base, {}).get('free', 0) or 0)
+                    if actual_amount > 0:
+                        sell_amt = actual_amount * 0.997
+                        base = symbol.split('/')[0]
+                        LOT_STEPS = {'ETH': 0.0001, 'BTC': 0.00001, 'BNB': 0.001, 'SOL': 0.001, 'DOGE': 1.0}
+                        step = LOT_STEPS.get(base, 0.0001)
+                        rounded = math.floor(sell_amt / step) * step
+                        if rounded > 0:
+                            self.logger.warning(f"🚨 {self.bot_name}: EMERGENCY MARKET SELL {symbol} {rounded:.8f}")
+                            await self.exchange.create_market_sell_order(symbol, rounded)
+                        else:
+                            self.logger.warning(f"⚠️ {self.bot_name}: {symbol} amount {sell_amt:.8f} rounds to 0 (step={step}) — skipping sell")
+                    else:
+                        self.logger.warning(f"⚠️ {self.bot_name}: no {base} balance to sell")
+                except Exception as e:
+                    self.logger.error(f"❌ {self.bot_name}: emergency sell failed: {e}")
+
+                self.in_position = False
+                self.entry_price = 0
+                self.entry_amount = 0
+                self.save_position_to_db()
+
+        # 2. Cancella ordini aperti su questo simbolo
+        try:
+            sym = getattr(self, 'symbol', None) or getattr(self, 'symbol_a', None)
+            if sym:
+                orders = await self.exchange.fetch_open_orders(sym)
+                for o in orders:
+                    try:
+                        await self.exchange.cancel_order(o['id'], sym)
+                        self.logger.info(f"🗑️ {self.bot_name}: cancelled order {o['id']} ({o['side']} {o['amount']} @ {o['price']})")
+                    except Exception as e:
+                        self.logger.warning(f"⚠️ {self.bot_name}: cancel order {o['id']} failed: {e}")
+        except Exception as e:
+            self.logger.warning(f"⚠️ {self.bot_name}: cancel orders failed: {e}")
+
     async def close(self):
         if self.exchange:
             await self.exchange.close()
@@ -297,26 +480,62 @@ class DenaroOpportunisticCore:
     async def start(self):
         self.running = True
         interval = self.config.get("interval_sec", 30)
+
+        # ── Kill-switch check all'avvio ──
+        if not self.kill_switch.check_bot_can_start(self.bot_name):
+            self.logger.error(f"☠️ {self.bot_name}: BLOCKED by kill-switch on startup — not starting.")
+            self.running = False
+            return
+
         self.logger.info(f"=== PRE-STARTUP CHECK ===")
         await self.on_startup()
         self.logger.info(f"=== POST-STARTUP (in_position={getattr(self, 'in_position', 'N/A')}) ===")
         self.logger.info(f"{self.bot_name} started (interval={interval}s, test_mode={self.test_mode}).")
+
+        # Tick counter for periodic balance refresh
+        tick = 0
+
         while self.running:
             try:
-                self.db.save_bot_state(self.bot_name, self.in_position,
-                    getattr(self, 'entry_price', 0), getattr(self, 'entry_amount', 0),
-                    self.tp_pct if hasattr(self, 'tp_pct') else 0,
-                    self.sl_pct if hasattr(self, 'sl_pct') else 0,
-                    time.time(), 'binance')
-                await self.refresh_balance()
+                # Periodic balance refresh (every 10 ticks or 30s max)
+                tick += 1
+                if tick % 3 == 0 or tick == 1:
+                    await self.refresh_balance()
+
                 await self.refresh_open_orders()
+
+                # Per-bot stop-loss check: se superato, esci e fermati
+                if not self._drawdown_stopped and not self.check_drawdown() and not self.test_mode:
+                    await self._emergency_close_per_bot()
+                    self.kill_switch.lock_bot(self.bot_name)
+                    self.logger.error(f"☠️ {self.bot_name}: drawdown limit hit — LOCKED by kill-switch")
+                    self.running = False
+                    break
+
                 await self.run_strategy()
             except Exception as e:
                 self.logger.error(f"Strategy error: {e}", exc_info=True)
             await asyncio.sleep(interval)
 
     async def on_startup(self):
-        pass
+        """Base startup: kill-switch check. Subclasses can extend."""
+        if not self.kill_switch.check_bot_can_start(self.bot_name):
+            self.logger.error(f"☠️ {self.bot_name}: kill-switch LOCKED on startup")
+            self.running = False
+
+    def _record_completed_trade(self, pnl_pct: float):
+        """Registra trade completato nel kill-switch (circuit breaker)."""
+        self._last_trade_pnl_pct = pnl_pct
+        if pnl_pct < 0:
+            tripped = self.kill_switch.record_loss(self.bot_name, self.max_consecutive_losses)
+            if tripped:
+                self.logger.error(
+                    f"🚨 CIRCUIT BREAKER {self.bot_name}: "
+                    f"{self.kill_switch.consecutive_losses(self.bot_name)} consecutive losses >= "
+                    f"{self.max_consecutive_losses} — bot LOCKED"
+                )
+        else:
+            self.kill_switch.record_win(self.bot_name)
 
     def stop(self):
         self.running = False

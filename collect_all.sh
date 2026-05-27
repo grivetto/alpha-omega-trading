@@ -18,4 +18,8 @@ scp -o ConnectTimeout=5 -q "sergio@nuvola:/home/sergio/denaro/dashboard/public/n
 scp -o ConnectTimeout=5 -q "marco@MARCODG1:/home/marco/denaro/dashboard/public/marcodg1.json" "$PUBLIC/marcodg1.json" 2>/dev/null || \
   echo "WARN: marcodg1.json pull failed"
 
+# 4. Sync to nuvola web server
+/usr/sbin/bash "$(dirname "$0")/sync_dashboard.sh" >/dev/null 2>&1 || \
+  echo "WARN: sync to nuvola failed"
+
 echo "Collect all done: $(ls $PUBLIC/*.json 2>/dev/null | wc -l) files"

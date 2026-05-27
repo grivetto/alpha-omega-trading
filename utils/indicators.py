@@ -1,5 +1,9 @@
+"""Indicatori tecnici — Pure Pandas/NumPy implementation.
+Niente pandas_ta: RSI, EMA, SMA, ATR, MACD calcolati con pandas/numpy puri.
+v3.0: rimossa dipendenza da pandas_ta per compatibilità Python 3.14+.
+"""
 import pandas as pd
-import pandas_ta as ta
+import numpy as np
 import statistics
 from typing import Optional
 
@@ -7,67 +11,79 @@ from typing import Optional
 # ── Base indicators ────────────────────────────────────────────────
 
 def calculate_rsi(prices, length=14):
-    """Calculates RSI using pandas_ta. Returns the last value."""
-    if len(prices) < length:
+    """RSI usando Wilder's smoothing. Return ultimo valore."""
+    if len(prices) < length + 1:
         return 50.0
-    series = pd.Series(prices)
-    rsi = ta.rsi(series, length=length)
-    return float(rsi.iloc[-1]) if not rsi.empty else 50.0
+    series = pd.Series(prices, dtype=float)
+    delta = series.diff()
+    gain = delta.clip(lower=0)
+    loss = (-delta).clip(lower=0)
+
+    avg_gain = gain.rolling(window=length, min_periods=length).mean()[:length+1]
+    avg_loss = loss.rolling(window=length, min_periods=length).mean()[:length+1]
+
+    # Wilder smoothing
+    for i in range(length+1, len(series)):
+        avg_gain.iloc[i] = (avg_gain.iloc[i-1] * (length-1) + gain.iloc[i]) / length
+        avg_loss.iloc[i] = (avg_loss.iloc[i-1] * (length-1) + loss.iloc[i]) / length
+
+    rs = avg_gain / avg_loss.replace(0, np.nan)
+    rsi = 100 - (100 / (1 + rs))
+    return float(rsi.iloc[-1]) if not pd.isna(rsi.iloc[-1]) else 50.0
+
 
 def calculate_ema(prices, length=9):
-    """Calculates EMA using pandas_ta. Returns the last value."""
+    """Exponential Moving Average — pura pandas."""
     if len(prices) < length:
-        return prices[-1] if prices else 0.0
-    series = pd.Series(prices)
-    ema = ta.ema(series, length=length)
-    return float(ema.iloc[-1]) if not ema.empty else prices[-1]
+        return float(prices[-1]) if prices else 0.0
+    series = pd.Series(prices, dtype=float)
+    ema = series.ewm(span=length, adjust=False).mean()
+    return float(ema.iloc[-1])
+
 
 def calculate_sma(prices, length=20):
     """Simple Moving Average."""
     if len(prices) < length:
-        return prices[-1] if prices else 0.0
-    return sum(prices[-length:]) / length
+        return float(prices[-1]) if prices else 0.0
+    return float(sum(prices[-length:]) / length)
+
 
 def calculate_atr(highs, lows, closes, length=14):
-    """Calculates ATR using pandas_ta. Returns the last value."""
-    if len(highs) < length:
+    """Average True Range — pura pandas."""
+    if len(highs) < length + 1:
         return 0.0
     df = pd.DataFrame({
-        'high': highs,
-        'low': lows,
-        'close': closes
+        'high': pd.Series(highs, dtype=float),
+        'low': pd.Series(lows, dtype=float),
+        'close': pd.Series(closes, dtype=float),
     })
-    atr = ta.atr(df['high'], df['low'], df['close'], length=length)
+    prev_close = df['close'].shift(1)
+    tr = pd.concat([
+        (df['high'] - df['low']).abs(),
+        (df['high'] - prev_close).abs(),
+        (df['low'] - prev_close).abs(),
+    ], axis=1).max(axis=1)
+    atr = tr.rolling(window=length, min_periods=length).mean()
     return float(atr.iloc[-1]) if not atr.empty else 0.0
 
 
 # ── MACD (Moving Average Convergence Divergence) ───────────────────
-# Aggiunto da video Alpha Arena: usato come indicatore principale
-# per trend momentum e divergenze.
 
 def calculate_macd(prices: list, fast=12, slow=26, signal=9) -> dict:
-    """
-    Calcola MACD.
-
-    Returns:
-        dict con:
-          - macd_line: MACD (EMA fast - EMA slow)
-          - signal_line: EMA della macd_line (periodo signal)
-          - histogram: macd_line - signal_line (positivo = bullish momentum)
-          - histogram_pct: istogramma normalizzato sul prezzo corrente (%)
-    """
+    """MACD usando EMA pura."""
     if len(prices) < slow + signal:
         return {"macd_line": 0.0, "signal_line": 0.0, "histogram": 0.0, "histogram_pct": 0.0}
 
-    series = pd.Series(prices)
-    macd_result = ta.macd(series, fast=fast, slow=slow, signal=signal)
-    if macd_result is None or macd_result.empty:
-        return {"macd_line": 0.0, "signal_line": 0.0, "histogram": 0.0, "histogram_pct": 0.0}
+    series = pd.Series(prices, dtype=float)
+    ema_fast = series.ewm(span=fast, adjust=False).mean()
+    ema_slow = series.ewm(span=slow, adjust=False).mean()
+    macd_line = ema_fast - ema_slow
+    signal_line = macd_line.ewm(span=signal, adjust=False).mean()
+    histogram = macd_line - signal_line
 
-    last = macd_result.iloc[-1]
-    macd_val = float(last.get(f"MACD_{fast}_{slow}_{signal}", 0))
-    signal_val = float(last.get(f"MACDs_{fast}_{slow}_{signal}", 0))
-    hist_val = float(last.get(f"MACDh_{fast}_{slow}_{signal}", 0))
+    macd_val = float(macd_line.iloc[-1])
+    signal_val = float(signal_line.iloc[-1])
+    hist_val = float(histogram.iloc[-1])
     current_price = prices[-1] if prices else 1.0
 
     return {
@@ -90,8 +106,6 @@ def calculate_vwap(ohlcv: list) -> Optional[float]:
 
 
 # ── Multi-timeframe aggregation ────────────────────────────────────
-# Pattern chiave dal video Alpha Arena: ogni decisione considera
-# TWO timeframe: short-term (~4h di 5min candles) + long-term (~3gg).
 
 def aggregate_timeframes(
     ohlcv_short: list,
@@ -99,22 +113,7 @@ def aggregate_timeframes(
     short_label: str = "short",
     long_label: str = "long",
 ) -> dict:
-    """
-    Aggrega indicatori da due timeframe in un unico dict strutturato.
-
-    Args:
-        ohlcv_short: Candele timeframe breve (es. 5min, ultime 4h)
-        ohlcv_long:  Candele timeframe lungo (es. 1h, ultimi 3gg)
-        short_label: Nome per il timeframe breve (default 'short')
-        long_label:  Nome per il timeframe lungo (default 'long')
-
-    Returns:
-        dict con:
-          - {short_label}: { rsi, ema9, sma20, macd, vwap, atr_pct, price }
-          - {long_label}:  { rsi, ema9, sma20, macd, vwap, atr_pct, price }
-          - divergence: 'bullish' | 'bearish' | 'neutral'
-            (short RSI diverge da long trend = segnale forte)
-    """
+    """Aggrega indicatori da due timeframe in un unico dict strutturato."""
     def _compute(label, ohlcv):
         if not ohlcv:
             return {label: {}, "price": 0.0}
@@ -147,11 +146,9 @@ def aggregate_timeframes(
     divergence = "neutral"
     if (short_data.get("rsi", 50) < 35 and
         long_data.get("price", 0) > long_data.get("sma20", 0)):
-        # Short ipervenduto ma long in uptrend = bullish divergence
         divergence = "bullish"
     elif (short_data.get("rsi", 50) > 65 and
           long_data.get("price", 0) < long_data.get("sma20", 0)):
-        # Short ipercomprato ma long in downtrend = bearish divergence
         divergence = "bearish"
 
     return {
