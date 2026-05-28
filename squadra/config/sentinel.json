@@ -1,0 +1,11 @@
+{
+  "symbol": "BNB/EUR",
+  "timeframe": "5m",
+  "base_order_eur": 10.0,
+  "max_investment_eur": 25.0,
+  "take_profit_pct": 0.008,
+  "stop_loss_pct": 0.005,
+  "max_drawdown_eur": 15.0,
+  "max_consecutive_losses": 3,
+  "interval_sec": 30
+}

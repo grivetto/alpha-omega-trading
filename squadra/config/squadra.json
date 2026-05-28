@@ -1,0 +1,10 @@
+{
+    "max_total_eur": 80.0,
+    "max_per_bot_eur": 30.0,
+    "drawdown_limit_pct": 10.0,
+    "initial_capital_eur": 40.0,
+    "per_bot_drawdown_eur": 40.0,
+    "max_consecutive_losses": 5,
+    "kill_switch_auto_reset": false,
+    "test_mode": false
+}

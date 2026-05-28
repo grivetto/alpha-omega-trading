@@ -17,3 +17,4 @@ get_*.py
 update_*.py
 soldi/
 .tmp/
+!squadra/config/*.json

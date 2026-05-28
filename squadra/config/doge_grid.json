@@ -1,0 +1,12 @@
+{
+  "symbol": "DOGE/EUR",
+  "base_order_eur": 8.0,
+  "max_investment_eur": 24.0,
+  "grid_levels": 4,
+  "grid_spacing_pct": 0.012,
+  "take_profit_pct": 0.015,
+  "compound_factor": 1.2,
+  "max_compound_mult": 1.5,
+  "interval_sec": 10,
+  "max_drawdown_eur": 40.0
+}
