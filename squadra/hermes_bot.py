@@ -23,6 +23,7 @@ class HermesSentimentBot(DenaroOpportunisticCore):
         self.entry_price = 0.0
         self.entry_amount = 0.0
         self._last_markov = None  # cache last Markov analysis for logging
+        self.atr_period = self.config.get("atr_period", 14) # Initialize atr_period
         # ATR-based SL/TP multipliers
         self.atr_sl_mult = self.config.get("atr_sl_multiplier", 1.5)
         self.atr_tp_mult = self.config.get("atr_tp_multiplier", 2.0)

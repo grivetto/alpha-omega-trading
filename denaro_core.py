@@ -48,7 +48,7 @@ class DenaroCore:
         
         # Initialize Client
         self.client = self._init_client()
-        self.db = TradeDB()
+        self.db = TradeDB(str(self.base_dir / "trades.db"))
         
         # Override defaults with JSON config
         self.load_config()
