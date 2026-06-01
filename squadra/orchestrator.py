@@ -10,7 +10,7 @@ Gestione del rischio centralizzata (v5.1 - spietato):
 """
 import os, sys, json, logging, asyncio, time, math
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(1, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from core import ENV_PATH, DenaroOpportunisticCore
 from dotenv import load_dotenv
@@ -25,6 +25,11 @@ from vulcan_bot import VulcanGridBot
 from doge_bot import DogeGridBot
 
 from risk.kill_switch import KillSwitchManager, KS_OFF, KS_BOT_STOPPED, KS_LOCKED
+
+# ── Self-Improve ──────────────────────────────
+from self_improve.history import TradeHistory as SITradeHistory
+from self_improve.goal import GoalManager
+from self_improve.reflector import StrategyReflector
 
 CONFIG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config", "squadra.json")
 
@@ -55,6 +60,11 @@ class SquadraOrchestrator:
         self.bot_capitals = {}
         # Exchange connection for balance checking
         self.exchange = None
+        # Self-Improve
+        self.si_history = SITradeHistory()
+        self.si_goal = GoalManager()
+        self.si_reflector = StrategyReflector(self.si_goal, self.si_history)
+        self.last_reflection_time = time.time()
 
     def _load_config(self):
         if os.path.exists(CONFIG_PATH):
@@ -65,9 +75,23 @@ class SquadraOrchestrator:
     async def _init_exchange(self):
         if self.test_mode:
             return
-        load_dotenv(ENV_PATH)
-        api_key = os.getenv("BINANCE_API_KEY", "")
-        api_secret = os.getenv("BINANCE_API_SECRET", "")
+        # Read .env directly to bypass system env vars
+        env_vars = {}
+        try:
+            with open(ENV_PATH, 'r') as ef:
+                for line in ef:
+                    line = line.strip()
+                    if line and not line.startswith('#') and '=' in line:
+                        k, v = line.split('=', 1)
+                        env_vars[k.strip()] = v.strip()
+        except FileNotFoundError:
+            pass
+        mc_label = env_vars.get("MACHINE_LABEL", "").upper().strip()
+        api_key = env_vars.get(f"BINANCE_API_KEY_{mc_label}", "")
+        api_secret = env_vars.get(f"BINANCE_API_SECRET_{mc_label}", "")
+        if not api_key:
+            api_key = env_vars.get("BINANCE_API_KEY", "")
+            api_secret = env_vars.get("BINANCE_API_SECRET", "")
         if api_key and api_secret:
             self.exchange = ccxt.binance({
                 "apiKey": api_key,
@@ -194,6 +218,11 @@ class SquadraOrchestrator:
             return False
 
         current_eur = await self._fetch_total_portfolio()
+
+        # Safety stop: if EUR balance drops below 5€, halt new trades
+        if current_eur < 5.0:
+            self.logger.error("⚠️ EUR balance < 5€ – suspending new trades")
+            return False
 
         # Track peak capital
         if current_eur > self.peak_capital:
@@ -412,6 +441,7 @@ class SquadraOrchestrator:
         tasks = [bot_wrapper(b) for b in self.bots]
         tasks.append(self._report_loop())
         tasks.append(self._risk_loop())
+        tasks.append(self._reflection_loop())
 
         await asyncio.gather(*tasks)
 
@@ -420,6 +450,54 @@ class SquadraOrchestrator:
         while True:
             await self.report()
             await asyncio.sleep(60)
+
+    async def _reflection_loop(self):
+        """Ciclo di riflessione auto-miglioramento.
+        Dopo reflection_every trade chiusi per bot, calcola performance
+        e modifica UNA variabile del suo config (metodo scientifico)."""
+        await asyncio.sleep(30)  # dai tempo ai bot di fare qualche trade
+        while True:
+            try:
+                for bot in self.bots:
+                    name = bot.bot_name
+                    trade_count = self.si_history.get_trade_count(name)
+                    cadence = self.si_goal.reflection_cadence(name)
+
+                    if trade_count < cadence:
+                        continue
+
+                    # Quanti trade quando abbiamo riflettuto l'ultima volta?
+                    reflections = self.si_history.get_reflections(name, 1)
+                    last_ref_trade_count = 0
+                    if reflections:
+                        last_ref_trade_count = len(reflections) * cadence
+
+                    if trade_count - last_ref_trade_count < cadence:
+                        continue
+
+                    # Esegui riflessione
+                    self.logger.info(
+                        f"🧬 {name}: riflessione ({trade_count} trade, cadenza={cadence})"
+                    )
+                    report = self.si_reflector.reflect(name)
+                    if report.get("changed"):
+                        self.logger.info(
+                            f"✅ {name}: {report['variable']} "
+                            f"{report['old_value']} → {report['new_value']} "
+                            f"({report['reason']})"
+                        )
+                    else:
+                        self.logger.info(
+                            f"⏭️ {name}: nessuna modifica ({report.get('reason', 'N/A')})"
+                        )
+
+                # Refresh goal ogni 15 min
+                if time.time() - self.last_reflection_time > 900:
+                    self.last_reflection_time = time.time()
+                    self.si_goal.load()  # reload if manual edits made
+            except Exception as e:
+                self.logger.error(f"❌ Reflection loop error: {e}")
+            await asyncio.sleep(120)  # controlla ogni 2 minuti
 
     async def _risk_loop(self):
         await asyncio.sleep(10)

@@ -1,20 +1,63 @@
+# Credenziali - MAI pushare su Git
 .env
-.env.*
-*.log
-*.out
-*.json
+.env.bak.*
+
+# Log e DB runtime
+squadra/squadra.log
+squadra/*.log
+*.db
+*.sqlite3
+squadra/bot_lock.json
+squadra/state/
+
+# Python cache
 __pycache__/
-*env/
-*.service
-*.csv
-out_scrape/
-test_*.py
-add_port.py
-check_*.py
-fix_*.py
-clear_*.py
-get_*.py
-update_*.py
-soldi/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+
+# Virtual env
+venv/
+.venv/
+denaro-venv/
+
+# Backup locali
+backup_old/
+
+# Dashboard (dati separati)
+dashboard/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+.graphify_corpus/
+graphify-out/
+logs/
+squadra/squadra.log
+.graphify_*
 .tmp/
-!squadra/config/*.json
+_archive/
+STATUS_CHECK
+HEAL_REPORT.md
+__init__.py
+zabbix_*
+denaro_core.py
+denaro_navigator.py
+denaro_shared.py
+dashboard_server.py
+check_*.py
+debug_*.py
+create_node_logs.py
+autohealer*
+*.log
+# Self-improve test artifacts
+squadra/self_improve/test_history*.json
+squadra/self_improve/*.log

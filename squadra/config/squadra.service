@@ -1,0 +1,23 @@
+[Unit]
+Description=Squadra — Orchestratore Denaro v5 (Ares+Hermes+Apollo+Artemis)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=sergio
+WorkingDirectory=/home/sergio/denaro/squadra
+EnvironmentFile=/home/sergio/denaro/.env
+ExecStart=/usr/bin/python3 /home/sergio/denaro/squadra/orchestrator.py
+Restart=on-failure
+RestartSec=30
+StandardOutput=journal
+StandardError=journal
+
+# Protezioni
+NoNewPrivileges=true
+ProtectSystem=full
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

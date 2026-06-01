@@ -13,13 +13,31 @@ ENV_PATH = os.path.join(PARENT_DIR, ".env")
 load_dotenv(ENV_PATH)
 
 import sys
-sys.path.insert(0, PARENT_DIR)
+# insert PARENT_DIR (denaro/) AFTER squadra/ so bot modules (strategies, etc.)
+# from squadra/ shadow denaro-level packages rather than vice versa
+sys.path.insert(1, PARENT_DIR)
 from trade_db import TradeDB
 from utils.risk_engine import RiskManager
 from risk.kill_switch import (
     KillSwitchManager, KS_OFF, KS_BOT_STOPPED, KS_LOCKED,
     DEFAULT_MAX_DRAWDOWN_EUR, DEFAULT_CONSECUTIVE_LOSS_LIMIT,
 )
+
+# ── Self-Improve ──────────────────────────────
+from self_improve.history import TradeHistory as SITradeHistory
+from self_improve.goal import GoalManager
+from self_improve.reflector import StrategyReflector
+
+_si_history: SITradeHistory = None
+_si_reflector: StrategyReflector = None
+
+def _init_si():
+    global _si_history, _si_reflector
+    if _si_history is None:
+        _si_history = SITradeHistory()
+        goal_mgr = GoalManager()
+        _si_reflector = StrategyReflector(goal_mgr, _si_history)
+    return _si_history, _si_reflector
 
 # ── Cost Model ────────────────────────────────────────────────
 BINANCE_MAKER_FEE = 0.00075   # 0.075% con BNB
@@ -120,10 +138,48 @@ class DenaroOpportunisticCore:
             self.balance = {"EUR": 100.0}  # fake balance
             self.open_orders = []
         else:
-            api_key = os.getenv("BINANCE_API_KEY", "")
-            api_secret = os.getenv("BINANCE_API_SECRET", "")
+            import re
+            # Read .env DIRECTLY from file, bypassing os.environ cache
+            env_vars = {}
+            try:
+                with open(ENV_PATH, 'r') as ef:
+                    for line in ef:
+                        line = line.strip()
+                        if line and not line.startswith('#') and '=' in line:
+                            k, v = line.split('=', 1)
+                            env_vars[k.strip()] = v.strip()
+            except FileNotFoundError:
+                pass
+
+            key_prefix = env_vars.get("BINANCE_KEY_PREFIX", "").upper().strip()
+            mc_label = env_vars.get("MACHINE_LABEL", "").upper().strip()
+
+            # Build candidates: PREFIX first, then MACHINE_LABEL, then old-style
+            candidates = []
+            if key_prefix:
+                candidates.append(key_prefix)
+            if mc_label:
+                candidates.append(mc_label)
+
+            api_key = None
+            api_secret = None
+            for candidate in candidates:
+                api_key = env_vars.get(f"BINANCE_API_KEY_{candidate}")
+                api_secret = env_vars.get(f"BINANCE_API_SECRET_{candidate}")
+                if api_key and api_secret:
+                    self.logger.info(f"✅ Auth with {candidate} key (from .env file)")
+                    break
+
+            if not (api_key and api_secret):
+                # Fallback: old unified format from env file
+                api_key = env_vars.get("BINANCE_API_KEY")
+                api_secret = env_vars.get("BINANCE_API_SECRET")
+                if api_key and api_secret:
+                    self.logger.warning("Using deprecated unified key format from .env")
+
             if not api_key or not api_secret:
-                self.logger.error("API keys not found in .env")
+                self.logger.error(f"API keys not found in {ENV_PATH}")
+                self.logger.error(f"Tried: {candidates}")
                 raise ValueError("BINANCE_API_KEY / BINANCE_API_SECRET missing")
 
             self.exchange = ccxt.binance({
@@ -523,8 +579,8 @@ class DenaroOpportunisticCore:
             self.logger.error(f"☠️ {self.bot_name}: kill-switch LOCKED on startup")
             self.running = False
 
-    def _record_completed_trade(self, pnl_pct: float):
-        """Registra trade completato nel kill-switch (circuit breaker)."""
+    def _record_completed_trade(self, pnl_pct: float, reason: str = ""):
+        """Registra trade completato nel kill-switch (circuit breaker) e nella history SI."""
         self._last_trade_pnl_pct = pnl_pct
         if pnl_pct < 0:
             tripped = self.kill_switch.record_loss(self.bot_name, self.max_consecutive_losses)
@@ -536,6 +592,12 @@ class DenaroOpportunisticCore:
                 )
         else:
             self.kill_switch.record_win(self.bot_name)
+        # Self-Improve: registra trade per riflessione
+        try:
+            h, _ = _init_si()
+            h.record_trade(self.bot_name, pnl_pct, reason=reason)
+        except Exception as e:
+            pass  # non bloccare il bot per un errore del tracker
 
     def stop(self):
         self.running = False

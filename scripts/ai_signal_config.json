@@ -1,0 +1,11 @@
+{
+  "model": "local-llm",
+  "prompt_file": "/home/sergio/denaro/scripts/prompts/ai_signal_prompt.txt",
+  "output_dir": "/home/sergio/denaro/bots/ai_signals",
+  "symbols": ["BTCUSDT", "ETHUSDT", "BNBUSDT"],
+  "lookback_minutes": 30,
+  "risk_params": {
+    "max_position_eur": 5,
+    "max_drawdown_eur": 5.0
+  }
+}

@@ -131,8 +131,23 @@ class DogeGridBot(DenaroOpportunisticCore):
         3. Calcola PnL del ciclo
         4. Piazza grid fresco con eventuale compounding
         """
+
+        # ── EUR FLOOR: non consumare l'ultimo capitale ──
+        EUR_FLOOR = 15.0
+        try:
+            bal = await self.exchange.fetch_balance() if not self.test_mode else {"EUR": {"free": 999.0}}
+            eur_free = float(bal.get("EUR", {}).get("free", 0) or 0)
+        except Exception:
+            eur_free = 999.0
+        if eur_free < EUR_FLOOR:
+            self.logger.critical(
+                f"☠️ EUR FLOOR HIT: {eur_free:.2f}€ < {EUR_FLOOR:.0f}€ — SKIPPING rebalance per proteggere il capitale"
+            )
+            self._grid_state["active"] = False
+            return
+
         # Sells accumulated (register profit first)
-        recovered = await self._sell_accumulated_base()  # Sell accumulated base (buy-only grid)  # Grid sell orders handle accumulation naturally
+        recovered = await self._sell_accumulated_base()  # Sell accumulated base (buy-only grid)
         invested = self.base_order_eur * self.grid_levels
         cycle_pnl = recovered - invested if recovered > 0 else 0.0
 
