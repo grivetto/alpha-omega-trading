@@ -285,7 +285,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--test-mode", action="store_true", help="Run in fake‑OHLCV mode")
-    parser.add_argument("--max-ticks", type=int, default=50, help="Max ticks before exit (0=infinite)")
+    parser.add_argument("--max-ticks", type=int, default=5, help="Max ticks before exit (0=infinite)")
     parser.add_argument("--sleep-seconds", type=float, default=5.0, help="Delay between ticks in seconds (default 5)")
 
     args = parser.parse_args()

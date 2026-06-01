@@ -484,3 +484,50 @@ class ExchangeWrapper:
             self._mock_balances[quote_asset] = self._mock_balances.get(quote_asset, 0.0) + value * (1 - fee_pct)
             
         logger.info(f"[DRY RUN] Executed mock order {oid} | {order['side'].upper()} {order['amount']:.6f} {order['symbol']} @ {order['price']:.4f}")
+
+    async def get_total_equity_usdt(self) -> float:
+        try:
+            bal = await self.fetch_balance()
+            total_bal = bal.get("total", {})
+            total_usdt = 0.0
+            
+            for asset, amount in total_bal.items():
+                if amount <= 0.0:
+                    continue
+                if asset in ("USDT", "USD", "USDC", "BUSD"):
+                    total_usdt += amount
+                    continue
+                    
+                # Convert asset to USDT
+                try:
+                    if asset == "EUR":
+                        try:
+                            ticker = await self.fetch_ticker("EUR/USDT")
+                            rate = float(ticker.get("last") or ticker.get("close") or 1.08)
+                        except Exception:
+                            rate = 1.08
+                        total_usdt += amount * rate
+                    else:
+                        try:
+                            ticker = await self.fetch_ticker(f"{asset}/USDT")
+                            rate = float(ticker.get("last") or ticker.get("close") or 0.0)
+                            total_usdt += amount * rate
+                        except Exception:
+                            if asset != "BTC":
+                                try:
+                                    ticker_btc = await self.fetch_ticker(f"{asset}/BTC")
+                                    rate_btc = float(ticker_btc.get("last") or ticker_btc.get("close") or 0.0)
+                                    ticker_usdt = await self.fetch_ticker("BTC/USDT")
+                                    rate_usdt = float(ticker_usdt.get("last") or ticker_usdt.get("close") or 0.0)
+                                    total_usdt += amount * rate_btc * rate_usdt
+                                except Exception as e:
+                                    logger.error(f"Failed to convert {asset} to USDT: {e}")
+                            else:
+                                logger.error(f"Failed to convert BTC to USDT.")
+                except Exception as e:
+                    logger.error(f"Equity conversion failed for {asset}: {e}")
+            return total_usdt
+        except Exception as e:
+            logger.error(f"Failed to fetch balance or calculate total equity: {e}")
+            return 0.0
+

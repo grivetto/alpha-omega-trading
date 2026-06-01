@@ -81,8 +81,37 @@ class GridTraderStrategy(BaseStrategy):
         half_levels = self._n_levels // 2
         # Price step between each grid band
         step_value = (mid_price * self._range_pct) / half_levels
-        capital_per_level = self.capital / self._n_levels
         
+        # Dynamically scale capital to the quote currency
+        quote_capital = await self.get_quote_capital()
+        capital_per_level = quote_capital / self._n_levels
+        
+        # Calculate dynamic minimum notional in quote currency (approx 5.0 EUR equivalent)
+        parts = self.symbol.split("/")
+        quote = parts[1].upper() if len(parts) >= 2 else "EUR"
+        min_notional = 5.0
+        if quote != "EUR":
+            try:
+                ticker = await self.exchange.fetch_ticker(f"{quote}/EUR")
+                rate = float(ticker.get("last") or ticker.get("close") or 0)
+                if rate > 0:
+                    min_notional = 5.0 / rate
+            except Exception:
+                try:
+                    ticker = await self.exchange.fetch_ticker(f"EUR/{quote}")
+                    rate = float(ticker.get("last") or ticker.get("close") or 0)
+                    if rate > 0:
+                        min_notional = 5.0 * rate
+                except Exception:
+                    if quote == "BTC":
+                        min_notional = 0.0001
+                    elif quote == "BNB":
+                        min_notional = 0.01
+                    else:
+                        min_notional = 5.0
+        
+        self.logger.info(f"Scaled Grid Allocation: Total Capital = {quote_capital:.6f} {quote} | Capital/Level = {capital_per_level:.6f} {quote} | Min Notional = {min_notional:.6f} {quote}")
+
         levels: list[GridLevel] = []
         
         # Set tick decimals based on price
@@ -92,15 +121,16 @@ class GridTraderStrategy(BaseStrategy):
         for i in range(1, half_levels + 1):
             p = round(mid_price - i * step_value, decimals)
             amt = round(capital_per_level / p, 4)
-            if amt * p > 1.0:  # CCXT/exchange minimum notional safety check
+            if amt * p >= min_notional:  # CCXT/exchange minimum notional safety check
                 levels.append(GridLevel(price=p, side=Side.BUY, amount=amt))
                 
         # Sell Levels (above mid-price)
         for i in range(1, half_levels + 1):
             p = round(mid_price + i * step_value, decimals)
             amt = round(capital_per_level / p, 4)
-            if amt * p > 1.0:
+            if amt * p >= min_notional:
                 levels.append(GridLevel(price=p, side=Side.SELL, amount=amt))
+
                 
         # Sort levels ascending by price
         levels.sort(key=lambda x: x.price)

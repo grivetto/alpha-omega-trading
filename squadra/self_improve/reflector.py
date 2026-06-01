@@ -2,8 +2,17 @@
 StrategyReflector — motore di riflessione scientifica.
 Dopo N trade chiusi, analizza performance, formula ipotesi,
 cambia UNA variabile alla volta nel config del bot.
+
+Principi dal video (Lewis Jackson / Zero-One Self-Improving Agent):
+  1. ACCURATE — dati reali, non assunti
+  2. RELIABLE — non rimane bloccato, auto-recupera
+  3. WELL-DEFINED GOAL — metriche chiare
+  4. SELF-IMPROVING — esplorazione vs sfruttamento:
+     - exploration_rate: probabilità di provare qualcosa di nuovo vs exploitare
+     - Dopo 5+ reflection senza miglioramento → esplora parametri non toccati
+     - Dopo 10+ → considera switch strategia (timeframe, ecc.)
 """
-import os, json, copy, logging
+import os, json, copy, logging, random, time
 from .goal import GoalManager
 from .history import TradeHistory
 
@@ -125,6 +134,19 @@ class StrategyReflector:
         direction = 0  # +1 = increase, -1 = decrease
         reason = ""
 
+        # ── Principio 4: EXPLORATION vs EXPLOITATION ──
+        # Quante reflection recenti senza miglioramento?
+        reflections = self.history.get_reflections(bot_name, 10)
+        stagnation_count = 0
+        for r in reflections:
+            if not r.get("changed"):
+                stagnation_count += 1
+            elif r.get("stats", {}).get("avg_pnl_pct", 0) <= 0:
+                stagnation_count += 1
+
+        # exploration rate cresce con la stagnazione (10% base → 80% a 10 stagnation)
+        exploration_rate = min(0.1 + stagnation_count * 0.07, 0.8)
+
         # Regole di aggiustamento (una alla volta, priorità decrescente)
 
         # 1. Drawdown troppo alto o perdite consecutive → riduci posizione
@@ -176,6 +198,71 @@ class StrategyReflector:
             delta = VAR_DELTAS.get(var_name, 2.0)
             direction = 1
             reason = f"performance buona (WR={win_rate:.1%}) → aumento posizione"
+        elif random.random() < exploration_rate and stagnation_count >= 3:
+            # ── EXPLORATION MODE ──
+            # Il sistema è stagnante → provo variabili non toccate di recente
+            recently_touched = set()
+            for r in reflections[:3]:
+                recently_touched.add(r.get("variable", ""))
+
+            # Variabili esplorabili ordinandole per rilevanza
+            explorables = [v for v in VAR_RANGES if v in config and v not in recently_touched]
+            if not explorables:
+                explorables = [v for v in VAR_RANGES if v in config]
+
+            if explorables:
+                var_name = random.choice(explorables)
+                delta = VAR_DELTAS.get(var_name, 1.0)
+                # Direzione casuale ma biased verso riduzione del rischio
+                direction = -1 if random.random() < 0.6 else 1
+                delta = delta * direction
+                reason = f"EXPLORATION (stagnation={stagnation_count}, rate={exploration_rate:.0%}) → provo {var_name}"
+                logger.info(f"🧭 {bot_name}: EXPLORATION mode — provo {var_name}")
+            else:
+                return {
+                    "bot": bot_name,
+                    "changed": False,
+                    "reason": "niente da esplorare",
+                    "stats": stats,
+                }
+        elif stagnation_count >= 8:
+            # ── RADICAL EXPLORATION ──
+            # 8+ reflection senza miglioramento → cambio timeframe o grid spacing
+            if "timeframe" in config and config["timeframe"] != "15m":
+                old_tf = config["timeframe"]
+                # Prova timeframe diverso
+                tf_options = {"1m": "5m", "5m": "15m", "15m": "5m", "1h": "15m", "1d": "1h"}
+                new_tf = tf_options.get(old_tf, "5m")
+                config["timeframe"] = new_tf
+                self._save_config(bot_name, config)
+                report = {
+                    "bot": bot_name,
+                    "changed": True,
+                    "variable": "timeframe",
+                    "old_value": old_tf,
+                    "new_value": new_tf,
+                    "delta": 0,
+                    "direction": "radical",
+                    "reason": f"RADICAL EXPLORATION (stagnation={stagnation_count}) → switch timeframe",
+                    "stats": stats,
+                    "ts": time.time(),
+                }
+                self.history.record_reflection(bot_name, report)
+                return report
+            elif "grid_spread_pct" in config:
+                var_name = "grid_spread_pct"
+                # Prova spread molto diverso
+                delta = VAR_DELTAS.get(var_name, 0.001) * 3  # 3x il delta normale
+                direction = 1 if config.get(var_name, 0.01) < 0.01 else -1
+                delta = delta * direction
+                reason = f"RADICAL (stagnation={stagnation_count}) → cambio grid_spread"
+            else:
+                return {
+                    "bot": bot_name,
+                    "changed": False,
+                    "reason": "radical exploration non applicabile",
+                    "stats": stats,
+                }
         else:
             # Default: aggiusta slow_sma o fast_sma se disponibile
             if "fast_sma" in config:

@@ -201,12 +201,11 @@ class TradingBot:
                 # Query aggregate account equity in USDT equivalent
                 total_equity = 0.0
                 for ex in self.exchanges.values():
-                    bal = await ex.fetch_balance()
-                    total_equity += bal.get("total", {}).get("USDT", 0.0)
-                    total_equity += bal.get("total", {}).get("EUR", 0.0)  # Support EUR balance valuation
+                    total_equity += await ex.get_total_equity_usdt()
                 
                 # Settle new daily risk baseline
-                self.risk.reset_daily(total_equity)
+                self.risk.set_daily_baseline(total_equity)
+
                 await self.notify.send(f"🌅 <b>Nuovo Giorno Tradato</b> | Equity Baseline auditata: <code>{total_equity:.2f} USD</code>")
             except Exception as e:
                 logger.error(f"Daily reset baseline update failed: {e}")
@@ -231,13 +230,11 @@ class TradingBot:
         # 2. Setup Risk Baseline
         total_equity = 0.0
         for name, ex in self.exchanges.items():
-            bal = await ex.fetch_balance()
-            total_equity += bal.get("total", {}).get("USDT", 0.0)
-            total_equity += bal.get("total", {}).get("EUR", 0.0)
+            total_equity += await ex.get_total_equity_usdt()
         
         # Settle fallback for dry-run or empty balances
         if total_equity <= 0:
-            total_equity = settings.total_capital_eur
+            total_equity = settings.total_capital_eur * 1.08  # Approx EUR to USDT rate
             
         self.risk.set_daily_baseline(total_equity)
 

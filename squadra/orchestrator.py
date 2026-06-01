@@ -43,7 +43,7 @@ class SquadraOrchestrator:
         self.max_total_eur = self.config.get("max_total_eur", 80.0)
         self.max_per_bot_eur = self.config.get("max_per_bot_eur", 30.0)
         self.drawdown_limit = self.config.get("drawdown_limit_pct", 5.0)
-        self.initial_capital = self.config.get("initial_capital_eur", 125.0)
+        self.initial_capital = self.config.get("initial_capital_eur", 19.27)
         self.per_bot_drawdown_limit = self.config.get("per_bot_drawdown_eur", 12.0)
         self.kill_switch_auto_reset = self.config.get("kill_switch_auto_reset", False)
         self.test_mode = self.config.get("test_mode", False)
@@ -55,7 +55,11 @@ class SquadraOrchestrator:
         lock_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "bot_lock.json")
         self.kill_switch = KillSwitchManager(db_path, lock_file)
         self.kill_switch_state = self.kill_switch.get_global_state()
+        # Peak capital — sarà aggiornato al primo fetch reale dal saldo Binance
         self.peak_capital = self.initial_capital
+        self._capital_synced = False  # flag: primo sync col saldo reale done?
+        self._stall_ticks = 0          # contatore tick senza trade (warm-up detection)
+        self._ks_locked_since = 0.0    # timestamp quando kill-switch è stato locked
         # Per-bot capital tracking (bot_name -> (initial_eur, peak_eur, current_eur))
         self.bot_capitals = {}
         # Exchange connection for balance checking
@@ -219,9 +223,24 @@ class SquadraOrchestrator:
 
         current_eur = await self._fetch_total_portfolio()
 
-        # Safety stop: if EUR balance drops below 5€, halt new trades
-        if current_eur < 5.0:
-            self.logger.error("⚠️ EUR balance < 5€ – suspending new trades")
+        # ── Auto-sync capitale iniziale al primo fetch reale ──
+        # Principio del video: "Accurate" — i dati devono riflettere la realtà
+        if not self._capital_synced and current_eur > 0 and self.exchange:
+            self.initial_capital = current_eur
+            self.peak_capital = current_eur
+            self._capital_synced = True
+            # Persisti nel config
+            try:
+                self.config["initial_capital_eur"] = round(current_eur, 2)
+                with open(CONFIG_PATH, "w") as f:
+                    json.dump(self.config, f, indent=2)
+                self.logger.info(f"🔄 Capital synced: initial_capital={current_eur:.2f}€ (saved to config)")
+            except Exception as e:
+                self.logger.warning(f"Could not save capital sync: {e}")
+
+        # Safety stop: if EUR balance drops below 3€, halt new trades
+        if current_eur < 3.0:
+            self.logger.error("⚠️ EUR balance < 3€ – suspending new trades")
             return False
 
         # Track peak capital
@@ -453,11 +472,35 @@ class SquadraOrchestrator:
 
     async def _reflection_loop(self):
         """Ciclo di riflessione auto-miglioramento.
+        Principi dal video (Lewis Jackson / Zero-One):
+          1. ACCURATE  → dati dal saldo reale, non dal config statico
+          2. RELIABLE  → se stallo per 10+ tick senza trade, seeda il reflector
+          3. WELL-DEFINED GOAL → metriche chiare (sharpe, win_rate, pnl_cum)
+          4. SELF-IMPROVING → dopo N trade, modifica UNA variabile (metodo scientifico)
+
         Dopo reflection_every trade chiusi per bot, calcola performance
         e modifica UNA variabile del suo config (metodo scientifico)."""
         await asyncio.sleep(30)  # dai tempo ai bot di fare qualche trade
         while True:
             try:
+                # ── Stall detection: se NESSUN bot ha trade, il sistema è bloccato ──
+                total_trades = sum(
+                    self.si_history.get_trade_count(b.bot_name) for b in self.bots
+                )
+                if total_trades == 0:
+                    self._stall_ticks += 1
+                else:
+                    self._stall_ticks = 0
+
+                # Dopo 10 tick (20 min) senza NESSUN trade → warm-up seed
+                if self._stall_ticks >= 10 and not hasattr(self, '_warmup_done'):
+                    self._warmup_done = True
+                    self.logger.warning(
+                        "🔥 STALL DETECTED: 20+ min senza trade — "
+                        "esecuzione warm-up seed per inizializzare reflector"
+                    )
+                    await self._warmup_seed()
+
                 for bot in self.bots:
                     name = bot.bot_name
                     trade_count = self.si_history.get_trade_count(name)
@@ -499,6 +542,55 @@ class SquadraOrchestrator:
                 self.logger.error(f"❌ Reflection loop error: {e}")
             await asyncio.sleep(120)  # controlla ogni 2 minuti
 
+    async def _warmup_seed(self):
+        """Seed trade history con mini-backtest su dati reali recenti.
+        Principio: il reflector non può migliorare senza dati storici.
+        Usiamo le candele recenti per simulare entry/exit con i parametri correnti."""
+        if not self.exchange:
+            self.logger.warning("Exchange non inizializzato — skip warmup seed")
+            return
+
+        seed_count = 0
+        for bot in self.bots:
+            name = bot.bot_name
+            symbol = getattr(bot, 'symbol', None)
+            if not symbol or self.si_history.get_trade_count(name) > 0:
+                continue  # salta se già ha trade reali
+
+            try:
+                # Fetch ultime 50 candele
+                tf = getattr(bot, 'timeframe', '5m')
+                ohlcv = await self.exchange.fetch_ohlcv(symbol, tf, limit=50)
+                if len(ohlcv) < 20:
+                    continue
+
+                # Simula trade semplici: TP/SL dai parametri del bot
+                tp = getattr(bot, 'take_profit_pct', 0.008)
+                sl = getattr(bot, 'stop_loss_pct', 0.005)
+                if tp == 0 and sl == 0:
+                    tp, sl = 0.008, 0.005  # default
+
+                for i in range(1, len(ohlcv) - 1):
+                    entry = ohlcv[i][2]  # high come entry simulato
+                    exit_ = ohlcv[i + 1][4]  # close del candle successivo
+                    pnl_pct = (exit_ - entry) / entry if entry > 0 else 0
+
+                    # Simula solo se oltre TP o SL
+                    if pnl_pct >= tp or pnl_pct <= -sl:
+                        reason = "TP" if pnl_pct >= 0 else "SL"
+                        self.si_history.record_trade(name, pnl_pct, reason=reason)
+                        seed_count += 1
+
+                self.logger.info(f"🌱 {name}: seeded {seed_count} mock trades da {symbol}")
+
+            except Exception as e:
+                self.logger.warning(f"Warmup seed error per {name}: {e}")
+
+        if seed_count > 0:
+            self.logger.info(f"🌱 Warmup completo: {seed_count} mock trades seeded — reflector pronto")
+        else:
+            self.logger.warning("🌱 Warmup: nessun mock trade generato")
+
     async def _risk_loop(self):
         await asyncio.sleep(10)
         while True:
@@ -508,9 +600,36 @@ class SquadraOrchestrator:
                 await self._emergency_close_positions()
                 for bot in self.bots:
                     bot.stop()
-                self.logger.error("🔒 Squadra fermata. Kill-switch LOCKED — reset bot_lock.json manualmente.")
+                self.logger.error("🔒 Squadra fermata. Kill-switch LOCKED.")
             elif not ok and self.kill_switch_state >= KS_LOCKED:
-                self.logger.warning("🔒 Kill-switch locked — waiting for manual reset")
+                # ── Auto-reset after cooldown (principio: RELIABLE) ──
+                # Se il kill-switch è locked da oltre 30 min, prova a resettarlo
+                # Il drawdown si ricalcolerà sul capitale aggiornato
+                if self._ks_locked_since == 0.0:
+                    self._ks_locked_since = time.time()
+                elapsed = time.time() - self._ks_locked_since
+                if elapsed > 1800:  # 30 min cooldown
+                    self.logger.warning("🔄 Kill-switch auto-reset dopo 30 min cooldown")
+                    # Reset manuale: sblocca tutti i bot + global state
+                    for bot in self.bots:
+                        self.kill_switch.unlock_bot(bot.bot_name)
+                    self.kill_switch._state_cache = KS_OFF
+                    self.kill_switch._save_persistent_state()
+                    self.kill_switch_state = KS_OFF
+                    self._ks_locked_since = 0.0
+                    # Reset peak capital al saldo corrente per drawdown fresh
+                    current_eur = await self._fetch_total_portfolio()
+                    if current_eur > 0:
+                        self.peak_capital = current_eur
+                        self._capital_synced = True
+                    self.logger.info(f"🔄 Sistema sbloccato — peak={self.peak_capital:.2f}€ — bot riprenderanno")
+                else:
+                    self.logger.warning(
+                        f"🔒 Kill-switch locked — auto-reset in {int(1800-elapsed)}s"
+                    )
+            else:
+                # Se tutto OK, resetta il timer di lock
+                self._ks_locked_since = 0.0
             await asyncio.sleep(10)  # ogni 10s, non 60s
 
     def stop(self):

@@ -56,6 +56,40 @@ class BaseStrategy(ABC):
         self._positions: dict[str, Position] = {}  # order_id -> Position
         self.logger = logger.bind(strategy=name)
 
+    async def get_quote_capital(self) -> float:
+        """Dynamically scales capital (denominated in EUR) to the quote asset of the traded symbol."""
+        parts = self.symbol.split("/")
+        if len(parts) < 2:
+            return self.capital
+        quote = parts[1].upper()
+        if quote == "EUR":
+            return self.capital
+
+        # Fetch ticker for quote/EUR (e.g., BTC/EUR)
+        try:
+            ticker = await self.exchange.fetch_ticker(f"{quote}/EUR")
+            rate = float(ticker.get("last") or ticker.get("close") or 0)
+            if rate > 0:
+                scaled = self.capital / rate
+                self.logger.info(f"Scaled capital from {self.capital:.2f} EUR to {scaled:.6f} {quote} using {quote}/EUR rate: {rate:.4f}")
+                return scaled
+        except Exception as e:
+            self.logger.debug(f"Failed to fetch {quote}/EUR ticker: {e}. Trying inverse...")
+
+        # Fallback to EUR/quote (e.g. EUR/USDT)
+        try:
+            ticker = await self.exchange.fetch_ticker(f"EUR/{quote}")
+            rate = float(ticker.get("last") or ticker.get("close") or 0)
+            if rate > 0:
+                scaled = self.capital * rate
+                self.logger.info(f"Scaled capital from {self.capital:.2f} EUR to {scaled:.6f} {quote} using EUR/{quote} rate: {rate:.4f}")
+                return scaled
+        except Exception as e:
+            self.logger.error(f"Failed to convert capital from EUR to {quote}: {e}")
+
+        return self.capital  # Safe fallback
+
+
     @abstractmethod
     async def on_candle(self, ohlcv: list[list[float]]) -> list[Signal]:
         """Process new candles and return trade signals."""

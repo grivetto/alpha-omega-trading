@@ -108,7 +108,7 @@ class ScalperStrategy(BaseStrategy):
                 self.logger.debug("TP target too small after fees. Skipping trade.")
                 return []
 
-            amount = self._calculate_position_size(curr_price, sl)
+            amount = await self._calculate_position_size(curr_price, sl)
             if amount <= 0:
                 return []
 
@@ -126,21 +126,24 @@ class ScalperStrategy(BaseStrategy):
 
         return signals
 
-    def _calculate_position_size(self, entry: float, sl: float) -> float:
+    async def _calculate_position_size(self, entry: float, sl: float) -> float:
+        # Scale capital to quote asset dynamically
+        quote_capital = await self.get_quote_capital()
         # Risk 2% of allocated capital per trade
-        risk_amount = self.capital * 0.02
+        risk_amount = quote_capital * 0.02
         risk_per_unit = entry - sl
         if risk_per_unit <= 0:
             return 0.0
         size = risk_amount / risk_per_unit
         
         # Max position sizing: never allocate more than 30% of total capital to single trade
-        max_size = (self.capital * 0.30) / entry
+        max_size = (quote_capital * 0.30) / entry
         final_size = min(size, max_size)
         
         # Settle decimals
         asset_decimals = 4 if entry > 1000 else (3 if entry > 10 else 1)
         return round(final_size, asset_decimals)
+
 
     async def _check_local_stop_loss(self, current_price: float):
         """Monitors positions and triggers stop loss locally to prevent fund lock errors."""
