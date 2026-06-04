@@ -111,7 +111,9 @@ def generate_signal(closes: list) -> str:
         ref_closes = closes[-WINDOW:]
     ma = sum(ref_closes) / len(ref_closes)
     try:
-        sigma_val = (sum((x - ma) ** 2 for x in ref_closes) ** 0.5)
+        # Use population standard deviation (divide by n, not n-1)
+        variance = sum((x - ma) ** 2 for x in ref_closes) / len(ref_closes)
+        sigma_val = variance ** 0.5
         if sigma_val == 0:
             sigma_val = 1.0
     except Exception:

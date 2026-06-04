@@ -7,6 +7,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import math
 import os
 import sqlite3
 import time
@@ -331,6 +332,42 @@ class ExchangeWrapper:
     async def close(self):
         if self._client:
             await self._client.close()
+
+    def get_market_precision_and_limits(self, symbol: str) -> tuple[int, float, float]:
+        """Returns (amount_precision, min_amount, min_cost) for a symbol."""
+        if self.dry_run or not self._client or symbol not in self._client.markets:
+            parts = symbol.split("/")
+            base = parts[0].upper() if len(parts) >= 1 else "BTC"
+            quote = parts[1].upper() if len(parts) >= 2 else "USDT"
+            
+            if base in ("BTC", "ETH"):
+                precision = 4
+            elif base in ("SOL", "BNB"):
+                precision = 3
+            else:
+                precision = 2
+                
+            min_amount = 0.0001 if base == "BTC" else (0.001 if base == "ETH" else 0.01)
+            
+            if quote == "BTC":
+                min_cost = 0.0001
+            elif quote == "BNB":
+                min_cost = 0.01
+            else:
+                min_cost = 5.0
+                
+            return precision, min_amount, min_cost
+            
+        market = self._client.market(symbol)
+        precision = market.get('precision', {}).get('amount', 4)
+        limits = market.get('limits', {})
+        min_amount = limits.get('amount', {}).get('min', 0.0001)
+        min_cost = limits.get('cost', {}).get('min', 5.0)
+        
+        if isinstance(precision, float):
+            precision = int(-math.log10(precision))
+            
+        return precision, min_amount, min_cost
 
     async def _call(self, fn_name: str, *args, **kwargs) -> Any:
         if self.dry_run:

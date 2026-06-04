@@ -1,271 +1,113 @@
-"""denaro-antigravity strategies/scalper.py – Technical Scalping Strategy.
 
-Uses EMA fast/slow cross + RSI + ATR to enter trades.
-Implements secure LOCAL Stop Loss triggers to prevent exchange double-allocation / locking errors.
-"""
-from __future__ import annotations
-
-import asyncio
-import time
-from typing import Any
-
-import numpy as np
-import pandas as pd
+import numpy as np, pandas as pd
 from loguru import logger
-
 from core.engine import Settings, TradeDB, settings
-from strategies.base import BaseStrategy, Position, Side, Signal
-
-_FEE_PCT = 0.00075  # 0.075% BNB discounted fee per side
-_MIN_PROFIT_PCT = 2 * _FEE_PCT + 0.001  # Round trip fees + 0.1% cushion
-
-# ── Tech Indicator Helpers ───────────────────────────────────────────────────
-def calculate_ema(prices: pd.Series, period: int) -> pd.Series:
-    return prices.ewm(span=period, adjust=False).mean()
-
-def calculate_rsi(prices: pd.Series, period: int) -> pd.Series:
-    delta = prices.diff()
-    gain = delta.clip(lower=0)
-    loss = -delta.clip(upper=0)
-    avg_gain = gain.ewm(com=period - 1, adjust=False).mean()
-    avg_loss = loss.ewm(com=period - 1, adjust=False).mean()
-    rs = avg_gain / avg_loss.replace(0, np.finfo(float).tiny)
-    return 100 - (100 / (1 + rs))
-
-def calculate_atr(high: pd.Series, low: pd.Series, close: pd.Series, period: int = 14) -> pd.Series:
-    tr = pd.concat([
-        high - low,
-        (high - close.shift(1)).abs(),
-        (low - close.shift(1)).abs()
-    ], axis=1).max(axis=1)
-    return tr.rolling(period).mean()
-
-# ── Scalper Strategy ──────────────────────────────────────────────────────────
+from strategies.base import BaseStrategy, Side, Signal
+_FEE = 0.00075
 class ScalperStrategy(BaseStrategy):
-    def __init__(self, exchange: Any, db: TradeDB, settings_ref: Settings = settings):
-        super().__init__(
-            name="Scalper",
-            exchange=exchange,
-            symbol=settings_ref.scalper_symbol,
-            capital=settings_ref.scalper_capital
-        )
-        self.db = db
-        self.settings = settings_ref
-        
-        self._ema_fast_period = self.settings.scalper_ema_fast
-        self._ema_slow_period = self.settings.scalper_ema_slow
-        self._rsi_period = self.settings.scalper_rsi_period
-        self._rsi_buy = self.settings.scalper_rsi_buy
-        self._rsi_sell = self.settings.scalper_rsi_sell
-        
-        self._tp_atr_mult = 1.5
-        self._sl_atr_mult = 1.0
-
-    async def on_candle(self, ohlcv: list[list[float]]) -> list[Signal]:
-        if self.is_paused or not ohlcv:
-            return []
-
-        # Convert to Pandas DataFrame for vector calculations
-        df = pd.DataFrame(ohlcv, columns=["timestamp", "open", "high", "low", "close", "volume"])
-        close = df["close"]
-        high = df["high"]
-        low = df["low"]
-
-        if len(close) < max(self._ema_slow_period, 20) + 2:
-            self.logger.debug("Not enough history candles yet.")
-            return []
-
-        # Calculate indicators
-        ema_fast = calculate_ema(close, self._ema_fast_period)
-        ema_slow = calculate_ema(close, self._ema_slow_period)
-        rsi = calculate_rsi(close, self._rsi_period)
-        atr = calculate_atr(high, low, close, 14)
-
-        prev_fast, curr_fast = ema_fast.iloc[-2], ema_fast.iloc[-1]
-        prev_slow, curr_slow = ema_slow.iloc[-2], ema_slow.iloc[-1]
-        curr_rsi = rsi.iloc[-1]
-        curr_price = close.iloc[-1]
-        curr_atr = atr.iloc[-1]
-
-        # Monitor active positions for stop-loss triggers locally
-        await self._check_local_stop_loss(curr_price)
-
-        # Trigger Entry signals
-        crossed_up = prev_fast <= prev_slow and curr_fast > curr_slow
-        signals: list[Signal] = []
-
-        if crossed_up and curr_rsi < self._rsi_buy and not self.has_open_position:
-            tp = curr_price + self._tp_atr_mult * curr_atr
-            sl = curr_price - self._sl_atr_mult * curr_atr
-            
-            # Ensure price details respect standard tick size / rounding
-            decimals = 4 if curr_price > 10 else (2 if curr_price > 1 else 6)
-            tp = round(tp, decimals)
-            sl = round(sl, decimals)
-
-            # Check fee break-even
-            if (tp - curr_price) / curr_price < _MIN_PROFIT_PCT:
-                self.logger.debug("TP target too small after fees. Skipping trade.")
-                return []
-
-            amount = await self._calculate_position_size(curr_price, sl)
-            if amount <= 0:
-                return []
-
-            signals.append(
-                Signal(
-                    side=Side.BUY,
-                    symbol=self.symbol,
-                    amount=amount,
-                    price=curr_price,
-                    tp_price=tp,
-                    sl_price=sl,
-                    reason=f"EMA Cross-Up | RSI={curr_rsi:.1f} ATR={curr_atr:.4f}"
-                )
-            )
-
-        return signals
-
-    async def _calculate_position_size(self, entry: float, sl: float) -> float:
-        # Scale capital to quote asset dynamically
-        quote_capital = await self.get_quote_capital()
-        # Risk 2% of allocated capital per trade
-        risk_amount = quote_capital * 0.02
-        risk_per_unit = entry - sl
-        if risk_per_unit <= 0:
-            return 0.0
-        size = risk_amount / risk_per_unit
-        
-        # Max position sizing: never allocate more than 30% of total capital to single trade
-        max_size = (quote_capital * 0.30) / entry
-        final_size = min(size, max_size)
-        
-        # Settle decimals
-        asset_decimals = 4 if entry > 1000 else (3 if entry > 10 else 1)
-        return round(final_size, asset_decimals)
-
-
-    async def _check_local_stop_loss(self, current_price: float):
-        """Monitors positions and triggers stop loss locally to prevent fund lock errors."""
-        for oid, pos in list(self._positions.items()):
-            # Only trigger SL if position is filled and exits are active
-            if pos.sl_price and pos.tp_order_id and current_price <= pos.sl_price:
-                self.logger.warning(f"LOCAL STOP LOSS TRIGGERED for {pos.symbol} @ {current_price:.4f} <= SL {pos.sl_price:.4f} (Entry: {pos.entry_price:.4f})")
-                
-                # 1. Cancel the outstanding TP limit order on exchange
-                try:
-                    await self.exchange.cancel_order(pos.tp_order_id, pos.symbol)
-                except Exception as e:
-                    self.logger.error(f"Failed to cancel TP limit order {pos.tp_order_id} during SL trigger: {e}")
-
-                # 2. Place an immediate market order to exit the trade
-                try:
-                    exit_order = await self.exchange.create_order(
-                        symbol=pos.symbol,
-                        order_type="market",
-                        side="sell",
-                        amount=pos.amount
-                    )
-                    
-                    # Calculate realized PnL
-                    actual_exit_price = exit_order["price"] if not self.exchange.dry_run else current_price
-                    gross_pnl = (actual_exit_price - pos.entry_price) * pos.amount
-                    fees = (pos.entry_price + actual_exit_price) * pos.amount * _FEE_PCT
-                    net_pnl = gross_pnl - fees
-                    
-                    self.logger.critical(f"LOCAL STOP LOSS EXECUTED. Realized Net PnL: {net_pnl:+.4f} USD.")
-                    
-                    # Save to DB
-                    self.db.save_trade(
-                        symbol=pos.symbol,
-                        side="sell",
-                        price=actual_exit_price,
-                        amount=pos.amount,
-                        value_usd=pos.amount * actual_exit_price,
-                        fee_usd=fees,
-                        net_pnl=net_pnl,
-                        strategy=self.name
-                    )
-                    
-                    # Clean up positions registry
-                    del self._positions[oid]
-                    
-                except Exception as e:
-                    self.logger.critical(f"FATAL: Local Stop Loss execution failed! position is orphaned! Error: {e}")
-
-    async def on_order_update(self, order: dict[str, Any]) -> None:
-        oid = order.get("id", "")
-        status = order.get("status", "")
-        
-        if status != "closed":
-            return
-
-        # Case 1: Entry Order Filled -> Place Take Profit Limit Order on Exchange
-        if oid in self._positions:
-            pos = self._positions[oid]
-            if not pos.tp_order_id:
-                try:
-                    tp_order = await self.exchange.create_order(
-                        symbol=pos.symbol,
-                        order_type="limit",
-                        side="sell",
-                        amount=pos.amount,
-                        price=pos.tp_price
-                    )
-                    pos.tp_order_id = tp_order["id"]
-                    self.logger.info(f"Entry filled @ {pos.entry_price:.4f}. Active TP order placed on exchange: {tp_order['id']} @ {pos.tp_price:.4f}")
-                except Exception as e:
-                    self.logger.critical(f"Failed to place TP limit order after entry fill: {e}. Position is currently naked!")
-            return
-
-        # Case 2: TP Order Filled -> Process profit trade completion
-        for entry_oid, pos in list(self._positions.items()):
-            if oid == pos.tp_order_id:
-                exec_price = order.get("price", pos.tp_price) or pos.tp_price
-                gross_pnl = (exec_price - pos.entry_price) * pos.amount
-                fees = (pos.entry_price + exec_price) * pos.amount * _FEE_PCT
-                net_pnl = gross_pnl - fees
-                
-                self.logger.info(f"TAKE PROFIT FILLED for {pos.symbol} @ {exec_price:.4f}. Net PnL: {net_pnl:+.4f} USD.")
-                
-                # Save trade
-                self.db.save_trade(
-                    symbol=pos.symbol,
-                    side="sell",
-                    price=exec_price,
-                    amount=pos.amount,
-                    value_usd=pos.amount * exec_price,
-                    fee_usd=fees,
-                    net_pnl=net_pnl,
-                    strategy=self.name
-                )
-                
-                # Clean registry
-                del self._positions[entry_oid]
-                return
-
-    async def shutdown(self) -> None:
-        self.logger.info("Graceful shutdown initiated. Cancelling active orders...")
-        for oid, pos in list(self._positions.items()):
-            # Cancel entry limit order if still open
-            if not pos.tp_order_id:
-                try:
-                    await self.exchange.cancel_order(oid, pos.symbol)
-                except Exception:
-                    pass
-            # Cancel TP limit order and liquidate position immediately
+    def __init__(self, ex, db, s=settings):
+        super().__init__("Scalper", ex, s.scalper_symbol, s.scalper_capital); self.db = db
+    async def on_candle(self, ohlcv):
+        if self.is_paused or not ohlcv or len(ohlcv) < 50: return []
+        df = pd.DataFrame(ohlcv, columns=["t","o","h","l","c","v"])
+        c, h, l = df["c"], df["h"], df["l"]
+        e21 = c.ewm(span=21, adjust=False).mean()
+        delta = c.diff(); g = delta.clip(lower=0); l2 = -delta.clip(upper=0)
+        ag = g.ewm(com=6, adjust=False).mean(); al = l2.ewm(com=6, adjust=False).mean()
+        rs = 100 - (100 / (1 + ag / al.replace(0, np.finfo(float).tiny)))
+        tr = pd.concat([h-l,(h-c.shift(1)).abs(),(l-c.shift(1)).abs()],axis=1).max(axis=1)
+        a = tr.rolling(14).mean()
+        cp = float(c.iloc[-1]); cr = float(rs.iloc[-1]); ca = float(a.iloc[-1])
+        await self._check_sl(cp)
+        sigs = []; hp = len(self._positions) > 0
+        # LONG: oversold (works in any trend, wider SL)
+        if cr < 40 and not hp:
+            tp = round(cp + 2.5*ca, 6); sl = round(cp - 2.0*ca, 6)
+            if (tp-cp)/cp >= _FEE*3:
+                am = await self._size(cp, sl)
+                if am > 0: sigs.append(Signal(Side.BUY, self.symbol, am, cp, tp, sl, "OvS r%.0f" % cr))
+        # SHORT: overbought
+        if cr > 60 and not hp and not sigs:
+            tp = round(cp - 2.5*ca, 6); sl = round(cp + 2.0*ca, 6)
+            if (cp-tp)/cp >= _FEE*3:
+                am = await self._size(cp, sl, True)
+                if am > 0: sigs.append(Signal(Side.SELL, self.symbol, am, cp, tp, sl, "OvB r%.0f" % cr))
+        return sigs
+    async def _size(self, entry, sl, short=False):
+        qc = await self.get_quote_capital(); pre, ma, mc = self.exchange.get_market_precision_and_limits(self.symbol)
+        risk = qc * 0.02; rpu = abs(entry-sl)
+        if rpu <= 0: return 0.0
+        sz = risk/rpu; ms = mc/entry
+        if sz < ms: sz = ms*1.05
+        f = min(sz, (qc*0.40)/entry)
+        if f < ma: f = ma
+        try:
+            b = await self.exchange.fetch_balance(); p = self.symbol.split("/")
+            if short:
+                fb = float(b["free"].get(p[0].upper(),0)); f = min(f, fb*0.98)
             else:
+                q = p[1].upper() if len(p)>=2 else "EUR"
+                fb = float(b["free"].get(q,0)); f = min(f, (fb*0.98)/entry)
+        except: pass
+        r = round(f, pre); 
+        if r < ma: r = round(f+10**(-pre), pre)
+        return 0.0 if r*entry < mc else r
+    async def _check_sl(self, price):
+        for oid, pos in list(self._positions.items()):
+            if not pos.sl_price or not pos.tp_order_id: continue
+            if pos.side==Side.BUY and price<=pos.sl_price: await self._exec_sl(oid,pos,"sell")
+            elif pos.side==Side.SELL and price>=pos.sl_price: await self._exec_sl(oid,pos,"buy")
+    async def _exec_sl(self, oid, pos, side):
+        try: await self.exchange.cancel_order(pos.tp_order_id,pos.symbol)
+        except: pass
+        try:
+            b=await self.exchange.fetch_balance(); p=self.symbol.split("/")
+            if side=="sell":
+                actual=float(b["free"].get(p[0].upper(),0))*0.98
+            else:
+                q=p[1].upper() if len(p)>=2 else "EUR"
+                actual=(float(b["free"].get(q,0))*0.98)/(pos.entry_price or 1)
+            amt = min(actual,pos.amount) if actual>0 else pos.amount
+            if amt<=0: return
+            ex=await self.exchange.create_order(symbol=pos.symbol,order_type="market",side=side,amount=amt)
+            ep=float(ex.get("price",pos.sl_price)) if not self.exchange.dry_run else pos.sl_price
+            g=(ep-pos.entry_price)*amt if pos.side==Side.BUY else (pos.entry_price-ep)*amt
+            fees=(pos.entry_price+ep)*amt*_FEE; n=g-fees
+            logger.critical("SL EXECUTED PnL=%.4f" % n)
+            self.db.save_trade(pos.symbol,side,ep,amt,amt*ep,fees,n,self.name)
+            del self._positions[oid]
+        except Exception as e: logger.error("SL FAIL: %s" % str(e))
+    async def on_order_update(self, order):
+        oid,st=order.get("id",""),order.get("status","")
+        if st!="closed": return
+        if oid in self._positions:
+            pos=self._positions[oid]
+            if not pos.tp_order_id:
                 try:
-                    await self.exchange.cancel_order(pos.tp_order_id, pos.symbol)
-                except Exception:
-                    pass
-                try:
-                    await self.exchange.create_order(
-                        symbol=pos.symbol,
-                        order_type="market",
-                        side="sell",
-                        amount=pos.amount
-                    )
-                except Exception:
-                    pass
+                    filled=float(order.get("filled",pos.amount) or pos.amount)
+                    pos.amount=min(filled,pos.amount) if filled>0 else pos.amount
+                    ts="sell" if pos.side==Side.BUY else "buy"
+                    to=await self.exchange.create_order(symbol=pos.symbol,order_type="limit",side=ts,amount=pos.amount,price=pos.tp_price)
+                    pos.tp_order_id=to["id"]
+                    logger.info("Entry filled TP @ %.4f" % pos.tp_price)
+                except Exception as e: logger.critical("TP fail: %s" % str(e))
+            return
+        for eo,pos in list(self._positions.items()):
+            if oid==pos.tp_order_id:
+                ep=float(order.get("price",pos.tp_price) or pos.tp_price)
+                g=(ep-pos.entry_price)*pos.amount if pos.side==Side.BUY else (pos.entry_price-ep)*pos.amount
+                fees=(pos.entry_price+ep)*pos.amount*_FEE; n=g-fees
+                logger.info("TP FILLED PnL=%.4f" % n)
+                self.db.save_trade(pos.symbol,"TP",ep,pos.amount,pos.amount*ep,fees,n,self.name)
+                del self._positions[eo]; return
+    async def shutdown(self):
+        for oid,pos in list(self._positions.items()):
+            if not pos.tp_order_id:
+                try: await self.exchange.cancel_order(oid,pos.symbol)
+                except: pass
+            else:
+                try: await self.exchange.cancel_order(pos.tp_order_id,pos.symbol)
+                except: pass
+                try: await self.exchange.create_order(symbol=pos.symbol,order_type="market",side="sell" if pos.side==Side.BUY else "buy",amount=pos.amount)
+                except: pass
         self._positions.clear()

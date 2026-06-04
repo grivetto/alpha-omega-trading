@@ -33,7 +33,7 @@ def fetch_via_skill(vid: str) -> str | None:
     """Attempt to fetch transcript using the youtube-content skill script."""
     cmd = [
         "python3",
-        "~/.hermes/skills/media/youtube-content/scripts/fetch_transcript.py",
+        "/home/sergio/.hermes/skills/media/youtube-content/scripts/fetch_transcript.py",
         f"https://www.youtube.com/watch?v={vid}",
         "--text-only",
     ]
@@ -51,37 +51,60 @@ def fetch_via_skill(vid: str) -> str | None:
 
 
 def fetch_via_yt_dlp(vid: str) -> str | None:
-    """Fallback: use yt-dlp to download auto‑generated subtitles."""
+    """Fallback: use yt-dlp to download auto-generated subtitles."""
     out_path = pathlib.Path(TRAN_DIR) / f"{vid}.txt"
+    tmp_dir = pathlib.Path(TRAN_DIR) / f"_tmp_{vid}"
+    tmp_dir.mkdir(parents=True, exist_ok=True)
     try:
         cmd = [
             "yt-dlp",
             "--quiet",
             "--no-warnings",
             "--write-auto-sub",
-            "--sub-lang",
-            "en",
+            "--sub-lang", "en",
             "--skip-download",
-            f"https://www.youtube.com/watch?v={vid}",
+            "--out", str(tmp_dir / f"{vid}"),
         ]
         result = subprocess.run(
-            cmd, capture_output=True, text=True, timeout=180
+            cmd, capture_output=True, text=True, timeout=90
         )
-        if result.returncode == 0:
-            out_path.write_text(result.stdout, encoding="utf-8")
-            logging.info("Fetched via yt-dlp: %s", vid)
-            return result.stdout
+        # yt-dlp writes subtitle file(s) to disk
+        sub_files = list(tmp_dir.glob("*.vtt")) + list(tmp_dir.glob("*.srt")) + list(tmp_dir.glob("*.ttml"))
+        if sub_files:
+            raw = sub_files[0].read_text(encoding="utf-8")
+            # Strip VTT/SRT formatting — keep only text lines
+            clean_lines = []
+            for line in raw.splitlines():
+                stripped = line.strip()
+                if not stripped or stripped.startswith("WEBVTT") or stripped.startswith("NOTE"):
+                    continue
+                if stripped[0].isdigit() and "-->" in stripped:
+                    continue  # timestamp line
+                if stripped.isdigit():
+                    continue  # sequence number
+                clean_lines.append(stripped)
+            text = "\n".join(clean_lines)
+            out_path.write_text(text, encoding="utf-8")
+            logging.info("Fetched via yt-dlp: %s (%d chars)", vid, len(text))
+            return text
+        logging.error("yt-dlp no subtitle files for %s (stdout: %s)", vid, result.stdout[:200])
     except Exception as e:
         logging.error("yt-dlp failed for %s: %s", vid, e)
+    finally:
+        # Cleanup tmp dir
+        import shutil
+        for f in tmp_dir.glob("*"):
+            f.unlink()
+        tmp_dir.rmdir()
     return None
 
 
 def main() -> None:
     """Iterate over all video IDs and fetch transcripts."""
     with open(IDS_PATH, "r") as f:
-        # Each line is: <index>|<youtube_id>
+        # Each line is a plain YouTube video ID
         ids = [
-            line.strip().split("|")[1] for line in f if "|" in line and line.strip()
+            line.strip() for line in f if line.strip()
         ]
 
     for vid in ids:

@@ -1,0 +1,62 @@
+=== DENARO BOT STATUS REPORT ===
+Timestamp: 2026-06-02 19:35:25 UTC
+
+📊 OVERVIEW SUMMARY
+- Sistema attuale: Architecture DENARO Squadra (non più grid_bot_v3)
+- Bot attivi: 2/3 (MC2: OK, Nuvola: OK, MARCODG1: OFFLINE)
+- Trading: FERMATO (Kill-switch attivato)
+- DB Trades: MC2=0 (test mode), Nuvola=? (errore sqlite), MARCODG1=0 (stale)
+
+🔍 DETTAGLI NODI
+---
+MC2 (localhost) | ✅ ATTIVO
+- Sentinel PID: 2144 (04:05:44 - 17:27:42 uptime)
+- Squadra PID: 13032 (04:17:32 - 17:15:58 uptime)
+- Trades.db: Presente (16KB, creato 2026-05-31 16:05)
+- Stato bot: Tutti in posizione = False (nessun trade attivo)
+- Log errori: 0 errori reali (124 test mode, 118 max ticks)
+- Attività: Nessun trade reale (solo test mode)
+
+---
+Nuvola (87.106.3.15) | ✅ ATTIVO
+- Squadra PID: 393271 (orchestrator)
+- Trades.db: Presente (60KB, creato 2026-06-02 02:19)
+- Stato: Errore SQLite (command non trovato)
+- DB age: 17h 16m (fresco ma non accessibile)
+- Connettività: OK
+
+---
+MARCODG1 (87.106.222.123) | ❌ OFFLINE
+- Processi: Nessun processo trovato
+- Kill-switch: GLOBAL_STATE=2 (bloccato)
+- Trades.db: Presente (52KB, creato 2026-05-27 21:10) - STALE (5+ giorni)
+- DB age: 5 giorni 22h (CRITICAMENTE STALE)
+- Stato bot: Fermato manualmente (bot_lock.json = unlocked ma kill-switch attivo)
+
+⚠️ CRITICAL ISSUES
+1. MARCODG1 completamente offline da ~1 giorno
+2. Kill-switch globale attivato (blocca tutti i bot)
+3. Trades.db su MARCODG1 stale da 5+ giorni
+4. SQLite non installato su MARCODG1 (impossibile verificare stato DB)
+5. Bot MC2 in test mode (124 test mode vs 0 real trades)
+
+📈 TRADING STATO
+- Bot attivi: 2/3 (MC2, Nuvola) ma fermati da kill-switch
+- Posizioni aperte: 0 (tutti i bot = False)
+- Real trades: 0 (solo test mode su MC2)
+- Last activity: Nessuna attività di trading reale rilevata
+
+🛠 ERRORI RILEVATI
+- MC2: 0 errori reali, solo test mode
+- Nuvola: Errore SQLite (comando non trovato) 
+- MARCODG1: Kill-switch attivo (non è un errore ma stato attuale)
+
+📋 AZIONI RICHIESTE
+1. URGENTE: Verificare stato kill-switch su MARCODG1 e resettare se necessario
+2. CRITICO: Installare SQLite su MARCODG1 per verificare trades.db
+3. ALTO: Riavviare bot su MARCODG1 dopo kill-switch reset
+4. MEDIO: Disattivare test mode su MC2 per trading reale
+5. BASSO: Monitorare trades.db freschezza su tutti i nodi
+
+🕐 PROSSIMO CONTROLLO: Fra 30 minuti
+=== FINE REPORT ===

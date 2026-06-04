@@ -3,7 +3,7 @@
     "timeframe": "1d",
     "fast_sma": 50,
     "slow_sma": 200,
-    "base_order_eur": 10.0,
+    "base_order_eur": 6.0,
     "max_investment_eur": 10.0,
     "take_profit_pct": 0.0,
     "stop_loss_pct": 0.0,
