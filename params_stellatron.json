@@ -1,0 +1,7 @@
+{
+  "grid_spacing": 0.003,
+  "base_order_eur": 3.0,
+  "compound_cap": 1.8,
+  "min_grid_levels": 3,
+  "max_grid_levels": 4
+}

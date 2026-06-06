@@ -1,0 +1,819 @@
+{
+  "LEGION_AAVE": {
+    "category": "TOO_CONSERVATIVE",
+    "reason": "Bot attivo ma non tradano. Parametri troppo restrittivi.",
+    "recommendations": [
+      {
+        "parameter": "TAKE_PROFIT",
+        "current_value": "0.02",
+        "advice": "Diminuisci il TP per aumentare la frequenza di chiusura",
+        "file": "legion_15_aave.py"
+      },
+      {
+        "parameter": "STOP_LOSS",
+        "current_value": "-0.04",
+        "advice": "Allarga lo SL per evitare stop prematuri",
+        "file": "legion_15_aave.py"
+      },
+      {
+        "parameter": "ENTRY_DROP",
+        "current_value": "-0.035",
+        "advice": "Aumenta la soglia (es. da -0.035 a -0.02) per entrare pi\u00f9 spesso",
+        "file": "legion_15_aave.py"
+      }
+    ]
+  },
+  "LEGION_XTZ": {
+    "category": "TOO_CONSERVATIVE",
+    "reason": "Bot attivo ma non tradano. Parametri troppo restrittivi.",
+    "recommendations": [
+      {
+        "parameter": "TAKE_PROFIT",
+        "current_value": "0.02",
+        "advice": "Diminuisci il TP per aumentare la frequenza di chiusura",
+        "file": "legion_17_xtz.py"
+      },
+      {
+        "parameter": "STOP_LOSS",
+        "current_value": "-0.04",
+        "advice": "Allarga lo SL per evitare stop prematuri",
+        "file": "legion_17_xtz.py"
+      },
+      {
+        "parameter": "ENTRY_DROP",
+        "current_value": "-0.035",
+        "advice": "Aumenta la soglia (es. da -0.035 a -0.02) per entrare pi\u00f9 spesso",
+        "file": "legion_17_xtz.py"
+      }
+    ]
+  },
+  "LEGION_XLM": {
+    "category": "TOO_CONSERVATIVE",
+    "reason": "Bot attivo ma non tradano. Parametri troppo restrittivi.",
+    "recommendations": [
+      {
+        "parameter": "TAKE_PROFIT",
+        "current_value": "0.02",
+        "advice": "Diminuisci il TP per aumentare la frequenza di chiusura",
+        "file": "legion_10_xlm.py"
+      },
+      {
+        "parameter": "STOP_LOSS",
+        "current_value": "-0.04",
+        "advice": "Allarga lo SL per evitare stop prematuri",
+        "file": "legion_10_xlm.py"
+      },
+      {
+        "parameter": "ENTRY_DROP",
+        "current_value": "-0.035",
+        "advice": "Aumenta la soglia (es. da -0.035 a -0.02) per entrare pi\u00f9 spesso",
+        "file": "legion_10_xlm.py"
+      }
+    ]
+  },
+  "LEGION_ATOM": {
+    "category": "TOO_CONSERVATIVE",
+    "reason": "Bot attivo ma non tradano. Parametri troppo restrittivi.",
+    "recommendations": [
+      {
+        "parameter": "TAKE_PROFIT",
+        "current_value": "0.02",
+        "advice": "Diminuisci il TP per aumentare la frequenza di chiusura",
+        "file": "legion_08_atom.py"
+      },
+      {
+        "parameter": "STOP_LOSS",
+        "current_value": "-0.04",
+        "advice": "Allarga lo SL per evitare stop prematuri",
+        "file": "legion_08_atom.py"
+      },
+      {
+        "parameter": "ENTRY_DROP",
+        "current_value": "-0.035",
+        "advice": "Aumenta la soglia (es. da -0.035 a -0.02) per entrare pi\u00f9 spesso",
+        "file": "legion_08_atom.py"
+      }
+    ]
+  },
+  "LEGION_FTM": {
+    "category": "TOO_CONSERVATIVE",
+    "reason": "Bot attivo ma non tradano. Parametri troppo restrittivi.",
+    "recommendations": [
+      {
+        "parameter": "TAKE_PROFIT",
+        "current_value": "0.02",
+        "advice": "Diminuisci il TP per aumentare la frequenza di chiusura",
+        "file": "legion_28_ftm.py"
+      },
+      {
+        "parameter": "STOP_LOSS",
+        "current_value": "-0.04",
+        "advice": "Allarga lo SL per evitare stop prematuri",
+        "file": "legion_28_ftm.py"
+      },
+      {
+        "parameter": "ENTRY_DROP",
+        "current_value": "-0.035",
+        "advice": "Aumenta la soglia (es. da -0.035 a -0.02) per entrare pi\u00f9 spesso",
+        "file": "legion_28_ftm.py"
+      }
+    ]
+  },
+  "SCIACALLO": {
+    "category": "TOO_CONSERVATIVE",
+    "reason": "Bot attivo ma non tradano. Parametri troppo restrittivi.",
+    "recommendations": [
+      {
+        "parameter": "FILE",
+        "current_value": "NOT_FOUND",
+        "advice": "File di codice non trovato"
+      }
+    ]
+  },
+  "LEGION_DOT": {
+    "category": "TOO_CONSERVATIVE",
+    "reason": "Bot attivo ma non tradano. Parametri troppo restrittivi.",
+    "recommendations": [
+      {
+        "parameter": "TAKE_PROFIT",
+        "current_value": "0.02",
+        "advice": "Diminuisci il TP per aumentare la frequenza di chiusura",
+        "file": "legion_05_dot.py"
+      },
+      {
+        "parameter": "STOP_LOSS",
+        "current_value": "-0.04",
+        "advice": "Allarga lo SL per evitare stop prematuri",
+        "file": "legion_05_dot.py"
+      },
+      {
+        "parameter": "ENTRY_DROP",
+        "current_value": "-0.035",
+        "advice": "Aumenta la soglia (es. da -0.035 a -0.02) per entrare pi\u00f9 spesso",
+        "file": "legion_05_dot.py"
+      }
+    ]
+  },
+  "sniper_squad": {
+    "category": "TOO_CONSERVATIVE",
+    "reason": "Bot attivo ma non tradano. Parametri troppo restrittivi.",
+    "recommendations": [
+      {
+        "parameter": "TAKE_PROFIT",
+        "current_value": "0",
+        "advice": "Diminuisci il TP per aumentare la frequenza di chiusura",
+        "file": "sniper_squad.py"
+      }
+    ]
+  },
+  "LEGION_LTC": {
+    "category": "TOO_CONSERVATIVE",
+    "reason": "Bot attivo ma non tradano. Parametri troppo restrittivi.",
+    "recommendations": [
+      {
+        "parameter": "TAKE_PROFIT",
+        "current_value": "0.02",
+        "advice": "Diminuisci il TP per aumentare la frequenza di chiusura",
+        "file": "legion_07_ltc.py"
+      },
+      {
+        "parameter": "STOP_LOSS",
+        "current_value": "-0.04",
+        "advice": "Allarga lo SL per evitare stop prematuri",
+        "file": "legion_07_ltc.py"
+      },
+      {
+        "parameter": "ENTRY_DROP",
+        "current_value": "-0.035",
+        "advice": "Aumenta la soglia (es. da -0.035 a -0.02) per entrare pi\u00f9 spesso",
+        "file": "legion_07_ltc.py"
+      }
+    ]
+  },
+  "RSI_HUNTER": {
+    "category": "TOO_CONSERVATIVE",
+    "reason": "Bot attivo ma non tradano. Parametri troppo restrittivi.",
+    "recommendations": [
+      {
+        "parameter": "TAKE_PROFIT",
+        "current_value": "0.001",
+        "advice": "Diminuisci il TP per aumentare la frequenza di chiusura",
+        "file": "hunter_swarm.py"
+      },
+      {
+        "parameter": "STOP_LOSS",
+        "current_value": "-0.05",
+        "advice": "Allarga lo SL per evitare stop prematuri",
+        "file": "hunter_swarm.py"
+      },
+      {
+        "parameter": "ENTRY_DROP",
+        "current_value": "-0.002",
+        "advice": "Aumenta la soglia (es. da -0.035 a -0.02) per entrare pi\u00f9 spesso",
+        "file": "hunter_swarm.py"
+      }
+    ]
+  },
+  "LEGION_EOS": {
+    "category": "TOO_CONSERVATIVE",
+    "reason": "Bot attivo ma non tradano. Parametri troppo restrittivi.",
+    "recommendations": [
+      {
+        "parameter": "TAKE_PROFIT",
+        "current_value": "0.02",
+        "advice": "Diminuisci il TP per aumentare la frequenza di chiusura",
+        "file": "legion_16_eos.py"
+      },
+      {
+        "parameter": "STOP_LOSS",
+        "current_value": "-0.04",
+        "advice": "Allarga lo SL per evitare stop prematuri",
+        "file": "legion_16_eos.py"
+      },
+      {
+        "parameter": "ENTRY_DROP",
+        "current_value": "-0.035",
+        "advice": "Aumenta la soglia (es. da -0.035 a -0.02) per entrare pi\u00f9 spesso",
+        "file": "legion_16_eos.py"
+      }
+    ]
+  },
+  "LEGION_UNI": {
+    "category": "TOO_CONSERVATIVE",
+    "reason": "Bot attivo ma non tradano. Parametri troppo restrittivi.",
+    "recommendations": [
+      {
+        "parameter": "TAKE_PROFIT",
+        "current_value": "0.02",
+        "advice": "Diminuisci il TP per aumentare la frequenza di chiusura",
+        "file": "legion_06_uni.py"
+      },
+      {
+        "parameter": "STOP_LOSS",
+        "current_value": "-0.04",
+        "advice": "Allarga lo SL per evitare stop prematuri",
+        "file": "legion_06_uni.py"
+      },
+      {
+        "parameter": "ENTRY_DROP",
+        "current_value": "-0.035",
+        "advice": "Aumenta la soglia (es. da -0.035 a -0.02) per entrare pi\u00f9 spesso",
+        "file": "legion_06_uni.py"
+      }
+    ]
+  },
+  "VAMPIRE": {
+    "category": "TOO_CONSERVATIVE",
+    "reason": "Bot attivo ma non tradano. Parametri troppo restrittivi.",
+    "recommendations": [
+      {
+        "parameter": "TAKE_PROFIT",
+        "current_value": "0",
+        "advice": "Diminuisci il TP per aumentare la frequenza di chiusura",
+        "file": "vampire_grid.py"
+      }
+    ]
+  },
+  "LEGION_MATIC": {
+    "category": "TOO_CONSERVATIVE",
+    "reason": "Bot attivo ma non tradano. Parametri troppo restrittivi.",
+    "recommendations": [
+      {
+        "parameter": "TAKE_PROFIT",
+        "current_value": "0.02",
+        "advice": "Diminuisci il TP per aumentare la frequenza di chiusura",
+        "file": "legion_04_matic.py"
+      },
+      {
+        "parameter": "STOP_LOSS",
+        "current_value": "-0.04",
+        "advice": "Allarga lo SL per evitare stop prematuri",
+        "file": "legion_04_matic.py"
+      },
+      {
+        "parameter": "ENTRY_DROP",
+        "current_value": "-0.035",
+        "advice": "Aumenta la soglia (es. da -0.035 a -0.02) per entrare pi\u00f9 spesso",
+        "file": "legion_04_matic.py"
+      }
+    ]
+  },
+  "LEGION_AVAX": {
+    "category": "TOO_CONSERVATIVE",
+    "reason": "Bot attivo ma non tradano. Parametri troppo restrittivi.",
+    "recommendations": [
+      {
+        "parameter": "TAKE_PROFIT",
+        "current_value": "0.02",
+        "advice": "Diminuisci il TP per aumentare la frequenza di chiusura",
+        "file": "legion_02_avax.py"
+      },
+      {
+        "parameter": "STOP_LOSS",
+        "current_value": "-0.04",
+        "advice": "Allarga lo SL per evitare stop prematuri",
+        "file": "legion_02_avax.py"
+      },
+      {
+        "parameter": "ENTRY_DROP",
+        "current_value": "-0.035",
+        "advice": "Aumenta la soglia (es. da -0.035 a -0.02) per entrare pi\u00f9 spesso",
+        "file": "legion_02_avax.py"
+      }
+    ]
+  },
+  "VAMPIRO": {
+    "category": "TOO_CONSERVATIVE",
+    "reason": "Bot attivo ma non tradano. Parametri troppo restrittivi.",
+    "recommendations": [
+      {
+        "parameter": "FILE",
+        "current_value": "NOT_FOUND",
+        "advice": "File di codice non trovato"
+      }
+    ]
+  },
+  "SCIAME": {
+    "category": "TOO_CONSERVATIVE",
+    "reason": "Bot attivo ma non tradano. Parametri troppo restrittivi.",
+    "recommendations": [
+      {
+        "parameter": "FILE",
+        "current_value": "NOT_FOUND",
+        "advice": "File di codice non trovato"
+      }
+    ]
+  },
+  "LEGION_NEAR": {
+    "category": "TOO_CONSERVATIVE",
+    "reason": "Bot attivo ma non tradano. Parametri troppo restrittivi.",
+    "recommendations": [
+      {
+        "parameter": "TAKE_PROFIT",
+        "current_value": "0.02",
+        "advice": "Diminuisci il TP per aumentare la frequenza di chiusura",
+        "file": "legion_27_near.py"
+      },
+      {
+        "parameter": "STOP_LOSS",
+        "current_value": "-0.04",
+        "advice": "Allarga lo SL per evitare stop prematuri",
+        "file": "legion_27_near.py"
+      },
+      {
+        "parameter": "ENTRY_DROP",
+        "current_value": "-0.035",
+        "advice": "Aumenta la soglia (es. da -0.035 a -0.02) per entrare pi\u00f9 spesso",
+        "file": "legion_27_near.py"
+      }
+    ]
+  },
+  "LEGION_FIL": {
+    "category": "TOO_CONSERVATIVE",
+    "reason": "Bot attivo ma non tradano. Parametri troppo restrittivi.",
+    "recommendations": [
+      {
+        "parameter": "TAKE_PROFIT",
+        "current_value": "0.02",
+        "advice": "Diminuisci il TP per aumentare la frequenza di chiusura",
+        "file": "legion_14_fil.py"
+      },
+      {
+        "parameter": "STOP_LOSS",
+        "current_value": "-0.04",
+        "advice": "Allarga lo SL per evitare stop prematuri",
+        "file": "legion_14_fil.py"
+      },
+      {
+        "parameter": "ENTRY_DROP",
+        "current_value": "-0.035",
+        "advice": "Aumenta la soglia (es. da -0.035 a -0.02) per entrare pi\u00f9 spesso",
+        "file": "legion_14_fil.py"
+      }
+    ]
+  },
+  "LEGION_ETC": {
+    "category": "TOO_CONSERVATIVE",
+    "reason": "Bot attivo ma non tradano. Parametri troppo restrittivi.",
+    "recommendations": [
+      {
+        "parameter": "TAKE_PROFIT",
+        "current_value": "0.02",
+        "advice": "Diminuisci il TP per aumentare la frequenza di chiusura",
+        "file": "legion_09_etc.py"
+      },
+      {
+        "parameter": "STOP_LOSS",
+        "current_value": "-0.04",
+        "advice": "Allarga lo SL per evitare stop prematuri",
+        "file": "legion_09_etc.py"
+      },
+      {
+        "parameter": "ENTRY_DROP",
+        "current_value": "-0.035",
+        "advice": "Aumenta la soglia (es. da -0.035 a -0.02) per entrare pi\u00f9 spesso",
+        "file": "legion_09_etc.py"
+      }
+    ]
+  },
+  "LEGION_ALGO": {
+    "category": "TOO_CONSERVATIVE",
+    "reason": "Bot attivo ma non tradano. Parametri troppo restrittivi.",
+    "recommendations": [
+      {
+        "parameter": "TAKE_PROFIT",
+        "current_value": "0.02",
+        "advice": "Diminuisci il TP per aumentare la frequenza di chiusura",
+        "file": "legion_12_algo.py"
+      },
+      {
+        "parameter": "STOP_LOSS",
+        "current_value": "-0.04",
+        "advice": "Allarga lo SL per evitare stop prematuri",
+        "file": "legion_12_algo.py"
+      },
+      {
+        "parameter": "ENTRY_DROP",
+        "current_value": "-0.035",
+        "advice": "Aumenta la soglia (es. da -0.035 a -0.02) per entrare pi\u00f9 spesso",
+        "file": "legion_12_algo.py"
+      }
+    ]
+  },
+  "DARKPOOL": {
+    "category": "TOO_CONSERVATIVE",
+    "reason": "Bot attivo ma non tradano. Parametri troppo restrittivi.",
+    "recommendations": [
+      {
+        "parameter": "FILE",
+        "current_value": "NOT_FOUND",
+        "advice": "File di codice non trovato"
+      }
+    ]
+  },
+  "TSUNAMI": {
+    "category": "TOO_CONSERVATIVE",
+    "reason": "Bot attivo ma non tradano. Parametri troppo restrittivi.",
+    "recommendations": [
+      {
+        "parameter": "TAKE_PROFIT",
+        "current_value": "0.003",
+        "advice": "Diminuisci il TP per aumentare la frequenza di chiusura",
+        "file": "tsunami_rider.py"
+      },
+      {
+        "parameter": "STOP_LOSS",
+        "current_value": "-0.01",
+        "advice": "Allarga lo SL per evitare stop prematuri",
+        "file": "tsunami_rider.py"
+      }
+    ]
+  },
+  "LEGION_SAND": {
+    "category": "TOO_CONSERVATIVE",
+    "reason": "Bot attivo ma non tradano. Parametri troppo restrittivi.",
+    "recommendations": [
+      {
+        "parameter": "TAKE_PROFIT",
+        "current_value": "0.02",
+        "advice": "Diminuisci il TP per aumentare la frequenza di chiusura",
+        "file": "legion_19_sand.py"
+      },
+      {
+        "parameter": "STOP_LOSS",
+        "current_value": "-0.04",
+        "advice": "Allarga lo SL per evitare stop prematuri",
+        "file": "legion_19_sand.py"
+      },
+      {
+        "parameter": "ENTRY_DROP",
+        "current_value": "-0.035",
+        "advice": "Aumenta la soglia (es. da -0.035 a -0.02) per entrare pi\u00f9 spesso",
+        "file": "legion_19_sand.py"
+      }
+    ]
+  },
+  "LEGION_AXS": {
+    "category": "TOO_CONSERVATIVE",
+    "reason": "Bot attivo ma non tradano. Parametri troppo restrittivi.",
+    "recommendations": [
+      {
+        "parameter": "TAKE_PROFIT",
+        "current_value": "0.02",
+        "advice": "Diminuisci il TP per aumentare la frequenza di chiusura",
+        "file": "legion_20_axs.py"
+      },
+      {
+        "parameter": "STOP_LOSS",
+        "current_value": "-0.04",
+        "advice": "Allarga lo SL per evitare stop prematuri",
+        "file": "legion_20_axs.py"
+      },
+      {
+        "parameter": "ENTRY_DROP",
+        "current_value": "-0.035",
+        "advice": "Aumenta la soglia (es. da -0.035 a -0.02) per entrare pi\u00f9 spesso",
+        "file": "legion_20_axs.py"
+      }
+    ]
+  },
+  "LEGION_LINK": {
+    "category": "TOO_CONSERVATIVE",
+    "reason": "Bot attivo ma non tradano. Parametri troppo restrittivi.",
+    "recommendations": [
+      {
+        "parameter": "TAKE_PROFIT",
+        "current_value": "0.02",
+        "advice": "Diminuisci il TP per aumentare la frequenza di chiusura",
+        "file": "legion_03_link.py"
+      },
+      {
+        "parameter": "STOP_LOSS",
+        "current_value": "-0.04",
+        "advice": "Allarga lo SL per evitare stop prematuri",
+        "file": "legion_03_link.py"
+      },
+      {
+        "parameter": "ENTRY_DROP",
+        "current_value": "-0.035",
+        "advice": "Aumenta la soglia (es. da -0.035 a -0.02) per entrare pi\u00f9 spesso",
+        "file": "legion_03_link.py"
+      }
+    ]
+  },
+  "BLACKHOLE": {
+    "category": "TOO_CONSERVATIVE",
+    "reason": "Bot attivo ma non tradano. Parametri troppo restrittivi.",
+    "recommendations": [
+      {
+        "parameter": "FILE",
+        "current_value": "NOT_FOUND",
+        "advice": "File di codice non trovato"
+      }
+    ]
+  },
+  "LEGION_CHZ": {
+    "category": "TOO_CONSERVATIVE",
+    "reason": "Bot attivo ma non tradano. Parametri troppo restrittivi.",
+    "recommendations": [
+      {
+        "parameter": "TAKE_PROFIT",
+        "current_value": "0.02",
+        "advice": "Diminuisci il TP per aumentare la frequenza di chiusura",
+        "file": "legion_23_chz.py"
+      },
+      {
+        "parameter": "STOP_LOSS",
+        "current_value": "-0.04",
+        "advice": "Allarga lo SL per evitare stop prematuri",
+        "file": "legion_23_chz.py"
+      },
+      {
+        "parameter": "ENTRY_DROP",
+        "current_value": "-0.035",
+        "advice": "Aumenta la soglia (es. da -0.035 a -0.02) per entrare pi\u00f9 spesso",
+        "file": "legion_23_chz.py"
+      }
+    ]
+  },
+  "LEGION_VET": {
+    "category": "TOO_CONSERVATIVE",
+    "reason": "Bot attivo ma non tradano. Parametri troppo restrittivi.",
+    "recommendations": [
+      {
+        "parameter": "TAKE_PROFIT",
+        "current_value": "0.02",
+        "advice": "Diminuisci il TP per aumentare la frequenza di chiusura",
+        "file": "legion_13_vet.py"
+      },
+      {
+        "parameter": "STOP_LOSS",
+        "current_value": "-0.04",
+        "advice": "Allarga lo SL per evitare stop prematuri",
+        "file": "legion_13_vet.py"
+      },
+      {
+        "parameter": "ENTRY_DROP",
+        "current_value": "-0.035",
+        "advice": "Aumenta la soglia (es. da -0.035 a -0.02) per entrare pi\u00f9 spesso",
+        "file": "legion_13_vet.py"
+      }
+    ]
+  },
+  "LEGION_BAT": {
+    "category": "TOO_CONSERVATIVE",
+    "reason": "Bot attivo ma non tradano. Parametri troppo restrittivi.",
+    "recommendations": [
+      {
+        "parameter": "TAKE_PROFIT",
+        "current_value": "0.02",
+        "advice": "Diminuisci il TP per aumentare la frequenza di chiusura",
+        "file": "legion_25_bat.py"
+      },
+      {
+        "parameter": "STOP_LOSS",
+        "current_value": "-0.04",
+        "advice": "Allarga lo SL per evitare stop prematuri",
+        "file": "legion_25_bat.py"
+      },
+      {
+        "parameter": "ENTRY_DROP",
+        "current_value": "-0.035",
+        "advice": "Aumenta la soglia (es. da -0.035 a -0.02) per entrare pi\u00f9 spesso",
+        "file": "legion_25_bat.py"
+      }
+    ]
+  },
+  "LEGION_ADA": {
+    "category": "TOO_CONSERVATIVE",
+    "reason": "Bot attivo ma non tradano. Parametri troppo restrittivi.",
+    "recommendations": [
+      {
+        "parameter": "TAKE_PROFIT",
+        "current_value": "0.02",
+        "advice": "Diminuisci il TP per aumentare la frequenza di chiusura",
+        "file": "legion_01_ada.py"
+      },
+      {
+        "parameter": "STOP_LOSS",
+        "current_value": "-0.04",
+        "advice": "Allarga lo SL per evitare stop prematuri",
+        "file": "legion_01_ada.py"
+      },
+      {
+        "parameter": "ENTRY_DROP",
+        "current_value": "-0.035",
+        "advice": "Aumenta la soglia (es. da -0.035 a -0.02) per entrare pi\u00f9 spesso",
+        "file": "legion_01_ada.py"
+      }
+    ]
+  },
+  "LEGION_GALA": {
+    "category": "TOO_CONSERVATIVE",
+    "reason": "Bot attivo ma non tradano. Parametri troppo restrittivi.",
+    "recommendations": [
+      {
+        "parameter": "TAKE_PROFIT",
+        "current_value": "0.02",
+        "advice": "Diminuisci il TP per aumentare la frequenza di chiusura",
+        "file": "legion_21_gala.py"
+      },
+      {
+        "parameter": "STOP_LOSS",
+        "current_value": "-0.04",
+        "advice": "Allarga lo SL per evitare stop prematuri",
+        "file": "legion_21_gala.py"
+      },
+      {
+        "parameter": "ENTRY_DROP",
+        "current_value": "-0.035",
+        "advice": "Aumenta la soglia (es. da -0.035 a -0.02) per entrare pi\u00f9 spesso",
+        "file": "legion_21_gala.py"
+      }
+    ]
+  },
+  "HUNTER_SWARM": {
+    "category": "TOO_CONSERVATIVE",
+    "reason": "Bot attivo ma non tradano. Parametri troppo restrittivi.",
+    "recommendations": [
+      {
+        "parameter": "TAKE_PROFIT",
+        "current_value": "0.001",
+        "advice": "Diminuisci il TP per aumentare la frequenza di chiusura",
+        "file": "hunter_swarm.py"
+      },
+      {
+        "parameter": "STOP_LOSS",
+        "current_value": "-0.05",
+        "advice": "Allarga lo SL per evitare stop prematuri",
+        "file": "hunter_swarm.py"
+      },
+      {
+        "parameter": "ENTRY_DROP",
+        "current_value": "-0.002",
+        "advice": "Aumenta la soglia (es. da -0.035 a -0.02) per entrare pi\u00f9 spesso",
+        "file": "hunter_swarm.py"
+      }
+    ]
+  },
+  "LEGION_ENJ": {
+    "category": "TOO_CONSERVATIVE",
+    "reason": "Bot attivo ma non tradano. Parametri troppo restrittivi.",
+    "recommendations": [
+      {
+        "parameter": "TAKE_PROFIT",
+        "current_value": "0.02",
+        "advice": "Diminuisci il TP per aumentare la frequenza di chiusura",
+        "file": "legion_22_enj.py"
+      },
+      {
+        "parameter": "STOP_LOSS",
+        "current_value": "-0.04",
+        "advice": "Allarga lo SL per evitare stop prematuri",
+        "file": "legion_22_enj.py"
+      },
+      {
+        "parameter": "ENTRY_DROP",
+        "current_value": "-0.035",
+        "advice": "Aumenta la soglia (es. da -0.035 a -0.02) per entrare pi\u00f9 spesso",
+        "file": "legion_22_enj.py"
+      }
+    ]
+  },
+  "LEGION_ZIL": {
+    "category": "TOO_CONSERVATIVE",
+    "reason": "Bot attivo ma non tradano. Parametri troppo restrittivi.",
+    "recommendations": [
+      {
+        "parameter": "TAKE_PROFIT",
+        "current_value": "0.02",
+        "advice": "Diminuisci il TP per aumentare la frequenza di chiusura",
+        "file": "legion_24_zil.py"
+      },
+      {
+        "parameter": "STOP_LOSS",
+        "current_value": "-0.04",
+        "advice": "Allarga lo SL per evitare stop prematuri",
+        "file": "legion_24_zil.py"
+      },
+      {
+        "parameter": "ENTRY_DROP",
+        "current_value": "-0.035",
+        "advice": "Aumenta la soglia (es. da -0.035 a -0.02) per entrare pi\u00f9 spesso",
+        "file": "legion_24_zil.py"
+      }
+    ]
+  },
+  "GARIBAN": {
+    "category": "TOO_CONSERVATIVE",
+    "reason": "Bot attivo ma non tradano. Parametri troppo restrittivi.",
+    "recommendations": [
+      {
+        "parameter": "TAKE_PROFIT",
+        "current_value": "0.0010",
+        "advice": "Diminuisci il TP per aumentare la frequenza di chiusura",
+        "file": "gariban_beggar.py"
+      },
+      {
+        "parameter": "STOP_LOSS",
+        "current_value": "-0.02",
+        "advice": "Allarga lo SL per evitare stop prematuri",
+        "file": "gariban_beggar.py"
+      },
+      {
+        "parameter": "ENTRY_DROP",
+        "current_value": "-0.01",
+        "advice": "Aumenta la soglia (es. da -0.035 a -0.02) per entrare pi\u00f9 spesso",
+        "file": "gariban_beggar.py"
+      }
+    ]
+  },
+  "LEGION_MKR": {
+    "category": "TOO_CONSERVATIVE",
+    "reason": "Bot attivo ma non tradano. Parametri troppo restrittivi.",
+    "recommendations": [
+      {
+        "parameter": "TAKE_PROFIT",
+        "current_value": "0.02",
+        "advice": "Diminuisci il TP per aumentare la frequenza di chiusura",
+        "file": "legion_26_mkr.py"
+      },
+      {
+        "parameter": "STOP_LOSS",
+        "current_value": "-0.04",
+        "advice": "Allarga lo SL per evitare stop prematuri",
+        "file": "legion_26_mkr.py"
+      },
+      {
+        "parameter": "ENTRY_DROP",
+        "current_value": "-0.035",
+        "advice": "Aumenta la soglia (es. da -0.035 a -0.02) per entrare pi\u00f9 spesso",
+        "file": "legion_26_mkr.py"
+      }
+    ]
+  },
+  "LEGION_BCH": {
+    "category": "TOO_CONSERVATIVE",
+    "reason": "Bot attivo ma non tradano. Parametri troppo restrittivi.",
+    "recommendations": [
+      {
+        "parameter": "TAKE_PROFIT",
+        "current_value": "0.02",
+        "advice": "Diminuisci il TP per aumentare la frequenza di chiusura",
+        "file": "legion_11_bch.py"
+      },
+      {
+        "parameter": "STOP_LOSS",
+        "current_value": "-0.04",
+        "advice": "Allarga lo SL per evitare stop prematuri",
+        "file": "legion_11_bch.py"
+      },
+      {
+        "parameter": "ENTRY_DROP",
+        "current_value": "-0.035",
+        "advice": "Aumenta la soglia (es. da -0.035 a -0.02) per entrare pi\u00f9 spesso",
+        "file": "legion_11_bch.py"
+      }
+    ]
+  }
+}

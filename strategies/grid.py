@@ -24,6 +24,8 @@ class GridLevel:
     amount: float
     order_id: str = ""
     filled: bool = False
+    entry_price: float = 0.0
+    lowest_price: float = 999999.0
 
 class GridTraderStrategy(BaseStrategy):
     def __init__(self, exchange: Any, db: TradeDB, settings_ref: Settings = settings):
@@ -57,6 +59,16 @@ class GridTraderStrategy(BaseStrategy):
             return []
 
         # Weekly rebalance (7 days)
+n        # Stop-loss: proteggi dal -2% su ogni livello BUY
+        for lvl in self._grid:
+            if lvl.side == Side.BUY and lvl.entry_price > 0:
+                lvl.lowest_price = min(lvl.lowest_price, curr_price)
+                loss_pct = (lvl.lowest_price - lvl.entry_price) / lvl.entry_price * 100
+                if loss_pct < -2.0:
+                    self.logger.warning(f"🛑 STOP-LOSS {lvl.side.name} @ {curr_price:.4f} | Loss: {loss_pct:+.1f}% | Entry: {lvl.entry_price:.4f}")
+                    try: await self.exchange.cancel_order(lvl.order_id, self.symbol)
+                    except: pass
+                    lvl.filled = True  # forza riciclo
         if time.time() - self._last_reset_ts > 7 * 86400:
             self.logger.info("Weekly rebalance trigger. Resetting grid zone...")
             await self.reset_grid(curr_price)
@@ -122,7 +134,7 @@ class GridTraderStrategy(BaseStrategy):
             p = round(mid_price - i * step_value, decimals)
             amt = round(capital_per_level / p, 4)
             if amt * p >= min_notional:  # CCXT/exchange minimum notional safety check
-                levels.append(GridLevel(price=p, side=Side.BUY, amount=amt))
+                levels.append(GridLevel(price=p, side=Side.BUY, amount=amt, entry_price=p))
                 
         # Sell Levels (above mid-price)
         for i in range(1, half_levels + 1):
@@ -221,6 +233,8 @@ class GridTraderStrategy(BaseStrategy):
             filled_lvl.order_id = new_order["id"]
             filled_lvl.side = opp_side
             filled_lvl.price = opp_price
+n            filled_lvl.entry_price = opp_price if opp_side == Side.BUY else 0.0
+            filled_lvl.lowest_price = 999999.0
             
             self.logger.info(f"Recycled grid level placed: {opp_side.upper()} @ {opp_price:.4f} | ID: {new_order['id']}")
             

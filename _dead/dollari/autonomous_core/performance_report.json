@@ -1,0 +1,578 @@
+{
+  "LIQUIDATION_SWEEPER": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": null,
+    "status": "UNHEALTHY",
+    "errors": 30
+  },
+  "EUR_USDC_NANO": {
+    "trades": 4000,
+    "profit": 10.179199999999994,
+    "last_trade": "2026-04-12 00:10:34",
+    "last_heartbeat": null,
+    "status": "UNKNOWN",
+    "errors": 0
+  },
+  "LEGION_AAVE": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": "2026-04-12 00:09:53",
+    "status": "ALIVE",
+    "errors": 0
+  },
+  "LEGION_XTZ": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": "2026-04-12 00:09:56",
+    "status": "ALIVE",
+    "errors": 0
+  },
+  "PROJECT_OLYMPUS": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": "2026-04-12 00:10:38",
+    "status": "ALIVE",
+    "errors": 0
+  },
+  "WEBSOCKET": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": null,
+    "status": "UNHEALTHY",
+    "errors": 3
+  },
+  "YIELD_FARMER": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": "2026-04-11 23:13:27",
+    "status": "ALIVE",
+    "errors": 0
+  },
+  "COMPOUNDER": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": null,
+    "status": "UNHEALTHY",
+    "errors": 78
+  },
+  "LEGION_XLM": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": "2026-04-12 00:10:01",
+    "status": "ALIVE",
+    "errors": 0
+  },
+  "LEGION_ATOM": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": "2026-04-12 00:09:54",
+    "status": "ALIVE",
+    "errors": 0
+  },
+  "volatility_hunter": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": null,
+    "status": "UNHEALTHY",
+    "errors": 148
+  },
+  "LIQUIDATION_SWEEP": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": null,
+    "status": "UNHEALTHY",
+    "errors": 30
+  },
+  "LEGION_FTM": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": "2026-04-12 00:09:53",
+    "status": "ALIVE",
+    "errors": 0
+  },
+  "SCIACALLO": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": "2026-04-12 00:10:23",
+    "status": "ALIVE",
+    "errors": 0
+  },
+  "BLADE_RUNNER": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": null,
+    "status": "UNHEALTHY",
+    "errors": 6
+  },
+  "EUR_USDT_MICRO": {
+    "trades": 4000,
+    "profit": 124.11079999999974,
+    "last_trade": "2026-04-12 00:09:54",
+    "last_heartbeat": null,
+    "status": "UNKNOWN",
+    "errors": 0
+  },
+  "LEGION_DOT": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": "2026-04-12 00:09:51",
+    "status": "ALIVE",
+    "errors": 0
+  },
+  "sniper_squad": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": "2026-04-14 04:01:58",
+    "status": "ALIVE",
+    "errors": 0
+  },
+  "ALPHA_STRIKE": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": "2026-04-12 00:10:00",
+    "status": "UNHEALTHY",
+    "errors": 1494
+  },
+  "LEGION_LTC": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": "2026-04-12 00:09:52",
+    "status": "ALIVE",
+    "errors": 0
+  },
+  "RSI_HUNTER": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": "2026-04-12 00:10:29",
+    "status": "ALIVE",
+    "errors": 0
+  },
+  "LEGION_EOS": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": "2026-04-12 00:09:53",
+    "status": "ALIVE",
+    "errors": 0
+  },
+  "ASIAN_ECHO": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": null,
+    "status": "UNHEALTHY",
+    "errors": 21
+  },
+  "LEGION_UNI": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": "2026-04-12 00:09:54",
+    "status": "ALIVE",
+    "errors": 0
+  },
+  "VAMPIRE": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": "2026-04-12 00:10:23",
+    "status": "ALIVE",
+    "errors": 0
+  },
+  "GAMMA_PAIRS": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": null,
+    "status": "UNHEALTHY",
+    "errors": 9
+  },
+  "LEGION_MATIC": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": "2026-04-12 00:10:02",
+    "status": "ALIVE",
+    "errors": 0
+  },
+  "OLYMPUS": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": "2026-04-12 00:10:38",
+    "status": "ALIVE",
+    "errors": 0
+  },
+  "LEGION_AVAX": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": "2026-04-12 00:09:52",
+    "status": "ALIVE",
+    "errors": 0
+  },
+  "VAMPIRO": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": "2026-04-12 00:10:23",
+    "status": "ALIVE",
+    "errors": 0
+  },
+  "LEGION_MANA": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": "2026-04-12 00:09:51",
+    "status": "ALIVE",
+    "errors": 0
+  },
+  "SCIAME": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": "2026-04-12 00:10:28",
+    "status": "ALIVE",
+    "errors": 0
+  },
+  "FLASH_CATCHER": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": "2026-04-12 00:09:40",
+    "status": "ALIVE",
+    "errors": 0
+  },
+  "FLASH_CRASH": {
+    "trades": 2652,
+    "profit": 4635.999999999996,
+    "last_trade": "2026-04-12 00:10:42",
+    "last_heartbeat": "2026-04-12 00:10:42",
+    "status": "ALIVE",
+    "errors": 0
+  },
+  "DCA_ACCUMULATOR": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": "2026-04-12 00:10:33",
+    "status": "ALIVE",
+    "errors": 0
+  },
+  "SQUADRA_GAMMA": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": null,
+    "status": "UNHEALTHY",
+    "errors": 9
+  },
+  "LEGION_NEAR": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": "2026-04-12 00:09:59",
+    "status": "ALIVE",
+    "errors": 0
+  },
+  "BOLLINGER_SNIPER": {
+    "trades": 2316,
+    "profit": 1493.5600000000018,
+    "last_trade": "2026-04-12 00:09:53",
+    "last_heartbeat": "2026-04-12 00:09:53",
+    "status": "ALIVE",
+    "errors": 0
+  },
+  "PAIRS_TRADER": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": null,
+    "status": "UNHEALTHY",
+    "errors": 1002
+  },
+  "LEGION_FIL": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": "2026-04-12 00:09:50",
+    "status": "ALIVE",
+    "errors": 0
+  },
+  "FUNDING_ARBITRAGE": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": null,
+    "status": "UNHEALTHY",
+    "errors": 822
+  },
+  "LEGION_ETC": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": "2026-04-12 00:09:52",
+    "status": "ALIVE",
+    "errors": 0
+  },
+  "PHANTOM": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": "2026-04-12 00:10:34",
+    "status": "ALIVE",
+    "errors": 0
+  },
+  "NEWS_SNIPER": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": "2026-04-12 00:10:02",
+    "status": "ALIVE",
+    "errors": 0
+  },
+  "LEGION_ALGO": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": "2026-04-12 00:09:58",
+    "status": "ALIVE",
+    "errors": 0
+  },
+  "DARKPOOL": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": "2026-04-12 00:10:37",
+    "status": "ALIVE",
+    "errors": 0
+  },
+  "AI_RISK": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": null,
+    "status": "UNHEALTHY",
+    "errors": 3
+  },
+  "TSUNAMI": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": "2026-04-12 00:10:24",
+    "status": "ALIVE",
+    "errors": 0
+  },
+  "REALISTIC_GRID": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": null,
+    "status": "UNHEALTHY",
+    "errors": 327
+  },
+  "DASHBOARD": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": null,
+    "status": "UNHEALTHY",
+    "errors": 126
+  },
+  "VAMPIRE_GRID": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": "2026-04-01 22:23:48",
+    "status": "ALIVE",
+    "errors": 0
+  },
+  "LEGION_SAND": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": "2026-04-12 00:09:58",
+    "status": "ALIVE",
+    "errors": 0
+  },
+  "LEGION_AXS": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": "2026-04-12 00:09:55",
+    "status": "ALIVE",
+    "errors": 0
+  },
+  "LEGION_LINK": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": "2026-04-12 00:09:52",
+    "status": "ALIVE",
+    "errors": 0
+  },
+  "VOLATILITY_HUNTER": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": null,
+    "status": "UNHEALTHY",
+    "errors": 147
+  },
+  "BLACKHOLE": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": "2026-04-12 00:10:33",
+    "status": "ALIVE",
+    "errors": 0
+  },
+  "LEGION_CHZ": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": "2026-04-12 00:10:08",
+    "status": "ALIVE",
+    "errors": 0
+  },
+  "SCAVENGER": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": "2026-04-12 00:10:23",
+    "status": "ALIVE",
+    "errors": 0
+  },
+  "ORBITAL_WS": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": null,
+    "status": "UNHEALTHY",
+    "errors": 15
+  },
+  "LEGION_VET": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": "2026-04-12 00:09:50",
+    "status": "ALIVE",
+    "errors": 0
+  },
+  "LEGION_BAT": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": "2026-04-12 00:10:07",
+    "status": "ALIVE",
+    "errors": 0
+  },
+  "LEGION_ADA": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": "2026-04-12 00:09:55",
+    "status": "ALIVE",
+    "errors": 0
+  },
+  "LEGION_GALA": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": "2026-04-12 00:09:56",
+    "status": "ALIVE",
+    "errors": 0
+  },
+  "HUNTER_SWARM": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": "2026-04-12 00:10:28",
+    "status": "ALIVE",
+    "errors": 0
+  },
+  "LEGION_ENJ": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": "2026-04-12 00:10:14",
+    "status": "ALIVE",
+    "errors": 0
+  },
+  "SNIPER_SQUAD": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": "2026-04-12 00:10:23",
+    "status": "ALIVE",
+    "errors": 0
+  },
+  "TG-BOT": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": null,
+    "status": "UNHEALTHY",
+    "errors": 1362
+  },
+  "grid_bot_v2": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": null,
+    "status": "UNHEALTHY",
+    "errors": 7
+  },
+  "LEGION_ZIL": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": "2026-04-12 00:09:50",
+    "status": "ALIVE",
+    "errors": 0
+  },
+  "GARIBAN": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": "2026-04-12 00:10:40",
+    "status": "ALIVE",
+    "errors": 0
+  },
+  "LEGION_MKR": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": "2026-04-12 00:10:07",
+    "status": "ALIVE",
+    "errors": 0
+  },
+  "LEGION_BCH": {
+    "trades": 0,
+    "profit": 0.0,
+    "last_trade": null,
+    "last_heartbeat": "2026-04-12 00:09:56",
+    "status": "ALIVE",
+    "errors": 0
+  }
+}
