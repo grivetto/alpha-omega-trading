@@ -58,8 +58,7 @@ class GridTraderStrategy(BaseStrategy):
             await self.reset_grid(curr_price)
             return []
 
-        # Weekly rebalance (7 days)
-n        # Stop-loss: proteggi dal -2% su ogni livello BUY
+        # Stop-loss: proteggi dal -2% su ogni livello BUY
         for lvl in self._grid:
             if lvl.side == Side.BUY and lvl.entry_price > 0:
                 lvl.lowest_price = min(lvl.lowest_price, curr_price)
@@ -233,7 +232,7 @@ n        # Stop-loss: proteggi dal -2% su ogni livello BUY
             filled_lvl.order_id = new_order["id"]
             filled_lvl.side = opp_side
             filled_lvl.price = opp_price
-n            filled_lvl.entry_price = opp_price if opp_side == Side.BUY else 0.0
+            filled_lvl.entry_price = opp_price if opp_side == Side.BUY else 0.0
             filled_lvl.lowest_price = 999999.0
             
             self.logger.info(f"Recycled grid level placed: {opp_side.upper()} @ {opp_price:.4f} | ID: {new_order['id']}")
