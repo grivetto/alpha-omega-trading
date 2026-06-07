@@ -78,10 +78,6 @@ class GridTraderStrategy(BaseStrategy):
         """Cancels all existing grid orders and sets up a new grid around mid_price."""
         self.logger.info(f"Resetting grid around mid price: {mid_price:.4f}")
         
-        if self._n_levels < 1:
-            self.logger.warning(f"Grid needs at least 2 levels, got {self._n_levels}. Aborting reset.")
-            return
-
         # 1. Cancel all open orders for this grid strategy
         existing_ids = [lvl.order_id for lvl in self._grid if lvl.order_id]
         if existing_ids:
@@ -93,7 +89,7 @@ class GridTraderStrategy(BaseStrategy):
         self._grid.clear()
         self._mid_price = mid_price
         
-        half_levels = max(1, self._n_levels // 2)
+        half_levels = self._n_levels // 2
         # Price step between each grid band
         step_value = (mid_price * self._range_pct) / half_levels
         

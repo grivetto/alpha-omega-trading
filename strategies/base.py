@@ -65,6 +65,8 @@ class BaseStrategy(ABC):
         if quote == "EUR":
             return self.capital
 
+        scaled_found = None
+
         # Fetch ticker for quote/EUR (e.g., BTC/EUR)
         try:
             ticker = await self.exchange.fetch_ticker(f"{quote}/EUR")
@@ -72,7 +74,7 @@ class BaseStrategy(ABC):
             if rate > 0:
                 scaled = self.capital / rate
                 self.logger.info(f"Scaled capital from {self.capital:.2f} EUR to {scaled:.6f} {quote} using {quote}/EUR rate: {rate:.4f}")
-                return scaled
+                scaled_found = scaled
         except Exception as e:
             self.logger.debug(f"Failed to fetch {quote}/EUR ticker: {e}. Trying inverse...")
 
@@ -83,10 +85,23 @@ class BaseStrategy(ABC):
             if rate > 0:
                 scaled = self.capital * rate
                 self.logger.info(f"Scaled capital from {self.capital:.2f} EUR to {scaled:.6f} {quote} using EUR/{quote} rate: {rate:.4f}")
-                return scaled
+                scaled_found = scaled
         except Exception as e:
             self.logger.error(f"Failed to convert capital from EUR to {quote}: {e}")
 
+
+        # Cap to available quote balance
+        try:
+            bal = await self.exchange.fetch_balance()
+            free_quote = bal.get("free", {}).get(quote, 0)
+            if free_quote < scaled:
+                self.logger.warning(f"Capping capital to available {quote} balance: {free_quote:.6f} (scaled: {scaled:.6f})")
+                scaled = free_quote
+                scaled_found = scaled
+        except Exception as e:
+            self.logger.debug(f"Failed to fetch balance for capping: {e}")
+        if scaled_found is not None:
+            return scaled_found
         return self.capital  # Safe fallback
 
 
