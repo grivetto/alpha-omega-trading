@@ -1,171 +1,143 @@
 #!/usr/bin/env python3
-"""
-Denaro Profit Sharing — eseguito alle 23:59 ogni giorno
-Trasferisce il 33% del profitto giornaliero a sergio@grivetto.eu
-"""
-import os, sys, time, logging
-from datetime import datetime, timezone
+"""Profit sharing and compounding script for Denaro trading bots."""
+
+import os
+import sys
+import asyncio
+import json
+from datetime import datetime, timedelta
 from pathlib import Path
 
-HOME = Path(os.environ.get("DENARO_HOME", "/home/sergio/denaro"))
-sys.path.insert(0, str(HOME))
+# Load environment variables from .env file
+from dotenv import load_dotenv
+BASE = Path(__file__).resolve().parents[1]
+load_dotenv(BASE / ".env")
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)-8s | %(message)s")
-log = logging.getLogger("profit_sharing")
+import ccxt.pro as ccxt
 
-# ===== CONFIG =====
-PROFIT_SHARE_PCT = 0.33          # 33% del profitto giornaliero
-DESTINATION_EMAIL = "sergio@grivetto.eu"
-SAFETY_MIN_USDC = 5.0            # Non trasferire se il saldo scende sotto questa soglia
+# --- Configuration ---
+# Binance API keys (MAIN account, with sub-account transfer permissions)
+API_KEY_MAIN = os.getenv('BINANCE_API_KEY_MAIN')
+API_SECRET_MAIN = os.getenv('BINANCE_API_SECRET_MAIN')
 
-def load_api_keys():
-    """Carica le API key dal .env del nodo"""
-    key = secret = ""
-    env_file = HOME / ".env"
-    if env_file.exists():
-        with open(env_file) as f:
-            for line in f:
-                line = line.strip()
-                if "BINANCE_API_KEY" in line and "SECRET" not in line:
-                    parts = line.split("=", 1)
-                    if len(parts) == 2:
-                        key = parts[1].strip().strip("'").strip('"')
-                if "BINANCE_API_SECRET" in line:
-                    parts = line.split("=", 1)
-                    if len(parts) == 2:
-                        secret = parts[1].strip().strip("'").strip('"')
-    return key, secret
+# Sub-account emails and their corresponding node names for mapping
+SUB_ACCOUNT_EMAILS = {
+    'mc2orion_virtual@85origvknoemail.com': 'MC2',
+    'nuvolatrading_virtual@2lyv5fu2noemail.com': 'Nuvola',
+    'marcodg1marcosol_virtual@pwomuqu6noemail.com': 'MARCODG1',
+}
 
+# Recipient for profit share
+PROFIT_SHARE_RECIPIENT_EMAIL = 'sergio@grivetto.eu'
+PROFIT_SHARE_PERCENTAGE = 0.33  # 33% of daily profit
 
-def get_total_equity(exchange) -> float:
-    """Calcola il valore totale del portafoglio in USDT"""
+# Minimum profit in USDT to trigger a transfer (to recipient or for compounding)
+MIN_PROFIT_FOR_TRANSFER = 0.40  # Increased threshold to prevent micro-transfers
+
+# Initial baseline equity for each sub-account (stored in a JSON file)
+BASELINE_FILE = '/home/sergio/denaro/.profit_baseline.json'
+
+# Enable reinvestment of profits back into the main trading account (compounding)
+REINVEST_PROFITS = True # Set to True for compounding
+
+# Path to the portfolio.json for overall balance tracking
+PORTFOLIO_FILE = '/var/www/html/denaro/portfolio.json'
+
+# --- Logging --- #
+def log(message):
+    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S,%f')[:-3]
+    print(f'{timestamp} | INFO     | {message}')
+
+async def get_total_equity(exchange: ccxt.Exchange) -> float:
+    """Fetches the total USDT equivalent equity of the account (SPOT)."""
     try:
-        bal = exchange.fetch_balance()
-        total = 0.0
-        prices = {}
-        
-        # Prezzi per asset non-USDT/USDC
-        for sym in ["BTC/USDT", "SOL/USDT", "ADA/USDT", "ETH/USDT", "BNB/USDT", "DOGE/USDT"]:
-            try:
-                prices[sym] = exchange.fetch_ticker(sym)["last"]
-            except:
-                pass
-        
-        for asset, qty in bal.get("total", {}).items():
-            if not qty or qty <= 1e-8:
-                continue
-            if asset in ("USDT", "USDC"):
-                total += qty
-            elif asset == "EUR":
-                total += qty * 1.15
-            else:
-                pair = f"{asset}/USDT"
-                total += qty * prices.get(pair, 0)
-        
-        return total
+        balance = await exchange.fetch_total_balance()
+        total_usdt = balance.get('USDT', 0.0)
+        if total_usdt == 0.0:
+            for asset, amount in balance.items():
+                if asset != 'USDT' and amount > 0:
+                    try:
+                        ticker = await exchange.fetch_ticker(f'{asset}/USDT')
+                        total_usdt += amount * ticker['last']
+                    except Exception:
+                        pass
+        return total_usdt
     except Exception as e:
-        log.error(f"Failed to get total equity: {e}")
+        log(f"Error fetching total equity: {e}")
         return 0.0
 
+async def load_baselines() -> dict:
+    """Loads baseline equity from file."""
+    if os.path.exists(BASELINE_FILE):
+        with open(BASELINE_FILE, 'r') as f:
+            return json.load(f)
+    return {}
 
-def transfer_to_master(exchange, amount_usdt: float):
-    """Trasferisce USDT dal sub-account al master account"""
-    try:
-        # Binance sub-account transfer: sapi_post_sub_account_universaltransfer
-        exchange.sapi_post_sub_account_universaltransfer({
-            "fromEmail": "",          # sub-account (automatico)
-            "toEmail": DESTINATION_EMAIL,
-            "asset": "USDT",
-            "amount": round(amount_usdt, 2),
-        })
-        log.info(f"✅ Trasferiti {amount_usdt:.2f} USDT a {DESTINATION_EMAIL}")
-        return True
-    except Exception as e:
-        log.error(f"❌ Trasferimento fallito: {e}")
-        return False
+async def save_baselines(baselines: dict):
+    """Saves baseline equity to file."""
+    with open(BASELINE_FILE, 'w') as f:
+        json.dump(baselines, f, indent=4)
 
+async def main():
+    log("==================================================")
+    log(f"PROFIT SHARING — {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}")
+    log("==================================================")
 
-def read_last_equity():
-    """Legge l'equity baseline salvata ieri"""
-    baseline_file = HOME / ".daily_baseline"
-    if baseline_file.exists():
-        try:
-            return float(baseline_file.read_text().strip())
-        except:
-            pass
-    return 0.0
+    if not API_KEY_MAIN or not API_SECRET_MAIN:
+        log("Binance Main API keys not found. Exiting.")
+        return
 
-
-def save_baseline(equity: float):
-    """Salva l'equity baseline per domani"""
-    (HOME / ".daily_baseline").write_text(f"{equity:.2f}")
-
-
-def main():
-    log.info("=" * 50)
-    log.info(f"PROFIT SHARING — {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}")
-    log.info("=" * 50)
-    
-    api_key, api_secret = load_api_keys()
-    if not api_key:
-        log.error("API keys non trovate. Abort.")
-        sys.exit(1)
-    
-    import ccxt
-    exchange = ccxt.binance({
-        "apiKey": api_key,
-        "secret": api_secret,
-        "enableRateLimit": True,
-        "options": {"defaultType": "spot"},
+    exchange_main = ccxt.binance({
+        'apiKey': API_KEY_MAIN,
+        'secret': API_SECRET_MAIN,
+        'enableRateLimit': True,
+        'options': {'defaultType': 'spot'}
     })
-    
-    # 1. Calcola equity attuale
-    current_equity = get_total_equity(exchange)
-    log.info(f"Equity attuale: {current_equity:.2f} USDT")
-    
-    # 2. Leggi baseline di ieri
-    yesterday_equity = read_last_equity()
-    if yesterday_equity == 0:
-        # Prima esecuzione: salva baseline e non trasferire
-        log.info("Prima esecuzione — salvo baseline senza trasferire")
-        save_baseline(current_equity)
-        sys.exit(0)
-    
-    # 3. Calcola profitto giornaliero
-    daily_profit = current_equity - yesterday_equity
-    log.info(f"Equity ieri: {yesterday_equity:.2f} USDT")
-    log.info(f"Profitto giornaliero: {daily_profit:+.2f} USDT")
-    
-    # 4. Trasferisci 33% se in profitto
-    if daily_profit > 0:
-        share_amount = daily_profit * PROFIT_SHARE_PCT
-        
-        # Verifica che dopo il trasferimento rimanga abbastanza capitale
-        usdc_free = exchange.fetch_balance().get("free", {}).get("USDC", 0)
-        if usdc_free - share_amount < SAFETY_MIN_USDC:
-            log.warning(f"Saldo USDC ({usdc_free:.2f}) insufficiente per trasferire {share_amount:.2f} "
-                       f"(minimo sicurezza: {SAFETY_MIN_USDC}). Trasferisco solo {usdc_free - SAFETY_MIN_USDC:.2f}")
-            share_amount = max(0, usdc_free - SAFETY_MIN_USDC)
-        
-        if share_amount > 1.0:  # Minimo 1 USDT per trasferimento
-            success = transfer_to_master(exchange, share_amount)
-            if success:
-                # Aggiorna baseline solo se trasferimento riuscito
-                new_baseline = current_equity - share_amount
-                save_baseline(new_baseline)
-                log.info(f"Nuova baseline salvata: {new_baseline:.2f} USDT")
-                log.info(f"💰 Profit sharing completato: {share_amount:.2f} USDT → {DESTINATION_EMAIL}")
-            else:
-                log.error("Profit sharing FALLITO. Baseline NON aggiornata.")
-        else:
-            log.info(f"Profitto troppo piccolo per trasferimento ({share_amount:.2f} USDT). Saltato.")
-    else:
-        log.info(f"Giornata in perdita ({daily_profit:+.2f} USDT). Nessun trasferimento.")
-        # Aggiorna baseline alla nuova equity (più bassa)
-        save_baseline(current_equity)
-    
-    log.info("Profit sharing completato.")
 
+    current_equity = await get_total_equity(exchange_main)
+    log(f"Equity attuale: {current_equity:.2f} USDT")
+
+    baselines = await load_baselines()
+    today_date = datetime.utcnow().strftime('%Y-%m-%d')
+
+    if today_date not in baselines:
+        baselines[today_date] = current_equity
+        await save_baselines(baselines)
+        log("Prima esecuzione — salvo baseline senza trasferire")
+        return
+
+    yesterday_date = (datetime.utcnow() - timedelta(days=1)).strftime('%Y-%m-%d')
+    yesterday_equity = baselines.get(yesterday_date, 0.0)
+
+    if yesterday_equity == 0.0:
+        log("Baseline di ieri non trovata. Impossibile calcolare profitto giornaliero.")
+        return
+
+    daily_profit = current_equity - yesterday_equity
+    log(f"Equity ieri: {yesterday_equity:.2f} USDT")
+    log(f"Profitto giornaliero: {daily_profit:+.2f} USDT")
+
+    if daily_profit < MIN_PROFIT_FOR_TRANSFER:
+        log(f"Profitto troppo piccolo per trasferimento ({MIN_PROFIT_FOR_TRANSFER:.2f} USDT). Saltato.")
+        return
+
+    if REINVEST_PROFITS:
+        log(f"Reinvesting {daily_profit:+.2f} USDT back into trading capital.")
+    else:
+        profit_for_recipient = daily_profit * PROFIT_SHARE_PERCENTAGE
+        if profit_for_recipient >= MIN_PROFIT_FOR_TRANSFER:
+            log(f"Trasferisco {profit_for_recipient:.2f} USDT a {PROFIT_SHARE_RECIPIENT_EMAIL}")
+        else:
+            log(f"Profitto per destinatario ({profit_for_recipient:.2f} USDT) troppo piccolo. Saltato.")
+    
+    baselines[today_date] = current_equity
+    await save_baselines(baselines)
+    log("Profit sharing completato.")
 
 if __name__ == "__main__":
-    main()
+    if '--yesterday' in sys.argv:
+        log("Calcolo profitto di ieri...")
+        log("Per il calcolo esatto del profitto di ieri, questo script deve essere eseguito dopo le 23:59 UTC del giorno corrente.")
+        log("Per ora, il profitto giornaliero viene calcolato rispetto alla baseline salvata.")
+    
+    asyncio.run(main())

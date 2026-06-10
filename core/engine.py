@@ -102,6 +102,34 @@ class Settings:
 settings = Settings()
 
 # ── SQLite Database Wrapper ──────────────────────────────────────────────────
+    # BTC/USDT Grid Settings
+    btc_grid_symbol: str = field(default_factory=lambda: _env("BTC_GRID_SYMBOL", "BTC/USDT"))
+    btc_grid_capital_usdt: float = field(default_factory=lambda: _float("BTC_GRID_CAPITAL_USDT", 5.0))
+    btc_grid_levels: int = field(default_factory=lambda: _int("BTC_GRID_LEVELS", 3))
+    btc_grid_spacing_pct: float = field(default_factory=lambda: _float("BTC_GRID_SPACING_PCT", 0.01))
+    btc_grid_take_pct: float = field(default_factory=lambda: _float("BTC_GRID_TAKE_PCT", 0.8))
+    btc_grid_trailing_stop: bool = field(default_factory=lambda: _bool("BTC_GRID_TRAILING_STOP", True))
+
+    # ETH/USDT Grid Settings
+    eth_grid_symbol: str = field(default_factory=lambda: _env("ETH_GRID_SYMBOL", "ETH/USDT"))
+    eth_grid_capital_usdt: float = field(default_factory=lambda: _float("ETH_GRID_CAPITAL_USDT", 3.0))
+    eth_grid_levels: int = field(default_factory=lambda: _int("ETH_GRID_LEVELS", 3))
+    eth_grid_spacing_pct: float = field(default_factory=lambda: _float("ETH_GRID_SPACING_PCT", 0.015))
+    eth_grid_take_pct: float = field(default_factory=lambda: _float("ETH_GRID_TAKE_PCT", 0.9))
+    eth_grid_trailing_stop: bool = field(default_factory=lambda: _bool("ETH_GRID_TRAILING_STOP", True))
+
+    # RSI Settings for BTC/ETH
+    btc_rsi_symbol: str = field(default_factory=lambda: _env("BTC_RSI_SYMBOL", "BTC/USDT"))
+    btc_rsi_capital_usdt: float = field(default_factory=lambda: _float("BTC_RSI_CAPITAL_USDT", 2.0))
+    eth_rsi_symbol: str = field(default_factory=lambda: _env("ETH_RSI_SYMBOL", "ETH/USDT"))
+    eth_rsi_capital_usdt: float = field(default_factory=lambda: _float("ETH_RSI_CAPITAL_USDT", 1.5))
+
+    # Feature flags for new strategies
+    enable_btc_grid: bool = field(default_factory=lambda: _bool("ENABLE_BTC_GRID", True))
+    enable_eth_grid: bool = field(default_factory=lambda: _bool("ENABLE_ETH_GRID", True))
+    enable_btc_rsi: bool = field(default_factory=lambda: _bool("ENABLE_BTC_RSI", True))
+    enable_eth_rsi: bool = field(default_factory=lambda: _bool("ENABLE_ETH_RSI", True))
+
 class TradeDB:
     def __init__(self, db_name: str = "denaro"):
         self.path = BASE / ".tmp" / f"{db_name}.db"
