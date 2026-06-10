@@ -98,6 +98,42 @@ class TradingBot:
                     except Exception as e:
                         logger.error(f"Failed to load Grid Strategy on {ex_name}: {e}")
 
+        # Load Dynamic Grid Strategy
+        if settings.enable_dynamic_grid:
+            for ex_name, exchange in required_exchanges.items():
+                if exchange:
+                    try:
+                        # Load Dynamic Grid Strategy
+                        capital_setting = getattr(settings, f'{ex_name.lower()}_dynamic_grid_capital_usdt', settings.dynamic_grid_capital_usdt)
+                        symbol = getattr(settings, f'{ex_name.lower()}_dynamic_grid_symbol', settings.dynamic_grid_symbol)
+                        base_levels = getattr(settings, f'{ex_name.lower()}_dynamic_grid_levels', settings.dynamic_grid_levels)
+                        min_spacing = getattr(settings, f'{ex_name.lower()}_dynamic_grid_min_spacing', settings.dynamic_grid_min_spacing)
+                        max_spacing = getattr(settings, f'{ex_name.lower()}_dynamic_grid_max_spacing', settings.dynamic_grid_max_spacing)
+                        price_precision = getattr(settings, f'{ex_name.lower()}_dynamic_grid_price_precision', settings.dynamic_grid_price_precision)
+                        amount_precision = getattr(settings, f'{ex_name.lower()}_dynamic_grid_amount_precision', settings.dynamic_grid_amount_precision)
+                        take_profit_pct = getattr(settings, f'{ex_name.lower()}_dynamic_grid_take_pct', settings.dynamic_grid_take_pct)
+                        trailing_stop = getattr(settings, f'{ex_name.lower()}_dynamic_grid_trailing_stop', settings.dynamic_grid_trailing_stop)
+
+                        strategy = DynamicGridStrategy(
+                            exchange,
+                            self.db,
+                            symbol=symbol,
+                            capital=capital_setting,
+                            base_levels=base_levels,
+                            min_spacing=min_spacing,
+                            max_spacing=max_spacing,
+                            price_precision=price_precision,
+                            amount_precision=amount_precision
+                        )
+                        await strategy.set_initial_capital(capital_setting)
+                        # Ensure the strategy has the risk management attributes
+                        strategy.take_profit_pct = take_profit_pct
+                        strategy.trailing_stop = trailing_stop
+                        self.strategies.append(strategy)
+                        logger.info(f"Loaded Dynamic Grid Strategy on exchange {ex_name} | Symbol: {symbol} | Capital: {capital_setting:.2f} USDT | Levels: {base_levels}")
+                    except Exception as e:
+                        logger.error(f"Failed to load Dynamic Grid Strategy on {ex_name}: {e}")
+
         # Load RSI Mean Reversion Strategy
         if settings.enable_rsi_reversion:
             for ex_name, exchange in required_exchanges.items():

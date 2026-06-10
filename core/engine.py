@@ -129,6 +129,24 @@ settings = Settings()
     enable_eth_grid: bool = field(default_factory=lambda: _bool("ENABLE_ETH_GRID", True))
     enable_btc_rsi: bool = field(default_factory=lambda: _bool("ENABLE_BTC_RSI", True))
     enable_eth_rsi: bool = field(default_factory=lambda: _bool("ENABLE_ETH_RSI", True))
+    # Feature flags for new strategies
+    enable_btc_grid: bool = field(default_factory=lambda: _bool("ENABLE_BTC_GRID", True))
+    enable_eth_grid: bool = field(default_factory=lambda: _bool("ENABLE_ETH_GRID", True))
+    enable_btc_rsi: bool = field(default_factory=lambda: _bool("ENABLE_BTC_RSI", True))
+    enable_eth_rsi: bool = field(default_factory=lambda: _bool("ENABLE_ETH_RSI", True))
+    enable_dynamic_grid: bool = field(default_factory=lambda: _bool("ENABLE_DYNAMIC_GRID", False))
+
+    # Dynamic Grid Strategy Settings
+    dynamic_grid_symbol: str = field(default_factory=lambda: _env("DYNAMIC_GRID_SYMBOL", "BTC/USDT"))
+    dynamic_grid_capital_usdt: float = field(default_factory=lambda: _float("DYNAMIC_GRID_CAPITAL_USDT", 10.0))
+    dynamic_grid_levels: int = field(default_factory=lambda: _int("DYNAMIC_GRID_LEVELS", 4))
+    dynamic_grid_min_spacing_pct: float = field(default_factory=lambda: _float("DYNAMIC_GRID_MIN_SPACING_PCT", 0.0002))
+    dynamic_grid_max_spacing_pct: float = field(default_factory=lambda: _float("DYNAMIC_GRID_MAX_SPACING_PCT", 0.005))
+    dynamic_grid_take_pct: float = field(default_factory=lambda: _float("DYNAMIC_GRID_TAKE_PCT", 0.4))
+    dynamic_grid_trailing_stop: bool = field(default_factory=lambda: _bool("DYNAMIC_GRID_TRAILING_STOP", True))
+    dynamic_grid_price_precision: int = field(default_factory=lambda: _int("DYNAMIC_GRID_PRICE_PRECISION", 6))
+    dynamic_grid_amount_precision: int = field(default_factory=lambda: _int("DYNAMIC_GRID_AMOUNT_PRECISION", 6))
+
 
 class TradeDB:
     def __init__(self, db_name: str = "denaro"):

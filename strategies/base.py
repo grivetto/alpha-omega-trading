@@ -136,6 +136,22 @@ class BaseStrategy:
 
             order = await self.exchange.create_order(self.symbol, order_type, side.value, amount, params=params)
             self.logger.info(f"Market order for closing: {side.value} {amount} {self.symbol} @ {price}. Order ID: {order['id']}")
+            # Hedge the spot market order on futures
+            try:
+                hedge_script = '/home/sergio/denaro/tools/hedger_futures.py'
+                # Convert Side enum to string for the script
+                hedge_side = side.value.lower()  # 'buy' or 'sell'
+                subprocess.Popen([
+                    '/home/sergio/denaro/venv/bin/python3',
+                    hedge_script,
+                    self.symbol,
+                    hedge_side,
+                    str(amount)
+                ])
+                self.logger.info(f"Hedger script launched for {self.symbol} {hedge_side} {amount}")
+            except Exception as hedge_err:
+                self.logger.error(f"Failed to launch hedger script: {hedge_err}")
+
             return order
         except Exception as e:
             self.logger.error(f"Failed to place market order: {e}")
@@ -171,6 +187,21 @@ class BaseStrategy:
             self.logger.warning(f"Trailing stop order placement for symbol {self.symbol} is a placeholder. Requires exchange-specific implementation.")
 
             self.logger.info(f"Stop Loss triggered for order ID {oid}. Position closed. Trailing stop logic initiated (placeholder).")
+            # Hedge the stop-loss market order on futures
+            try:
+                hedge_script = '/home/sergio/denaro/tools/hedger_futures.py'
+                hedge_side = side.value.lower()
+                subprocess.Popen([
+                    '/home/sergio/denaro/venv/bin/python3',
+                    hedge_script,
+                    self.symbol,
+                    hedge_side,
+                    str(pos.amount)
+                ])
+                self.logger.info(f"Hedger script launched for SL {self.symbol} {hedge_side} {pos.amount}")
+            except Exception as hedge_err:
+                self.logger.error(f"Failed to launch hedger script for SL: {hedge_err}")
+
             # Remove the position from active tracking after SL
             if oid in self._positions:
                 del self._positions[oid]
