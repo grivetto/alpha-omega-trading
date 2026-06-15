@@ -20,17 +20,20 @@ from strategies.base import BaseStrategy, Position, Side, Signal
 from strategies.grid import GridTraderStrategy
 from strategies.scalper import ScalperStrategy
 from strategies.rsi_mean_rev import RSIReversionStrategy # Import new strategy
+from strategies.dynamic_grid import DynamicGridStrategy
 
 
 class TradingBot:
     def __init__(self):
-        self.exchanges: Dict[str, ExchangeWrapper] = {{}}
+        self.exchanges: Dict[str, ExchangeWrapper] = {}
         self.strategies: list[BaseStrategy] = []
         self.db: TradeDB | None = None
         self.risk_manager: RiskManager | None = None
         self.dashboard: DashboardServer | None = None
         self.notification_service: NotificationService | None = None
         self.closing = False
+        self._ohlcv_cache: Dict[str, list[list[float]]] = {}  # Format: "{symbol}:{timeframe}" -> ohlcv
+        self._reconcile_task: asyncio.Task | None = None
 
     async def _initialize_services(self):
         logger.info("Initializing Denaro Bot Engine...")
@@ -228,23 +231,41 @@ class TradingBot:
                 await asyncio.sleep(strategy.update_interval)
                 if self.is_paused or strategy.is_paused: continue
 
-                # Fetch latest candle data
-                ohlcv = await strategy.exchange.fetch_ohlcv(strategy.symbol, strategy.timeframe)
+                # Use shared OHLCV cache or fetch fresh data
+                key = f"{strategy.symbol}:{strategy.timeframe}"
+                if key in self._ohlcv_cache:
+                    ohlcv = self._ohlcv_cache[key]
+                else:
+                    ohlcv = await strategy.exchange.fetch_ohlcv(strategy.symbol, strategy.timeframe)
+                    if ohlcv:
+                        self._ohlcv_cache[key] = ohlcv
+                    else:
+                        logger.warning(f"No OHLCV data received for {strategy.symbol} (cache missed)")
+                        continue
+
                 if not ohlcv:
                     logger.warning(f"No OHLCV data received for {strategy.symbol}")
                     continue
 
                 # Update capital for DPS calculation
-                current_capital = await strategy.get_quote_capital()
-                await strategy.set_initial_capital(current_capital) # Update capital for dynamic risk calculation
-                await strategy._check_sl(ohlcv[-1][4]) # Check stop loss based on last close price
+                try:
+                    current_capital = await strategy.get_quote_capital()
+                    await strategy.set_initial_capital(current_capital) # Update capital for dynamic risk calculation
+                    await strategy._check_sl(ohlcv[-1][4]) # Check stop loss based on last close price
+                except Exception as e:
+                    logger.error(f"Error updating capital/checking SL for {strategy.symbol}: {e}")
+                    continue
 
-                signals = await strategy.on_candle(ohlcv)
+                # Handle different strategy types
+                if hasattr(strategy, 'on_candle'):
+                    signals = await strategy.on_candle(ohlcv)
+                elif hasattr(strategy, 'run'):  # For dynamic grid which has its own run loop
+                    await strategy.run()
+                    continue
                 
                 if signals:
                     for sig in signals:
                         await self._execute_signal(sig, strategy)
-
             except asyncio.CancelledError:
                 logger.info(f"Strategy loop for {strategy.symbol} cancelled.")
                 break
@@ -260,13 +281,11 @@ class TradingBot:
 
         try:
             logger.info(f"Executing signal: {sig.side.value} {sig.amount} {sig.symbol} @ {sig.entry_price} (TP: {sig.tp_price}, SL: {sig.sl_price}) from {sig.source}")
-            order = await strategy.exchange.create_order(sig.symbol, 'limit', sig.side.value, sig.amount, sig.entry_price, {{'params': {{'takeProfit': sig.tp_price, 'stopLoss': sig.sl_price}}}}) # Note: TP/SL params might be exchange-specific
+            order = await strategy.exchange.create_order(sig.symbol, 'limit', sig.side.value, sig.amount, sig.entry_price)
             
-            # Store position details
             new_pos = Position(sig.symbol, sig.side, sig.amount, sig.entry_price, sig.tp_price, sig.sl_price, sig.source, order_id=order['id'])
             strategy._positions[order['id']] = new_pos
             logger.info(f"Order placed: {order['id']} for {sig.symbol}")
-
         except Exception as e:
             logger.error(f"Failed to execute signal for {sig.symbol}: {e}")
 
@@ -281,14 +300,72 @@ class TradingBot:
             if strategy.initial_capital == 0:
                  current_capital = await strategy.get_quote_capital()
                  await strategy.set_initial_capital(current_capital)
-            
+             
             task = asyncio.create_task(self._run_strategy_loop(strategy))
             strategy_tasks.append(task)
             logger.info(f"Started strategy loop for {strategy.symbol}")
 
+        # Start order reconciliation task
+        self._reconcile_task = asyncio.create_task(self._reconcile_orders())
+        logger.info("Started order reconciliation task")
+
         # Keep the main loop running
         while not self.closing:
             await asyncio.sleep(1)
+
+    async def _reconcile_orders(self) -> None:
+        """Periodically reconcile local order state with exchange."""
+        while not self.closing:
+            try:
+                await asyncio.sleep(60)  # Reconcile every minute
+                for strategy in self.strategies:
+                    if not hasattr(strategy, '_positions'):
+                        continue
+                    
+                    for oid, pos in list(strategy._positions.items()):
+                        try:
+                            if oid.startswith("MOCK-"):
+                                continue  # Skip mock orders
+                            
+                            order = await strategy.exchange.fetch_order(oid, pos.symbol)
+                            status = order.get('status', '')
+                            
+                            if status == 'closed' and oid in strategy._positions:
+                                # Order filled - check if it was entry or exit
+                                if pos.side == Side.BUY and pos.tp_order_id == oid:
+                                    # This was a TP order
+                                    exec_price = order.get('price', pos.tp_price) or pos.tp_price
+                                    gross_pnl = (exec_price - pos.entry_price) * pos.amount
+                                    fees = (pos.entry_price + exec_price) * pos.amount * 0.00075
+                                    net_pnl = gross_pnl - fees
+                                    
+                                    logger.info(f"RECONCILE: TP filled for {pos.symbol} @ {exec_price:.4f}. Net PnL: {net_pnl:+.4f} USD.")
+                                    strategy.db.save_trade(
+                                        symbol=pos.symbol,
+                                        side="sell",
+                                        price=exec_price,
+                                        amount=pos.amount,
+                                        value_usd=pos.amount * exec_price,
+                                        fee_usd=fees,
+                                        net_pnl=net_pnl,
+                                        strategy=strategy.name
+                                    )
+                                    del strategy._positions[oid]
+                                elif pos.side == Side.SELL and pos.tp_order_id == oid:
+                                    # This was an entry (sell) order
+                                    # Check if corresponding buy filled
+                                    pass
+                            elif status == 'canceled':
+                                logger.warning(f"RECONCILE: Order {oid} was canceled on exchange")
+                                if oid in strategy._positions:
+                                    del strategy._positions[oid]
+                        except Exception as e:
+                            logger.debug(f"Reconcile check for {oid} failed: {e}")
+                            continue
+            except asyncio.CancelledError:
+                break
+            except Exception as e:
+                logger.error(f"Order reconciliation error: {e}")
 
     def stop(self):
         self.closing = True

@@ -60,6 +60,8 @@ class ScalperStrategy(BaseStrategy):
         
         self._tp_atr_mult = 1.5
         self._sl_atr_mult = 1.0
+        self._atr_window = 14
+        self._atr_history = []  # Store ATR values for volatility regime detection
 
     async def on_candle(self, ohlcv: list[list[float]]) -> list[Signal]:
         if self.is_paused or not ohlcv:
@@ -80,6 +82,19 @@ class ScalperStrategy(BaseStrategy):
         ema_slow = calculate_ema(close, self._ema_slow_period)
         rsi = calculate_rsi(close, self._rsi_period)
         atr = calculate_atr(high, low, close, 14)
+        
+        # Update ATR history for volatility adaptation
+        self._atr_history.append(curr_atr)
+        if len(self._atr_history) > 50:  # Keep last 50 ATR values
+            self._atr_history.pop(0)
+        
+        # Adaptive ATR multipliers based on volatility regime
+        avg_atr = sum(self._atr_history) / len(self._atr_history) if self._atr_history else curr_atr
+        volatility_ratio = curr_atr / avg_atr if avg_atr > 0 else 1.0
+        
+        # Tighter stops in high volatility, wider in low volatility
+        adaptive_sl_mult = max(0.8, min(1.5, self._sl_atr_mult / volatility_ratio))
+        adaptive_tp_mult = max(1.2, min(2.5, self._tp_atr_mult * volatility_ratio))
 
         prev_fast, curr_fast = ema_fast.iloc[-2], ema_fast.iloc[-1]
         prev_slow, curr_slow = ema_slow.iloc[-2], ema_slow.iloc[-1]
@@ -95,8 +110,8 @@ class ScalperStrategy(BaseStrategy):
         signals: list[Signal] = []
 
         if crossed_up and curr_rsi < self._rsi_buy and not self.has_open_position:
-            tp = curr_price + self._tp_atr_mult * curr_atr
-            sl = curr_price - self._sl_atr_mult * curr_atr
+            tp = curr_price + adaptive_tp_mult * curr_atr
+            sl = curr_price - adaptive_sl_mult * curr_atr
             
             # Ensure price details respect standard tick size / rounding
             decimals = 4 if curr_price > 10 else (2 if curr_price > 1 else 6)
@@ -238,13 +253,30 @@ class ScalperStrategy(BaseStrategy):
     async def on_order_update(self, order: dict[str, Any]) -> None:
         oid = order.get("id", "")
         status = order.get("status", "")
+        filled = float(order.get("filled", 0.0) or 0.0)
+        remaining = float(order.get("remaining", 0.0) or 0.0)
         
+        if status not in ("closed", "open"):
+            return
+
+        # Handle partial fills for open orders
+        if status == "open" and filled > 0 and oid in self._positions:
+            pos = self._positions[oid]
+            if filled < pos.amount:
+                self.logger.info(f"Partial fill detected for {oid}: {filled}/{pos.amount}")
+                pos.partially_filled = filled
+
         if status != "closed":
             return
 
         # Case 1: Entry Order Filled -> Place Take Profit Limit Order on Exchange
         if oid in self._positions:
             pos = self._positions[oid]
+            actual_amount = filled if filled > 0 else pos.amount
+            if actual_amount != pos.amount:
+                pos.amount = actual_amount
+                self.logger.info(f"Adjusting position size to filled amount: {actual_amount}")
+            
             if not pos.tp_order_id:
                 try:
                     tp_order = await self.exchange.create_order(
@@ -264,8 +296,9 @@ class ScalperStrategy(BaseStrategy):
         for entry_oid, pos in list(self._positions.items()):
             if oid == pos.tp_order_id:
                 exec_price = order.get("price", pos.tp_price) or pos.tp_price
-                gross_pnl = (exec_price - pos.entry_price) * pos.amount
-                fees = (pos.entry_price + exec_price) * pos.amount * _FEE_PCT
+                actual_amount = filled if filled > 0 else pos.amount
+                gross_pnl = (exec_price - pos.entry_price) * actual_amount
+                fees = (pos.entry_price + exec_price) * actual_amount * _FEE_PCT
                 net_pnl = gross_pnl - fees
                 
                 self.logger.info(f"TAKE PROFIT FILLED for {pos.symbol} @ {exec_price:.4f}. Net PnL: {net_pnl:+.4f} USD.")
@@ -275,8 +308,8 @@ class ScalperStrategy(BaseStrategy):
                     symbol=pos.symbol,
                     side="sell",
                     price=exec_price,
-                    amount=pos.amount,
-                    value_usd=pos.amount * exec_price,
+                    amount=actual_amount,
+                    value_usd=actual_amount * exec_price,
                     fee_usd=fees,
                     net_pnl=net_pnl,
                     strategy=self.name

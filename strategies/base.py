@@ -138,7 +138,9 @@ class BaseStrategy:
             self.logger.info(f"Market order for closing: {side.value} {amount} {self.symbol} @ {price}. Order ID: {order['id']}")
             # Hedge the spot market order on futures
             try:
-                hedge_script = '/home/sergio/denaro/tools/hedger_futures.py'
+                import os
+                BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+                hedge_script = os.path.join(BASE, 'tools', 'hedger_futures.py')
                 # Convert Side enum to string for the script
                 hedge_side = side.value.lower()  # 'buy' or 'sell'
                 subprocess.Popen([
@@ -189,7 +191,9 @@ class BaseStrategy:
             self.logger.info(f"Stop Loss triggered for order ID {oid}. Position closed. Trailing stop logic initiated (placeholder).")
             # Hedge the stop-loss market order on futures
             try:
-                hedge_script = '/home/sergio/denaro/tools/hedger_futures.py'
+                import os
+                BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+                hedge_script = os.path.join(BASE, 'tools', 'hedger_futures.py')
                 hedge_side = side.value.lower()
                 subprocess.Popen([
                     '/home/sergio/denaro/venv/bin/python3',

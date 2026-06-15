@@ -47,11 +47,24 @@ def make_app(bot: TradingBot) -> FastAPI:
     @app.get("/api/state")
     async def get_state():
         try:
-            # Collect exchange balances
+            # Collect exchange balances in parallel with timeout
             balances = {}
-            for name, wrapper in bot.exchanges.items():
-                bal = await wrapper.fetch_balance()
-                balances[name] = bal.get("free", {})
+            async def _fetch_balance(name: str, wrapper):
+                try:
+                    bal = await asyncio.wait_for(wrapper.fetch_balance(), timeout=10.0)
+                    return name, bal.get("free", {})
+                except asyncio.TimeoutError:
+                    logger.warning(f"Dashboard: Balance fetch timed out for {name}")
+                    return name, {}
+                except Exception as e:
+                    logger.error(f"Dashboard: Balance fetch failed for {name}: {e}")
+                    return name, {}
+            
+            results = await asyncio.gather(
+                *[_fetch_balance(name, wrapper) for name, wrapper in bot.exchanges.items()]
+            )
+            for name, bal in results:
+                balances[name] = bal
 
             # Collect strategies information
             strategies_data = []

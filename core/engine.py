@@ -129,11 +129,6 @@ settings = Settings()
     enable_eth_grid: bool = field(default_factory=lambda: _bool("ENABLE_ETH_GRID", True))
     enable_btc_rsi: bool = field(default_factory=lambda: _bool("ENABLE_BTC_RSI", True))
     enable_eth_rsi: bool = field(default_factory=lambda: _bool("ENABLE_ETH_RSI", True))
-    # Feature flags for new strategies
-    enable_btc_grid: bool = field(default_factory=lambda: _bool("ENABLE_BTC_GRID", True))
-    enable_eth_grid: bool = field(default_factory=lambda: _bool("ENABLE_ETH_GRID", True))
-    enable_btc_rsi: bool = field(default_factory=lambda: _bool("ENABLE_BTC_RSI", True))
-    enable_eth_rsi: bool = field(default_factory=lambda: _bool("ENABLE_ETH_RSI", True))
     enable_dynamic_grid: bool = field(default_factory=lambda: _bool("ENABLE_DYNAMIC_GRID", False))
 
     # Dynamic Grid Strategy Settings
@@ -354,6 +349,9 @@ class ExchangeWrapper:
         self._mock_balances: dict[str, float] = {"USDT": 49.0, "EUR": 49.0, "BTC": 0.0, "SOL": 0.0, "BNB": 0.05}
         self._mock_orders: dict[str, dict] = {}
         
+        # Public client for dry-run market data (cached)
+        self._public_client: ccxt.Exchange | None = None
+        
     async def connect(self):
         if self.dry_run:
             logger.info(f"Exchange [{self.name}]: Connected in DRY_RUN mode.")
@@ -375,9 +373,41 @@ class ExchangeWrapper:
         await self._client.load_markets()
         logger.info(f"Exchange [{self.name}]: Real connection initialized.")
 
+    async def reconnect(self, max_attempts: int = 5) -> bool:
+        """Attempt to reconnect with exponential backoff."""
+        for attempt in range(1, max_attempts + 1):
+            try:
+                delay = min(2 ** attempt, 30)  # Exponential backoff capped at 30s
+                logger.warning(f"Exchange [{self.name}]: Reconnect attempt {attempt}/{max_attempts} in {delay}s...")
+                await asyncio.sleep(delay)
+                
+                if self._client:
+                    try:
+                        await self._client.close()
+                    except Exception:
+                        pass
+                    self._client = None
+                
+                await self.connect()
+                logger.info(f"Exchange [{self.name}]: Reconnected successfully on attempt {attempt}.")
+                return True
+            except Exception as e:
+                logger.error(f"Exchange [{self.name}]: Reconnect attempt {attempt} failed: {e}")
+        
+        logger.critical(f"Exchange [{self.name}]: Failed to reconnect after {max_attempts} attempts.")
+        return False
+
+    def _get_public_client(self) -> ccxt.Exchange:
+        if self._public_client is None:
+            self._public_client = ccxt.binance({"enableRateLimit": True})
+        return self._public_client
+
     async def close(self):
         if self._client:
             await self._client.close()
+        if self._public_client:
+            await self._public_client.close()
+            self._public_client = None
 
     def get_market_precision_and_limits(self, symbol: str) -> tuple[int, float, float]:
         """Returns (amount_precision, min_amount, min_cost) for a symbol."""
@@ -430,7 +460,20 @@ class ExchangeWrapper:
                     logger.warning(f"Exchange [{self.name}] {fn_name} failed: {exc}. Retrying in {delay}s...")
                     await asyncio.sleep(delay)
                 else:
-                    logger.error(f"Exchange [{self.name}] {fn_name} failed after retries: {exc}.")
+                    logger.error(f"Exchange [{self.name}] {fn_name} failed after retries: {exc}. Attempting reconnect...")
+                    reconnected = await self.reconnect(max_attempts=3)
+                    if reconnected:
+                        fn = getattr(self._client, fn_name)
+                        try:
+                            return await fn(*args, **kwargs)
+                        except Exception as retry_exc:
+                            logger.error(f"Exchange [{self.name}] {fn_name} failed after reconnect: {retry_exc}")
+            except ccxt.InsufficientFunds as exc:
+                raise RuntimeError(f"Exchange [{self.name}] insufficient funds: {exc}") from exc
+            except ccxt.InvalidOrder as exc:
+                raise RuntimeError(f"Exchange [{self.name}] invalid order: {exc}") from exc
+            except ccxt.RateLimitExceeded as exc:
+                raise RuntimeError(f"Exchange [{self.name}] rate limit exceeded: {exc}") from exc
             except ccxt.BaseError as exc:
                 raise RuntimeError(f"Exchange [{self.name}] api error: {exc}") from exc
         raise RuntimeError(f"Exchange [{self.name}] network failure: {last_exc}")
@@ -439,14 +482,11 @@ class ExchangeWrapper:
     async def fetch_ohlcv(self, symbol: str, timeframe: str = "1m", limit: int = 200) -> list[list[float]]:
         # In dry run, we still fetch real public market candles
         if self.dry_run:
-            # Create a temporary public client to fetch public market data without credentials
-            tmp_client = ccxt.binance({"enableRateLimit": True})
             try:
-                data = await tmp_client.fetch_ohlcv(symbol, timeframe, None, limit)
-                await tmp_client.close()
+                public_client = self._get_public_client()
+                data = await public_client.fetch_ohlcv(symbol, timeframe, None, limit)
                 return data
             except Exception as e:
-                await tmp_client.close()
                 logger.error(f"Dry run public OHLCV fetch failed: {e}")
                 # return a dummy series if request fails
                 t = int(time.time() * 1000)
