@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 """Patch base.py to implement Dynamic Position Sizing and Trailing Stop Guard"""
 import os
-import ccxt
 import asyncio
-import pandas as pd
-from pathlib import Path
+from typing import Any
 from enum import Enum
 
 from loguru import logger
