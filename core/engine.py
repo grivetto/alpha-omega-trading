@@ -141,8 +141,9 @@ class Settings:
     dynamic_grid_amount_precision: int = field(default_factory=lambda: _int("DYNAMIC_GRID_AMOUNT_PRECISION", 6))
 
 
-settings = Settings()
+    db_path: str = field(default_factory=lambda: _env("DB_PATH", ".tmp/denaro.db"))
 
+settings = Settings()
 class TradeDB:
     def __init__(self, db_name: str = "denaro"):
         self.path = BASE / ".tmp" / f"{db_name}.db"
