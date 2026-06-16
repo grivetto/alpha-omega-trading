@@ -33,8 +33,8 @@ def _bool(key: str, default: bool = True) -> bool:
 class Settings:
     # ── Exchange Settings ────────────────────────────────────────────────────
     exchange_id: str = field(default_factory=lambda: _env("EXCHANGE_ID", "binance"))
-    api_key: str = field(default_factory=lambda: _env("API_KEY", ""))
-    api_secret: str = field(default_factory=lambda: _env("API_SECRET", ""))
+    api_key: str = field(default_factory=lambda: _env("API_KEY", _env("BINANCE_API_KEY", "")))
+    api_secret: str = field(default_factory=lambda: _env("API_SECRET", _env("BINANCE_API_SECRET", "")))
     subaccount_name: Optional[str] = field(default_factory=lambda: _env("SUBACCOUNT_NAME", None))
     
     # ── Trading Settings ────────────────────────────────────────────────────
