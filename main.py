@@ -111,7 +111,7 @@ class TradingBot:
                         symbol = getattr(settings, f'{ex_name.lower()}_dynamic_grid_symbol', settings.dynamic_grid_symbol)
                         base_levels = getattr(settings, f'{ex_name.lower()}_dynamic_grid_levels', settings.dynamic_grid_levels)
                         min_spacing = getattr(settings, f'{ex_name.lower()}_dynamic_grid_min_spacing', settings.dynamic_grid_min_spacing)
-                        max_spacing = getattr(settings, f'{ex_name.lower()}_dynamic_grid_max_spacing', settings.dynamic_grid_max_spacing)
+                        max_spacing = getattr(settings, f'{ex_name.lower()}_dynamic_grid_max_spacing_pct', settings.dynamic_grid_max_spacing_pct)
                         price_precision = getattr(settings, f'{ex_name.lower()}_dynamic_grid_price_precision', settings.dynamic_grid_price_precision)
                         amount_precision = getattr(settings, f'{ex_name.lower()}_dynamic_grid_amount_precision', settings.dynamic_grid_amount_precision)
                         take_profit_pct = getattr(settings, f'{ex_name.lower()}_dynamic_grid_take_pct', settings.dynamic_grid_take_pct)
