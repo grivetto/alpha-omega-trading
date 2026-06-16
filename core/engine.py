@@ -1,3 +1,4 @@
+import asyncio
 from dataclasses import dataclass, field
 import os
 from pathlib import Path
@@ -233,8 +234,17 @@ class RiskManager:
     async def initialize(self, strategies):
         logger.info("RiskManager initialized.")
         return self
+    
+    async def is_safe(self, symbol: str, side, amount: float) -> bool:
+        """Check if a trade is safe to execute."""
+        if self._is_halted:
+            logger.warning(f"RiskManager: Trading is halted. Blocking {side} {amount} {symbol}")
+            return False
+        return True
 
 class ExchangeWrapper:
+    """Wrapper around ccxt.Exchange that delegates all methods to the underlying exchange."""
+    
     def __init__(self, settings_ref: Settings = settings):
         self.settings = settings_ref
         self._exchange = None
@@ -253,20 +263,33 @@ class ExchangeWrapper:
             logger.error(f"ExchangeWrapper: Connection failed: {e}")
             raise
     
+    # Delegate all unknown attributes to the underlying ccxt exchange
+    def __getattr__(self, name):
+        return getattr(self._exchange, name)
+    
     async def connect(self):
         return self._exchange
     
-    def fetch_balance(self) -> Dict[str, float]:
+    async def fetch_balance(self) -> Dict[str, float]:
         try:
             balance = self._exchange.fetch_balance()
-            return {k: v for k, v in balance["total"].items() if isinstance(v, (int, float))}
+            # Return full balance dict (with free, used, total) for compatibility
+            return balance
         except Exception as e:
             logger.error(f"ExchangeWrapper: Fetch balance failed: {e}")
-            return {}
+            return {"free": {}, "used": {}, "total": {}}
     
-    def fetch_ohlcv(self, symbol: str, timeframe: str = "1h", limit: int = 100) -> List[List[float]]:
+    async def fetch_ohlcv(self, symbol: str, timeframe: str = "1h", limit: int = 100) -> List[List[float]]:
         try:
-            return self._exchange.fetch_ohlcv(symbol, timeframe, limit=limit)
+            return await asyncio.to_thread(self._exchange.fetch_ohlcv, symbol, timeframe, limit=limit)
         except Exception as e:
             logger.error(f"ExchangeWrapper: Fetch OHLCV failed: {e}")
             return []
+    
+    def close(self):
+        """Close the exchange connection."""
+        if self._exchange:
+            try:
+                self._exchange.close()
+            except Exception as e:
+                logger.debug(f"ExchangeWrapper: close() error: {e}")

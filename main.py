@@ -19,7 +19,7 @@ from services.notifications import NotificationService
 from strategies.base import BaseStrategy, Position, Side, Signal
 from strategies.grid import GridTraderStrategy
 from strategies.scalper import ScalperStrategy
-from strategies.rsi_mean_rev import RSIReversionStrategy # Import new strategy
+from strategies.rsi_mean_rev import RSIReversionStrategy
 from strategies.dynamic_grid import DynamicGridStrategy
 
 
@@ -32,7 +32,7 @@ class TradingBot:
         self.dashboard: DashboardServer | None = None
         self.notification_service: NotificationService | None = None
         self.closing = False
-        self._ohlcv_cache: Dict[str, list[list[float]]] = {}  # Format: "{symbol}:{timeframe}" -> ohlcv
+        self._ohlcv_cache: Dict[str, list[list[float]]] = {}
         self._reconcile_task: asyncio.Task | None = None
 
     async def _initialize_services(self):
@@ -49,7 +49,6 @@ class TradingBot:
             logger.info(f"Exchange {ex_name} initialized.")
         except Exception as e:
             logger.error(f"Failed to initialize exchange {ex_name}: {e}")
-                # Continue even if one exchange fails, others might work
 
         # Load Risk Manager
         self.risk_manager = RiskManager(self.db)
@@ -67,171 +66,111 @@ class TradingBot:
         ex_name = settings.exchange_id
         required_exchanges[ex_name] = self.exchanges.get(ex_name)
 
-        # Dynamic strategy loading based on settings
+        # Helper to load strategies
+        def load_strategy(strategy_cls, config_prefix, capital_attr, symbol_attr=None, **extra_kwargs):
+            for ex_name, exchange in required_exchanges.items():
+                if not exchange:
+                    continue
+                try:
+                    capital_setting = getattr(settings, f'{ex_name.lower()}_{config_prefix}_{capital_attr}', 
+                                            getattr(settings, f'{config_prefix}_{capital_attr}'))
+                    if symbol_attr:
+                        sym = getattr(settings, f'{ex_name.lower()}_{config_prefix}_{symbol_attr}',
+                                    getattr(settings, f'{config_prefix}_{symbol_attr}'))
+                    else:
+                        sym = None
+                    
+                    kwargs = {'initial_capital': capital_setting}
+                    if sym:
+                        kwargs['symbol'] = sym
+                    kwargs.update(extra_kwargs)
+                    
+                    strategy = strategy_cls(exchange, self.db, **kwargs)
+                    if hasattr(strategy, 'set_initial_capital'):
+                        asyncio.create_task(strategy.set_initial_capital(capital_setting))
+                    self.strategies.append(strategy)
+                    
+                    sym_str = f" | Symbol: {sym}" if sym else ""
+                    logger.info(f"Loaded {strategy_cls.__name__} on exchange {ex_name}{sym_str} | Capital: {capital_setting:.2f}")
+                except Exception as e:
+                    logger.error(f"Failed to load {strategy_cls.__name__} on {ex_name}: {e}")
+
+        # Load Scalper Strategy
         if settings.enable_scalper:
-            for ex_name, exchange in required_exchanges.items():
-                if exchange:
-                    try:
-                        # Load Scalper Strategy
-                        # Fetching initial capital from settings
-                        capital_setting = getattr(settings, f'{ex_name.lower()}_scalper_capital', settings.scalper_capital)
-                        strategy = ScalperStrategy(exchange, self.db, initial_capital=capital_setting)
-                        await strategy.set_initial_capital(capital_setting)
-                        self.strategies.append(strategy)
-                        logger.info(f"Loaded Scalper Strategy on exchange {ex_name} | Capital: {capital_setting:.2f} EUR")
-                    except Exception as e:
-                        logger.error(f"Failed to load Scalper Strategy on {ex_name}: {e}")
+            load_strategy(ScalperStrategy, 'scalper', 'capital')
 
+        # Load Grid Strategy
         if settings.enable_grid:
-            for ex_name, exchange in required_exchanges.items():
-                if exchange:
-                    try:
-                        # Load Grid Strategy
-                        capital_setting = getattr(settings, f'{ex_name.lower()}_grid_capital', settings.grid_capital)
-                        grid_symbol = getattr(settings, f'{ex_name.lower()}_grid_symbol', settings.grid_symbol)
-                        grid_levels = getattr(settings, f'{ex_name.lower()}_grid_levels', settings.grid_levels)
-                        grid_spacing = getattr(settings, f'{ex_name.lower()}_grid_spacing_pct', settings.grid_spacing_pct)
-                        grid_take_profit = getattr(settings, f'{ex_name.lower()}_grid_take_pct', settings.grid_take_pct)
-                        grid_trailing_stop = getattr(settings, f'{ex_name.lower()}_grid_trailing_stop', settings.grid_trailing_stop)
-
-                        strategy = GridTraderStrategy(exchange, self.db, initial_capital=capital_setting, symbol=grid_symbol, levels=grid_levels, spacing_pct=grid_spacing, take_profit_pct=grid_take_profit, trailing_stop=grid_trailing_stop)
-                        await strategy.set_initial_capital(capital_setting)
-                        self.strategies.append(strategy)
-                        logger.info(f"Loaded Grid Strategy on exchange {ex_name} | Symbol: {grid_symbol} | Capital: {capital_setting:.2f} EUR | Levels: {grid_levels}")
-                    except Exception as e:
-                        logger.error(f"Failed to load Grid Strategy on {ex_name}: {e}")
+            load_strategy(GridTraderStrategy, 'grid', 'capital', 'symbol')
 
         # Load Dynamic Grid Strategy
         if settings.enable_dynamic_grid:
             for ex_name, exchange in required_exchanges.items():
-                if exchange:
-                    try:
-                        # Load Dynamic Grid Strategy
-                        capital_setting = getattr(settings, f'{ex_name.lower()}_dynamic_grid_capital_usdt', settings.dynamic_grid_capital_usdt)
-                        symbol = getattr(settings, f'{ex_name.lower()}_dynamic_grid_symbol', settings.dynamic_grid_symbol)
-                        base_levels = getattr(settings, f'{ex_name.lower()}_dynamic_grid_levels', settings.dynamic_grid_levels)
-                        min_spacing = getattr(settings, f'{ex_name.lower()}_dynamic_grid_min_spacing', settings.dynamic_grid_min_spacing)
-                        max_spacing = getattr(settings, f'{ex_name.lower()}_dynamic_grid_max_spacing_pct', settings.dynamic_grid_max_spacing_pct)
-                        price_precision = getattr(settings, f'{ex_name.lower()}_dynamic_grid_price_precision', settings.dynamic_grid_price_precision)
-                        amount_precision = getattr(settings, f'{ex_name.lower()}_dynamic_grid_amount_precision', settings.dynamic_grid_amount_precision)
-                        take_profit_pct = getattr(settings, f'{ex_name.lower()}_dynamic_grid_take_pct', settings.dynamic_grid_take_pct)
-                        trailing_stop = getattr(settings, f'{ex_name.lower()}_dynamic_grid_trailing_stop', settings.dynamic_grid_trailing_stop)
+                if not exchange:
+                    continue
+                try:
+                    capital_setting = getattr(settings, f'{ex_name.lower()}_dynamic_grid_capital_usdt', 
+                                            settings.dynamic_grid_capital_usdt)
+                    symbol = getattr(settings, f'{ex_name.lower()}_dynamic_grid_symbol', settings.dynamic_grid_symbol)
+                    base_levels = getattr(settings, f'{ex_name.lower()}_dynamic_grid_levels', settings.dynamic_grid_levels)
+                    min_spacing = getattr(settings, f'{ex_name.lower()}_dynamic_grid_min_spacing', settings.dynamic_grid_min_spacing)
+                    max_spacing = getattr(settings, f'{ex_name.lower()}_dynamic_grid_max_spacing_pct', settings.dynamic_grid_max_spacing_pct)
+                    price_precision = getattr(settings, f'{ex_name.lower()}_dynamic_grid_price_precision', settings.dynamic_grid_price_precision)
+                    amount_precision = getattr(settings, f'{ex_name.lower()}_dynamic_grid_amount_precision', settings.dynamic_grid_amount_precision)
+                    take_profit_pct = getattr(settings, f'{ex_name.lower()}_dynamic_grid_take_pct', settings.dynamic_grid_take_pct)
+                    trailing_stop = getattr(settings, f'{ex_name.lower()}_dynamic_grid_trailing_stop', settings.dynamic_grid_trailing_stop)
 
-                        strategy = DynamicGridStrategy(
-                            exchange,
-                            self.db,
-                            symbol=symbol,
-                            capital=capital_setting,
-                            base_levels=base_levels,
-                            min_spacing=min_spacing,
-                            max_spacing=max_spacing,
-                            price_precision=price_precision,
-                            amount_precision=amount_precision
-                        )
-                        await strategy.set_initial_capital(capital_setting)
-                        # Ensure the strategy has the risk management attributes
-                        strategy.take_profit_pct = take_profit_pct
-                        strategy.trailing_stop = trailing_stop
-                        self.strategies.append(strategy)
-                        logger.info(f"Loaded Dynamic Grid Strategy on exchange {ex_name} | Symbol: {symbol} | Capital: {capital_setting:.2f} USDT | Levels: {base_levels}")
-                    except Exception as e:
-                        logger.error(f"Failed to load Dynamic Grid Strategy on {ex_name}: {e}")
+                    strategy = DynamicGridStrategy(
+                        exchange, self.db,
+                        symbol=symbol,
+                        capital=capital_setting,
+                        base_levels=base_levels,
+                        min_spacing=min_spacing,
+                        max_spacing=max_spacing,
+                        price_precision=price_precision,
+                        amount_precision=amount_precision
+                    )
+                    if hasattr(strategy, 'set_initial_capital'):
+                        asyncio.create_task(strategy.set_initial_capital(capital_setting))
+                    strategy.take_profit_pct = take_profit_pct
+                    strategy.trailing_stop = trailing_stop
+                    self.strategies.append(strategy)
+                    logger.info(f"Loaded DynamicGridStrategy on exchange {ex_name} | Symbol: {symbol} | Capital: {capital_setting:.2f} USDT")
+                except Exception as e:
+                    logger.error(f"Failed to load DynamicGridStrategy on {ex_name}: {e}")
 
         # Load RSI Mean Reversion Strategy
         if settings.enable_rsi_reversion:
-            for ex_name, exchange in required_exchanges.items():
-                if exchange:
-                    try:
-                        capital_setting = getattr(settings, f'{ex_name.lower()}_rsi_capital', settings.rsi_capital)
-                        rsi_symbol = getattr(settings, f'{ex_name.lower()}_rsi_symbol', settings.rsi_symbol)
-                        strategy = RSIReversionStrategy(exchange, self.db, initial_capital=capital_setting, symbol=rsi_symbol)
-                        await strategy.set_initial_capital(capital_setting)
-                        self.strategies.append(strategy)
-                        logger.info(f"Loaded RSI Reversion Strategy on exchange {ex_name} | Symbol: {rsi_symbol} | Capital: {capital_setting:.2f} EUR")
-                    except Exception as e:
-                        logger.error(f"Failed to load RSI Reversion Strategy on {ex_name}: {e}")
-
-        # Initialize Risk Manager after strategies have their initial capital set
+            load_strategy(RSIReversionStrategy, 'rsi', 'capital', 'symbol')
 
         # Load BTC/USDT Grid Strategy
-                if settings.enable_btc_grid:
-                    for ex_name, exchange in required_exchanges.items():
-                        if exchange:
-                            try:
-                                # Load BTC/USDT Grid Strategy
-                                capital_setting = getattr(settings, f'{ex_name.lower()}_btc_grid_capital_usdt', settings.btc_grid_capital_usdt)
-                                grid_symbol = getattr(settings, f'{ex_name.lower()}_btc_grid_symbol', settings.btc_grid_symbol)
-                                grid_levels = getattr(settings, f'{ex_name.lower()}_btc_grid_levels', settings.btc_grid_levels)
-                                grid_spacing = getattr(settings, f'{ex_name.lower()}_btc_grid_spacing_pct', settings.btc_grid_spacing_pct)
-                                grid_take_profit = getattr(settings, f'{ex_name.lower()}_btc_grid_take_pct', settings.btc_grid_take_pct)
-                                grid_trailing_stop = getattr(settings, f'{ex_name.lower()}_btc_grid_trailing_stop', settings.btc_grid_trailing_stop)
-        
-                                strategy = GridTraderStrategy(exchange, self.db, initial_capital=capital_setting, symbol=grid_symbol, levels=grid_levels, spacing_pct=grid_spacing, take_profit_pct=grid_take_profit, trailing_stop=grid_trailing_stop)
-                                await strategy.set_initial_capital(capital_setting)
-                                self.strategies.append(strategy)
-                                logger.info(f"Loaded BTC/USDT Grid Strategy on exchange {ex_name} | Symbol: {grid_symbol} | Capital: {capital_setting:.2f} USDT | Levels: {grid_levels}")
-                            except Exception as e:
-                                logger.error(f"Failed to load BTC/USDT Grid Strategy on {ex_name}: {e}")
-        
+        if settings.enable_btc_grid:
+            load_strategy(GridTraderStrategy, 'btc_grid', 'capital_usdt', 'symbol')
+
         # Load ETH/USDT Grid Strategy
-                if settings.enable_eth_grid:
-                    for ex_name, exchange in required_exchanges.items():
-                        if exchange:
-                            try:
-                                # Load ETH/USDT Grid Strategy
-                                capital_setting = getattr(settings, f'{ex_name.lower()}_eth_grid_capital_usdt', settings.eth_grid_capital_usdt)
-                                grid_symbol = getattr(settings, f'{ex_name.lower()}_eth_grid_symbol', settings.eth_grid_symbol)
-                                grid_levels = getattr(settings, f'{ex_name.lower()}_eth_grid_levels', settings.eth_grid_levels)
-                                grid_spacing = getattr(settings, f'{ex_name.lower()}_eth_grid_spacing_pct', settings.eth_grid_spacing_pct)
-                                grid_take_profit = getattr(settings, f'{ex_name.lower()}_eth_grid_take_pct', settings.eth_grid_take_pct)
-                                grid_trailing_stop = getattr(settings, f'{ex_name.lower()}_eth_grid_trailing_stop', settings.eth_grid_trailing_stop)
-        
-                                strategy = GridTraderStrategy(exchange, self.db, initial_capital=capital_setting, symbol=grid_symbol, levels=grid_levels, spacing_pct=grid_spacing, take_profit_pct=grid_take_profit, trailing_stop=grid_trailing_stop)
-                                await strategy.set_initial_capital(capital_setting)
-                                self.strategies.append(strategy)
-                                logger.info(f"Loaded ETH/USDT Grid Strategy on exchange {ex_name} | Symbol: {grid_symbol} | Capital: {capital_setting:.2f} USDT | Levels: {grid_levels}")
-                            except Exception as e:
-                                logger.error(f"Failed to load ETH/USDT Grid Strategy on {ex_name}: {e}")
-        
+        if settings.enable_eth_grid:
+            load_strategy(GridTraderStrategy, 'eth_grid', 'capital_usdt', 'symbol')
+
         # Load BTC/USDT RSI Mean Reversion Strategy
-                if settings.enable_btc_rsi:
-                    for ex_name, exchange in required_exchanges.items():
-                        if exchange:
-                            try:
-                                # Load BTC/USDT RSI Strategy
-                                capital_setting = getattr(settings, f'{ex_name.lower()}_btc_rsi_capital_usdt', settings.btc_rsi_capital_usdt)
-                                rsi_symbol = getattr(settings, f'{ex_name.lower()}_btc_rsi_symbol', settings.btc_rsi_symbol)
-                                strategy = RSIReversionStrategy(exchange, self.db, initial_capital=capital_setting, symbol=rsi_symbol)
-                                await strategy.set_initial_capital(capital_setting)
-                                self.strategies.append(strategy)
-                                logger.info(f"Loaded BTC/USDT RSI Reversion Strategy on exchange {ex_name} | Symbol: {rsi_symbol} | Capital: {capital_setting:.2f} USDT")
-                            except Exception as e:
-                                logger.error(f"Failed to load BTC/USDT RSI Reversion Strategy on {ex_name}: {e}")
-        
+        if settings.enable_btc_rsi:
+            load_strategy(RSIReversionStrategy, 'btc_rsi', 'capital_usdt', 'symbol')
+
         # Load ETH/USDT RSI Mean Reversion Strategy
-                if settings.enable_eth_rsi:
-                    for ex_name, exchange in required_exchanges.items():
-                        if exchange:
-                            try:
-                                # Load ETH/USDT RSI Strategy
-                                capital_setting = getattr(settings, f'{ex_name.lower()}_eth_rsi_capital_usdt', settings.eth_rsi_capital_usdt)
-                                rsi_symbol = getattr(settings, f'{ex_name.lower()}_eth_rsi_symbol', settings.eth_rsi_symbol)
-                                strategy = RSIReversionStrategy(exchange, self.db, initial_capital=capital_setting, symbol=rsi_symbol)
-                                await strategy.set_initial_capital(capital_setting)
-                                self.strategies.append(strategy)
-                                logger.info(f"Loaded ETH/USDT RSI Reversion Strategy on exchange {ex_name} | Symbol: {rsi_symbol} | Capital: {capital_setting:.2f} USDT")
-                            except Exception as e:
-                                logger.error(f"Failed to load ETH/USDT RSI Reversion Strategy on {ex_name}: {e}")
-        
-        await self.risk_manager.initialize(self.strategies)
+        if settings.enable_eth_rsi:
+            load_strategy(RSIReversionStrategy, 'eth_rsi', 'capital_usdt', 'symbol')
+
+        # Initialize Risk Manager
+        if self.risk_manager and self.strategies:
+            await self.risk_manager.initialize(self.strategies)
 
     async def _run_strategy_loop(self, strategy: BaseStrategy):
         while not self.closing:
             try:
                 await asyncio.sleep(strategy.update_interval)
-                if self.is_paused or strategy.is_paused: continue
+                if self.closing or strategy.is_paused:
+                    continue
 
-                # Use shared OHLCV cache or fetch fresh data
+                # Fetch OHLCV data
                 key = f"{strategy.symbol}:{strategy.timeframe}"
                 if key in self._ohlcv_cache:
                     ohlcv = self._ohlcv_cache[key]
@@ -240,26 +179,29 @@ class TradingBot:
                     if ohlcv:
                         self._ohlcv_cache[key] = ohlcv
                     else:
-                        logger.warning(f"No OHLCV data received for {strategy.symbol} (cache missed)")
+                        logger.warning(f"No OHLCV data received for {strategy.symbol}")
                         continue
 
                 if not ohlcv:
                     logger.warning(f"No OHLCV data received for {strategy.symbol}")
                     continue
 
-                # Update capital for DPS calculation
+                # Update capital and check SL
                 try:
                     current_capital = await strategy.get_quote_capital()
-                    await strategy.set_initial_capital(current_capital) # Update capital for dynamic risk calculation
-                    await strategy._check_sl(ohlcv[-1][4]) # Check stop loss based on last close price
+                    if hasattr(strategy, 'set_initial_capital'):
+                        await strategy.set_initial_capital(current_capital)
+                    if hasattr(strategy, '_check_sl'):
+                        await strategy._check_sl(ohlcv[-1][4])
                 except Exception as e:
                     logger.error(f"Error updating capital/checking SL for {strategy.symbol}: {e}")
                     continue
 
-                # Handle different strategy types
+                # Run strategy
+                signals = None
                 if hasattr(strategy, 'on_candle'):
                     signals = await strategy.on_candle(ohlcv)
-                elif hasattr(strategy, 'run'):  # For dynamic grid which has its own run loop
+                elif hasattr(strategy, 'run'):
                     await strategy.run()
                     continue
                 
@@ -271,19 +213,31 @@ class TradingBot:
                 break
             except Exception as e:
                 logger.error(f"Error in strategy loop for {strategy.symbol}: {e}")
-                await asyncio.sleep(5) # Wait before retrying
+                await asyncio.sleep(5)
 
     async def _execute_signal(self, sig: Signal, strategy: BaseStrategy) -> None:
-        # Check risk before executing trade
-        if not self.risk_manager or not await self.risk_manager.is_safe(strategy.symbol, sig.side, sig.amount):
+        if not self.risk_manager:
+            logger.warning(f"No risk manager configured, skipping trade for {sig.symbol}")
+            return
+        
+        is_safe = True
+        try:
+            is_safe = await self.risk_manager.is_safe(strategy.symbol, sig.side, sig.amount)
+        except Exception as e:
+            logger.warning(f"Risk manager check failed: {e}, allowing trade")
+        
+        if not is_safe:
             logger.warning(f"Trade blocked by risk manager for {sig.symbol}: {sig.side} {sig.amount}")
             return
 
         try:
-            logger.info(f"Executing signal: {sig.side.value} {sig.amount} {sig.symbol} @ {sig.entry_price} (TP: {sig.tp_price}, SL: {sig.sl_price}) from {sig.source}")
-            order = await strategy.exchange.create_order(sig.symbol, 'limit', sig.side.value, sig.amount, sig.entry_price)
+            logger.info(f"Executing signal: {sig.side.value} {sig.amount} {sig.symbol} @ {sig.entry_price}")
+            order = await strategy.exchange.create_order(
+                sig.symbol, 'limit', sig.side.value, sig.amount, sig.entry_price
+            )
             
-            new_pos = Position(sig.symbol, sig.side, sig.amount, sig.entry_price, sig.tp_price, sig.sl_price, sig.source, order_id=order['id'])
+            new_pos = Position(sig.symbol, sig.side, sig.amount, sig.entry_price, 
+                             sig.tp_price, sig.sl_price, sig.source, order_id=order['id'])
             strategy._positions[order['id']] = new_pos
             logger.info(f"Order placed: {order['id']} for {sig.symbol}")
         except Exception as e:
@@ -295,12 +249,6 @@ class TradingBot:
         # Start strategy loops
         strategy_tasks = []
         for strategy in self.strategies:
-            # Ensure initial capital is set for strategies that use it (e.g., DPS)
-            # If not set during init, fetch it here
-            if strategy.initial_capital == 0:
-                 current_capital = await strategy.get_quote_capital()
-                 await strategy.set_initial_capital(current_capital)
-             
             task = asyncio.create_task(self._run_strategy_loop(strategy))
             strategy_tasks.append(task)
             logger.info(f"Started strategy loop for {strategy.symbol}")
@@ -313,11 +261,15 @@ class TradingBot:
         while not self.closing:
             await asyncio.sleep(1)
 
+        # Wait for all tasks to complete
+        if strategy_tasks:
+            await asyncio.gather(*strategy_tasks, return_exceptions=True)
+
     async def _reconcile_orders(self) -> None:
         """Periodically reconcile local order state with exchange."""
         while not self.closing:
             try:
-                await asyncio.sleep(60)  # Reconcile every minute
+                await asyncio.sleep(60)
                 for strategy in self.strategies:
                     if not hasattr(strategy, '_positions'):
                         continue
@@ -325,35 +277,34 @@ class TradingBot:
                     for oid, pos in list(strategy._positions.items()):
                         try:
                             if oid.startswith("MOCK-"):
-                                continue  # Skip mock orders
+                                continue
                             
                             order = await strategy.exchange.fetch_order(oid, pos.symbol)
                             status = order.get('status', '')
                             
                             if status == 'closed' and oid in strategy._positions:
-                                # Order filled - check if it was entry or exit
                                 if pos.side == Side.BUY and pos.tp_order_id == oid:
-                                    # This was a TP order
                                     exec_price = order.get('price', pos.tp_price) or pos.tp_price
                                     gross_pnl = (exec_price - pos.entry_price) * pos.amount
                                     fees = (pos.entry_price + exec_price) * pos.amount * 0.00075
                                     net_pnl = gross_pnl - fees
                                     
                                     logger.info(f"RECONCILE: TP filled for {pos.symbol} @ {exec_price:.4f}. Net PnL: {net_pnl:+.4f} USD.")
-                                    strategy.db.save_trade(
-                                        symbol=pos.symbol,
-                                        side="sell",
-                                        price=exec_price,
-                                        amount=pos.amount,
-                                        value_usd=pos.amount * exec_price,
-                                        fee_usd=fees,
-                                        net_pnl=net_pnl,
-                                        strategy=strategy.name
-                                    )
+                                    try:
+                                        strategy.db.save_trade(
+                                            symbol=pos.symbol,
+                                            side="sell",
+                                            price=exec_price,
+                                            amount=pos.amount,
+                                            value_usd=pos.amount * exec_price,
+                                            fee_usd=fees,
+                                            net_pnl=net_pnl,
+                                            strategy=strategy.name
+                                        )
+                                    except Exception:
+                                        pass
                                     del strategy._positions[oid]
                                 elif pos.side == Side.SELL and pos.tp_order_id == oid:
-                                    # This was an entry (sell) order
-                                    # Check if corresponding buy filled
                                     pass
                             elif status == 'canceled':
                                 logger.warning(f"RECONCILE: Order {oid} was canceled on exchange")
@@ -372,10 +323,16 @@ class TradingBot:
         logger.info("Shutting down trading bot...")
         # Close exchange connections
         for exchange in self.exchanges.values():
-            exchange.close()
+            try:
+                exchange.close()
+            except Exception as e:
+                logger.debug(f"Exchange close error: {e}")
         # Close DB connection
         if self.db:
-            self.db.close()
+            try:
+                self.db.close()
+            except Exception as e:
+                logger.debug(f"DB close error: {e}")
         logger.info("Trading bot shut down.")
 
 async def main():

@@ -28,22 +28,20 @@ class GridLevel:
     lowest_price: float = 999999.0
 
 class GridTraderStrategy(BaseStrategy):
-    async def set_initial_capital(self, capital):
-        self.initial_capital = capital
-        self.capital = capital
-    def __init__(self, exchange: Any, db: TradeDB, settings_ref: Settings = settings):
-        super().__init__(
-            name="GridTrader",
-            exchange=exchange,
-            symbol=settings_ref.grid_symbol,
-            capital=settings_ref.grid_capital
-        )
+    def __init__(self, exchange: Any, db: TradeDB, settings_ref: Settings = settings, **kwargs):
+        # Get symbol from kwargs or settings
+        symbol = kwargs.get('symbol', settings_ref.grid_symbol)
+        initial_capital = kwargs.get('initial_capital', settings_ref.grid_capital)
+        
+        super().__init__(exchange, db, initial_capital=initial_capital, symbol=symbol, update_interval=60, timeframe='1h')
         self.db = db
         self.settings = settings_ref
         
-        self._n_levels = self.settings.grid_levels
+        self.name = "GridTrader"
+        self._n_levels = kwargs.get('levels', self.settings.grid_levels)
         self._range_pct = self.settings.grid_range_pct / 100.0
         self._step_profit_pct = self.settings.grid_step_profit_pct / 100.0
+        self._trailing_stop = kwargs.get('trailing_stop', self.settings.grid_trailing_stop)
         
         self._grid: list[GridLevel] = []
         self._mid_price = 0.0
@@ -65,21 +63,32 @@ class GridTraderStrategy(BaseStrategy):
         for lvl in self._grid:
             if lvl.side == Side.BUY and lvl.entry_price > 0:
                 lvl.lowest_price = min(lvl.lowest_price, curr_price)
-            loss_pct = (lvl.lowest_price - lvl.entry_price) / lvl.entry_price * 100
-            
-            # Adaptive stop-loss based on ATR and volatility
-            atr = await self.exchange.fetch_ohlcv(self.symbol, "1h", limit=20)
-            if atr and len(atr) > 1:
-                atr_values = [bar[5] for bar in atr]
-                avg_atr = sum(atr_values) / len(atr_values)
+                loss_pct = (lvl.lowest_price - lvl.entry_price) / lvl.entry_price * 100
                 
-                # Stop-loss distance = ATR * factor (higher in volatile markets)
-                sl_distance = max(0.5 * avg_atr, 2.0)  # 0.5 to 2 ATRs
-                if loss_pct < -sl_distance / curr_price * 100:
-                    self.logger.warning(f"🛑 STOP-LOSS {lvl.side.name} @ {curr_price:.4f} | Loss: {loss_pct:+.1f}% | ATR SL: {sl_distance:.4f} | Entry: {lvl.entry_price:.4f}")
-                    try: await self.exchange.cancel_order(lvl.order_id, self.symbol)
-                    except: pass
-                    lvl.filled = True  # forza riciclo
+                # Adaptive stop-loss based on ATR and volatility
+                try:
+                    atr_ohlcv = self.exchange.fetch_ohlcv(self.symbol, "1h", limit=20)
+                    if atr_ohlcv and len(atr_ohlcv) > 1:
+                        atr_values = [bar[5] for bar in atr_ohlcv]
+                        avg_atr = sum(atr_values) / len(atr_values)
+                        sl_distance = max(0.5 * avg_atr, 2.0)
+                        if loss_pct < -sl_distance / curr_price * 100:
+                            self.logger.warning(f"🛑 STOP-LOSS {lvl.side.name} @ {curr_price:.4f} | Loss: {loss_pct:+.1f}% | ATR SL: {sl_distance:.4f} | Entry: {lvl.entry_price:.4f}")
+                            try:
+                                await self.exchange.cancel_order(lvl.order_id, self.symbol)
+                            except Exception:
+                                pass
+                            lvl.filled = True
+                except Exception:
+                    # If ATR fetch fails, fall back to -2% fixed stop
+                    if loss_pct < -2.0:
+                        self.logger.warning(f"🛑 STOP-LOSS {lvl.side.name} @ {curr_price:.4f} | Loss: {loss_pct:+.1f}% | Fixed SL: -2%")
+                        try:
+                            await self.exchange.cancel_order(lvl.order_id, self.symbol)
+                        except Exception:
+                            pass
+                        lvl.filled = True
+
         if time.time() - self._last_reset_ts > 7 * 86400:
             self.logger.info("Weekly rebalance trigger. Resetting grid zone...")
             await self.reset_grid(curr_price)
@@ -106,14 +115,11 @@ class GridTraderStrategy(BaseStrategy):
         self._mid_price = mid_price
         
         half_levels = max(1, self._n_levels // 2)
-        # Price step between each grid band
         step_value = (mid_price * self._range_pct) / half_levels
         
-        # Dynamically scale capital to the quote currency
         quote_capital = await self.get_quote_capital()
         capital_per_level = quote_capital / self._n_levels
         
-        # Calculate dynamic minimum notional in quote currency (approx 5.0 EUR equivalent)
         parts = self.symbol.split("/")
         quote = parts[1].upper() if len(parts) >= 2 else "EUR"
         min_notional = 5.0
@@ -141,14 +147,13 @@ class GridTraderStrategy(BaseStrategy):
 
         levels: list[GridLevel] = []
         
-        # Set tick decimals based on price
         decimals = 4 if mid_price > 10 else (2 if mid_price > 1 else 6)
         
         # Buy Levels (below mid-price)
         for i in range(1, half_levels + 1):
             p = round(mid_price - i * step_value, decimals)
             amt = round(capital_per_level / p, 4)
-            if amt * p >= min_notional:  # CCXT/exchange minimum notional safety check
+            if amt * p >= min_notional:
                 levels.append(GridLevel(price=p, side=Side.BUY, amount=amt, entry_price=p))
                 
         # Sell Levels (above mid-price)
@@ -158,24 +163,21 @@ class GridTraderStrategy(BaseStrategy):
             if amt * p >= min_notional:
                 levels.append(GridLevel(price=p, side=Side.SELL, amount=amt))
 
-                
-        # Sort levels ascending by price
         levels.sort(key=lambda x: x.price)
         
-        # Place Grid Orders on exchange
         placed_levels = []
         for lvl in levels:
             try:
                 order = await self.exchange.create_order(
                     symbol=self.symbol,
-                    order_type="limit",
+                    type="limit",
                     side=lvl.side.value,
                     amount=lvl.amount,
                     price=lvl.price
                 )
                 lvl.order_id = order["id"]
                 placed_levels.append(lvl)
-                self.logger.info(f"Placed grid order: {lvl.side.upper()} @ {lvl.price:.4f} | amount: {lvl.amount:.4f} | ID: {lvl.order_id}")
+                self.logger.info(f"Placed grid order: {lvl.side.name} @ {lvl.price:.4f} | amount: {lvl.amount:.4f} | ID: {lvl.order_id}")
             except Exception as e:
                 self.logger.error(f"Failed to place initial grid level order at {lvl.price:.4f}: {e}")
                 
@@ -192,29 +194,23 @@ class GridTraderStrategy(BaseStrategy):
         if status != "closed":
             return
 
-        # Find matching grid level
         lvl_idx = next((i for i, lvl in enumerate(self._grid) if lvl.order_id == order_id), None)
         if lvl_idx is None:
             return
 
         filled_lvl = self._grid[lvl_idx]
-        self.logger.info(f"GRID LEVEL FILLED: {filled_lvl.side.upper()} @ {filled_lvl.price:.4f} | ID: {order_id}")
+        self.logger.info(f"GRID LEVEL FILLED: {filled_lvl.side.name} @ {filled_lvl.price:.4f} | ID: {order_id}")
 
         decimals = 4 if filled_lvl.price > 10 else (2 if filled_lvl.price > 1 else 6)
         
-        # Calculate recycled opposing price shifted to secure actual profit
         if filled_lvl.side == Side.BUY:
-            # We bought at P. To secure profit, we must sell at a higher price!
             opp_side = Side.SELL
             opp_price = round(filled_lvl.price * (1 + self._step_profit_pct), decimals)
-            net_pnl = 0.0  # Realized PnL is resolved when the matching sell completes
+            net_pnl = 0.0
         else:
-            # We sold at P. To buy back and complete round trip, we place a buy at a lower price!
             opp_side = Side.BUY
             opp_price = round(filled_lvl.price * (1 - self._step_profit_pct), decimals)
             
-            # The round-trip is now complete: we sold high and bought low!
-            # Realized net profit is generated by the grid step minus round trip fees
             value = filled_lvl.amount * filled_lvl.price
             gross_pnl = value * self._step_profit_pct
             fees = value * _FEE_PCT * 2
@@ -222,36 +218,36 @@ class GridTraderStrategy(BaseStrategy):
             
             self.logger.info(f"GRID ROUND-TRIP COMPLETED. Realized Net Profit: {net_pnl:+.4f} USD.")
             
-            # Record completed transaction in TradeDB
-            self.db.save_trade(
-                symbol=self.symbol,
-                side="sell",
-                price=filled_lvl.price,
-                amount=filled_lvl.amount,
-                value_usd=value,
-                fee_usd=fees,
-                net_pnl=net_pnl,
-                strategy=self.name
-            )
+            try:
+                self.db.save_trade(
+                    symbol=self.symbol,
+                    side="sell",
+                    price=filled_lvl.price,
+                    amount=filled_lvl.amount,
+                    value_usd=value,
+                    fee_usd=fees,
+                    net_pnl=net_pnl,
+                    strategy=self.name
+                )
+            except Exception as e:
+                self.logger.error(f"Failed to save trade: {e}")
 
-        # Place recycled opposing order
         try:
             new_order = await self.exchange.create_order(
                 symbol=self.symbol,
-                order_type="limit",
+                type="limit",
                 side=opp_side.value,
                 amount=filled_lvl.amount,
                 price=opp_price
             )
             
-            # Update Grid level state
             filled_lvl.order_id = new_order["id"]
             filled_lvl.side = opp_side
             filled_lvl.price = opp_price
             filled_lvl.entry_price = opp_price if opp_side == Side.BUY else 0.0
             filled_lvl.lowest_price = 999999.0
             
-            self.logger.info(f"Recycled grid level placed: {opp_side.upper()} @ {opp_price:.4f} | ID: {new_order['id']}")
+            self.logger.info(f"Recycled grid level placed: {opp_side.name} @ {opp_price:.4f} | ID: {new_order['id']}")
             
         except Exception as e:
             self.logger.error(f"Failed to place recycled opposing grid order @ {opp_price:.4f}: {e}")
