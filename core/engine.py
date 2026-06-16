@@ -112,6 +112,7 @@ class Settings:
     dynamic_grid_capital_usdt: float = field(default_factory=lambda: _float("DYNAMIC_GRID_CAPITAL_USDT", 10.0))
     dynamic_grid_levels: int = field(default_factory=lambda: _int("DYNAMIC_GRID_LEVELS", 4))
     dynamic_grid_min_spacing_pct: float = field(default_factory=lambda: _float("DYNAMIC_GRID_MIN_SPACING_PCT", 0.0002))
+    dynamic_grid_min_spacing: float = field(default_factory=lambda: _float("DYNAMIC_GRID_MIN_SPACING", 0.0002))
     dynamic_grid_max_spacing_pct: float = field(default_factory=lambda: _float("DYNAMIC_GRID_MAX_SPACING_PCT", 0.005))
     dynamic_grid_take_pct: float = field(default_factory=lambda: _float("DYNAMIC_GRID_TAKE_PCT", 0.4))
     dynamic_grid_trailing_stop: bool = field(default_factory=lambda: _bool("DYNAMIC_GRID_TRAILING_STOP", True))

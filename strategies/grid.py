@@ -28,6 +28,9 @@ class GridLevel:
     lowest_price: float = 999999.0
 
 class GridTraderStrategy(BaseStrategy):
+    async def set_initial_capital(self, capital):
+        self.initial_capital = capital
+        self.capital = capital
     def __init__(self, exchange: Any, db: TradeDB, settings_ref: Settings = settings):
         super().__init__(
             name="GridTrader",
@@ -61,7 +64,7 @@ class GridTraderStrategy(BaseStrategy):
         # Stop-loss: proteggi dal -2% su ogni livello BUY
         for lvl in self._grid:
             if lvl.side == Side.BUY and lvl.entry_price > 0:
-lvl.lowest_price = min(lvl.lowest_price, curr_price)
+                lvl.lowest_price = min(lvl.lowest_price, curr_price)
             loss_pct = (lvl.lowest_price - lvl.entry_price) / lvl.entry_price * 100
             
             # Adaptive stop-loss based on ATR and volatility
