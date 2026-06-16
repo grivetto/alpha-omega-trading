@@ -230,6 +230,10 @@ class RiskManager:
             return False
         return True
 
+    async def initialize(self, strategies):
+        logger.info("RiskManager initialized.")
+        return self
+
 class ExchangeWrapper:
     def __init__(self, settings_ref: Settings = settings):
         self.settings = settings_ref
