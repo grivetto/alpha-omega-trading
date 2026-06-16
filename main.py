@@ -55,11 +55,11 @@ class TradingBot:
         self.risk_manager = RiskManager(self.db)
 
         # Load Notification Service
-        self.notification_service = NotificationService()
+        self.notification_service = NotificationService(self)
         await self.notification_service.initialize()
 
         # Load Dashboard
-        self.dashboard = DashboardServer(self.exchanges, self.strategies, self.db)
+        self.dashboard = DashboardServer(self)
         asyncio.create_task(self.dashboard.start(settings.dashboard_host, settings.dashboard_port))
 
         # Load Strategies and their required exchanges
