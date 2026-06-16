@@ -60,7 +60,7 @@ class TradingBot:
 
         # Load Dashboard
         self.dashboard = DashboardServer(self)
-        asyncio.create_task(self.dashboard.start(settings.dashboard_host, settings.dashboard_port))
+        asyncio.create_task(self.dashboard.start())
 
         # Load Strategies and their required exchanges
         required_exchanges = {{}}
