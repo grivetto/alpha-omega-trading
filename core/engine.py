@@ -70,6 +70,8 @@ class Settings:
     grid_spacing_pct: float = field(default_factory=lambda: _float("GRID_SPACING_PCT", 0.04))
     grid_take_pct: float = field(default_factory=lambda: _float("GRID_TAKE_PCT", 1.0))
     grid_trailing_stop: bool = field(default_factory=lambda: _bool("GRID_TRAILING_STOP", True))
+    grid_range_pct: float = field(default_factory=lambda: _float("GRID_RANGE_PCT", 2.0))
+    grid_step_profit_pct: float = field(default_factory=lambda: _float("GRID_STEP_PROFIT_PCT", 0.5))
     
     # ── RSI Settings ────────────────────────────────────────────────────────
     rsi_symbol: str = field(default_factory=lambda: _env("RSI_SYMBOL", "SOL/USDC"))
