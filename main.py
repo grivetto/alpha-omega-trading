@@ -41,14 +41,14 @@ class TradingBot:
         await self.db.connect()
 
         # Load exchanges
-        for ex_name, ex_config in settings.exchanges.items():
-            try:
-                exchange = ExchangeWrapper(ex_name, ex_config)
-                await exchange.initialize()
-                self.exchanges[ex_name] = exchange
-                logger.info(f"Exchange {ex_name} initialized.")
-            except Exception as e:
-                logger.error(f"Failed to initialize exchange {ex_name}: {e}")
+        ex_name = settings.exchange_id
+        try:
+            exchange = ExchangeWrapper(settings)
+            await exchange.connect()
+            self.exchanges[ex_name] = exchange
+            logger.info(f"Exchange {ex_name} initialized.")
+        except Exception as e:
+            logger.error(f"Failed to initialize exchange {ex_name}: {e}")
                 # Continue even if one exchange fails, others might work
 
         # Load Risk Manager
@@ -64,8 +64,8 @@ class TradingBot:
 
         # Load Strategies and their required exchanges
         required_exchanges = {{}}
-        for ex_name in settings.exchanges:
-            required_exchanges[ex_name] = self.exchanges.get(ex_name)
+        ex_name = settings.exchange_id
+        required_exchanges[ex_name] = self.exchanges.get(ex_name)
 
         # Dynamic strategy loading based on settings
         if settings.enable_scalper:
