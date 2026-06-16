@@ -99,8 +99,6 @@ class Settings:
     def grid_capital(self) -> float:
         return self.total_capital_eur * (1.0 - self.capital_split_scalper)
 
-settings = Settings()
-
 # ── SQLite Database Wrapper ──────────────────────────────────────────────────
     # BTC/USDT Grid Settings
     btc_grid_symbol: str = field(default_factory=lambda: _env("BTC_GRID_SYMBOL", "BTC/USDT"))
@@ -142,6 +140,8 @@ settings = Settings()
     dynamic_grid_price_precision: int = field(default_factory=lambda: _int("DYNAMIC_GRID_PRICE_PRECISION", 6))
     dynamic_grid_amount_precision: int = field(default_factory=lambda: _int("DYNAMIC_GRID_AMOUNT_PRECISION", 6))
 
+
+settings = Settings()
 
 class TradeDB:
     def __init__(self, db_name: str = "denaro"):
