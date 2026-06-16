@@ -63,7 +63,7 @@ class TradingBot:
         asyncio.create_task(self.dashboard.start())
 
         # Load Strategies and their required exchanges
-        required_exchanges = {{}}
+        required_exchanges = {}
         ex_name = settings.exchange_id
         required_exchanges[ex_name] = self.exchanges.get(ex_name)
 
