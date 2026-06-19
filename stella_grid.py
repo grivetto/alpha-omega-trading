@@ -47,6 +47,8 @@ class StellaGridStrategy:
         self.config = config
         self._grid: list[dict] = []
         self._initialized = False
+        # Stop-loss -2% fisso per ogni livello BUY
+        self._stop_loss_pct = config.get("stop_loss_pct", 0.02)
 
     def on_tick(self, price: float, rsi: float):
         """Callback chiamato dal WebSocket a ogni tick"""
@@ -54,6 +56,15 @@ class StellaGridStrategy:
             self._setup_grid(price)
             self._initialized = True
             return
+
+        # Stop-loss: proteggi dal -2% FISSO su ogni livello BUY (mandato utente)
+        for level in self._grid[:]:
+            if level["side"] == "BUY" and "entry_price" in level and level["entry_price"] > 0:
+                loss_pct = (price - level["entry_price"]) / level["entry_price"] * 100
+                if loss_pct < -2.0:
+                    log.warning(f"🛑 STOP-LOSS BUY @ {price:.4f} | Loss: {loss_pct:+.1f}% | Fixed SL: -2%")
+                    level["side"] = "STOPPED"
+                    continue
 
         # Verifica se qualche livello è stato raggiunto
         for level in self._grid[:]:
@@ -64,6 +75,7 @@ class StellaGridStrategy:
                 # Ricicla il livello come SELL
                 level["side"] = "SELL"
                 level["price"] = round(price * (1 + self.config["take"]), 4)
+                level["entry_price"] = price
                 log.info(f"  → Nuovo SELL @ {level['price']}")
             elif level["side"] == "SELL" and price >= level["price"]:
                 profit = level["amount"] * price * self.config["take"]
@@ -85,6 +97,7 @@ class StellaGridStrategy:
                 "side": "BUY",
                 "price": buy_price,
                 "amount": amount,
+                "entry_price": buy_price
             })
         log.info(f"Grid inizializzata: {levels} livelli, mid={mid_price}, capital/level=${capital_per_level:.2f}")
 

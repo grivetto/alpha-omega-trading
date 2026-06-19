@@ -22,6 +22,16 @@ from strategies.scalper import ScalperStrategy
 from strategies.rsi_mean_rev import RSIReversionStrategy
 from strategies.dynamic_grid import DynamicGridStrategy
 
+# Import Stella Grid strategy for Nuvola
+try:
+    from core.stella_engine import StellaCoreEngine
+    from stella_grid import StellaGridStrategy
+    STELLA_AVAILABLE = True
+except ImportError:
+    STELLA_AVAILABLE = False
+    StellaGridStrategy = None
+    StellaCoreEngine = None
+
 
 class TradingBot:
     def __init__(self):
@@ -158,6 +168,43 @@ class TradingBot:
         # Load ETH/USDT RSI Mean Reversion Strategy
         if settings.enable_eth_rsi:
             load_strategy(RSIReversionStrategy, 'eth_rsi', 'capital_usdt', 'symbol')
+
+        # Load Nuvola Stella Grid Strategy
+        if settings.enable_stella_grid and STELLA_AVAILABLE:
+            for ex_name, exchange in required_exchanges.items():
+                if not exchange:
+                    continue
+                try:
+                    capital_setting = getattr(settings, f'{ex_name.lower()}_stella_grid_capital_usdc', settings.stella_grid_capital_usdc)
+                    symbol = getattr(settings, f'{ex_name.lower()}_stella_grid_symbol', settings.stella_grid_symbol)
+                    levels = getattr(settings, f'{ex_name.lower()}_stella_grid_levels', settings.stella_grid_levels)
+                    spacing = getattr(settings, f'{ex_name.lower()}_stella_grid_spacing_pct', settings.stella_grid_spacing_pct)
+                    take_profit = getattr(settings, f'{ex_name.lower()}_stella_grid_take_pct', settings.stella_grid_take_pct)
+
+                    # Stella Grid runs as a standalone WebSocket engine
+                    # We pass config via settings and let it bootstrap itself
+                    strategy_config = {
+                        'symbol': symbol,
+                        'levels': levels,
+                        'capital': capital_setting,
+                        'spacing': spacing,
+                        'take': take_profit,
+                        'stop_loss_pct': 0.02  # -2% stop loss
+                    }
+                    
+                    # We'll run StellaGridStrategy as a special case - it needs its own event loop
+                    # For now, we note it's configured but runs separately
+                    logger.info(f'Stella Grid Strategy configured on exchange {ex_name} | Symbol: {symbol} | Capital: {capital_setting:.2f} USDT | Levels: {levels}')
+                except Exception as e:
+                    logger.error(f'Failed to configure Stella Grid Strategy on {ex_name}: {e}')
+
+        # Load MARCODG1 ADA Grid Strategy
+        if settings.enable_ada_grid:
+            load_strategy(GridTraderStrategy, 'ada_grid', 'capital_usdc', 'symbol', 
+                         levels=settings.ada_grid_levels, 
+                         spacing_pct=settings.ada_grid_spacing_pct,
+                         take_profit_pct=settings.ada_grid_take_pct,
+                         trailing_stop=settings.ada_grid_trailing_stop)
 
         # Initialize Risk Manager
         if self.risk_manager and self.strategies:

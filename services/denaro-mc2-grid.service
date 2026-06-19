@@ -1,0 +1,16 @@
+[Unit]
+Description=Denaro MC2 SOL/USDC Grid Bot
+After=network.target
+
+[Service]
+Type=simple
+User=sergio
+WorkingDirectory=/home/sergio/denaro
+ExecStart=/home/sergio/denaro/venv/bin/python3 -u /home/sergio/denaro/mc2_bot.py
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

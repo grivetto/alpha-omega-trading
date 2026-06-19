@@ -59,35 +59,20 @@ class GridTraderStrategy(BaseStrategy):
             await self.reset_grid(curr_price)
             return []
 
-        # Stop-loss: proteggi dal -2% su ogni livello BUY
+        # Stop-loss: proteggi dal -2% FISSO su ogni livello BUY (mandato utente)
         for lvl in self._grid:
             if lvl.side == Side.BUY and lvl.entry_price > 0:
                 lvl.lowest_price = min(lvl.lowest_price, curr_price)
                 loss_pct = (lvl.lowest_price - lvl.entry_price) / lvl.entry_price * 100
                 
-                # Adaptive stop-loss based on ATR and volatility
-                try:
-                    atr_ohlcv = self.exchange.fetch_ohlcv(self.symbol, "1h", limit=20)
-                    if atr_ohlcv and len(atr_ohlcv) > 1:
-                        atr_values = [bar[5] for bar in atr_ohlcv]
-                        avg_atr = sum(atr_values) / len(atr_values)
-                        sl_distance = max(0.5 * avg_atr, 2.0)
-                        if loss_pct < -sl_distance / curr_price * 100:
-                            self.logger.warning(f"🛑 STOP-LOSS {lvl.side.name} @ {curr_price:.4f} | Loss: {loss_pct:+.1f}% | ATR SL: {sl_distance:.4f} | Entry: {lvl.entry_price:.4f}")
-                            try:
-                                await self.exchange.cancel_order(lvl.order_id, self.symbol)
-                            except Exception:
-                                pass
-                            lvl.filled = True
-                except Exception:
-                    # If ATR fetch fails, fall back to -2% fixed stop
-                    if loss_pct < -2.0:
-                        self.logger.warning(f"🛑 STOP-LOSS {lvl.side.name} @ {curr_price:.4f} | Loss: {loss_pct:+.1f}% | Fixed SL: -2%")
-                        try:
-                            await self.exchange.cancel_order(lvl.order_id, self.symbol)
-                        except Exception:
-                            pass
-                        lvl.filled = True
+                # Stop-loss FISSO a -2% - NO ATR, NO dinamico
+                if loss_pct < -2.0:
+                    self.logger.warning(f"🛑 STOP-LOSS {lvl.side.name} @ {curr_price:.4f} | Loss: {loss_pct:+.1f}% | Fixed SL: -2%")
+                    try:
+                        await self.exchange.cancel_order(lvl.order_id, self.symbol)
+                    except Exception:
+                        pass
+                    lvl.filled = True
 
         if time.time() - self._last_reset_ts > 7 * 86400:
             self.logger.info("Weekly rebalance trigger. Resetting grid zone...")
