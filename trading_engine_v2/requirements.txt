@@ -1,0 +1,11 @@
+# Multi-Agent Trading Engine - Dependencies
+# Python 3.11+
+
+# Exchange connectivity
+ccxt>=4.0.0
+
+# Async HTTP for LLM client
+httpx>=0.25.0
+
+# Environment variables
+python-dotenv>=1.0.0
