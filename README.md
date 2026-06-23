@@ -1,173 +1,148 @@
-# Denaro — Multi-Node Adaptive Crypto Trading System
+# Alpha Omega Trading — Denaro
 
-[![Status](https://img.shields.io/badge/status-production-green)]()
-[![Exchange](https://img.shields.io/badge/exchange-Binance-F0B90B)]()
-[![Python](https://img.shields.io/badge/python-3.14-blue)]()
+> **Production-grade automated crypto trading on Binance**  
+> Multi-agent, regime-aware, self-optimising. H24/7.
 
-**Denaro** is a distributed multi-strategy trading system that runs across three independent nodes, each executing a distinct algorithmic strategy on Binance spot markets. Each node operates its own Binance sub-account, eliminating balance contention and allowing parallel execution.
+[![GitHub](https://img.shields.io/badge/License-MIT-green)](LICENSE)
+[![Python 3.12+](https://img.shields.io/badge/Python-3.12+-blue)](https://www.python.org/)
+[![Status](https://img.shields.io/badge/Status-Production-brightgreen)]()
 
 ---
 
-## Architecture
+## 📐 Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    Denaro Trading System                     │
-├──────────────┬──────────────────┬───────────────────────────┤
-│   Nuvola     │      Mc2         │        MARCODG1           │
-│  SOL/EUR     │  28 USDT Pairs   │       ADA/EUR             │
-│ Regime Grid  │ Momentum Scalper │     Trend Grid            │
-└──────┬───────┴────────┬─────────┴─────────────┬─────────────┘
-       │                │                       │
-       └────────────────┼───────────────────────┘
-                        │
-                  ┌─────▼──────┐
-                  │   Binance   │
-                  │  Spot APIs  │
-                  └─────▲──────┘
-                        │
-              ┌─────────┴─────────┐
-              │    Zabbix         │
-              │   Monitoring      │
-              └───────────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│                    DENARO TRADING SYSTEM                     │
+├──────────────────────────────────────────────────────────────┤
+│                                                              │
+│  🤖 MC2 (15GB, Intel N150)           🖥️ Nuvola (4GB)       │
+│  ├── Grid Bot (SOL/USDC)             ├── Stella Grid        │
+│  ├── Arbitrage Bot                    │   (WebSocket, SOL)  │
+│  ├── Gariban Beggar (micro-scalper)   └── API Gateway        │
+│  ├── Portfolio Allocator                                   │
+│  └── LLM Strategy Optimizer           🖥️ MARCODG1 (4GB)    │
+│                                        ├── Grid Bot         │
+│  📡 Binance API                        │   (ADA/USDC)       │
+│  🧠 Ollama qwen3.5 (local via LAN)     └── API Gateway      │
+│                                                              │
+├──────────────────────────────────────────────────────────────┤
+│  📊 Performance    |    🛡️ Risk Management                 │
+│  • Sharpe > 1.0    |    • Max daily drawdown 3%             │
+│  • WinRate > 45%   |    • Consecutive losses circuit-breaker │
+│  • Kelly sizing    |    • Monte Carlo VaR (95% confidence)   │
+│  • Regime-aware    |    • Multi-level kill-switch            │
+├──────────────────────────────────────────────────────────────┤
+│  💰 Capital: 3 sub-accounts ($196 deployed + $24 MAIN)       │
+│  📈 Profit sharing: sergio@grivetto.eu 33% daily @23:50 UTC │
+└──────────────────────────────────────────────────────────────┘
 ```
 
-Each node runs **one focused bot** with its own `.env` credentials (Binance sub-account), its own config, and its own strategy. BNB balances are maintained on each sub-account for fee discount.
-
----
-
-## Node Strategies
-
-### Nuvola — Regime-Adaptive Grid (SOL/EUR)
-
-Uses **regime detection** (inspired by Hidden Markov Model principles) to classify market conditions into 4 states and adjust grid parameters dynamically:
-
-| Regime | Grid Levels | Spacing | Profit Target | Risk |
-|--------|-------------|---------|---------------|------|
-| Bull   | 6           | 1.5%    | 0.4%          | Aggressive |
-| Bear   | 2           | 2.5%    | 0.6%          | Defensive |
-| Choppy | 4           | 0.8%    | 0.3%          | Mean-reversion |
-| Volatile | 3         | 3.0%    | 0.8%          | Wide buffer |
-
-**Regime detection** combines:
-- EMA50/EMA200 cross (trend direction & strength)
-- ATR (volatility regime)
-- RSI (momentum confirmation)
-- Volume ratio (participation)
-
-**Kill switches:**
-- Portfolio floor: 45 EUR
-- Max drawdown: 8%
-- Out-of-bounds price protection
-
----
-
-### Mc2 — Momentum Multi-Pair Scalper (28 USDT Pairs)
-
-Multi-pair momentum strategy scanning 28 altcoin pairs for oversold bounces with volume confirmation:
-
-**Entry conditions (all must be true):**
-1. RSI(14) < 30 (oversold)
-2. Price > EMA50 (trend alignment)
-3. Volume > 1.5× 20-period average (institutional interest)
-4. ATR > 0 (liquid market)
-
-**Risk management:**
-- TP: ATR × 1.5 (limit order)
-- SL: ATR × 2.0 (limit order)
-- Max 3 concurrent positions
-- Position size: risk-based (1% of 500 USDT capital per trade)
-- Max 33 USDT per position
-
-**Tracked pairs:** MATIC, MKR, UNI, ALGO, CHZ, FTM, GALA, BCH, ADA, LINK, ETC, AVAX, NEAR, XTZ, VET, AAVE, DOT, SAND, MANA, FIL, XLM, ENJ, ZIL, BAT, EOS, LTC, AXS, ATOM
-
----
-
-### MARCODG1 — Trend Grid + Auto-Switch (ADA/EUR)
-
-Grid trading with trend filter and automatic pair switching:
-
-**Primary:** ADA/EUR grid with regime-adjusted parameters
-**Backup:** SOL/EUR (auto-switches if ADA volatility < 0.5%)
-
-**Regime detection** adjusts grid levels, spacing, and investment limits based on market conditions.
-
-**Auto-switch logic:**
-- If ADA/EUR hourly ATR < 0.5% for 4+ hours → switch to SOL/EUR
-- Switches back when ADA volatility recovers above threshold
-- 4-hour cooldown between switches
-
----
-
-## Tech Stack
-
-| Component | Technology |
-|-----------|------------|
-| Language | Python 3.14 |
-| Exchange API | CCXT 4.5.x |
-| Data Analysis | pandas, pandas-ta |
-| Streams | WebSocket (real-time ticker) |
-| Fee Discount | BNB (set as default fee currency) |
-| Monitoring | Zabbix agent + custom metrics |
-| Deployment | systemd services |
-| Distribution | 3 independent nodes |
-
----
-
-## Repository Structure
-
-```
-denaro/
-├── .env                  # Per-node Binance API keys + Telegram
-├── denaro_shared.py      # Shared library (client, regime detector, state, alerts)
-├── nuvola_bot.py         # Nuvola: SOL/EUR regime grid
-├── mc2_bot.py            # Mc2: 28-pair momentum scalper
-├── marcodg1_bot.py       # MARCODG1: ADA/EUR trend grid + auto-switch
-├── config_nuvola.json    # Nuvola configuration
-├── config_mc2.json       # Mc2 configuration
-├── config_marcodg1.json  # MARCODG1 configuration
-├── zabbix_nuvola.conf    # Zabbix agent config — Nuvola
-├── zabbix_mc2.conf       # Zabbix agent config — Mc2
-├── zabbix_marcodg1.conf  # Zabbix agent config — MARCODG1
-├── zabbix_nuvola_metric.py
-├── zabbix_mc2_metric.py
-├── zabbix_marcodg1_metric.py
-└── README.md
-```
-
----
-
-## Deployment
+## 🚀 Quick Start
 
 ```bash
-# Each node (run locally on each machine):
-git pull origin Prod-V2
-cd /home/{user}/denaro
-python3 -m venv venv
-source venv/bin/activate
-pip install ccxt pandas pandas-ta websockets python-dotenv
-cp .env.example .env   # Edit with Binance sub-account keys
+# Clone & install
+git clone https://github.com/grivetto/alpha-omega-trading
+cd alpha-omega-trading
+pip install requests pydantic duckdb ccxt
 
-# Run:
-screen -dmS denaro bash -c "cd /home/{user}/denaro && venv/bin/python3 {node}_bot.py"
+# Configure
+cp .env.master .env
+# Edit .env with your Binance API keys
 
-# Or systemd:
-cp {node}_bot.service /etc/systemd/system/
-systemctl daemon-reload && systemctl enable {node}_bot && systemctl start {node}_bot
+# Run
+python consolidation_bot.py        # Main production bot (SOL/USDC)
+python gariban_beggar.py           # Micro-scalper
+python services/dashboard.py       # Web dashboard
 ```
 
+## 📋 Services (systemd)
+
+| Service | Machine | Symbol | Status |
+|---------|---------|--------|--------|
+| `denaro-mc2-grid` | MC2 | SOL/USDC | 🟢 Grid 4 livelli |
+| `denaro-mc2-arb` | MC2 | SOL/BTC/USDC | 🟢 Triangolare |
+| `denaro-gariban` | MC2 | SOL/USDC | 🟢 Micro-scalper V2 |
+| `denaro-v2` | MC2 | Multi | 🟢 LLM + EW + Portfolio |
+| `denaro-nuvola-stella` | Nuvola | SOL/USDC | 🟢 WebSocket Grid |
+| `denaro-marcodg1-grid` | MARCODG1 | ADA/USDC | 🟢 Grid ADA |
+
+## 🧠 Strategies
+
+### Grid Market Making
+Regime-aware grid deployment. Adapts spacing and levels based on volatility regime (quiet/ranging/volatile/trending). No martingale — fixed size per level.
+
+### Gariban Beggar (Micro-Scalper)
+Entry at -0.8% dip, target +0.4%, stop-loss -2%. High-frequency small profits that compound over hundreds of cycles.
+
+### LLM Strategy Optimizer
+Local Ollama (qwen3.5:4b) analyses RSI, order book imbalance, spread, and volatility every 180s. Suggests grid parameter adjustments — never blocks trades.
+
+### Portfolio Allocator (3-strategy)
+- **Grid** (40%) — Market making on SOL/USDC
+- **Mean Reversion RSI** (30%) — RSI < 25 buy, > 60 sell
+- **Momentum Trend** (30%) — EMA 8/21 cross with volume filter  
+Daily Kelly-based rebalancing. Max €5 per trade.
+
+## 🛡️ Risk Management
+
+- **Level 1**: 3 consecutive losses → block new entries
+- **Level 2**: Daily loss > 3% → block + reduce size 50%
+- **Level 3**: Daily loss > 5% → liquidate ALL positions + halt
+- **Level 4**: Monte Carlo VaR(95%) > 4% equity → reduce size 50%
+- Half-Kelly fraction on all position sizing
+- BNB ≥ 0.002 checked at startup (fee discount)
+
+## 📊 Observability
+
+```
+/health  → {"equity": 197.50, "regime": "ranging", "risk_status": "ok", ...}
+/metrics → Prometheus-style counters
+```
+
+## 🗂️ Project Structure
+
+```
+├── consolidation_bot.py    # Main production entry point
+├── gariban_beggar.py       # Micro-scalper with kill-switch
+├── mc2_bot.py              # MC2 dedicated bot
+├── arb_bot.py              # Triangular arbitrage
+├── stella_grid.py          # WebSocket grid for Nuvola
+├── main.py                 # Legacy main (MARCODG1)
+├── core/                   # Engine, risk, portfolio, settings
+├── risk_modules/           # AdvancedRiskManager, analytics
+├── services/               # Dashboard, early_warning, portfolio_optimizer
+├── strategies/             # Grid, dynamic_grid, scalper
+├── config/                 # JSON configs per bot
+├── scripts/                # Backtest gate, nightly evolution
+├── tools/                  # ATR calculator, profit sharing
+└── templates/              # Dashboard HTML
+```
+
+## ⚙️ Configuration
+
+```bash
+# .env — Required variables
+BINANCE_API_KEY=your_key
+BINANCE_API_SECRET=your_secret
+GRID_CAPITAL_USDC=70
+TOTAL_CAPITAL_USDC=200
+DRY_RUN=false
+GRID_LEVELS=4
+GRID_SPACING_PCT=0.012
+MAX_DAILY_LOSS_PCT=3.0
+```
+
+## 📈 Performance Requirements
+
+| Metric | Target |
+|--------|--------|
+| Sharpe Ratio | > 1.0 |
+| Max Drawdown (daily) | < 3% |
+| Win Rate | > 45% |
+| Kelly Fraction | 0.5 (Half-Kelly) |
+| Min BNB balance | 0.002 |
+
 ---
 
-## Monitoring
-
-Zabbix metrics available on each node:
-- `denaro.bot.status` — Bot alive check
-- `denaro.metrics` — JSON with price, balance, PnL, trades, regime
-- `denaro.bot.alive` — Process count
-- `denaro.load.1m`, `denaro.mem.pct`, `denaro.disk.pct` — System health
-
----
-
-## License
-
-MIT
+*Hermes AI — Autonomous Trading Agent v2. June 2026.*
