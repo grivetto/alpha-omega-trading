@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 """Triangular Arbitrage Bot — SOL/BTC/USDC"""
-import ccxt, time
+import ccxt, time, os
 
-API = "4BNvDozDjFWQUFrhVOL855RqAnq2TdZ3945dAg98CmC3sPlnHLe2q1UuPz5oKr7R"
-SEC = "wemEbD2mVKSVSAaHL1GZ71JOkLrxcAKYfGgSnEnbIVWgo84Fb7U1JkG4uLPwftHS"
+API = os.environ.get("ARB_API_KEY", "")
+SEC = os.environ.get("ARB_API_SECRET", "")
+
+if not API or not SEC:
+    print("ERR: ARB_API_KEY and ARB_API_SECRET must be set in environment", flush=True)
+    exit(1)
 
 ex = ccxt.binance({"apiKey":API,"secret":SEC,"enableRateLimit":True,"options":{"defaultType":"spot"}})
 MIN_PCT = 0.003  # 0.3%

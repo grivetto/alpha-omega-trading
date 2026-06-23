@@ -1,12 +1,42 @@
 # Credenziali - MAI pushare su Git
 .env
 .env.bak.*
+.env.backup_*
+.env.clean
+.env.master
+.env.new
+.env.tmp
+.env.tmp2
+
+# Key leaks
+*_keys.tmp
+*_keys.txt
+tmp_*.txt
+tmp_*.py
+mc2_keys.tmp
+real_main_keys.txt
+vault.json
+
+# Backup / dead code
+*.bak
+core/__init__.py.bak
+strategies/__init__.py.bak
+strategies/grid.py.bak
+
+# One-shot patch scripts
+patch_*.py
+
+# Auto-generated review spam
+meta/reviews/
 
 # Log e DB runtime
 squadra/squadra.log
 squadra/*.log
 *.db
 *.sqlite3
+*.db-shm
+*.db-wal
+trades.db.*
 squadra/bot_lock.json
 squadra/state/
 
@@ -58,6 +88,15 @@ debug_*.py
 create_node_logs.py
 autohealer*
 *.log
+
 # Self-improve test artifacts
 squadra/self_improve/test_history*.json
 squadra/self_improve/*.log
+
+# Temporary state files
+.flash_crash_state.json
+bot_lock.json
+.status_check_cache
+.daily_baseline
+env_without_main.tmp
+stella_grid_state.json

@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING
 import uvicorn
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from loguru import logger
 
 from core.engine import Settings, settings
@@ -42,6 +42,39 @@ def make_app(bot: TradingBot) -> FastAPI:
                 "<html><body><h1>denaro-antigravity Dashboard</h1><p>index.html not found.</p></body></html>"
             )
         return HTMLResponse(html_file.read_text(encoding="utf-8"))
+
+    # ── Health Check ─────────────────────────────────────────────────────────
+    @app.get("/healthz")
+    async def healthz():
+        """Health check: kill-switch status, exchange, DB."""
+        status = {"status": "ok", "checks": {}}
+
+        # Check kill-switch
+        ks_ok = not bot.risk.is_halted
+        status["checks"]["kill_switch"] = "ok" if ks_ok else "LOCKED"
+        if not ks_ok:
+            status["status"] = "degraded"
+
+        # Check DB
+        try:
+            bot.db.stats()
+            status["checks"]["db"] = "ok"
+        except Exception:
+            status["checks"]["db"] = "unreachable"
+            status["status"] = "degraded"
+
+        # Check at least one exchange
+        try:
+            for name, wrapper in bot.exchanges.items():
+                await asyncio.wait_for(wrapper.fetch_status(), timeout=5.0)
+                status["checks"]["exchange"] = "ok"
+                break
+        except Exception:
+            status["checks"]["exchange"] = "unreachable"
+            status["status"] = "degraded"
+
+        http_code = 200 if status["status"] == "ok" else 503
+        return JSONResponse(content=status, status_code=http_code)
 
     # ── API Endpoints ─────────────────────────────────────────────────────────
     @app.get("/api/state")

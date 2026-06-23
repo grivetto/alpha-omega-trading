@@ -13,7 +13,7 @@ Caratteristiche:
   - Market sell forzato all'attivazione
 """
 
-import json, os, time, logging
+import json, os, time, logging, hashlib, tempfile
 from typing import Optional
 
 logger = logging.getLogger("KillSwitch")
@@ -44,19 +44,32 @@ class KillSwitchManager:
     # ── Persistence ──────────────────────────────────────────────
 
     def _load_persistent_state(self):
-        """Carica stato persistente dal file lock."""
+        """Carica stato persistente dal file lock, con verifica checksum."""
         try:
             if os.path.exists(self.lock_file):
                 with open(self.lock_file) as f:
-                    data = json.load(f)
-                    self._state_cache = data.get("global_state", KS_OFF)
-                    self._bot_locks = data.get("bot_locks", {})
-                    self._consecutive_losses = data.get("consecutive_losses", {})
-                    logger.info(
-                        f"KillSwitch loaded: global_state={self._state_cache}, "
-                        f"bots_locked={len(self._bot_locks)}, "
-                        f"consec_losses={dict(self._consecutive_losses)}"
-                    )
+                    raw = f.read()
+                data = json.loads(raw)
+                # Verify checksum
+                stored_hash = data.pop("_checksum", None)
+                if stored_hash:
+                    computed = hashlib.sha256(
+                        json.dumps(data, sort_keys=True).encode()
+                    ).hexdigest()
+                    if computed != stored_hash:
+                        logger.error("KillSwitch: checksum mismatch — lock file may be corrupted!")
+                        self._state_cache = KS_OFF
+                        self._bot_locks = {}
+                        self._consecutive_losses = {}
+                        return
+                self._state_cache = data.get("global_state", KS_OFF)
+                self._bot_locks = data.get("bot_locks", {})
+                self._consecutive_losses = data.get("consecutive_losses", {})
+                logger.info(
+                    f"KillSwitch loaded: global_state={self._state_cache}, "
+                    f"bots_locked={len(self._bot_locks)}, "
+                    f"consec_losses={dict(self._consecutive_losses)}"
+                )
             else:
                 self._state_cache = KS_OFF
                 self._bot_locks = {}
@@ -68,7 +81,7 @@ class KillSwitchManager:
             self._consecutive_losses = {}
 
     def _save_persistent_state(self):
-        """Salva stato persistente su file lock."""
+        """Salva stato persistente con atomic write + checksum."""
         try:
             data = {
                 "global_state": self._state_cache,
@@ -76,9 +89,23 @@ class KillSwitchManager:
                 "consecutive_losses": self._consecutive_losses,
                 "updated_at": time.time(),
             }
-            os.makedirs(os.path.dirname(self.lock_file) or ".", exist_ok=True)
-            with open(self.lock_file, "w") as f:
-                json.dump(data, f, indent=2)
+            # Compute checksum before writing
+            data["_checksum"] = hashlib.sha256(
+                json.dumps(data, sort_keys=True).encode()
+            ).hexdigest()
+            # Atomic write: write to temp, then rename
+            lock_dir = os.path.dirname(self.lock_file) or "."
+            os.makedirs(lock_dir, exist_ok=True)
+            fd, tmp_path = tempfile.mkstemp(
+                suffix=".tmp", prefix="bot_lock_", dir=lock_dir
+            )
+            try:
+                with os.fdopen(fd, "w") as f:
+                    json.dump(data, f, indent=2)
+                os.replace(tmp_path, self.lock_file)  # atomic on Linux
+            except Exception:
+                os.unlink(tmp_path)
+                raise
         except Exception as e:
             logger.error(f"KillSwitch save failed: {e}")
 

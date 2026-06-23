@@ -1,4 +1,7 @@
 {
+  "_schema": "denaro-v2",
+  "_comment": "Centralized config — machine-specific overrides in the 'machines' key. Load with MACHINE=nuvola|marcodg1|mc2",
+
   "exchange": {
     "id": "binance",
     "testnet": false
@@ -49,5 +52,54 @@
     "health_port": 8909,
     "telegram_alerts": false,
     "log_level": "INFO"
+  },
+
+  "machines": {
+    "nuvola": {
+      "regime_grid": {
+        "symbol": "SOL/EUR",
+        "base_order_eur": 8.0,
+        "max_invested_eur": 30.0,
+        "portfolio_floor": 45.0,
+        "max_drawdown_pct": 8.0,
+        "regime_check_interval": 300,
+        "fill_check_interval": 10,
+        "report_interval": 3600,
+        "regime": {
+          "bull":    {"grid_levels": 6, "spacing_pct": 0.015, "profit_pct": 0.004, "max_invested": 40.0},
+          "bear":    {"grid_levels": 2, "spacing_pct": 0.025, "profit_pct": 0.006, "max_invested": 10.0},
+          "choppy":  {"grid_levels": 4, "spacing_pct": 0.008, "profit_pct": 0.003, "max_invested": 20.0},
+          "neutral": {"grid_levels": 3, "spacing_pct": 0.012, "profit_pct": 0.004, "max_invested": 20.0},
+          "volatile":{"grid_levels": 3, "spacing_pct": 0.030, "profit_pct": 0.008, "max_invested": 15.0},
+          "unknown": {"grid_levels": 2, "spacing_pct": 0.010, "profit_pct": 0.004, "max_invested": 15.0}
+        }
+      }
+    },
+    "marcodg1": {
+      "regime_grid": {
+        "symbol": "ADA/EUR",
+        "backup_symbol": "SOL/EUR",
+        "base_order_eur": 7.0,
+        "max_invested_eur": 25.0,
+        "portfolio_floor": 35.0,
+        "max_drawdown_pct": 10.0,
+        "regime_check_interval": 300,
+        "fill_check_interval": 15,
+        "report_interval": 3600,
+        "pair_switch_cooldown": 14400,
+        "regime": {
+          "bull":    {"grid_levels": 5, "spacing_pct": 0.012, "profit_pct": 0.005, "max_invested": 30.0},
+          "bear":    {"grid_levels": 2, "spacing_pct": 0.020, "profit_pct": 0.007, "max_invested": 8.0},
+          "choppy":  {"grid_levels": 3, "spacing_pct": 0.006, "profit_pct": 0.003, "max_invested": 15.0},
+          "neutral": {"grid_levels": 3, "spacing_pct": 0.010, "profit_pct": 0.004, "max_invested": 18.0},
+          "volatile":{"grid_levels": 2, "spacing_pct": 0.025, "profit_pct": 0.008, "max_invested": 12.0},
+          "unknown": {"grid_levels": 2, "spacing_pct": 0.010, "profit_pct": 0.004, "max_invested": 12.0}
+        }
+      }
+    },
+    "mc2": {
+      "regime_grid": {},
+      "_comment": "MC2 uses the top-level trading/grid/scalper config directly"
+    }
   }
 }
