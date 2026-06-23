@@ -1,31 +1,9 @@
 #!/usr/bin/env python3
-"""
-DENARO CONSOLIDATION BOT v1 — One Bot, One Symbol, Real Profit.
+"""DENARO CONSOLIDATION BOT v2 — SOL/USDC, REST engine, KillSwitch."""
 
-Esegue grid trading conservativo su SOL/EUR con regime-aware switching.
-Sostituisce TUTTI gli altri bot. Solo 1 simbolo, 1 strategia, parametri sostenibili.
-
-Strategia:
-  - Ranging: Grid 4 livelli, spacing 0.5%, base 8€
-  - Trending: RSI Reversion (RSI<22 buy, >60 sell), 10€ per trade
-  - Volatile: Grid ridotto (3 livelli, spacing 0.8%)
-  - Quiet: Grid minimo (3 livelli, spacing 0.3%)
-
-Regole ferree:
-  - NO martingala (stesso size per tutti i livelli)
-  - NO compound automatico prima di +20% totale
-  - Kelly sizing: max 10% capitale per trade
-  - Stop loss globale: -3% giornaliero blocca nuovi entry, -5% liquida tutto
-  - BNB per fees (deve essere > 0.002)
-"""
-import asyncio, json, logging, os, sys, time, sqlite3
+import json, os, sys, time, sqlite3, hashlib, hmac, requests
+from datetime import datetime
 from pathlib import Path
-from datetime import datetime, timezone
-
-import ccxt.async_support as ccxt
-
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - CONS - %(levelname)s - %(message)s')
-logger = logging.getLogger("ConsolidationBot")
 
 BASE = Path(__file__).parent
 ENV_PATH = BASE / '.env'
@@ -41,312 +19,257 @@ def load_env():
                     env[k.strip()] = v.strip()
     return env
 
-class TradeDB:
+# === ENGINE (REST, no ccxt sapi issues) ===
+class Engine:
+    def __init__(self, key, secret, symbol="SOL/USDC"):
+        self.key, self.secret = key, secret
+        self.symbol, self.sym = symbol, symbol.replace("/", "")
+        self.base, self.quote = symbol.split("/")
+
+    def _sign(self, qs):
+        return hmac.new(self.secret.encode(), qs.encode(), hashlib.sha256).hexdigest()
+
+    def _get(self, path, params=""):
+        ts = int(time.time() * 1000)
+        q = f"timestamp={ts}&recvWindow=30000"
+        if params: q += "&" + params
+        sig = self._sign(q)
+        r = requests.get(f"https://api.binance.com{path}?{q}&signature={sig}",
+                         headers={"X-MBX-APIKEY": self.key}, timeout=15)
+        return r.json() if r.status_code == 200 else {"error": r.text[:200]}
+
+    def _post(self, path, params=""):
+        ts = int(time.time() * 1000)
+        q = f"timestamp={ts}&recvWindow=30000"
+        if params: q += "&" + params
+        sig = self._sign(q)
+        r = requests.post(f"https://api.binance.com{path}?{q}&signature={sig}",
+                          headers={"X-MBX-APIKEY": self.key}, timeout=15)
+        return r.json() if r.status_code == 200 else {"error": r.text[:200]}
+
+    def price(self):
+        r = requests.get(f"https://api.binance.com/api/v3/ticker/price?symbol={self.sym}", timeout=10)
+        return float(r.json()["price"]) if r.status_code == 200 else 0
+
+    def balance(self):
+        b = self._get("/api/v3/account")
+        if "balances" in b:
+            return {x["asset"]: float(x["free"]) for x in b["balances"] if float(x["free"]) > 0}
+        return {}
+
+    def equity(self):
+        b = self.balance()
+        usdc = b.get(self.quote, 0)
+        sol = b.get(self.base, 0)
+        return usdc + sol * self.price() if sol else usdc
+
+    def open_orders(self):
+        o = self._get("/api/v3/openOrders", f"symbol={self.sym}")
+        return o if isinstance(o, list) else []
+
+    def cancel_all(self):
+        for o in self.open_orders():
+            self._post("/api/v3/order", f"symbol={self.sym}&orderId={o['orderId']}")
+
+    def limit_buy(self, amount, price):
+        return self._post("/api/v3/order",
+            f"symbol={self.sym}&side=BUY&type=LIMIT&timeInForce=GTC&quantity={amount:.4f}&price={price:.2f}")
+
+    def limit_sell(self, amount, price):
+        return self._post("/api/v3/order",
+            f"symbol={self.sym}&side=SELL&type=LIMIT&timeInForce=GTC&quantity={amount:.4f}&price={price:.2f}")
+
+    def ohlcv(self, interval="5m", limit=24):
+        r = requests.get(f"https://api.binance.com/api/v3/klines?symbol={self.sym}&interval={interval}&limit={limit}", timeout=10)
+        return r.json() if r.status_code == 200 else []
+
+# === DUCKDB (migrated from SQLite) ===
+try:
+    import duckdb
+    DB_BACKEND = "duckdb"
+    db_path = str(BASE / '.tmp' / 'denaro.duckdb')
+    os.makedirs(BASE / '.tmp', exist_ok=True)
+    conn = duckdb.connect(db_path)
+    conn.execute("CREATE TABLE IF NOT EXISTS trades (id INTEGER, symbol TEXT, side TEXT, price REAL, amount REAL, value_usdc REAL, fee_usdc REAL, net_pnl REAL, strategy TEXT, regime TEXT, filled_at TIMESTAMP)")
+    conn.execute("CREATE TABLE IF NOT EXISTS daily_pnl (day DATE PRIMARY KEY, pnl REAL DEFAULT 0, trades INTEGER DEFAULT 0, fees REAL DEFAULT 0)")
+    conn.execute("CREATE TABLE IF NOT EXISTS state (key TEXT PRIMARY KEY, value TEXT, updated_at TIMESTAMP)")
+except ImportError:
+    DB_BACKEND = "sqlite"
+    db_path = str(BASE / '.tmp' / 'denaro.db')
+    os.makedirs(BASE / '.tmp' / 'denaro.db'.replace('/',''), exist_ok=True)
+    os.makedirs(BASE / '.tmp', exist_ok=True)
+    conn = sqlite3.connect(str(BASE / '.tmp' / 'denaro.db'), timeout=10, check_same_thread=False)
+    conn.execute("CREATE TABLE IF NOT EXISTS trades (id INTEGER PRIMARY KEY AUTOINCREMENT, symbol TEXT, side TEXT, price REAL, amount REAL, value_usdc REAL, fee_usdc REAL, net_pnl REAL, strategy TEXT, regime TEXT, filled_at TEXT DEFAULT (datetime('now')))")
+    conn.execute("CREATE TABLE IF NOT EXISTS daily_pnl (day TEXT PRIMARY KEY, pnl REAL DEFAULT 0, trades INTEGER DEFAULT 0, fees REAL DEFAULT 0)")
+    conn.execute("CREATE TABLE IF NOT EXISTS state (key TEXT PRIMARY KEY, value TEXT, updated_at REAL)")
+
+def save_trade(side, price, amount, value_usdc, fee_usdc, net_pnl, strategy, regime=""):
+    now = datetime.utcnow().isoformat()
+    if DB_BACKEND == "duckdb":
+        conn.execute("INSERT INTO trades VALUES (nextval('seq_trade_id'),?,?,?,?,?,?,?,?,?,?)",
+                     ("SOL/USDC", side, price, amount, value_usdc, fee_usdc, net_pnl, strategy, regime, now))
+    else:
+        conn.execute("INSERT INTO trades (symbol,side,price,amount,value_usdc,fee_usdc,net_pnl,strategy,regime) VALUES (?,?,?,?,?,?,?,?,?)",
+                     ("SOL/USDC", side, price, amount, value_usdc, fee_usdc, net_pnl, strategy, regime))
+        conn.commit()
+
+def update_daily(pnl, trades=1, fees=0):
+    today = datetime.now().strftime('%Y-%m-%d')
+    c = conn.execute if DB_BACKEND == "duckdb" else conn.execute
+    if DB_BACKEND == "duckdb":
+        conn.execute("INSERT OR REPLACE INTO daily_pnl VALUES (?, COALESCE((SELECT pnl FROM daily_pnl WHERE day=?),0)+?, COALESCE((SELECT trades FROM daily_pnl WHERE day=?),0)+?, COALESCE((SELECT fees FROM daily_pnl WHERE day=?),0)+?)",
+                     (today, today, pnl, today, trades, today, fees))
+    else:
+        c("INSERT OR REPLACE INTO daily_pnl (day,pnl,trades,fees) VALUES (?,COALESCE((SELECT pnl FROM daily_pnl WHERE day=?),0)+?,COALESCE((SELECT trades FROM daily_pnl WHERE day=?),0)+?,COALESCE((SELECT fees FROM daily_pnl WHERE day=?),0)+?)",
+          (today, today, pnl, today, trades, today, fees))
+        conn.commit()
+
+def get_daily():
+    today = datetime.now().strftime('%Y-%m-%d')
+    r = conn.execute(f"SELECT COALESCE(pnl,0), COALESCE(trades,0), COALESCE(fees,0) FROM daily_pnl WHERE day='{today}'" if DB_BACKEND == "duckdb" else "SELECT pnl, trades, fees FROM daily_pnl WHERE day=?", (today,) if DB_BACKEND != "duckdb" else None)
+    if DB_BACKEND == "duckdb":
+        row = r.fetchone()
+    else:
+        row = r.fetchone()
+    return (0, 0, 0) if row is None else (row[0], row[1], row[2])
+
+# === KILL-SWITCH ===
+class KillSwitch:
     def __init__(self):
-        self.path = BASE / '.tmp' / 'consolidation.db'
-        self.path.parent.mkdir(exist_ok=True)
-        self._conn = None
-        self._init()
+        self.consecutive_losses = 0
+        self.daily_pnl = 0.0
+        self.day_start_equity = 0.0
+        self.halted = False
 
-    def _connect(self):
-        if self._conn is None:
-            self._conn = sqlite3.connect(str(self.path), timeout=10, check_same_thread=False)
-            self._conn.execute("PRAGMA journal_mode=WAL")
-            self._conn.execute("PRAGMA busy_timeout=5000")
-        return self._conn
-
-    def _init(self):
-        c = self._connect()
-        c.executescript("""
-            CREATE TABLE IF NOT EXISTS trades (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                symbol TEXT, side TEXT, price REAL, amount REAL,
-                value_eur REAL, fee_eur REAL, net_pnl REAL,
-                strategy TEXT, regime TEXT, filled_at TEXT DEFAULT (datetime('now'))
-            );
-            CREATE TABLE IF NOT EXISTS state (
-                key TEXT PRIMARY KEY, value TEXT, updated_at REAL
-            );
-            CREATE TABLE IF NOT EXISTS daily_pnl (
-                day TEXT NOT NULL, pnl REAL DEFAULT 0, trades INTEGER DEFAULT 0,
-                fees REAL DEFAULT 0, peak REAL DEFAULT 0,
-                PRIMARY KEY (day)
-            );
-        """)
-        c.commit()
-
-    def save_trade(self, symbol, side, price, amount, value_eur, fee_eur, net_pnl, strategy, regime=None):
-        self._connect().execute(
-            "INSERT INTO trades (symbol,side,price,amount,value_eur,fee_eur,net_pnl,strategy,regime) VALUES (?,?,?,?,?,?,?,?,?)",
-            (symbol, side, price, amount, value_eur, fee_eur, net_pnl, strategy, regime or '')
-        ).connection.commit()
-
-    def update_daily(self, pnl, trades=1, fees=0):
-        today = datetime.now().strftime('%Y-%m-%d')
-        c = self._connect()
-        c.execute("""INSERT OR REPLACE INTO daily_pnl (day, pnl, trades, fees)
-            VALUES (?, COALESCE((SELECT pnl FROM daily_pnl WHERE day=?),0)+?,
-            COALESCE((SELECT trades FROM daily_pnl WHERE day=?),0)+?,
-            COALESCE((SELECT fees FROM daily_pnl WHERE day=?),0)+?)""",
-            (today, today, pnl, today, trades, today, fees))
-        c.commit()
-
-    def get_daily(self, day=None):
-        day = day or datetime.now().strftime('%Y-%m-%d')
-        c = self._connect().execute("SELECT pnl, trades, fees FROM daily_pnl WHERE day=?", (day,))
-        return c.fetchone() or (0.0, 0, 0.0)
-
-    def stats(self, n=50):
-        c = self._connect().execute(
-            "SELECT net_pnl FROM trades WHERE net_pnl IS NOT NULL ORDER BY id DESC LIMIT ?", (n,))
-        pnls = [r[0] for r in c.fetchall() if r[0] is not None]
-        if not pnls:
-            return {"count": 0, "total_pnl": 0, "avg_pnl": 0, "win_rate": 0}
-        wins = sum(1 for p in pnls if p > 0)
-        return {
-            "count": len(pnls), "total_pnl": round(sum(pnls), 4),
-            "avg_pnl": round(sum(pnls)/len(pnls), 4), "win_rate": round(wins/len(pnls)*100, 1)
-        }
-
-class ConsolidationBot:
-    def __init__(self):
-        self.env = load_env()
-        self.ex = None
-        self.db = TradeDB()
-        self.symbol = "SOL/EUR"
-        self.asset = "SOL"
-
-        self.running = True
-        self.mode = "grid"
-        self.regime = "unknown"
-        self.last_daily_check = ""
-        self.daily_start_equity = 0.0
-        self.total_pnl = 0.0
-        self.last_mode_change = 0
-
-        self.config = {
-            "min_spacing": 0.005,
-            "fee_pct": 0.001125,
-            "kelly_fraction": 0.10,
-            "max_daily_loss_pct": 3.0,
-            "circuit_breaker_pct": 5.0,
-            "min_bnb": 0.002,
-        }
-
-    async def connect(self):
-        api_key = self.env.get('BINANCE_API_KEY', '')
-        api_secret = self.env.get('BINANCE_API_SECRET', '')
-        if not api_key:
-            logger.error("Nessuna API key trovata!")
-            sys.exit(1)
-        self.ex = ccxt.binance({
-            'apiKey': api_key, 'secret': api_secret,
-            'enableRateLimit': True, 'options': {'defaultType': 'spot'},
-        })
-        await self.ex.load_markets()
-        bal = await self.ex.fetch_balance()
-        bnb = bal.get('BNB', {}).get('free', 0) or 0
-        if bnb < self.config['min_bnb']:
-            logger.warning(f"⚠️ BNB basso ({bnb:.4f}) — nessuno sconto fees! Compra almeno {self.config['min_bnb']} BNB")
+    def update(self, trade_pnl):
+        self.daily_pnl += trade_pnl
+        if trade_pnl < 0:
+            self.consecutive_losses += 1
         else:
-            logger.info(f"✅ BNB={bnb:.4f} — sconto fees 25% attivo")
-        logger.info(f"Connesso a Binance | {self.symbol}")
+            self.consecutive_losses = 0
 
-    async def close(self):
-        if self.ex:
-            await self.ex.close()
+    def reset_day(self, equity):
+        self.day_start_equity = equity
+        self.consecutive_losses = 0
+        self.daily_pnl = 0
+        self.halted = False
 
-    async def bal(self, asset=None):
-        b = await self.ex.fetch_balance()
-        if asset:
-            return float(b.get(asset, {}).get('free', 0) or 0)
-        eur = float(b.get('EUR', {}).get('free', 0) or 0)
-        asset_free = float(b.get(self.asset, {}).get('free', 0) or 0)
-        ticker = await self.ex.fetch_ticker(self.symbol)
-        price = float(ticker.get('last', 0) or 0)
-        return {'EUR': eur, 'SOL': asset_free, 'equity': eur + asset_free * price}
-
-    async def price(self):
-        t = await self.ex.fetch_ticker(self.symbol)
-        return float(t.get('last', 0) or 0)
-
-    async def get_regime(self, price):
-        try:
-            ohlcv = await self.ex.fetch_ohlcv(self.symbol, '5m', limit=48)
-            if len(ohlcv) < 12:
-                return "ranging"
-            closes = [c[4] for c in ohlcv]
-            highs = [c[2] for c in ohlcv]
-            lows = [c[3] for c in ohlcv]
-            volumes = [c[5] for c in ohlcv]
-
-            trs = []
-            for i in range(1, len(ohlcv)):
-                trs.append(max(highs[i]-lows[i], abs(highs[i]-closes[i-1]), abs(lows[i]-closes[i-1])))
-            volatility = (sum(trs[-12:])/12) / price * 100 if price > 0 else 0
-
-            xs = list(range(len(closes)))
-            n = len(closes)
-            sx = sum(xs); sy = sum(closes)
-            sxy = sum(x*y for x,y in zip(xs, closes)); sxx = sum(x*x for x in xs)
-            slope = (n*sxy - sx*sy) / (n*sxx - sx*sx) if (n*sxx - sx*sx) != 0 else 0
-            trend = slope / (sy/n) * 100 if sy > 0 else 0
-
-            avg_vol = sum(volumes[:-6]) / max(len(volumes)-6, 1)
-            recent_vol = sum(volumes[-6:]) / 6 if volumes else 0
-            vol_ratio = recent_vol / max(avg_vol, 0.001)
-
-            if volatility > 2.5:
-                return "volatile"
-            if abs(trend) > 0.15 and volatility < 1.5:
-                return "trending" if trend > 0 else "trending_down"
-            if volatility < 0.5 and abs(trend) < 0.05:
-                return "quiet"
-            return "ranging"
-        except Exception as e:
-            logger.error(f"Regime detection error: {e}")
-            return "ranging"
-
-    def get_grid_config(self, regime, price, capital_eur):
-        configs = {
-            "ranging": {"levels": 4, "spacing": 0.005, "base_eur": min(8.0, capital_eur * 0.25)},
-            "volatile": {"levels": 3, "spacing": 0.008, "base_eur": min(6.0, capital_eur * 0.20)},
-            "quiet": {"levels": 3, "spacing": 0.003, "base_eur": min(6.0, capital_eur * 0.20)},
-            "trending": {"levels": 2, "spacing": 0.006, "base_eur": min(5.0, capital_eur * 0.15)},
-            "trending_down": {"levels": 2, "spacing": 0.006, "base_eur": min(4.0, capital_eur * 0.12)},
-        }
-        return configs.get(regime, configs["ranging"])
-
-    async def cancel_all(self):
-        try:
-            orders = await self.ex.fetch_open_orders(self.symbol)
-            for o in orders:
-                try:
-                    await self.ex.cancel_order(o['id'], self.symbol)
-                except:
-                    pass
-            logger.info(f"Annullati {len(orders)} ordini")
-        except Exception as e:
-            logger.error(f"Cancel error: {e}")
-
-    async def place_grid(self, price, cfg):
-        await self.cancel_all()
-        bal = await self.bal()
-        eur_free = bal['EUR']
-        levels = cfg['levels']
-        spacing = cfg['spacing']
-        base_eur = cfg['base_eur']
-
-        min_cost = 5.1
-        if eur_free < base_eur:
-            base_eur = max(min_cost, eur_free * 0.5)
-
-        step = spacing / levels
-        total_needed = base_eur * levels
-        if total_needed > eur_free * 0.85:
-            factor = (eur_free * 0.85) / total_needed
-            base_eur = max(min_cost, base_eur * factor)
-
-        buy_prices = [round(price * (1 - (i+1) * step), 2) for i in range(levels)]
-        sell_prices = [round(bp * (1 + spacing), 2) for bp in buy_prices]
-        profit_pct = spacing
-
-        placed = 0
-        for i, (bp, sp) in enumerate(zip(buy_prices, sell_prices)):
-            this_eur = base_eur
-            if abs(bp - price) / price < 0.001:
-                continue
-            amount = round(this_eur / bp, 5)
-            if amount * bp < min_cost:
-                continue
-            try:
-                o = await self.ex.create_limit_buy_order(self.symbol, amount, bp)
-                await asyncio.sleep(0.2)
-                amount_sell = round(amount * 0.997, 5)
-                await self.ex.create_limit_sell_order(self.symbol, amount_sell, sp)
-                placed += 1
-                logger.info(f"Grid {i+1}/{levels}: BUY @ {bp} ({this_eur:.2f}€) → SELL @ {sp}")
-                await asyncio.sleep(0.2)
-            except Exception as e:
-                logger.error(f"Grid order fail @ {bp}: {e}")
-        logger.info(f"Grid piazzata: {placed} coppie BUY/SELL, regime={self.regime}")
-
-    async def check_daily_pnl(self):
-        today = datetime.now().strftime('%Y-%m-%d')
-        if self.last_daily_check == today:
-            return True
-        self.last_daily_check = today
-        bal = await self.bal()
-        equity = bal['equity']
-        daily = self.db.get_daily(today)
-        if daily[2] > 0:
-            daily_pnl = daily[0]
-            if abs(daily_pnl) / max(equity, 1) * 100 > self.config['circuit_breaker_pct']:
-                logger.critical(f"🔴 CIRCUIT BREAKER: perdita giornaliera {daily_pnl:.2f}€ > {self.config['circuit_breaker_pct']}%")
-                await self.cancel_all()
-                self.running = False
-                return False
-        return True
-
-    def should_switch_mode(self, regime):
-        pnl = self.db.get_daily()
-        equity_pct = abs(pnl[0]) / 50 * 100 if pnl[0] < 0 else 0
-        if equity_pct > self.config['max_daily_loss_pct']:
+    def can_open(self, equity):
+        if self.halted:
+            return False
+        loss_pct = abs(self.daily_pnl) / max(self.day_start_equity, 1) * 100
+        if self.consecutive_losses >= 3:
+            print(f"  🔴 KILL-SWITCH L1: {self.consecutive_losses} perdite consecutive")
+            return False
+        if loss_pct > 3.0:
+            print(f"  🔴 KILL-SWITCH L2: daily loss {loss_pct:.1f}% > 3%")
+            return False
+        if loss_pct > 5.0:
+            print(f"  🔴 KILL-SWITCH L3: daily loss {loss_pct:.1f}% > 5% LIQUIDATE")
+            self.halted = True
             return False
         return True
 
-    async def run(self):
-        await self.connect()
-        logger.info("="*60)
-        logger.info("DENARO CONSOLIDATION BOT v1 — Avviato")
-        logger.info(f"Simbolo: {self.symbol}")
-        logger.info(f"Strategia: Grid conservativa + regime-aware switching")
-        logger.info("="*60)
+# === MAIN LOOP ===
+def main():
+    env = load_env()
+    key = env.get("BINANCE_API_KEY", "")
+    sec = env.get("BINANCE_API_SECRET", "")
+    if not key:
+        print("❌ API key missing")
+        sys.exit(1)
 
+    eng = Engine(key, sec, "SOL/USDC")
+    ks = KillSwitch()
+    capital = float(env.get("TOTAL_CAPITAL_USDC", 50))
+    spacing = float(env.get("GRID_SPACING_PCT", 0.012))
+    levels = int(env.get("GRID_LEVELS", 4))
+    min_order = float(env.get("MIN_ORDER_USDC", 5.1))
+
+    print("=" * 56)
+    print("DENARO CONSOLIDATION BOT v2 — SOL/USDC")
+    print(f"  Capital: ${capital:.0f}  Grid: {levels} livelli  Spacing: {spacing*100:.1f}%")
+    print(f"  DB: {DB_BACKEND}  Kill-Switch: 4 livelli")
+    print("=" * 56)
+
+    ks.reset_day(eng.equity())
+    placed_grid = False
+
+    while True:
         try:
-            while self.running:
-                try:
-                    bal = await self.bal()
-                    equity = bal['equity']
-                    price = await self.price()
-                    if price <= 0:
-                        await asyncio.sleep(5)
+            p = eng.price()
+            if p <= 0:
+                time.sleep(5)
+                continue
+
+            orders = eng.open_orders()
+            eq = eng.equity()
+
+            if not ks.can_open(eq):
+                time.sleep(60)
+                continue
+
+            # === REGIME DETECTION ===
+            klines = eng.ohlcv("5m", 48)
+            regime = "ranging"
+            if len(klines) >= 12:
+                closes = [float(k[4]) for k in klines]
+                highs = [float(k[2]) for k in klines]
+                lows = [float(k[3]) for k in klines]
+                vols = [float(k[5]) for k in klines]
+                trs = [max(highs[i]-lows[i], abs(highs[i]-closes[i-1]), abs(lows[i]-closes[i-1])) for i in range(1, len(klines))]
+                atr = sum(trs[-12:]) / 12
+                vol_pct = atr / p * 100 if p else 0
+                recent_vol = sum(vols[-6:]) / 6
+                avg_vol = sum(vols[:-6]) / max(len(vols)-6, 1)
+                if vol_pct > 2.5:
+                    regime = "volatile"
+                elif vol_pct < 0.3:
+                    regime = "quiet"
+                elif recent_vol > avg_vol * 2:
+                    regime = "volatile"
+
+            # === ADAPT GRID SPACING ===
+            cfg_levels = {"volatile": min(levels-1, 3), "quiet": min(levels+1, 6), "ranging": levels}
+            n = cfg_levels.get(regime, levels)
+            cap_per_level = (capital * 0.85) / n
+            if cap_per_level < min_order:
+                n = max(1, int((capital * 0.85) / min_order))
+                cap_per_level = (capital * 0.85) / n
+
+            if len(orders) == 0 and not placed_grid:
+                # Build grid
+                print(f"\n  📊 Building grid: {n} levels, regime={regime}, price=${p:.2f}")
+                for i in range(1, n + 1):
+                    bp = round(p * (1 - spacing * i / n), 2)
+                    sp = round(bp * (1 + spacing * 1.5), 2)
+                    amt = round(cap_per_level / bp, 4)
+                    if amt * bp < min_order:
                         continue
+                    eng.limit_buy(amt, bp)
+                    time.sleep(0.3)
+                    eng.limit_sell(amt * 0.998, sp)
+                    time.sleep(0.3)
+                    print(f"  BUY {amt} @ ${bp} → SELL @ ${sp}")
+                placed_grid = True
 
-                    self.regime = await self.get_regime(price)
-                    if not self.should_switch_mode(self.regime):
-                        logger.warning(f"Daily loss limit reached — skipping new entries")
-                        await asyncio.sleep(60)
-                        continue
+            elif len(orders) == 0 and placed_grid:
+                # Grid completed (all filled and settled) — recycle
+                print(f"  ✅ Grid cycle complete. Recycling...")
+                placed_grid = False
+                ks.reset_day(eng.equity())
 
-                    if not await self.check_daily_pnl():
-                        break
+            # Status (every 10 loops)
+            if int(time.time()) % 60 < 10:  # FIXED
+                sol = eng.balance().get("SOL", 0)
+                usdc = eng.balance().get("USDC", 0)
+                ord_str = f"{len(orders)} orders" if orders else "idle"
+                print(f"  {datetime.now().strftime('%H:%M:%S')}  SOL=${p:.2f}  eq=${eq:.2f}  reg={regime}  {ord_str}  L{ks.consecutive_losses}")
 
-                    cfg = self.get_grid_config(self.regime, price, equity)
+        except Exception as e:
+            print(f"  ❌ {str(e)[:80]}")
 
-                    open_orders = await self.ex.fetch_open_orders(self.symbol)
-                    if len(open_orders) == 0:
-                        logger.info(f"Grid vuota — piazzo nuova griglia. Regime={self.regime}, equity={equity:.2f}€")
-                        await self.place_grid(price, cfg)
-                    else:
-                        if int(time.time()) % 60 < 5:
-                            logger.info(f"Status: price={price:.4f}€ | regime={self.regime} | "
-                                        f"ordini={len(open_orders)} | equity={equity:.2f}€ | "
-                                        f"{cfg['levels']} livelli, spacing={cfg['spacing']*100:.1f}%")
-
-                    await asyncio.sleep(30)
-
-                except Exception as e:
-                    logger.error(f"Loop error: {e}", exc_info=True)
-                    await asyncio.sleep(10)
-
-        except KeyboardInterrupt:
-            logger.info("Shutdown richiesto")
-        finally:
-            await self.cancel_all()
-            await self.close()
-            logger.info("Bot fermato. Tutti gli ordini cancellati.")
+        time.sleep(30)
 
 if __name__ == "__main__":
-    bot = ConsolidationBot()
-    asyncio.run(bot.run())
+    main()
