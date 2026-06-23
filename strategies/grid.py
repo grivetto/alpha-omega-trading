@@ -153,13 +153,17 @@ class GridTraderStrategy(BaseStrategy):
         placed_levels = []
         for lvl in levels:
             try:
-                order = await self.exchange.create_order(
+                result = self.exchange.create_order(
                     symbol=self.symbol,
                     type="limit",
                     side=lvl.side.value,
                     amount=lvl.amount,
                     price=lvl.price
                 )
+                if asyncio.iscoroutine(result):
+                    order = await result
+                else:
+                    order = result
                 lvl.order_id = order["id"]
                 placed_levels.append(lvl)
                 self.logger.info(f"Placed grid order: {lvl.side.name} @ {lvl.price:.4f} | amount: {lvl.amount:.4f} | ID: {lvl.order_id}")
@@ -218,14 +222,18 @@ class GridTraderStrategy(BaseStrategy):
                 self.logger.error(f"Failed to save trade: {e}")
 
         try:
-            new_order = await self.exchange.create_order(
+            result = self.exchange.create_order(
                 symbol=self.symbol,
                 type="limit",
                 side=opp_side.value,
                 amount=filled_lvl.amount,
                 price=opp_price
             )
-            
+            if asyncio.iscoroutine(result):
+                new_order = await result
+            else:
+                new_order = result
+
             filled_lvl.order_id = new_order["id"]
             filled_lvl.side = opp_side
             filled_lvl.price = opp_price
