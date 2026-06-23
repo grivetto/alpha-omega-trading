@@ -1,0 +1,53 @@
+{
+  "exchange": {
+    "id": "binance",
+    "testnet": false
+  },
+  "trading": {
+    "symbol": "SOL/USDC",
+    "quote_asset": "USDC",
+    "base_asset": "SOL",
+    "total_capital_usdc": 200,
+    "min_order_usdc": 5.1,
+    "max_per_trade_usdc": 5.0
+  },
+  "grid": {
+    "levels": 4,
+    "spacing_pct": 0.012,
+    "atr_spacing_factor": 1.0,
+    "max_levels": 10,
+    "min_levels": 2
+  },
+  "scalper": {
+    "entry_drop_pct": 0.008,
+    "take_profit_pct": 0.004,
+    "stop_loss_pct": 0.02,
+    "max_capital_usdc": 20.0,
+    "check_interval_sec": 5
+  },
+  "risk": {
+    "max_daily_loss_pct": 3.0,
+    "circuit_breaker_pct": 5.0,
+    "max_consecutive_losses": 3,
+    "kelly_fraction": 0.5,
+    "var_confidence": 0.95,
+    "var_max_drawdown_pct": 4.0,
+    "stop_loss_type": "atr",
+    "atr_period": 14,
+    "atr_trail_multiplier": 1.5,
+    "break_even_r": 1.0,
+    "max_risk_per_trade_pct": 1.0
+  },
+  "portfolio": {
+    "grid_allocation_pct": 0.40,
+    "rsi_allocation_pct": 0.30,
+    "momentum_allocation_pct": 0.30,
+    "rebalance_interval_hours": 24,
+    "global_daily_drawdown_usdc": 6.0
+  },
+  "observability": {
+    "health_port": 8909,
+    "telegram_alerts": false,
+    "log_level": "INFO"
+  }
+}
