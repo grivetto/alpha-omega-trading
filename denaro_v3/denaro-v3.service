@@ -1,0 +1,27 @@
+[Unit]
+Description=Denaro v3 Grid Trading Engine
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=sergio
+Group=sergio
+WorkingDirectory=/home/sergio/denaro
+ExecStart=/home/sergio/denaro/venv/bin/python3 -m denaro_v3.main
+Restart=always
+RestartSec=15
+StandardOutput=append:/home/sergio/denaro/denaro_v3.log
+StandardError=append:/home/sergio/denaro/denaro_v3.log
+EnvironmentFile=-/home/sergio/denaro/.env
+
+# Security hardening
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/home/sergio/denaro
+ReadOnlyPaths=/home/sergio/denaro/.env
+
+[Install]
+WantedBy=multi-user.target
