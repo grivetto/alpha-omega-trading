@@ -19,6 +19,8 @@ class DataFeeder:
         self._config = config
         self._cache: Dict[str, tuple[float, Any]] = {}
         self._trade_count: int = 0  # Incremented after each fill
+        self._ws_ticker: Dict[str, dict] = {}  # WebSocket-injected tickers
+        self._ws_balance: dict = {}  # WebSocket-injected balances
 
     def _get(self, key: str, ttl: int) -> Optional[Any]:
         """Return cached value if not expired."""
@@ -82,7 +84,12 @@ class DataFeeder:
 
     # ── Ticker ─────────────────────────────────────────────
     def get_ticker(self, symbol: str) -> Optional[dict]:
-        """Fetch ticker with short cache."""
+        """Fetch ticker with short cache. WebSocket data overrides cache."""
+        # Check injected WS ticker first (real-time, bypasses cache)
+        ws_ticker = self._ws_ticker.get(symbol, {})
+        if ws_ticker and ws_ticker.get("last", 0) > 0:
+            return ws_ticker
+
         key = f"ticker:{symbol}"
         cached = self._get(key, self._config.cache_ttl_ticker)
         if cached is not None:
@@ -94,6 +101,15 @@ class DataFeeder:
         except Exception as e:
             logger.error(f"Ticker fetch failed for {symbol}: {e}")
             return self._get(key, 60) or {"last": 0}
+
+    def inject_ws_ticker(self, symbol: str, data: dict):
+        """Inject WebSocket ticker data. Overrides REST cache."""
+        self._ws_ticker[symbol] = data
+
+    def inject_ws_balance(self, balances: dict):
+        """Inject WebSocket balance update. Invalidates balance cache."""
+        self._ws_balance = balances
+        self.invalidate("balance")
 
     # ── Open Orders ────────────────────────────────────────
     def get_open_orders(self, symbol: str) -> List[dict]:

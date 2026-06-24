@@ -5,6 +5,7 @@ No LLM. No multi-strategy. No complexity. Just grid.
 """
 
 import math
+import time
 from dataclasses import dataclass
 from enum import Enum
 from typing import List, Optional
@@ -273,6 +274,59 @@ class GridEngine:
         return active == 0
 
     # ── Status ─────────────────────────────────────────────
+    def on_ws_fill(self, fill_data: dict):
+        """Handle real-time fill event from WebSocket.
+
+        Called immediately when Binance sends executionReport.
+        Bypasses the 60s polling loop — latency < 500ms.
+        """
+        symbol = fill_data["symbol"]
+        if symbol != self._config.symbol:
+            return
+
+        order_id = fill_data["order_id"]
+        side_str = fill_data["side"]
+        price = fill_data["price"]
+        amount = fill_data["amount"]
+        status = fill_data.get("status", "FILLED")
+        is_maker = fill_data.get("is_maker", False)
+        fee = fill_data.get("fee", 0.0)
+
+        # Find matching level
+        for level in self._levels:
+            if level.order_id == order_id:
+                if status == "FILLED":
+                    level.filled = True
+                logger.info(
+                    f"WS fill: {side_str.upper()} {amount:.4f} @ {price:.4f} "
+                    f"(fee={fee:.6f}, maker={is_maker}) | ID={order_id}"
+                )
+
+                # Record P&L
+                side = Side.BUY if side_str == "buy" else Side.SELL
+                if side == Side.BUY:
+                    self._buy_fills.append(level)
+                elif side == Side.SELL and self._buy_fills:
+                    buy = self._buy_fills.pop(0)
+                    pnl = (price - buy.price) * amount
+                    actual_fee = fee if fee > 0 else (
+                        buy.price * buy.amount + price * amount
+                    ) * 0.001
+                    self._breaker.record_trade(TradeRecord(
+                        timestamp=time.time(),
+                        symbol=self._config.symbol,
+                        side="sell",
+                        amount=amount,
+                        price=price,
+                        pnl=pnl - actual_fee,
+                        fee=actual_fee,
+                    ))
+                    logger.info(
+                        f"WS cycle: BUY @ {buy.price:.4f} → SELL @ {price:.4f} "
+                        f"| P&L=${pnl - actual_fee:.2f} (fee=${actual_fee:.4f})"
+                    )
+                break
+
     def summary(self) -> dict:
         """Human-readable grid status."""
         active_buys = sum(1 for level in self._levels if level.side == Side.BUY and level.order_id and not level.filled)

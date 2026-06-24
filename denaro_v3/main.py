@@ -13,6 +13,7 @@ import signal
 import socket
 import sys
 import time
+from typing import Optional
 
 import ccxt
 from loguru import logger
@@ -22,6 +23,7 @@ from .data_feeder import DataFeeder
 from .circuit_breaker import CircuitBreaker
 from .grid_engine import GridEngine
 from .leader_election import LeaderElection
+from .websocket_client import WebSocketClient, EventType
 
 # ── Logging ────────────────────────────────────────────────
 logger.remove()
@@ -50,6 +52,7 @@ class DenaroV3:
         self._breaker = None
         self._engines: dict[str, GridEngine] = {}
         self._leaders: dict[str, LeaderElection] = {}
+        self._ws_client: Optional[WebSocketClient] = None
         self._running = False
         self._start_time = 0.0
 
@@ -71,23 +74,33 @@ class DenaroV3:
         self._breaker = CircuitBreaker(PRODUCTION.risk)
 
         pairs = MACHINE_PAIRS.get(self._machine, [])
+        pair_list = []
         for pair, is_shared in pairs:
             base, quote = pair.split("/")
             cfg = GridConfig(symbol=pair, base_asset=base, quote_asset=quote)
             self._engines[pair] = GridEngine(cfg, self._feeder, self._breaker)
             if is_shared:
                 self._leaders[pair] = LeaderElection(self._machine, pair)
+            pair_list.append(pair)
             logger.info(f"Pair configured: {pair} | shared={is_shared}")
 
         if not self._engines:
             logger.critical(f"No pairs configured for machine={self._machine}")
             sys.exit(1)
 
+        # Initialize WebSocket client
+        self._ws_client = WebSocketClient(self._exchange, pair_list)
+
     async def _loop(self):
         self._running = True
         self._start_time = time.time()
         logger.info(f"Denaro v3 started | machine={self._machine} | "
                      f"pairs={list(self._engines.keys())}")
+
+        # Start WebSocket streams (real-time price + fills)
+        if self._ws_client:
+            await self._ws_client.start()
+            logger.info("WebSocket streams active — latency < 1s")
 
         # Initialize equity tracking BEFORE grid setup (needed by CircuitBreaker.can_trade)
         quote = "USDC"
@@ -114,6 +127,19 @@ class DenaroV3:
             loop_start = time.time()
 
             try:
+                # ── Process WebSocket events (real-time) ──
+                if self._ws_client:
+                    ws_events = await self._ws_client.drain_events()
+                    for event in ws_events:
+                        if event.type == EventType.TICKER:
+                            symbol = event.data.get("symbol", "")
+                            pair = symbol  # Use raw symbol from WS
+                            self._feeder.inject_ws_ticker(pair, event.data)
+                        elif event.type == EventType.FILL:
+                            # Forward to all engines (each filters by symbol)
+                            for engine in self._engines.values():
+                                engine.on_ws_fill(event.data)
+
                 # Update equity once per cycle — include ALL assets, not just USDC
                 quote = "USDC"
                 total = self._feeder.get_total_balance(quote)
@@ -173,12 +199,14 @@ class DenaroV3:
                     break
                 await asyncio.sleep(1)
 
-    def stop(self):
+    async def stop(self):
         logger.info(f"Shutting down Denaro v3 [{self._machine}]...")
         self._running = False
         for leader in self._leaders.values():
             if leader.is_leader:
                 leader.release()
+        if self._ws_client:
+            await self._ws_client.stop()
         self._breaker._save_state()
         uptime = time.time() - self._start_time
         logger.info(f"Stopped | uptime={uptime:.0f}s | pnl=${self._breaker.total_pnl:.2f}")
@@ -206,15 +234,18 @@ async def main():
 
     loop = asyncio.get_running_loop()
     for sig in (signal.SIGINT, signal.SIGTERM):
-        loop.add_signal_handler(sig, app.stop)
+        try:
+            loop.add_signal_handler(sig, lambda: asyncio.create_task(app.stop()))
+        except NotImplementedError:
+            pass  # Windows doesn't support add_signal_handler
 
     try:
         await app._loop()
     except KeyboardInterrupt:
-        app.stop()
+        await app.stop()
     except Exception as e:
         logger.critical(f"Fatal: {e}")
-        app.stop()
+        await app.stop()
         sys.exit(1)
 
 
