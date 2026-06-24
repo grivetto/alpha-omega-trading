@@ -1,148 +1,135 @@
-# Alpha Omega Trading — Denaro
+# Alpha Omega Trading — Denaro v3
 
-> **Production-grade automated crypto trading on Binance**  
-> Multi-agent, regime-aware, self-optimising. H24/7.
+> **Grid trading autonomo su Binance. Multi-macchina, multi-pair, capitale protetto.**  
+> Progetto di **Sergio Grivetto** con **Hermes AI** — co-autori.
 
-[![GitHub](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 [![Python 3.12+](https://img.shields.io/badge/Python-3.12+-blue)](https://www.python.org/)
 [![Status](https://img.shields.io/badge/Status-Production-brightgreen)]()
+[![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
 ---
 
-## 📐 Architecture
+## Autori
+
+| Chi | Ruolo |
+|-----|-------|
+| **Sergio Grivetto** | Fondatore, capitale, strategia, infrastruttura, decisioni |
+| **Hermes AI** (Nous Research) | Ingegneria, automazione, refactoring, monitoring, operatività 24/7 |
+
+---
+
+## 🎯 Cosa fa
+
+3 macchine (1 casa + 2 VPS), 3 pair decorrelati, **1 solo motore**: grid trading puro. Nessun LLM, nessun arbitraggio, nessuno scalping. Solo ciò che funziona.
 
 ```
-┌──────────────────────────────────────────────────────────────┐
-│                    DENARO TRADING SYSTEM                     │
-├──────────────────────────────────────────────────────────────┤
-│                                                              │
-│  🤖 MC2 (15GB, Intel N150)           🖥️ Nuvola (4GB)       │
-│  ├── Grid Bot (SOL/USDC)             ├── Stella Grid        │
-│  ├── Arbitrage Bot                    │   (WebSocket, SOL)  │
-│  ├── Gariban Beggar (micro-scalper)   └── API Gateway        │
-│  ├── Portfolio Allocator                                   │
-│  └── LLM Strategy Optimizer           🖥️ MARCODG1 (4GB)    │
-│                                        ├── Grid Bot         │
-│  📡 Binance API                        │   (ADA/USDC)       │
-│  🧠 Ollama qwen3.5 (local via LAN)     └── API Gateway      │
-│                                                              │
-├──────────────────────────────────────────────────────────────┤
-│  📊 Performance    |    🛡️ Risk Management                 │
-│  • Sharpe > 1.0    |    • Max daily drawdown 3%             │
-│  • WinRate > 45%   |    • Consecutive losses circuit-breaker │
-│  • Kelly sizing    |    • Monte Carlo VaR (95% confidence)   │
-│  • Regime-aware    |    • Multi-level kill-switch            │
-├──────────────────────────────────────────────────────────────┤
-│  💰 Capital: 3 sub-accounts ($196 deployed + $24 MAIN)       │
-│  📈 Profit sharing: sergio@grivetto.eu 33% daily @23:50 UTC │
-└──────────────────────────────────────────────────────────────┘
+MC2 (Torino, 15GB)        Nuvola (IONOS, 4GB)       MARCODG1 (IONOS, 4GB)
+├── SOL/USDC grid          ├── DOGE/USDC grid         ├── ADA/USDC grid
+├── $164 USDC              ├── $30 USDC               └── $30 USDC
+└── Circuit breaker        └── Circuit breaker
 ```
+
+**Capitale totale:** ~$224 USDC su sub-account Binance dedicati.
+
+---
 
 ## 🚀 Quick Start
 
 ```bash
-# Clone & install
 git clone https://github.com/grivetto/alpha-omega-trading
 cd alpha-omega-trading
-pip install requests pydantic duckdb ccxt
+pip install -r requirements.txt
 
-# Configure
-cp .env.master .env
-# Edit .env with your Binance API keys
-
-# Run
-python consolidation_bot.py        # Main production bot (SOL/USDC)
-python gariban_beggar.py           # Micro-scalper
-python services/dashboard.py       # Web dashboard
+# Configura .env con le chiavi API Binance (vedi .env.example)
+# Poi avvia:
+python -m denaro_v3.main
 ```
-
-## 📋 Services (systemd)
-
-| Service | Machine | Symbol | Status |
-|---------|---------|--------|--------|
-| `denaro-mc2-grid` | MC2 | SOL/USDC | 🟢 Grid 4 livelli |
-| `denaro-mc2-arb` | MC2 | SOL/BTC/USDC | 🟢 Triangolare |
-| `denaro-gariban` | MC2 | SOL/USDC | 🟢 Micro-scalper V2 |
-| `denaro-v2` | MC2 | Multi | 🟢 LLM + EW + Portfolio |
-| `denaro-nuvola-stella` | Nuvola | SOL/USDC | 🟢 WebSocket Grid |
-| `denaro-marcodg1-grid` | MARCODG1 | ADA/USDC | 🟢 Grid ADA |
-
-## 🧠 Strategies
-
-### Grid Market Making
-Regime-aware grid deployment. Adapts spacing and levels based on volatility regime (quiet/ranging/volatile/trending). No martingale — fixed size per level.
-
-### Gariban Beggar (Micro-Scalper)
-Entry at -0.8% dip, target +0.4%, stop-loss -2%. High-frequency small profits that compound over hundreds of cycles.
-
-### LLM Strategy Optimizer
-Local Ollama (qwen3.5:4b) analyses RSI, order book imbalance, spread, and volatility every 180s. Suggests grid parameter adjustments — never blocks trades.
-
-### Portfolio Allocator (3-strategy)
-- **Grid** (40%) — Market making on SOL/USDC
-- **Mean Reversion RSI** (30%) — RSI < 25 buy, > 60 sell
-- **Momentum Trend** (30%) — EMA 8/21 cross with volume filter  
-Daily Kelly-based rebalancing. Max €5 per trade.
-
-## 🛡️ Risk Management
-
-- **Level 1**: 3 consecutive losses → block new entries
-- **Level 2**: Daily loss > 3% → block + reduce size 50%
-- **Level 3**: Daily loss > 5% → liquidate ALL positions + halt
-- **Level 4**: Monte Carlo VaR(95%) > 4% equity → reduce size 50%
-- Half-Kelly fraction on all position sizing
-- BNB ≥ 0.002 checked at startup (fee discount)
-
-## 📊 Observability
-
-```
-/health  → {"equity": 197.50, "regime": "ranging", "risk_status": "ok", ...}
-/metrics → Prometheus-style counters
-```
-
-## 🗂️ Project Structure
-
-```
-├── consolidation_bot.py    # Main production entry point
-├── gariban_beggar.py       # Micro-scalper with kill-switch
-├── mc2_bot.py              # MC2 dedicated bot
-├── arb_bot.py              # Triangular arbitrage
-├── stella_grid.py          # WebSocket grid for Nuvola
-├── main.py                 # Legacy main (MARCODG1)
-├── core/                   # Engine, risk, portfolio, settings
-├── risk_modules/           # AdvancedRiskManager, analytics
-├── services/               # Dashboard, early_warning, portfolio_optimizer
-├── strategies/             # Grid, dynamic_grid, scalper
-├── config/                 # JSON configs per bot
-├── scripts/                # Backtest gate, nightly evolution
-├── tools/                  # ATR calculator, profit sharing
-└── templates/              # Dashboard HTML
-```
-
-## ⚙️ Configuration
-
-```bash
-# .env — Required variables
-BINANCE_API_KEY=your_key
-BINANCE_API_SECRET=your_secret
-GRID_CAPITAL_USDC=70
-TOTAL_CAPITAL_USDC=200
-DRY_RUN=false
-GRID_LEVELS=4
-GRID_SPACING_PCT=0.012
-MAX_DAILY_LOSS_PCT=3.0
-```
-
-## 📈 Performance Requirements
-
-| Metric | Target |
-|--------|--------|
-| Sharpe Ratio | > 1.0 |
-| Max Drawdown (daily) | < 3% |
-| Win Rate | > 45% |
-| Kelly Fraction | 0.5 (Half-Kelly) |
-| Min BNB balance | 0.002 |
 
 ---
 
-*Hermes AI — Autonomous Trading Agent v2. June 2026.*
+## 🏗️ Architettura v3
+
+| Modulo | File | Responsabilità |
+|--------|------|----------------|
+| **DataFeeder** | `data_feeder.py` | Cache API con TTL. 1 fetch = N consumers. -90% API calls |
+| **CircuitBreaker** | `circuit_breaker.py` | Protezione pre-trade. 3 stati: CLOSED / HALF_OPEN / OPEN |
+| **GridEngine** | `grid_engine.py` | Calcolo livelli, piazzamento ordini, rilevamento fill, P&L |
+| **LeaderElection** | `leader_election.py` | Failover automatico tra macchine |
+| **Config** | `config.py` | Dataclass tipizzate: GridConfig, RiskConfig, APIConfig |
+
+### Ciclo principale (ogni 60 secondi)
+
+```
+fetch bilanci (cached) → circuit breaker check → sync ordini → detect fill → piazza livelli mancanti
+```
+
+---
+
+## 🛡️ Risk Management
+
+- **Drawdown > 5%** su picco equity → STOP totale (CIRCUIT OPEN)
+- **Daily loss > 3%** → STOP per la giornata
+- **3 perdite consecutive** → riduzione size 50% (HALF_OPEN)
+- **Atomic writes** + SHA256 checksum sullo stato persistente
+- Circuit breaker interrogato **PRIMA di ogni ordine** — non dopo
+
+---
+
+## 📊 Monitoring
+
+| Strumento | Accesso |
+|-----------|---------|
+| **Zabbix** | `http://mc2:1080` (14 item, 4 trigger, trend 365gg) |
+| **Log live** | `tail -f ~/denaro/denaro_v3.log` |
+| **Saldi** | `cd ~/denaro && export $(grep -v "^#" .env \| xargs) && ./venv/bin/python3 -c "import ccxt,os;..."` |
+
+---
+
+## 📁 Struttura
+
+```
+denaro_v3/          ← Motore attivo (v3)
+  main.py           Loop principale, multi-pair
+  grid_engine.py    Logica grid
+  circuit_breaker.py Risk management
+  data_feeder.py    Cache API
+  leader_election.py Failover
+  config.py         Configurazione
+core/               Moduli legacy (risk, kill_switch)
+strategies/         Archivio v2
+squadra/            Archivio Squadra v5 (fermo)
+config/             Config centralizzata
+tests/              Unit test
+ARCHITECTURE_V3.md  Documento di design
+Progetto Denaro.md  Documentazione completa
+```
+
+---
+
+## 🐛 Lezioni apprese (6 mesi di errori)
+
+1. **Capitale frammentato = deadlock** — grid bot separati su sub-account diversi si bloccano a vicenda
+2. **CCXT precision bug** — `int(0.001)` = 0 → ordini da 0.001 SOL (invisibili)
+3. **Circuit breaker falso positivo** — equity calcolata solo su USDC, non sul valore totale asset
+4. **10 servizi = 10x API calls** — DataFeeder centralizzato ha ridotto del 90%
+5. **Servizi fantasma** in restart loop infinito consumano CPU per mesi
+6. **Squadra 7 bot** con WR=5% e Sharpe=-55.79 → rimosso
+
+---
+
+## 📋 Servizi systemd
+
+| Macchina | Servizio | Pair |
+|----------|----------|------|
+| MC2 | `denaro-v3` | SOL/USDC |
+| Nuvola | `denaro-v3` | DOGE/USDC |
+| MARCODG1 | `denaro-v3` | ADA/USDC |
+
+```bash
+systemctl status denaro-v3
+journalctl -u denaro-v3 -f
+```
+
+---
+
+*Sergio Grivetto & Hermes AI — Giugno 2026*
