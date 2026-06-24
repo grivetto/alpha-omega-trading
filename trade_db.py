@@ -49,3 +49,7 @@ class TradeDB:
             if row:
                 return json.loads(row[0])
             return None
+
+    def close(self):
+        """No-op close for API compatibility. SQLite connections are short-lived."""
+        pass

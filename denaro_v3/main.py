@@ -1,82 +1,100 @@
-"""Denaro v3 Main — Single-process grid trading engine.
+"""Denaro v3 Main — Multi-machine grid trading engine.
 
-One loop. One strategy. One machine. Full capital. No bullshit.
+One loop per machine. Leader election for shared pairs.
+Each machine can run its own local pair + compete for the primary pair.
 
 Usage:
-    BINANCE_API_KEY=xxx BINANCE_API_SECRET=yyy python -m denaro_v3.main
+    MACHINE_ID=mc2 BINANCE_API_KEY=xxx BINANCE_API_SECRET=yyy python -m denaro_v3.main
 """
 
 import asyncio
 import os
 import signal
+import socket
 import sys
 import time
-from datetime import datetime, timezone
 
 import ccxt
 from loguru import logger
 
-from .config import Config, PRODUCTION
+from .config import Config, GridConfig, PRODUCTION
 from .data_feeder import DataFeeder
 from .circuit_breaker import CircuitBreaker
 from .grid_engine import GridEngine
+from .leader_election import LeaderElection
 
-# ── Logging Setup ──────────────────────────────────────────
+# ── Logging ────────────────────────────────────────────────
 logger.remove()
-logger.add(
-    sys.stderr,
-    format="<green>{time:HH:mm:ss}</green> | <level>{level: <8}</level> | <level>{message}</level>",
-    level="INFO",
-    colorize=True,
-)
+logger.add(sys.stderr, format="<green>{time:HH:mm:ss}</green> | <level>{level: <8}</level> | <level>{message}</level>",
+           level="INFO", colorize=True)
+
+
+# ── Per-machine pair configuration ─────────────────────────
+# (machine_id) -> list of (pair, is_shared)
+# Shared pairs use leader election (only 1 instance trades them).
+# Local pairs are exclusive to that machine.
+MACHINE_PAIRS = {
+    "mc2":      [("SOL/USDC", False)],
+    "nuvola":   [("DOGE/USDC", False)],
+    "marcodg1": [("ADA/USDC", False)],
+}
 
 
 class DenaroV3:
-    """Main application. Single responsibility: run the grid trading loop."""
+    """Trading engine for one machine. Can manage multiple pairs."""
 
-    def __init__(self, config: Config = PRODUCTION):
-        self._config = config
+    def __init__(self, machine_id: str):
+        self._machine = machine_id
         self._exchange = None
         self._feeder = None
         self._breaker = None
-        self._engine = None
+        self._engines: dict[str, GridEngine] = {}
+        self._leaders: dict[str, LeaderElection] = {}
         self._running = False
         self._start_time = 0.0
 
     def _init_exchange(self):
-        """Initialize ccxt exchange connection."""
-        api_key = os.environ.get("BINANCE_API_KEY", "").strip()
-        api_secret = os.environ.get("BINANCE_API_SECRET", "").strip()
-
-        if not api_key or not api_secret:
-            logger.critical("BINANCE_API_KEY and BINANCE_API_SECRET must be set")
+        key = os.environ.get("BINANCE_API_KEY", "").strip()
+        sec = os.environ.get("BINANCE_API_SECRET", "").strip()
+        if not key or not sec:
+            logger.critical("BINANCE_API_KEY and BINANCE_API_SECRET required")
             sys.exit(1)
-
         self._exchange = ccxt.binance({
-            "apiKey": api_key,
-            "secret": api_secret,
+            "apiKey": key, "secret": sec,
             "enableRateLimit": True,
             "options": {"defaultType": "spot"},
         })
-        logger.info(f"Connected to Binance | pair={self._config.grid.symbol}")
+        logger.info(f"Exchange connected | machine={self._machine}")
 
     def _init_modules(self):
-        """Initialize all sub-modules."""
-        self._feeder = DataFeeder(self._exchange, self._config.api)
-        self._breaker = CircuitBreaker(self._config.risk)
-        self._engine = GridEngine(self._config.grid, self._feeder, self._breaker)
+        self._feeder = DataFeeder(self._exchange, PRODUCTION.api)
+        self._breaker = CircuitBreaker(PRODUCTION.risk)
+
+        pairs = MACHINE_PAIRS.get(self._machine, [])
+        for pair, is_shared in pairs:
+            cfg = GridConfig(symbol=pair)
+            self._engines[pair] = GridEngine(cfg, self._feeder, self._breaker)
+            if is_shared:
+                self._leaders[pair] = LeaderElection(self._machine, pair)
+            logger.info(f"Pair configured: {pair} | shared={is_shared}")
+
+        if not self._engines:
+            logger.critical(f"No pairs configured for machine={self._machine}")
+            sys.exit(1)
 
     async def _loop(self):
-        """Main trading loop. Runs every loop_interval seconds."""
         self._running = True
         self._start_time = time.time()
+        logger.info(f"Denaro v3 started | machine={self._machine} | "
+                     f"pairs={list(self._engines.keys())}")
 
-        logger.info(f"Denaro v3 started | {self._config.grid.symbol} | "
-                     f"levels={self._config.grid.levels} | "
-                     f"spacing={self._config.grid.spacing_pct}%")
-
-        # Initial grid setup
-        self._engine.reset_grid()
+        # Initial grid setup for each pair
+        for pair, engine in self._engines.items():
+            leader = self._leaders.get(pair)
+            if leader and not leader.try_acquire():
+                logger.info(f"Skipping {pair} — not leader (leader={leader.get_current_leader()})")
+                continue
+            engine.reset_grid()
 
         cycle = 0
         while self._running:
@@ -84,62 +102,90 @@ class DenaroV3:
             loop_start = time.time()
 
             try:
-                # 1. Update equity tracker
-                quote = self._config.grid.quote_asset
+                # Update equity once per cycle
+                quote = "USDC"
                 total = self._feeder.get_total_balance(quote)
                 self._breaker.update_equity(total)
 
-                # 2. Log status every 10 cycles
+                # Process each pair
+                for pair, engine in self._engines.items():
+                    leader = self._leaders.get(pair)
+
+                    # Leader election check
+                    if leader:
+                        if not leader.is_leader:
+                            if leader.try_acquire():
+                                logger.info(f"Acquired leadership for {pair} — initializing grid")
+                                engine.reset_grid()
+                            else:
+                                continue  # Skip — not leader
+                        leader.heartbeat()
+
+                    # Sync orders
+                    if self._breaker.state != CircuitBreaker.STATE_OPEN:
+                        engine.sync_orders()
+
+                    # Reset dead grid
+                    if engine.needs_reset():
+                        logger.warning(f"[{pair}] Grid has no active levels — resetting")
+                        engine.reset_grid()
+
+                # Status log every 10 cycles
                 if cycle % 10 == 0:
                     breaker_summary = self._breaker.summary()
-                    grid_summary = self._engine.summary()
-                    logger.info(
-                        f"Cycle {cycle} | "
-                        f"Equity=${breaker_summary['equity']:.2f} | "
-                        f"CB={breaker_summary['state']} | "
-                        f"PnL=${breaker_summary['total_pnl']:.2f} | "
-                        f"Grid={grid_summary['active_buys']}B/{grid_summary['active_sells']}S"
-                    )
-
-                # 3. Sync orders (detect fills, place new)
-                if not self._breaker.state == self._breaker.STATE_OPEN:
-                    self._engine.sync_orders()
-
-                # 4. Reset grid if dead
-                if self._engine.needs_reset():
-                    logger.warning("Grid has no active levels — resetting")
-                    self._engine.reset_grid()
+                    parts = [f"Cycle {cycle}", f"Equity=${breaker_summary['equity']:.2f}",
+                             f"CB={breaker_summary['state']}", f"PnL=${breaker_summary['total_pnl']:.2f}"]
+                    for pair, engine in self._engines.items():
+                        gs = engine.summary()
+                        leader_info = ""
+                        if pair in self._leaders:
+                            l = self._leaders[pair]
+                            leader_info = f" [{'L' if l.is_leader else 'S'}]"
+                        parts.append(f"{pair}={gs['active_buys']}B/{gs['active_sells']}S{leader_info}")
+                    logger.info(" | ".join(parts))
 
             except Exception as e:
                 logger.error(f"Loop error (cycle {cycle}): {e}")
-                # Don't crash the loop — continue next cycle
 
-            # 5. Sleep until next cycle
+            # Sleep responsive to shutdown
             elapsed = time.time() - loop_start
-            sleep_time = max(1, self._config.api.loop_interval - elapsed)
-            await asyncio.sleep(sleep_time)
+            sleep_time = max(1, PRODUCTION.api.loop_interval - elapsed)
+            for _ in range(int(sleep_time)):
+                if not self._running:
+                    break
+                await asyncio.sleep(1)
 
     def stop(self):
-        """Graceful shutdown."""
-        logger.info("Shutting down Denaro v3...")
+        logger.info(f"Shutting down Denaro v3 [{self._machine}]...")
         self._running = False
+        for leader in self._leaders.values():
+            if leader.is_leader:
+                leader.release()
         self._breaker._save_state()
         uptime = time.time() - self._start_time
-        logger.info(f"Denaro v3 stopped | uptime={uptime:.0f}s | "
-                     f"total_pnl=${self._breaker.total_pnl:.2f} | "
-                     f"trades={self._feeder.trade_count}")
+        logger.info(f"Stopped | uptime={uptime:.0f}s | pnl=${self._breaker.total_pnl:.2f}")
 
 
 async def main():
-    """Entry point with signal handling."""
-    app = DenaroV3()
+    machine_id = os.environ.get("MACHINE_ID", socket.gethostname().split(".")[0].lower())
+    if machine_id not in MACHINE_PAIRS:
+        logger.error(f"Unknown MACHINE_ID={machine_id}. Known: {list(MACHINE_PAIRS.keys())}")
+        # Fallback: guess from hostname
+        if "mc2" in machine_id:
+            machine_id = "mc2"
+        elif "nuvola" in machine_id:
+            machine_id = "nuvola"
+        elif "marcodg1" in machine_id.lower():
+            machine_id = "marcodg1"
+        else:
+            logger.critical("Cannot determine machine role")
+            sys.exit(1)
 
-    # Initialize
+    app = DenaroV3(machine_id)
     logger.info("Denaro v3 — Starting...")
     app._init_exchange()
     app._init_modules()
 
-    # Signal handlers for graceful shutdown
     loop = asyncio.get_running_loop()
     for sig in (signal.SIGINT, signal.SIGTERM):
         loop.add_signal_handler(sig, app.stop)
@@ -149,7 +195,7 @@ async def main():
     except KeyboardInterrupt:
         app.stop()
     except Exception as e:
-        logger.critical(f"Fatal error: {e}")
+        logger.critical(f"Fatal: {e}")
         app.stop()
         sys.exit(1)
 

@@ -1,0 +1,20 @@
+[Unit]
+Description=Denaro v3 Grid Trading Engine (marcodg1)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=marco
+Group=marco
+WorkingDirectory=/home/marco/denaro
+Environment=MACHINE_ID=marcodg1
+ExecStart=/home/marco/denaro/venv/bin/python3 -m denaro_v3.main
+Restart=always
+RestartSec=15
+StandardOutput=append:/home/marco/denaro/denaro_v3.log
+StandardError=append:/home/marco/denaro/denaro_v3.log
+EnvironmentFile=-/home/marco/denaro/.env
+
+[Install]
+WantedBy=multi-user.target
