@@ -80,13 +80,13 @@ class GridEngine:
         for i in range(half):
             # Buy levels below mid
             buy_price = mid * (1 - spacing_pct / 100 * (i + 1))
-            buy_amount = self._calculate_amount(buy_price)
+            buy_amount = self._calculate_amount(buy_price, Side.BUY)
             levels.append(GridLevel(side=Side.BUY, price=self._round_price(buy_price), amount=buy_amount))
 
         for i in range(n - half):
             # Sell levels above mid
             sell_price = mid * (1 + spacing_pct / 100 * (i + 1))
-            sell_amount = self._calculate_amount(sell_price)
+            sell_amount = self._calculate_amount(sell_price, Side.SELL)
             levels.append(GridLevel(side=Side.SELL, price=self._round_price(sell_price), amount=sell_amount))
 
         logger.info(
@@ -108,13 +108,18 @@ class GridEngine:
             tr_sum += tr
         return tr_sum / min(len(ohlcv) - 1, self._config.atr_period)
 
-    def _calculate_amount(self, price: float) -> float:
+    def _calculate_amount(self, price: float, side: Side) -> float:
         """Calculate order amount in base asset.
 
-        Uses free quote balance to determine max amount per level.
+        BUY: uses free quote balance. SELL: uses free base balance.
         """
-        quote_balance = self._feeder.get_free_balance(self._config.quote_asset)
-        capital_per_level = quote_balance / (self._config.levels + 1)  # +1 buffer
+        if side == Side.BUY:
+            balance = self._feeder.get_free_balance(self._config.quote_asset)
+        else:
+            balance = self._feeder.get_free_balance(self._config.base_asset)
+            balance = balance * price  # Convert base asset to quote value
+
+        capital_per_level = balance / (self._config.levels + 1)  # +1 buffer
 
         # Clamp between min and max
         capital_per_level = max(self._config.min_order_usdc, min(capital_per_level, self._config.max_order_usdc))
@@ -127,14 +132,20 @@ class GridEngine:
         """Round price to exchange tick size."""
         try:
             market = self._feeder.exchange.market(self._config.symbol)
-            tick_size = market["precision"]["price"]
-            if tick_size is None:
-                # Use significant digits
-                info = market.get("info", {})
-                tick = float(info.get("tickSize", "0.01"))
-                return round(price / tick) * tick
-            # tick_size is number of decimal places
-            return round(price, int(tick_size))
+            if not market.get("precision"):
+                self._feeder.exchange.load_markets()
+                market = self._feeder.exchange.market(self._config.symbol)
+            step_size = market["precision"]["price"]
+            if step_size is not None:
+                if step_size < 1:
+                    # Float step size (e.g. 0.01) — use floor/round
+                    return round(price / step_size) * step_size
+                # Integer decimal places
+                return round(price, int(step_size))
+            # Fallback
+            info = market.get("info", {})
+            tick = float(info.get("tickSize", "0.01"))
+            return round(price / tick) * tick
         except Exception:
             return round(price, 4)
 
@@ -142,11 +153,19 @@ class GridEngine:
         """Round amount to exchange step size."""
         try:
             market = self._feeder.exchange.market(self._config.symbol)
+            if not market.get("precision"):
+                self._feeder.exchange.load_markets()
+                market = self._feeder.exchange.market(self._config.symbol)
             limits = market.get("limits", {}).get("amount", {})
             min_amt = limits.get("min", 0.001)
             step_size = market["precision"]["amount"]
             if step_size is not None:
-                amount = round(amount, int(step_size))
+                if step_size < 1:
+                    # Float step size (e.g. 0.001) — use floor division
+                    amount = math.floor(amount / step_size) * step_size
+                else:
+                    # Integer decimal places (e.g. 3)
+                    amount = round(amount, int(step_size))
             else:
                 info = market.get("info", {})
                 step = float(info.get("stepSize", "0.001"))
@@ -191,14 +210,31 @@ class GridEngine:
                             ))
                             logger.info(f"Grid cycle complete: BUY @ {buy.price:.4f} → SELL @ {level.price:.4f} | P&L={pnl:.2f}")
 
-        # Place missing orders
-        existing_prices = {o["price"] for o in open_orders}
+        # Reconcile: assign existing order IDs to levels with matching prices
+        price_to_order = {o["price"]: o for o in open_orders}
         for level in self._levels:
-            if level.order_id is None and level.price not in existing_prices:
+            if level.order_id is None and level.price in price_to_order:
+                level.order_id = price_to_order[level.price]["id"]
+                logger.debug(f"Reconciled {level.side.name} @ {level.price:.4f} → ID={level.order_id}")
+
+        # Place missing orders
+        for level in self._levels:
+            if level.order_id is None and level.price not in price_to_order:
                 self._place_level(level)
 
     def _place_level(self, level: GridLevel):
         """Place a single grid level order. Pre-checked by CircuitBreaker."""
+        # Check if we have the asset to trade
+        if level.side == Side.SELL:
+            base_balance = self._feeder.get_free_balance(self._config.base_asset)
+            if base_balance < level.amount:
+                return  # Will retry after a buy fills
+        elif level.side == Side.BUY:
+            needed = level.amount * level.price
+            quote_balance = self._feeder.get_free_balance(self._config.quote_asset)
+            if quote_balance < needed:
+                return  # Will retry after a sell fills or capital arrives
+
         result = self._breaker.can_trade(level.amount * level.price)
         if not result[0]:
             logger.warning(f"Circuit breaker blocked {level.side.name} @ {level.price:.4f}: {result[1]}")
