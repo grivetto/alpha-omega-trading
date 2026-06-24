@@ -100,3 +100,4 @@ bot_lock.json
 .daily_baseline
 env_without_main.tmp
 stella_grid_state.json
+.keys.json
