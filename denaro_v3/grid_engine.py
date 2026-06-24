@@ -252,11 +252,15 @@ class GridEngine:
             logger.error(f"Failed to place {level.side.name} @ {level.price:.4f}")
 
     def reset_grid(self):
-        """Cancel all open orders and recalculate grid from scratch."""
+        """Cancel ALL open orders and recalculate grid from scratch."""
         logger.info("Resetting grid...")
-        for level in self._levels:
-            if level.order_id and not level.filled:
-                self._feeder.cancel_order(level.order_id, self._config.symbol)
+        # Cancel ALL open orders on exchange — handles orphaned orders from restarts
+        try:
+            open_orders = self._feeder.get_open_orders(self._config.symbol)
+            for o in open_orders:
+                self._feeder.cancel_order(o["id"], self._config.symbol)
+        except Exception:
+            pass
         self._levels = self.calculate_levels()
         self._buy_fills = []
         self.sync_orders()
