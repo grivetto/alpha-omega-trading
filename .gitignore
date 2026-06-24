@@ -101,3 +101,4 @@ bot_lock.json
 env_without_main.tmp
 stella_grid_state.json
 .keys.json
+.hermes/
