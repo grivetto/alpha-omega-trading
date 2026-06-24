@@ -92,6 +92,12 @@ class DenaroV3:
         # Initialize equity tracking BEFORE grid setup (needed by CircuitBreaker.can_trade)
         quote = "USDC"
         total = self._feeder.get_total_balance(quote)
+        for pair, engine in self._engines.items():
+            base = pair.split("/")[0]
+            base_qty = self._feeder.get_total_balance(base)
+            ticker = self._feeder.get_ticker(pair)
+            if ticker and ticker.get("last", 0) > 0:
+                total += base_qty * ticker["last"]
         self._breaker.update_equity(total)
 
         # Initial grid setup for each pair
@@ -108,9 +114,15 @@ class DenaroV3:
             loop_start = time.time()
 
             try:
-                # Update equity once per cycle
+                # Update equity once per cycle — include ALL assets, not just USDC
                 quote = "USDC"
                 total = self._feeder.get_total_balance(quote)
+                for pair, engine in self._engines.items():
+                    base = pair.split("/")[0]
+                    base_qty = self._feeder.get_total_balance(base)
+                    ticker = self._feeder.get_ticker(pair)
+                    if ticker and ticker.get("last", 0) > 0:
+                        total += base_qty * ticker["last"]
                 self._breaker.update_equity(total)
 
                 # Process each pair
