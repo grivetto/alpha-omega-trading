@@ -72,7 +72,8 @@ class DenaroV3:
 
         pairs = MACHINE_PAIRS.get(self._machine, [])
         for pair, is_shared in pairs:
-            cfg = GridConfig(symbol=pair)
+            base, quote = pair.split("/")
+            cfg = GridConfig(symbol=pair, base_asset=base, quote_asset=quote)
             self._engines[pair] = GridEngine(cfg, self._feeder, self._breaker)
             if is_shared:
                 self._leaders[pair] = LeaderElection(self._machine, pair)
@@ -87,6 +88,11 @@ class DenaroV3:
         self._start_time = time.time()
         logger.info(f"Denaro v3 started | machine={self._machine} | "
                      f"pairs={list(self._engines.keys())}")
+
+        # Initialize equity tracking BEFORE grid setup (needed by CircuitBreaker.can_trade)
+        quote = "USDC"
+        total = self._feeder.get_total_balance(quote)
+        self._breaker.update_equity(total)
 
         # Initial grid setup for each pair
         for pair, engine in self._engines.items():
