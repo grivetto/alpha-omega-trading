@@ -1,7 +1,7 @@
 """Tests for Denaro v3 Data Feeder."""
 
 import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 from denaro_v3.config import APIConfig
 from denaro_v3.data_feeder import DataFeeder
 

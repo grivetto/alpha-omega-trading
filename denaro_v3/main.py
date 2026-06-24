@@ -17,7 +17,7 @@ import time
 import ccxt
 from loguru import logger
 
-from .config import Config, GridConfig, PRODUCTION
+from .config import GridConfig, PRODUCTION
 from .data_feeder import DataFeeder
 from .circuit_breaker import CircuitBreaker
 from .grid_engine import GridEngine
@@ -139,8 +139,8 @@ class DenaroV3:
                         gs = engine.summary()
                         leader_info = ""
                         if pair in self._leaders:
-                            l = self._leaders[pair]
-                            leader_info = f" [{'L' if l.is_leader else 'S'}]"
+                            leader = self._leaders[pair]
+                            leader_info = f" [{'L' if leader.is_leader else 'S'}]"
                         parts.append(f"{pair}={gs['active_buys']}B/{gs['active_sells']}S{leader_info}")
                     logger.info(" | ".join(parts))
 

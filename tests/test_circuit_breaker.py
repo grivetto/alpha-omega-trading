@@ -1,6 +1,5 @@
 """Tests for Denaro v3 Circuit Breaker."""
 
-import json
 import os
 import tempfile
 import pytest

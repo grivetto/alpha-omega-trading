@@ -1,5 +1,4 @@
 """Unit tests — Kill-Switch and Dynamic Risk Engine."""
-import pytest
 from core.kill_switch import KillSwitch
 
 class TestKillSwitch:

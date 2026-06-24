@@ -3,7 +3,6 @@
 
 import random
 import sys
-import os
 
 # Add squadra to path so we can import core constants
 sys.path.insert(0, '/home/sergio/denaro/squadra')
@@ -111,12 +110,12 @@ def test_fetch_klines_test_mode():
     
     assert len(kline) == 1, f"Expected 1 kline, got {len(kline)}"
     assert len(kline[0]) == 6, f"Expected 6 fields [ts,o,h,l,c,v], got {len(kline[0])}"
-    assert kline[0][4] == price, f"Close price mismatch"
+    assert kline[0][4] == price, "Close price mismatch"
     # Note: test_mode only returns 1 candle which is < WINDOW(50), 
     # so generate_signal will always return NEUTRAL in test mode.
     # This is a design issue, not a code bug per se.
     print(f"  kline: ts={kline[0][0]}, O={kline[0][1]:.2f}, H={kline[0][2]:.2f}, L={kline[0][3]:.2f}, C={kline[0][4]:.2f}, V={kline[0][5]}")
-    print(f"  ✓ PASS (format valid, but NOTE: only 1 candle < WINDOW=50, signal will be NEUTRAL)")
+    print("  ✓ PASS (format valid, but NOTE: only 1 candle < WINDOW=50, signal will be NEUTRAL)")
 
 
 if __name__ == "__main__":

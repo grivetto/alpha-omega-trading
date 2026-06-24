@@ -240,8 +240,6 @@ class GridEngine:
             logger.warning(f"Circuit breaker blocked {level.side.name} @ {level.price:.4f}: {result[1]}")
             return
 
-        adjusted_amount = result[2] / level.price if result[2] > 0 else level.amount
-
         if level.side == Side.BUY:
             order = self._feeder.create_limit_buy(self._config.symbol, level.amount, level.price)
         else:
@@ -267,14 +265,14 @@ class GridEngine:
         """Check if grid needs recalculation (no active orders)."""
         if not self._levels:
             return True
-        active = sum(1 for l in self._levels if l.order_id and not l.filled)
+        active = sum(1 for level in self._levels if level.order_id and not level.filled)
         return active == 0
 
     # ── Status ─────────────────────────────────────────────
     def summary(self) -> dict:
         """Human-readable grid status."""
-        active_buys = sum(1 for l in self._levels if l.side == Side.BUY and l.order_id and not l.filled)
-        active_sells = sum(1 for l in self._levels if l.side == Side.SELL and l.order_id and not l.filled)
+        active_buys = sum(1 for level in self._levels if level.side == Side.BUY and level.order_id and not level.filled)
+        active_sells = sum(1 for level in self._levels if level.side == Side.SELL and level.order_id and not level.filled)
         pending_buys = len(self._buy_fills)
         return {
             "levels_total": len(self._levels),
