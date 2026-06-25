@@ -1,0 +1,15 @@
+[Unit]
+Description=Denaro WAR Machine
+After=network.target
+
+[Service]
+Type=simple
+User=sergio
+EnvironmentFile=/home/sergio/denaro/.env
+WorkingDirectory=/home/sergio/denaro/denaro_war
+ExecStart=/home/sergio/denaro/venv/bin/python3 -u main.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

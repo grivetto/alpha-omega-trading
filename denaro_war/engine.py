@@ -117,6 +117,44 @@ class BinanceEngine:
         params = {"symbol": symbol, "orderId": order_id}
         return self._post("/api/v3/order", params)
 
+    # --- Adapter methods for WAR strategies ---
+    def imbalance(self, symbol: str) -> float:
+        _, _, imb = self.order_book_imbalance(symbol, 20)
+        return imb
+
+    def open_orders(self, symbol: str) -> list:
+        return self.get_open_orders(symbol)
+
+    def cancel_all(self, symbol: str):
+        for o in self.open_orders(symbol):
+            self.cancel_order(symbol, o["orderId"])
+
+    def ohlcv(self, symbol: str, interval: str = "5m", limit: int = 30) -> list:
+        data = self._get("/api/v3/klines", {"symbol": symbol, "interval": interval, "limit": limit})
+        return data
+
+    def atr(self, symbol: str, period: int = 14) -> float:
+        klines = self.ohlcv(symbol, "5m", limit=period + 1)
+        if not klines: return 0.0
+        trs = []
+        for i in range(1, len(klines)):
+            h, l = float(klines[i][2]), float(klines[i][3])
+            pc = float(klines[i-1][4])
+            trs.append(max(h-l, abs(h-pc), abs(l-pc)))
+        return sum(trs) / len(trs) if trs else 0.0
+
+    def balance_usdc(self) -> float:
+        return self.balance("USDC")
+
+    def balance_sol(self) -> float:
+        return self.balance("SOL")
+
+    def market_buy_quote(self, symbol: str, quote_amount: float) -> dict:
+        """Buy using quote amount (USDC) instead of base quantity."""
+        p = self.price(symbol)
+        qty = round(quote_amount / p, 4) if p else 0
+        return self.market_buy(symbol, qty)
+
 
 if __name__ == "__main__":
     engine = BinanceEngine()

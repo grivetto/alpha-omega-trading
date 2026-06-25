@@ -1,7 +1,7 @@
 """Denaro WAR — Multi-strategy crypto war machine. Brutale. Veloce. Redditizio."""
 import json, os, sys, time, random
 from datetime import datetime
-from engine import WarEngine
+from engine import BinanceEngine as WarEngine
 from strategies.scalper import Scalper
 from strategies.whale_tracker import WhaleTracker
 from strategies.news_reactor import NewsReactor
