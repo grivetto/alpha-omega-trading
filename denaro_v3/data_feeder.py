@@ -8,7 +8,7 @@ import time
 from typing import Dict, List, Optional, Any
 from loguru import logger
 
-from .config import APIConfig
+from config import APIConfig
 
 
 class DataFeeder:

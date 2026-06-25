@@ -14,7 +14,7 @@ from typing import List
 
 from loguru import logger
 
-from .config import RiskConfig
+from config import RiskConfig
 
 
 @dataclass
