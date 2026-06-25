@@ -3,6 +3,7 @@ import hashlib
 import time
 import requests
 import json
+import os
 from typing import Dict, Optional, Tuple
 from urllib.parse import urlencode
 
@@ -12,13 +13,28 @@ class BinanceEngine:
         with open(config_path, "r") as f:
             self.config = json.load(f)
         
-        binance_cfg = self.config["binance"]
-        self.base_url = binance_cfg["base_url"]
-        self.api_key = binance_cfg.get("api_key", "")
-        self.api_secret = binance_cfg.get("api_secret", "").encode()
+        # Load API keys from env FIRST, then config fallback
+        self._load_env_file()
+        
+        binance_cfg = self.config.get("binance", {}) or self.config.get("exchanges", {}).get("binance", {})
+        self.base_url = binance_cfg.get("base_url", "https://api.binance.com")
+        self.api_key = os.environ.get("BINANCE_API_KEY", "") or binance_cfg.get("api_key", "")
+        self.api_secret = (os.environ.get("BINANCE_API_SECRET", "") or binance_cfg.get("api_secret", "")).encode()
         
         self.session = requests.Session()
         self.session.headers.update({"X-MBX-APIKEY": self.api_key})
+
+    def _load_env_file(self):
+        """Load .env file into os.environ (systemd EnvironmentFile fallback)."""
+        import os as _os
+        env_path = _os.path.join(_os.path.dirname(__file__), "..", ".env")
+        if _os.path.exists(env_path):
+            with open(env_path) as f:
+                for line in f:
+                    line = line.strip()
+                    if line and not line.startswith("#") and "=" in line:
+                        k, v = line.split("=", 1)
+                        _os.environ.setdefault(k.strip(), v.strip())
 
     def _sign_params(self, params: Dict) -> Dict:
         """Add timestamp and signature to params"""

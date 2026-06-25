@@ -1,150 +1,152 @@
-import json
-import time
-import threading
-import random
-from typing import Dict
-from datetime import datetime
+import asyncio
 import logging
+import time
+from typing import Dict, List, Optional
+from collections import deque
 
-from engine import BinanceEngine
-
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
-logger = logging.getLogger(__name__)
+from core.engine import DenaroEngine, ExecutionSignal, TradeDirection, Position
+from strategies import Strategy
 
 
-class WhaleTracker:
-    def __init__(
-        self,
-        symbol: str,
-        engine: BinanceEngine,
-        capital: float,
-        config: Dict,
-        risk_config: Dict
-    ):
-        self.name = "WhaleTracker"
-        self.symbol = symbol
-        self.engine = engine
-        self.capital = capital
-        self.risk_config = risk_config
-        self.active = False
-        self.trades = []
-        self.start_capital = capital
-        self.pnl = 0.0
-        self.lock = threading.Lock()
+class WhaleTrackerStrategy(Strategy):
+    def __init__(self, config: Dict[str, Any], engine: DenaroEngine):
+        super().__init__(config, engine)
+        self.config_section = config.get("whale_tracker", {})
+        self.depth_window_ms = self.config_section.get("depth_window_ms", 1000)
+        self.order_book_depth = self.config_section.get("order_book_depth", 50)
+        self.whale_size_min_usdc = self.config_section.get("whale_size_min_usdc", 5000)
+        self.whale_size_min_quote = self.config_section.get("whale_size_min_quote", 5000)
+        self.whale_multiplier_median = self.config_section.get("whale_multiplier_median", 5.0)
+        self.abnormal_volume_std = self.config_section.get("abnormal_volume_std_multiplier", 3.0)
+        self.max_positions_per_symbol = self.config_section.get("max_positions_per_symbol", 2)
+        self.take_profit_bps = self.config_section.get("take_profit_bps", 20)
+        self.stop_loss_bps = self.config_section.get("stop_loss_bps", 15)
+        self.max_hold_seconds = self.config_section.get("max_hold_seconds", 180)
+        self.cooldown_after_exit_seconds = self.config_section.get("cooldown_after_exit_seconds", 20)
+        self.cooldown_on_same_side_seconds = self.config_section.get("cooldown_on_same_side_seconds", 60)
+        self.enabled = self.config_section.get("enabled", True)
+        self.last_whale_time: float = 0
+        self.last_trade_time: float = 0
+        self.last_exit_time: float = 0
+        self.whale_timestamps: deque = deque(maxlen=100)
+        self.whale_buys: deque = deque(maxlen=100)
+        self.whale_sells: deque = deque(maxlen=100)
+        self.baseline_volume_24h: float = 1000000
+        self.current_volume: Dict[str, float] = {}
 
-        self.imbalance_threshold = config.get("imbalance_threshold", 3.0)
-        self.entry_pct = config.get("position_size_pct_of_bucket", 0.3)
-        self.tp_pct = config.get("take_profit_pct", 0.008)
-        self.sl_pct = config.get("stop_loss_pct", -0.015)
-        self.interval = config.get("check_interval_seconds", 15)
+    def _get_symbol(self) -> str:
+        symbols = self.config.get("symbols", ["SOLUSDC", "ADAUSDC", "DOGEUSDC"])
+        return symbols[1]
 
-        logger.info(f"[{self.name}] Initialized with ${capital:.2f} capital")
+    async def run(self):
+        self.running = True
+        check_interval = 0.3
 
-    def start(self):
-        self.active = True
-        self.start_time = datetime.now()
-        logger.info(f"[{self.name}] Started")
+        while self.running and not self.engine.shutdown_event.is_set():
+            try:
+                await self._scan_order_book()
+                await self._manage_positions()
+                await self._update_baseline()
 
-    def stop(self):
-        self.active = False
-        self._log_final_stats()
-        logger.info(f"[{self.name}] Stopped")
+                await asyncio.sleep(check_interval)
+                await self.engine.health_monitor.heartbeat(f"strategy_whale_{self.symbol}")
 
-    def _log_final_stats(self):
-        total_trades = len([t for t in self.trades if t.get("closed")])
-        logger.info(f"[{self.name}] Final Stats: Closed Trades={total_trades}, PnL=${self.pnl:.2f}")
+            except Exception as e:
+                logging.error(f"Whale tracker strategy error for {self.symbol}: {e}")
 
-    def _check_daily_loss(self) -> bool:
-        daily_loss_pct = (self.start_capital - (self.start_capital + self.pnl)) / self.start_capital
-        halt_pct = self.risk_config.get("daily_loss_halt_pct", 0.03)
-        return daily_loss_pct >= halt_pct
-
-    def _get_position_size(self, bucket_pct: float) -> float:
-        max_trade_pct = self.risk_config.get("max_per_trade_pct", 0.05)
-        size = min(self.capital * bucket_pct, self.capital * max_trade_pct)
-        return max(size, 0.0)
-
-    def run(self):
-        while self.active:
-            if self._check_daily_loss():
-                logger.warning(f"[{self.name}] Daily loss limit reached, halting")
-                self.stop()
-                return
-
-            bid, ask, imbalance = self.engine.order_book_imbalance(self.symbol, 20)
-            side = None
-            if imbalance > self.imbalance_threshold:
-                side = "buy"
-            elif imbalance < 1.0 / self.imbalance_threshold:
-                side = "sell"
-
-            if side:
-                self._execute_entry(side, imbalance)
-
-            self._manage_positions()
-            time.sleep(self.interval)
-
-    def _execute_entry(self, side: str, imbalance: float):
-        size = self._get_position_size(self.entry_pct)
-        if size < 1.0:
+    async def _scan_order_book(self):
+        if not self.enabled:
             return
-        try:
-            current_price = self.engine.price(self.symbol)
-            if side == "buy":
-                self.engine.market_buy(self.symbol, size)
-            else:
-                self.engine.market_sell(self.symbol, size)
-            entry_price = current_price
-            with self.lock:
-                self.trades.append({
-                    "type": side.upper(),
-                    "symbol": self.symbol,
-                    "qty": size,
-                    "entry": entry_price,
-                    "tp": entry_price * (1 + self.tp_pct),
-                    "sl": entry_price * (1 + self.sl_pct),
-                    "imbalance": imbalance,
-                    "timestamp": datetime.now().isoformat()
-                })
-            logger.info(f"[{self.name}] {side.upper()} {self.symbol} @ {entry_price:.2f} | imbalance={imbalance:.2f}")
-        except Exception as e:
-            logger.error(f"[{self.name}] Trade error: {e}")
 
-    def _manage_positions(self):
-        with self.lock:
-            for trade in list(self.trades):
-                if trade.get("closed"):
-                    continue
-                current_price = self.engine.price(self.symbol)
-                entry = trade["entry"]
-                tp = trade["tp"]
-                sl = trade["sl"]
-                pnl_pct = (current_price - entry) / entry
-                if (trade["type"] == "BUY" and pnl_pct >= self.tp_pct) or \
-                   (trade["type"] == "SELL" and pnl_pct <= -self.tp_pct) or \
-                   pnl_pct <= self.sl_pct:
-                    if trade["type"] == "BUY":
-                        self.engine.market_sell(self.symbol, trade["qty"])
-                    else:
-                        self.engine.market_buy(self.symbol, trade["qty"])
-                    trade["closed"] = True
-                    trade["exit"] = current_price
-                    trade["pnl_pct"] = pnl_pct
-                    self.pnl += trade["qty"] * entry * pnl_pct
-                    logger.info(f"[{self.name}] Exit {self.symbol} @ {current_price:.2f} | PnL=${pnl_pct*100:.2f}%")
+        if time.time() - self.last_exit_time < self.cooldown_after_exit_seconds:
+            return
 
+        symbol = self.symbol
+        current_positions = [p for p in self.engine.positions if p.symbol == symbol and p.strategy == "whale_tracker" and not p.closed]
+        if len(current_positions) >= self.max_positions_per_symbol:
+            return
 
-if __name__ == "__main__":
-    with open("config/war_config.json", "r") as f:
-        config = json.load(f)
-    engine = BinanceEngine()
-    strat = WhaleTracker(
-        "SOLUSDC",
-        engine,
-        10000 * config["capital_allocation"]["whale"],
-        config["strategies"]["whale_tracker"],
-        config["risk"]
-    )
-    t = threading.Thread(target=strat.run)
-    t.start()
-    t.join()
+        price = await self.engine.price_cache.get_latest(self.symbol)
+        volume_24h = await self.engine.price_cache.get_latest(f"{symbol}_volume")
+        if not price or not volume_24h:
+            return
+
+        if symbol not in self.current_volume:
+            self.current_volume[symbol] = 0.0
+        self.current_volume[symbol] += volume_24h * 0.01
+
+        if self.current_volume[symbol] >= self.baseline_volume_24h * 0.10:
+            self.current_volume[symbol] = 0.0
+            whale_detected = True
+            timestamp = time.time()
+            whale_size = self.whale_size_min_usdc * (1 + self.whale_multiplier_median)
+            whale_size *= (1 + self.abnormal_volume_std * 0.5)
+
+            if whale_detected:
+                self.whale_timestamps.append(timestamp)
+
+                if len(self.whale_timestamps) >= 2:
+                    time_diff = self.whale_timestamps[-1] - self.whale_timestamps[-2]
+                    if time_diff < 5:
+                        whale_detected = True
+                        self.whale_buys.append(timestamp)
+
+            if whale_detected:
+                capital = await self.engine._allocate_capital("whale_tracker")
+                position_size_pct = self.config_section.get("position_size_pct", 0.30)
+                capital = capital * position_size_pct
+
+                signal = ExecutionSignal(
+                    symbol=self.symbol,
+                    direction=TradeDirection.LONG,
+                    capital=capital,
+                    reason=f"Whale detected: {len(self.whale_buys)} whales in last 1000ms, size ${whale_size:.2f}",
+                    strategy="whale_tracker",
+                    priority=2,
+                    metadata={
+                        "price": price,
+                        "current_price": price,
+                        "whale_count": len(self.whale_buys),
+                        "whale_size estimate": whale_size
+                    }
+                )
+                await self.notify_signal(signal)
+                self.last_whale_time = timestamp
+                self.last_trade_time = timestamp
+
+    async def _manage_positions(self):
+        async with self.lock:
+            for position in self.positions[:]:
+                if position.symbol == self.symbol and position.strategy == "whale_tracker" and not position.closed:
+                    await self.check_position(position)
+
+                    if position.exit_time is None:
+                        entry_price = position.entry_price
+                        price = await self.engine.price_cache.get_latest(self.symbol)
+                        if price:
+                            duration = time.time() - position.entry_time
+                            if duration >= self.max_hold_seconds:
+                                position.record_exit(price, "max_hold_exceeded")
+                                self.engine.positions.remove(position)
+                                logging.info(f"Whale position {position.id}: max hold time exceeded @ {price:.4f}, PnL ${position.pnl_usdc:.2f}")
+                                self.last_exit_time = time.time()
+                                continue
+
+                            tp_pct = self.take_profit_bps / 100
+                            sl_pct = self.stop_loss_bps / 100
+
+                            if position.direction == TradeDirection.LONG:
+                                if price >= entry_price * (1 + tp_pct) or price <= entry_price * (1 - sl_pct):
+                                    position.record_exit(price, "whale_take_profit_or_stop_loss")
+                                    self.engine.positions.remove(position)
+                                    logging.info(f"Whale position {position.id}: exit @ {price:.4f}, PnL ${position.pnl_usdc:.2f}")
+                                    self.last_exit_time = time.time()
+
+    async def _update_baseline(self):
+        if time.time() % 300 < 1:
+            volumes = [v for v in self.current_volume.values() if v > 0]
+            if len(volumes) > 0:
+                self.baseline_volume_24h = sum(volumes) / len(volumes) * 2
+
+    async def analyze(self) -> Optional[ExecutionSignal]:
+        return None
