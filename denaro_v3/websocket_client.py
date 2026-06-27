@@ -81,11 +81,13 @@ class UserDataStream:
         self._running = False
         self._keepalive_task: Optional[asyncio.Task] = None
         self._session: Optional[aiohttp.ClientSession] = None
+        self._session_lock = asyncio.Lock()
 
     async def _get_listen_key(self) -> str:
         try:
-            if self._session is None:
-                self._session = aiohttp.ClientSession()
+            async with self._session_lock:
+                if self._session is None:
+                    self._session = aiohttp.ClientSession()
             async with self._session.post(
                 "https://api.binance.com/api/v3/userDataStream",
                 headers={"X-MBX-APIKEY": self._exchange.apiKey},
@@ -94,7 +96,11 @@ class UserDataStream:
                 if resp.status == 200:
                     js = await resp.json()
                     return js.get("listenKey", "")
-                logger.error(f"Listen‑key API returned {resp.status}")
+                # 410 = endpoint deprecato da Binance, non è un errore
+                if resp.status == 410:
+                    logger.info("Listen-key endpoint deprecated (410) — using REST fallback")
+                    return "__DEPRECATED__"
+                logger.warning(f"Listen‑key API returned {resp.status}")
                 return ""
         except Exception as exc:
             logger.error(f"Failed to get listen key: {exc}")
@@ -106,8 +112,9 @@ class UserDataStream:
             if not self._running:
                 break
             try:
-                if self._session is None:
-                    self._session = aiohttp.ClientSession()
+                async with self._session_lock:
+                    if self._session is None:
+                        self._session = aiohttp.ClientSession()
                 async with self._session.put(
                     "https://api.binance.com/api/v3/userDataStream",
                     headers={"X-MBX-APIKEY": self._exchange.apiKey},
@@ -121,12 +128,18 @@ class UserDataStream:
 
     async def start(self):
         self._running = True
+        deprecated_logged = False
         while self._running:
             try:
                 self._listen_key = await self._get_listen_key()
                 if not self._listen_key:
                     logger.error("No listen key – retry 30s")
                     await asyncio.sleep(30)
+                    continue
+                if self._listen_key == "__DEPRECATED__":
+                    if not deprecated_logged:
+                        deprecated_logged = True
+                    await asyncio.sleep(300)  # check less often
                     continue
                 logger.info("User data WS connected")
                 self._keepalive_task = asyncio.create_task(self._keepalive())

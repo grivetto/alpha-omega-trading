@@ -54,6 +54,7 @@ class CircuitBreaker:
         self._daily_pnl: float = 0.0
         self._daily_date: str = ""
         self._total_pnl: float = 0.0
+        self._state_since: float = 0.0  # timestamp of last state change
         self._load_state()
 
     # ── State Persistence ──────────────────────────────────
@@ -147,13 +148,21 @@ class CircuitBreaker:
             # Recover: if we're in half_open and have a winning trade, go back
             if self._consecutive_losses == 0:
                 self._transition(self.STATE_CLOSED, "Recovered — no active risk conditions")
+            # Auto-recovery: force CLOSED after 4h in HALF_OPEN to prevent permanent deadlock
+            elif self._state == self.STATE_HALF_OPEN and self._state_since > 0:
+                import time as _time
+                if _time.time() - self._state_since > 14400:
+                    logger.warning("Circuit breaker: HALF_OPEN timeout (4h) — forcing CLOSED")
+                    self._transition(self.STATE_CLOSED, "Auto-recovery timeout")
 
     def _transition(self, new_state: str, reason: str):
         """Transition to a new state. Only escalates, never downgrades silently."""
         if new_state != self._state:
+            import time as _time
             logger.warning(f"Circuit breaker: {self._state} → {new_state} | {reason}")
             self._state = new_state
             self._reason = reason
+            self._state_since = _time.time()
             self._save_state()
 
     # ── Pre-Trade Check ────────────────────────────────────

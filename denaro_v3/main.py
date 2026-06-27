@@ -26,7 +26,7 @@ logger.remove()
 logger.add(sys.stderr, format="<green>{time:HH:mm:ss}</green> | <level>{level: <8}</level> | <level>{message}</level>", level="INFO", colorize=True)
 
 MACHINE_PAIRS = {
-    "mc2": [("SOL/USDC", False)],
+    "mc2": [("SOL/USDC", False), ("ADA/USDC", False), ("DOGE/USDC", False)],
     "nuvola": [("DOGE/USDC", False)],
     "marcodg1": [("ADA/USDC", False)],
 }
@@ -73,9 +73,15 @@ class DenaroV3:
         self._ws_client = WebSocketClient(self._exchange, pair_list)
 
     async def _total_equity(self) -> float:
+        """Calculate total portfolio value in USDC across all assets.
+
+        Falls back to last known WS ticker when REST fetch fails,
+        so the circuit breaker never sees a false zero.
+        """
         balances = self._feeder.get_balance()
         totals = balances.get('total', {}) or balances.get('free', {})
         total = 0.0
+        failed_assets = 0
         for asset, amount in totals.items():
             if not amount:
                 continue
@@ -87,9 +93,20 @@ class DenaroV3:
                     price = ticker.get('last') if ticker else 0
                     if price and price > 0:
                         total += amount * price
-                except Exception:
-                    pass
-        return total or 0.1  # Never return zero to avoid division errors
+                        continue
+                except Exception as exc:
+                    logger.debug(f"Ticker fetch failed for {asset}/USDC: {exc}")
+                # Fallback: try WS last known price
+                if self._ws_client:
+                    ws_price = self._ws_client.get_price(f"{asset}/USDC")
+                    if ws_price > 0:
+                        total += amount * ws_price
+                        continue
+                failed_assets += 1
+                logger.warning(f"Cannot price {asset} ({amount:.6f}) — no REST nor WS data")
+        if failed_assets > 0:
+            logger.warning(f"Equity incomplete: {failed_assets} assets could not be priced | known USDC=${total:.2f}")
+        return total if total > 0 else 0.1
 
     async def _loop(self):
         self._running = True
