@@ -6,11 +6,8 @@
   },
   "circuit_breaker": {
     "cb_max_consecutive_losses": 3,
-    "cb_max_daily_drawdown_pct": 3.0,
-    "cb_max_total_drawdown_pct": 5.0,
-    "cb_half_open_scale": 0.5
-  },
-  "scalper_capital": 100,
-  "whale_capital": 75,
-  "momentum_capital": 76
+    "cb_max_daily_drawdown_pct": 5.0,
+    "cb_max_total_drawdown_pct": 10.0,
+    "cb_half_open_scale": 0.4
+  }
 }
