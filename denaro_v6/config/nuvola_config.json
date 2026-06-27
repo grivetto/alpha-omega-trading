@@ -1,0 +1,13 @@
+{
+  "total_capital": 50,
+  "symbols": ["DOGEUSDC"],
+  "binance": {
+    "base_url": "https://api.binance.com"
+  },
+  "circuit_breaker": {
+    "cb_max_consecutive_losses": 2,
+    "cb_max_daily_drawdown_pct": 8.0,
+    "cb_max_total_drawdown_pct": 15.0,
+    "cb_half_open_scale": 0.3
+  }
+}

@@ -1,13 +1,13 @@
 {
-  "total_capital": 110,
-  "symbols": ["SOLUSDC"],
+  "total_capital": 50,
+  "symbols": ["ADAUSDC"],
   "binance": {
     "base_url": "https://api.binance.com"
   },
   "circuit_breaker": {
     "cb_max_consecutive_losses": 3,
     "cb_max_daily_drawdown_pct": 5.0,
-    "cb_max_total_drawdown_pct": 10.0,
+    "cb_max_total_drawdown_pct": 12.0,
     "cb_half_open_scale": 0.4
   }
 }
