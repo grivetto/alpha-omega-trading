@@ -1,0 +1,16 @@
+[Unit]
+Description=Denaro VOL-SCALPER: Volatility scalper on Nuvola dev
+After=network-online.target
+
+[Service]
+Type=simple
+User=sergio
+WorkingDirectory=/home/sergio/denaro_dev
+EnvironmentFile=/home/sergio/denaro_dev/.env
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/usr/bin/python3 -u vol_scalper.py
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
