@@ -1,23 +1,35 @@
-"""Denaro WAR v4 — Multi-strategy war machine. Last updated: hammer time."""
+"""Denaro WAR v5 — State-driven war machine. Sync strategies, real BinanceEngine."""
 import json, os, sys, time
 from datetime import datetime
-from engine import BinanceEngine as Engine
-from strategies.scalper import Scalper
-from strategies.whale_tracker import WhaleTracker
-from strategies.news_reactor import NewsReactor
+
+# Set up path for imports
+sys.path.insert(0, os.path.dirname(__file__))
+
+from engine import BinanceEngine
+from ws_engine import WSEngine
+from strategies.sync_strategies import Scalper, WhaleTracker, NewsReactor
+from strategies.state_engine import StateEngine
+
 
 def main():
-    # Load config
     cfg_path = os.path.join(os.path.dirname(__file__), "config", "war_config.json")
     with open(cfg_path) as f:
         cfg = json.load(f)
 
-    eng = Engine(cfg_path)
+    # Use WebSocket engine if available, fallback to REST
+    try:
+        eng = WSEngine(cfg_path)
+        print("  ⚡ WebSocket engine active")
+    except Exception as e:
+        print(f"  ⚠️ WS engine unavailable ({e}), using REST")
+        eng = BinanceEngine(cfg_path)
+    total = float(cfg.get("total_capital", 70))
+    symbols = cfg.get("symbols", ["SOLUSDC"])
 
-    total = cfg["total_capital"]
-    symbols = cfg["symbols"]  # ["SOLUSDC","ADAUSDC","DOGEUSDC"]
-    
-    # Capital allocation
+    # Initialize State Engine
+    state_eng = StateEngine(lookback_days=20, threshold_pct=5.0)
+
+    # Strategy pools — capital per strategy TYPE (shared across symbols)
     pools = {
         "scalper": total * 0.40,
         "whale_tracker": total * 0.30,
@@ -25,45 +37,79 @@ def main():
     }
 
     print("=" * 50)
-    print("  DENARO WAR MACHINE v4")
+    print("  ⚔️  DENARO WAR v5 — STATE ENGINE ⚔️")
     print(f"  Capital: ${total:.0f} | {len(symbols)} symbols")
     print("=" * 50)
 
-    # Deploy strategies across all symbols
+    # Create strategy instances for each symbol
     strats = []
     for sym in symbols:
-        s_cfg = {"entry_drop": 0.008, "atr_spike_threshold": 3.0}
-        w_cfg = {"imbalance_threshold": 3.0}
+        s_cfg = {"entry_drop": 0.008, "take_profit": 0.004, "stop_loss": 0.02,
+                 "atr_spike_threshold": 3.0, "cooldown_after_exit_seconds": 30}
+        w_cfg = {"imbalance_threshold": 3.0, "take_profit_bps": 80, "stop_loss_bps": 150}
         n_cfg = {}
+
         strats.append(("scalper", sym, Scalper(eng, sym, pools["scalper"], s_cfg)))
         strats.append(("whale", sym, WhaleTracker(eng, sym, pools["whale_tracker"], w_cfg)))
         strats.append(("news", sym, NewsReactor(eng, sym, pools["news_reactor"], n_cfg)))
 
-    print(f"  {len(strats)} strategies active")
+    print(f"  {len(strats)} strategies | State Engine: {state_eng.lookback}d lookback")
     cycle = 0
+    SLEEP = 0.5  # Fast cycle with WS prices (no API calls for reads)
 
     while True:
         try:
             cycle += 1
-            for stype, sym, strat in strats:
-                result = strat.run()
-                if result and "action" in result:
-                    print(f"  [{sym}] {stype}: {result['action']} "
-                          f"@{result.get('price',0):.2f} x{result.get('qty',0):.4f}")
 
-            if cycle % 30 == 0:
+            # === DAILY STATE UPDATE (once per ~24 min with 5s cycle) ===
+            if cycle % 288 == 1 or not state_eng.state:
+                sym = symbols[0]
+                try:
+                    ohlcv = eng.ohlcv(sym, "1d", limit=25)
+                    if ohlcv:
+                        p = eng.price(sym)
+                        info = state_eng.update(p, ohlcv)
+                        signal = state_eng.strategy_signal()
+                        print(f"  📊 State: {info['state']} | Strategy: {signal['primary']} "
+                              f"| Stickiness: {info['stickiness']:.0%} | "
+                              f"Grid={signal['grid']} Scalp={signal['scalper']} Whale={signal['whale']}")
+                except Exception as e:
+                    print(f"  ⚠️ State update failed: {e}")
+
+            # === RUN STRATEGIES (respecting state) ===
+            signal = state_eng.strategy_signal()
+            for stype, sym, strat in strats:
+                # Disable strategies that don't match market state
+                if stype == "scalper" and not signal.get("scalper", True):
+                    continue
+                if stype == "whale" and not signal.get("whale", True):
+                    continue
+
+                try:
+                    result = strat.run()
+                    if result and "action" in result:
+                        print(f"  ⚡ [{sym}] {stype}: {result['action']} "
+                              f"@{result.get('price', 0):.4f} "
+                              f"{result.get('reason', '')}")
+                except Exception as e:
+                    print(f"  ❌ [{sym}] {stype}: {str(e)[:80]}")
+
+            # Status every 12s (24 cycles * 0.5s)
+            if cycle % 24 == 0:
                 tt = sum(s[2].t for s in strats)
                 tp = sum(s[2].pnl for s in strats)
-                print(f"  Cycle {cycle} | Trades: {tt} | PnL: ${tp:+.2f}")
+                ws_status = "⚡" if getattr(eng, 'ws_alive', False) else "🌐"
+                print(f"  {ws_status} C{cycle} | Trades:{tt} | PnL:${tp:+.2f} | State:{state_eng.state}")
 
-            time.sleep(1)
+            time.sleep(SLEEP)
 
         except KeyboardInterrupt:
-            print("\n  Shutting down...")
+            print("\n  ⚔️  Shutting down WAR machine...")
             break
         except Exception as e:
             print(f"  ! {str(e)[:80]}")
             time.sleep(5)
+
 
 if __name__ == "__main__":
     main()

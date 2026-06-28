@@ -23,6 +23,8 @@ class BinanceEngine:
         
         self.session = requests.Session()
         self.session.headers.update({"X-MBX-APIKEY": self.api_key})
+        # Default timeout for all requests (connect=5s, read=10s)
+        self._timeout = (5, 10)
 
     def _load_env_file(self):
         """Load .env file into os.environ (systemd EnvironmentFile fallback)."""
@@ -53,7 +55,7 @@ class BinanceEngine:
         params = params or {}
         if signed:
             params = self._sign_params(params)
-        response = self.session.get(url, params=params)
+        response = self.session.get(url, params=params, timeout=self._timeout)
         response.raise_for_status()
         return response.json()
 
@@ -61,7 +63,7 @@ class BinanceEngine:
         url = f"{self.base_url}{endpoint}"
         if signed:
             params = self._sign_params(params)
-        response = self.session.post(url, data=params)
+        response = self.session.post(url, data=params, timeout=self._timeout)
         response.raise_for_status()
         return response.json()
 

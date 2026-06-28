@@ -26,7 +26,7 @@ logger.remove()
 logger.add(sys.stderr, format="<green>{time:HH:mm:ss}</green> | <level>{level: <8}</level> | <level>{message}</level>", level="INFO", colorize=True)
 
 MACHINE_PAIRS = {
-    "mc2": [("SOL/USDC", False)],
+    "mc2": [("SOL/USDC", False), ("ADA/USDC", False), ("DOGE/USDC", False)],
     "nuvola": [("DOGE/USDC", False)],
     "marcodg1": [("ADA/USDC", False)],
 }

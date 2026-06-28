@@ -1,6 +1,6 @@
 """
 Denaro Dev — Grid+ATR Strategy
-Dynamic grid levels based on ATR, with auto-tuning.
+Dynamic grid levels based on ATR, with exchange filter compliance.
 Tests on MARCODG1 with $10 capital.
 """
 import json, os, sys, time, math, hmac, hashlib
@@ -12,11 +12,19 @@ import requests
 
 
 # ═══════════════════════════════
-# ENGINE (same pattern as v6)
+# ENGINE
 # ═══════════════════════════════
 
 class Engine:
     def __init__(self):
+        env_path = os.path.join(os.path.dirname(__file__), ".env")
+        if os.path.exists(env_path):
+            with open(env_path) as f:
+                for line in f:
+                    line = line.strip()
+                    if line and not line.startswith("#") and "=" in line:
+                        k, v = line.split("=", 1)
+                        os.environ.setdefault(k.strip(), v.strip())
         self.key = os.environ.get("BINANCE_API_KEY", "")
         self.secret = os.environ.get("BINANCE_API_SECRET", "").encode()
         self.base = "https://api.binance.com"
@@ -64,14 +72,34 @@ class Engine:
         return self._post("/api/v3/order", {"symbol": sym, "side": "SELL", "type": "MARKET", "quantity": f"{qty:.6f}"})
     def limit_buy(self, sym, qty, price):
         return self._post("/api/v3/order", {"symbol": sym, "side": "BUY", "type": "LIMIT", "timeInForce": "GTC",
-                                              "quantity": f"{qty:.6f}", "price": f"{price:.4f}"})
+                                              "quantity": f"{qty:.{self._qprec}f}", "price": f"{price:.{self._pprec}f}"})
     def limit_sell(self, sym, qty, price):
         return self._post("/api/v3/order", {"symbol": sym, "side": "SELL", "type": "LIMIT", "timeInForce": "GTC",
-                                               "quantity": f"{qty:.6f}", "price": f"{price:.4f}"})
+                                               "quantity": f"{qty:.{self._qprec}f}", "price": f"{price:.{self._pprec}f}"})
     def cancel_order(self, sym, oid):
         return self._delete("/api/v3/order", {"symbol": sym, "orderId": oid})
     def open_orders(self, sym):
         return self._get("/api/v3/openOrders", {"symbol": sym}, signed=True)
+
+    def load_filters(self, sym):
+        """Load LOT_SIZE + PRICE_FILTER for symbol."""
+        r = self._get("/api/v3/exchangeInfo", {"symbol": sym})
+        f = {x["filterType"]: x for x in r["symbols"][0]["filters"]}
+        ls = f["LOT_SIZE"]
+        pf = f["PRICE_FILTER"]
+        self._lot_step = float(ls["stepSize"])
+        self._lot_min = float(ls["minQty"])
+        self._tick = float(pf["tickSize"])
+        self._qprec = len(str(self._lot_step).split(".")[1]) if "." in str(self._lot_step) else 0
+        self._pprec = len(str(self._tick).split(".")[1]) if "." in str(self._tick) else 0
+        print(f"  📐 Filters: lot_step={self._lot_step} tick={self._tick} qprec={self._qprec} pprec={self._pprec}")
+
+    def round_qty(self, qty):
+        if self._lot_step >= 1: return math.floor(qty)
+        return math.floor(qty / self._lot_step) * self._lot_step
+
+    def round_price(self, price):
+        return round(round(price / self._tick) * self._tick, self._pprec)
 
 
 # ═══════════════════════════════
@@ -79,7 +107,6 @@ class Engine:
 # ═══════════════════════════════
 
 def calc_atr(klines, period=14):
-    """Calculate ATR from klines."""
     if len(klines) < period + 1:
         return 0.0
     trs = []
@@ -97,11 +124,6 @@ def calc_atr(klines, period=14):
 # ═══════════════════════════════
 
 class GridATR:
-    """
-    Dynamic grid with ATR-based spacing.
-    Places N buy/sell limit orders around current price.
-    When a limit fills, places the opposite order at TP level.
-    """
     def __init__(self, engine, symbol: str, capital: float, config: dict):
         self.eng = engine
         self.sym = symbol
@@ -109,50 +131,40 @@ class GridATR:
         self.capital = capital
         self.cfg = config
 
-        # Configurable params
-        self.grid_levels = config.get("grid_levels", 3)        # buy + sell sides
-        self.grid_spread_atr = config.get("grid_spread_atr", 0.5)  # spacing as fraction of ATR
-        self.tp_atr = config.get("tp_atr", 1.5)                 # TP as multiple of ATR
-        self.sl_atr = config.get("sl_atr", 3.0)                 # SL as multiple of ATR
+        self.grid_levels = config.get("grid_levels", 3)
+        self.grid_spread_atr = config.get("grid_spread_atr", 0.8)
+        self.tp_atr = config.get("tp_atr", 1.5)
         self.atr_period = config.get("atr_period", 14)
-        self.max_position_pct = config.get("max_position_pct", 0.8)
-        self.rebalance_interval = config.get("rebalance_interval_s", 300)  # 5min
+        self.max_pos_pct = config.get("max_position_pct", 0.8)
+        self.rebal_interval = config.get("rebalance_interval_s", 300)
 
-        # State
         self.trades = 0
         self.pnl = 0.0
         self.wins = 0
         self.losses = 0
-        self._orders: Dict[str, dict] = {}  # orderId -> info
+        self._orders: Dict[str, dict] = {}
         self._last_rebalance = 0.0
-        self._current_atr = 0.0
-        self._current_price = 0.0
-        self._position_qty = 0.0
-        self._position_avg = 0.0
+        self._atr = 0.0
+        self._price = 0.0
         self._bal_base = 0.0
         self._bal_quote = 0.0
-
-        # History
         self.history: List[dict] = []
 
     def refresh_balances(self):
-        """Update balance snapshot."""
         self._bal_base = self.eng.balance(self.base)
         self._bal_quote = self.eng.balance("USDC")
 
     def update_market(self):
-        """Fetch ATR, price, depth."""
         try:
             kl = self.eng.ohlcv(self.sym, "5m", limit=30)
-            self._current_atr = calc_atr(kl, self.atr_period)
-            self._current_price = self.eng.price(self.sym)
+            self._atr = calc_atr(kl, self.atr_period)
+            self._price = self.eng.price(self.sym)
             return True
         except Exception as e:
-            print(f"  ⚠️ market update: {e}")
+            print(f"  ⚠️ market: {e}")
             return False
 
     def cancel_all(self):
-        """Cancel all open orders for symbol."""
         for o in self.eng.open_orders(self.sym):
             try:
                 self.eng.cancel_order(self.sym, o["orderId"])
@@ -161,64 +173,57 @@ class GridATR:
         self._orders.clear()
 
     def place_grid(self):
-        """Place grid of limit orders around current price."""
-        if self._current_atr <= 0 or self._current_price <= 0:
+        if self._atr <= 0 or self._price <= 0:
             return
-
         self.cancel_all()
         time.sleep(0.5)
         self.refresh_balances()
 
-        # Available capital per side
-        per_side = self._bal_quote * 0.3 / self.grid_levels  # 30% of USDC per side, divided by levels
+        per_side = self._bal_quote * 0.3 / self.grid_levels
+        raw_spread = max(self._atr * self.grid_spread_atr, self.eng._tick * 2)
 
-        spread = self._current_atr * self.grid_spread_atr
-
-        # BUY orders below price
+        # BUY orders below
         for i in range(1, self.grid_levels + 1):
-            px = self._current_price - spread * i
-            qty = per_side / px
-            qty = self._round_qty(qty)
-            if qty > 0:
+            px = self.eng.round_price(self._price - raw_spread * i)
+            px = max(px, self.eng._tick)
+            qty = self.eng.round_qty(per_side / px)
+            if qty >= self.eng._lot_min:
                 try:
                     r = self.eng.limit_buy(self.sym, qty, px)
                     if "orderId" in r:
                         self._orders[r["orderId"]] = {
                             "side": "BUY", "price": px, "qty": qty,
-                            "tp": self._current_price + spread * (i * 0.5),  # TP above entry
+                            "tp": self.eng.round_price(self._price + raw_spread * i * 0.5),
                             "ts": time.time()
                         }
                 except Exception as e:
-                    print(f"  ⚠️ buy order fail: {e}")
+                    pass
 
-        # SELL orders above price
+        # SELL orders above
         for i in range(1, self.grid_levels + 1):
-            px = self._current_price + spread * i
-            qty = per_side / px
-            qty = self._round_qty(qty)
-            if qty > 0:
+            px = self.eng.round_price(self._price + raw_spread * i)
+            qty = self.eng.round_qty(per_side / px)
+            if qty >= self.eng._lot_min:
                 try:
                     r = self.eng.limit_sell(self.sym, qty, px)
                     if "orderId" in r:
                         self._orders[r["orderId"]] = {
                             "side": "SELL", "price": px, "qty": qty,
-                            "tp": self._current_price - spread * (i * 0.5),
+                            "tp": self.eng.round_price(self._price - raw_spread * i * 0.5),
                             "ts": time.time()
                         }
                 except Exception as e:
-                    print(f"  ⚠️ sell order fail: {e}")
+                    pass
 
-        print(f"  📋 Grid: {len(self._orders)} orders @ ±{spread:.4f} ATR={self._current_atr:.4f} px={self._current_price:.4f}")
+        print(f"  📋 Grid: {len(self._orders)} ordini, spread={raw_spread:.4f}, ATR={self._atr:.4f}")
 
     def check_fills(self):
-        """Check if any orders filled, place opposite TP order."""
-        filled = []
-        current_orders = {o["orderId"]: o for o in self.eng.open_orders(self.sym)}
-        current_ids = set(current_orders.keys())
+        current = {o["orderId"]: o for o in self.eng.open_orders(self.sym)}
+        current_ids = set(current.keys())
 
+        filled = []
         for oid, info in list(self._orders.items()):
             if oid not in current_ids:
-                # Order was filled (or cancelled externally)
                 filled.append(info)
                 del self._orders[oid]
 
@@ -228,43 +233,27 @@ class GridATR:
             qty = fill["qty"]
             self.trades += 1
 
-            # Place opposite TP order
-            if side == "BUY":
-                # Sold too cheap? no - bought low, now sell high at TP
-                tp_px = fill["tp"]
-                rq = self._round_qty(qty * 0.95)  # sell slightly less to avoid rounding issues
-                if rq > 0:
-                    try:
-                        r = self.eng.limit_sell(self.sym, rq, tp_px)
-                        self._orders[r["orderId"]] = {
-                            "side": "SELL", "price": tp_px, "qty": rq,
-                            "parent": "TP", "ts": time.time()
-                        }
-                        print(f"  📈 BUY filled @ {px} → SELL TP @ {tp_px:.4f}")
-                    except Exception as e:
-                        print(f"  ⚠️ TP sell fail: {e}")
-            else:
-                # Sold high, now buy back at TP
-                tp_px = fill["tp"]
-                rq = self._round_qty(qty * 0.95)
-                if rq > 0:
-                    try:
-                        r = self.eng.limit_buy(self.sym, rq, tp_px)
-                        self._orders[r["orderId"]] = {
-                            "side": "BUY", "price": tp_px, "qty": rq,
-                            "parent": "TP", "ts": time.time()
-                        }
-                        print(f"  📉 SELL filled @ {px} → BUY TP @ {tp_px:.4f}")
-                    except Exception as e:
-                        print(f"  ⚠️ TP buy fail: {e}")
+            tp_px = fill["tp"]
+            rq = self.eng.round_qty(qty * 0.95)
+            if rq < self.eng._lot_min:
+                continue
 
-            # Record trade (estimate PnL)
-            if side == "SELL":
-                est_pnl = (px - fill.get("avg_entry", px)) * qty
-                if est_pnl >= 0:
-                    self.wins += 1
+            try:
+                if side == "BUY":
+                    r = self.eng.limit_sell(self.sym, rq, tp_px)
+                    if "orderId" in r:
+                        self._orders[r["orderId"]] = {"side": "SELL", "price": tp_px, "qty": rq, "parent": "TP", "ts": time.time()}
                 else:
-                    self.losses += 1
+                    r = self.eng.limit_buy(self.sym, rq, tp_px)
+                    if "orderId" in r:
+                        self._orders[r["orderId"]] = {"side": "BUY", "price": tp_px, "qty": rq, "parent": "TP", "ts": time.time()}
+            except:
+                pass
+
+            est_pnl = (tp_px - px) * qty if side == "BUY" else (px - tp_px) * qty
+            if side == "SELL":
+                if est_pnl >= 0: self.wins += 1
+                else: self.losses += 1
                 self.pnl += est_pnl
                 self.history.append({
                     "ts": datetime.now().isoformat(),
@@ -273,109 +262,24 @@ class GridATR:
                 })
 
     def run_cycle(self) -> dict:
-        """Single cycle: update market, rebalance grid, check fills."""
         self.update_market()
-
         now = time.time()
-        if now - self._last_rebalance > self.rebalance_interval:
+        if now - self._last_rebalance > self.rebal_interval:
             self._last_rebalance = now
             self.place_grid()
-
         self.check_fills()
-
-        return {
-            "price": self._current_price,
-            "atr": self._current_atr,
-            "orders": len(self._orders),
-            "trades": self.trades,
-            "pnl": self.pnl,
-            "wins": self.wins,
-            "losses": self.losses,
-            "bal_usdc": self._bal_quote,
-            "bal_base": self._bal_base
-        }
-
-    def _round_qty(self, qty):
-        if qty > 100: return math.floor(qty)
-        elif qty > 1: return round(qty, 2)
-        elif qty > 0.01: return round(qty, 4)
-        else: return round(qty, 6)
+        return {"price": self._price, "atr": self._atr, "orders": len(self._orders),
+                "trades": self.trades, "pnl": self.pnl}
 
     def stats(self) -> dict:
         total = self.wins + self.losses
         return {
-            "trades": self.trades,
-            "pnl": round(self.pnl, 2),
+            "trades": self.trades, "pnl": round(self.pnl, 2),
             "winrate": f"{self.wins/total*100:.1f}%" if total > 0 else "N/A",
-            "wins": self.wins,
-            "losses": self.losses,
+            "wins": self.wins, "losses": self.losses,
             "open_orders": len(self._orders),
-            "bal_usdc": round(self._bal_quote, 2),
-            "bal_base": round(self._bal_base, 6)
+            "bal_usdc": round(self._bal_quote, 2)
         }
-
-
-# ═══════════════════════════════
-# TEST HARNESS
-# ═══════════════════════════════
-
-def run_test(strategy, symbol: str, duration_minutes: int = 60, save_results: bool = True):
-    """Run a strategy and collect metrics."""
-    print(f"\n{'='*60}")
-    print(f"  TEST HARNESS | {strategy.__class__.__name__} | {symbol}")
-    print(f"  Duration: {duration_minutes}min | Start: {datetime.now().isoformat()}")
-    print(f"{'='*60}\n")
-
-    start = time.time()
-    end = start + duration_minutes * 60
-    cycles = 0
-    errors = 0
-
-    result_file = f"results/{strategy.__class__.__name__}_{symbol}_{datetime.now().strftime('%Y%m%d_%H%M')}.json"
-
-    while time.time() < end:
-        try:
-            status = strategy.run_cycle()
-            cycles += 1
-
-            if cycles % 60 == 0:
-                s = strategy.stats()
-                elapsed = int(time.time() - start)
-                print(f"  [{elapsed}s] T:{s['trades']} PnL:${s['pnl']} WR:{s['winrate']} "
-                      f"Ord:{s['open_orders']} USDC:{s['bal_usdc']}")
-
-            time.sleep(5)  # 5s per cycle
-
-        except KeyboardInterrupt:
-            print("\n  ⚔️ Stopped by user")
-            break
-        except Exception as e:
-            errors += 1
-            print(f"  ❌ Cycle {cycles}: {str(e)[:80]}")
-            time.sleep(10)
-
-    elapsed = int(time.time() - start)
-    s = strategy.stats()
-
-    print(f"\n{'='*60}")
-    print(f"  TEST COMPLETE | {elapsed}s | {cycles} cycles | {errors} errors")
-    print(f"  {json.dumps(s, indent=2)}")
-    print(f"{'='*60}\n")
-
-    if save_results:
-        with open(result_file, "w") as f:
-            json.dump({
-                "strategy": strategy.__class__.__name__,
-                "symbol": symbol,
-                "duration_s": elapsed,
-                "cycles": cycles,
-                "errors": errors,
-                "stats": s,
-                "history": strategy.history[-100:]  # last 100 trades
-            }, f, indent=2)
-        print(f"  Results saved to {result_file}")
-
-    return s
 
 
 # ═══════════════════════════════
@@ -383,12 +287,10 @@ def run_test(strategy, symbol: str, duration_minutes: int = 60, save_results: bo
 # ═══════════════════════════════
 
 if __name__ == "__main__":
-    # Load config
     cfg = {
         "grid_levels": 3,
-        "grid_spread_atr": 0.5,
+        "grid_spread_atr": 0.8,
         "tp_atr": 1.5,
-        "sl_atr": 3.0,
         "atr_period": 14,
         "max_position_pct": 0.8,
         "rebalance_interval_s": 300
@@ -396,16 +298,30 @@ if __name__ == "__main__":
 
     SYMBOL = "ADAUSDC"
     eng = Engine()
+    eng.load_filters(SYMBOL)
 
-    print(f"  Balance USDC: ${eng.balance('USDC'):.2f}")
-    print(f"  Balance ADA: {eng.balance('ADA'):.6f}")
-    print(f"  Price {SYMBOL}: ${eng.price(SYMBOL):.4f}")
+    print(f"  USDC: ${eng.balance('USDC'):.2f}  ADA: {eng.balance('ADA'):.4f}")
+    print(f"  Prezzo {SYMBOL}: ${eng.price(SYMBOL):.4f}")
 
     strat = GridATR(eng, SYMBOL, capital=10.0, config=cfg)
-
-    # First: update market + place initial grid
     strat.update_market()
     strat.place_grid()
 
-    # Run test
-    run_test(strat, SYMBOL, duration_minutes=60, save_results=False)
+    cycle = 0
+    while True:
+        try:
+            cycle += 1
+            status = strat.run_cycle()
+            if cycle % 12 == 0:
+                s = strat.stats()
+                elapsed = int(time.time() - strat._last_rebalance + strat.rebal_interval)
+                print(f"  ⚡ C{cycle} | T:{s['trades']} PnL:${s['pnl']} WR:{s['winrate']} "
+                      f"Ord:{s['open_orders']} USDC:{s['bal_usdc']}")
+            time.sleep(5)
+        except KeyboardInterrupt:
+            print("\n  ⚔️ Stop")
+            strat.cancel_all()
+            break
+        except Exception as e:
+            print(f"  ! {str(e)[:80]}")
+            time.sleep(10)

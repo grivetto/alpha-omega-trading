@@ -1,15 +1,24 @@
 [Unit]
-Description=Denaro WAR Machine
-After=network.target
+Description=Denaro WAR Machine - Multi-Strategy Trading
+After=network-online.target
+Wants=network-online.target
 
 [Service]
 Type=simple
 User=sergio
-EnvironmentFile=/home/sergio/denaro/.env
 WorkingDirectory=/home/sergio/denaro/denaro_war
-ExecStart=/home/sergio/denaro/venv/bin/python3 -u main.py
+EnvironmentFile=/home/sergio/denaro/.env
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/home/sergio/denaro/venv/bin/python3 -u /home/sergio/denaro/denaro_war/main.py
 Restart=always
 RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=denaro-war
+
+# Security
+NoNewPrivileges=yes
+PrivateTmp=yes
 
 [Install]
 WantedBy=multi-user.target

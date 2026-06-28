@@ -1,9 +1,9 @@
 {
-  "_comment": "Denaro War Machine - Brutal Production Config",
-  "version": "4.0.0",
+  "_comment": "Denaro War Machine - Production Config",
+  "version": "5.0.0",
 
-  "total_capital": 70.0,
-  "initial_capital": 70.0,
+  "total_capital": 251.0,
+  "initial_capital": 251.0,
   "base_currency": "USDC",
   "max_risk_per_trade": 0.05,
   "max_daily_loss": 0.15,
@@ -15,7 +15,7 @@
       "api_secret": "",
       "base_url": "https://api.binance.com",
       "ws_url": "wss://stream.binance.com:9443/ws",
-      "testnet": true,
+      "testnet": false,
       "rate_limit_per_second": 10
     }
   },
@@ -47,7 +47,7 @@
 
   "scalper": {
     "enabled": true,
-    "min_capital": 10.0,
+    "min_capital": 5.0,
     "max_capital_pct": 0.60,
     "atr_period": 14,
     "atr_baseline_periods": 50,
@@ -67,7 +67,7 @@
 
   "whale_tracker": {
     "enabled": true,
-    "min_capital": 10.0,
+    "min_capital": 5.0,
     "max_capital_pct": 0.40,
     "depth_window_ms": 1000,
     "order_book_depth": 50,
@@ -91,7 +91,7 @@
 
   "news_reactor": {
     "enabled": true,
-    "min_capital": 10.0,
+    "min_capital": 5.0,
     "max_capital_pct": 0.50,
     "sentiment_threshold_bullish": 0.6,
     "sentiment_threshold_bearish": -0.6,
@@ -125,7 +125,7 @@
   },
 
   "logging": {
-    "level": "DEBUG",
+    "level": "INFO",
     "file": "logs/denaro_war.log",
     "max_bytes": 10485760,
     "backup_count": 10,
