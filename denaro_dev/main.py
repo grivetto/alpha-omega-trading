@@ -178,42 +178,46 @@ class GridATR:
         self.cancel_all()
         time.sleep(0.5)
         self.refresh_balances()
+        self._last_rebalance = time.time()
 
-        per_side = self._bal_quote * 0.3 / self.grid_levels
+        # Use most of available USDC for a single order
+        order_usdc = self._bal_quote * 1.0
         raw_spread = max(self._atr * self.grid_spread_atr, self.eng._tick * 2)
 
-        # BUY orders below
+        # BUY orders below price (we have USDC, no ADA to sell initially)
         for i in range(1, self.grid_levels + 1):
             px = self.eng.round_price(self._price - raw_spread * i)
             px = max(px, self.eng._tick)
-            qty = self.eng.round_qty(per_side / px)
-            if qty >= self.eng._lot_min:
+            qty = self.eng.round_qty(order_usdc / px)
+            if qty >= self.eng._lot_min and qty * px >= 5.0:
                 try:
                     r = self.eng.limit_buy(self.sym, qty, px)
                     if "orderId" in r:
                         self._orders[r["orderId"]] = {
                             "side": "BUY", "price": px, "qty": qty,
-                            "tp": self.eng.round_price(self._price + raw_spread * i * 0.5),
+                            "tp": self.eng.round_price(self._price + raw_spread * i * 1.5),
                             "ts": time.time()
                         }
                 except Exception as e:
+                    print(f"  \u26a0\ufe0f BUY fail: {str(e)[:60]}")
                     pass
 
-        # SELL orders above
-        for i in range(1, self.grid_levels + 1):
-            px = self.eng.round_price(self._price + raw_spread * i)
-            qty = self.eng.round_qty(per_side / px)
-            if qty >= self.eng._lot_min:
-                try:
-                    r = self.eng.limit_sell(self.sym, qty, px)
-                    if "orderId" in r:
-                        self._orders[r["orderId"]] = {
-                            "side": "SELL", "price": px, "qty": qty,
-                            "tp": self.eng.round_price(self._price - raw_spread * i * 0.5),
-                            "ts": time.time()
-                        }
-                except Exception as e:
-                    pass
+        # SELL only if we have quote asset to sell
+        if self._bal_base >= self.eng._lot_min * 2:
+            for i in range(1, self.grid_levels + 1):
+                px = self.eng.round_price(self._price + raw_spread * i)
+                qty = self.eng.round_qty(self._bal_base * 0.8)
+                if qty >= self.eng._lot_min and qty * px >= 5.0:
+                    try:
+                        r = self.eng.limit_sell(self.sym, qty, px)
+                        if "orderId" in r:
+                            self._orders[r["orderId"]] = {
+                                "side": "SELL", "price": px, "qty": qty,
+                                "tp": self.eng.round_price(self._price - raw_spread * i * 0.5),
+                                "ts": time.time()
+                            }
+                    except Exception as e:
+                        pass
 
         print(f"  📋 Grid: {len(self._orders)} ordini, spread={raw_spread:.4f}, ATR={self._atr:.4f}")
 
@@ -234,7 +238,7 @@ class GridATR:
             self.trades += 1
 
             tp_px = fill["tp"]
-            rq = self.eng.round_qty(qty * 0.95)
+            rq = self.eng.round_qty(qty)
             if rq < self.eng._lot_min:
                 continue
 
@@ -288,8 +292,8 @@ class GridATR:
 
 if __name__ == "__main__":
     cfg = {
-        "grid_levels": 3,
-        "grid_spread_atr": 0.8,
+        "grid_levels": 1,
+        "grid_spread_atr": 1.5,
         "tp_atr": 1.5,
         "atr_period": 14,
         "max_position_pct": 0.8,
@@ -305,7 +309,6 @@ if __name__ == "__main__":
 
     strat = GridATR(eng, SYMBOL, capital=10.0, config=cfg)
     strat.update_market()
-    strat.place_grid()
 
     cycle = 0
     while True:
