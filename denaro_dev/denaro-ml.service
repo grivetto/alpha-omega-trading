@@ -1,0 +1,16 @@
+[Unit]
+Description=Denaro ML-PREDICTOR: ML classifier for SOL
+After=network-online.target
+
+[Service]
+Type=simple
+User=marco
+WorkingDirectory=/home/marco/denaro_dev
+EnvironmentFile=/home/marco/denaro_dev/.env
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/home/marco/denaro_dev/venv/bin/python3 -u ml_predictor.py
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
