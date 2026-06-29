@@ -16,6 +16,17 @@ from collections import deque
 
 sys.stdout.reconfigure(line_buffering=True)
 
+# Log file for reliable recording
+LOG_FILE = os.path.join(os.path.dirname(__file__) or ".", "grid_pro.log")
+def log(msg):
+    ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+    line = f"{ts} {msg}"
+    print(line, flush=True)
+    try:
+        with open(LOG_FILE, "a") as f:
+            f.write(line + "\n")
+    except: pass
+
 # === LOAD .ENV ===
 env_path = os.path.join(os.path.dirname(__file__), ".env")
 if os.path.exists(env_path):
@@ -97,6 +108,11 @@ def calc_atr(klines, period=14):
     trs = [abs(klines[i][1] - klines[i-1][1]) for i in range(1, len(klines))]
     return sum(trs[-period:]) / period if len(trs) >= period else 0
 
+def rq_qty_ceil(qty, step):
+    """Round UP to step size — use for min notional to ensure ≥$5."""
+    if step >= 1: return math.ceil(qty)
+    return math.ceil(qty / step) * step
+
 # === STATE ===
 STATE_FILE = os.path.join(os.path.dirname(__file__), "grid_pro_state.json")
 
@@ -127,19 +143,45 @@ losses = state.get("losses", 0)
 cycle = state.get("cycle", 0)
 last_rebalance = 0
 
-print(f"\n{'='*50}")
-print(f"  DENARO GRID-PRO | {SYMBOL} | ${TOTAL_CAPITAL}")
-print(f"  Filters: step={flt['lot_step']} tick={flt['tick']} minNot=${flt['min_notional']}")
-print(f"  Resuming: {len(orders)} tracked orders | T:{trades} PnL:${pnl:.2f}")
-print(f"{'='*50}\n")
+log(f"\n{'='*50}")
+log(f"  DENARO GRID-PRO | {SYMBOL} | ${TOTAL_CAPITAL}")
+log(f"  Filters: step={flt['lot_step']} tick={flt['tick']} minNot=${flt['min_notional']}")
+log(f"  Resuming: {len(orders)} tracked orders | T:{trades} PnL:${pnl:.2f}")
+log(f"{'='*50}\n")
+
+SIGNAL_PATH = os.path.join(os.path.dirname(__file__) or ".", "advisor_signal.json")
+
+def load_advisor_signal():
+    """Read advisor signal file, return neutral defaults if missing/stale."""
+    try:
+        if not os.path.exists(SIGNAL_PATH):
+            return {"bias": 0.0, "grid_offset": 0.0, "position_scale": 1.0, "volatility": "normal"}
+        with open(SIGNAL_PATH) as f:
+            sig = json.load(f)
+        age_ms = int(time.time() * 1000) - sig.get("ts", 0)
+        if age_ms > 600000:  # 10 min stale threshold
+            log(f"  ⚠️ Advisor signal stale ({age_ms//1000}s old), using neutral")
+            return {"bias": 0.0, "grid_offset": 0.0, "position_scale": 1.0, "volatility": "normal"}
+        return sig
+    except Exception as e:
+        log(f"  ⚠️ Advisor signal error: {e}, using neutral")
+        return {"bias": 0.0, "grid_offset": 0.0, "position_scale": 1.0, "volatility": "normal"}
 
 def place_grid():
     global orders, last_rebalance
+
+    # --- Load advisor signal ---
+    sig = load_advisor_signal()
+    bias = sig.get("bias", 0.0)
+    grid_offset = sig.get("grid_offset", 0.0)
+    position_scale = sig.get("position_scale", 1.0)
+    volatility = sig.get("volatility", "normal")
+
     px = price(SYMBOL)
     bal = balance("USDC")
     base_bal = balance(BASE_ASSET)
-    bal_us = bal  # Available USDC for buys
-    bal_base = base_bal  # Available ADA for sells
+    bal_us = bal
+    bal_base = base_bal
 
     # Cancel all open orders first
     oo = sg("/api/v3/openOrders", {"symbol": SYMBOL})
@@ -149,36 +191,47 @@ def place_grid():
     orders = {}
     time.sleep(0.5)
 
+    # Adjusted center price
+    px_center = px * (1.0 + grid_offset)
+    px_center = max(px * 0.98, min(px * 1.02, px_center))  # clamp ±2%
+
     # Get ATR for spacing
     kl = get_klines(SYMBOL, "5m", 20)
     atr = calc_atr(kl, 7)
-    spread = max(atr * 1.2, flt["tick"] * 3)  # at least 3 ticks
 
-    # Calculate safe order size
-    # Use 40% of USDC for buys, 40% of ADA for sells
-    buy_usdc = bal_us * 0.4
-    sell_ada = bal_base * 0.4
+    # Volatility-adaptive spread
+    vol_mult = 1.5 if volatility == "high" else (0.8 if volatility == "low" else 1.0)
+    spread = max(atr * 1.2 * vol_mult, flt["tick"] * 3)
+
+    # Scale order sizes by position_scale
+    buy_usdc = bal_us * 0.4 * position_scale
+    sell_ada = bal_base * 0.4 * position_scale
 
     levels = 2  # 2 buy + 2 sell levels
 
-    # BUY orders below market
-    buy_qty = rq_qty(buy_usdc / levels / px, flt["lot_step"])
-    if buy_qty > 0 and buy_qty * px >= flt["min_notional"]:
+    # BUY orders below adjusted center
+    buy_qty = rq_qty(buy_usdc / levels / px_center, flt["lot_step"])
+    # Clamp: if scaled below min_notional, use minimum viable
+    if buy_qty > 0 and buy_qty * px_center < flt["min_notional"]:
+        buy_qty = rq_qty_ceil(flt["min_notional"] / px_center, flt["lot_step"])
+    if buy_qty > 0 and buy_qty * px_center >= flt["min_notional"]:
         for i in range(1, levels + 1):
-            bp = rq_price(px - spread * i, flt["tick"])
+            bp = rq_price(px_center - spread * i, flt["tick"])
             if bp >= flt["tick"]:
                 r = sp("/api/v3/order", {"symbol": SYMBOL, "side": "BUY", "type": "LIMIT",
                                          "timeInForce": "GTC", "quantity": f"{buy_qty:.{flt['qprec']}f}",
-                              "price": f"{bp:.{flt['pprec']}f}"})
+                                         "price": f"{bp:.{flt['pprec']}f}"})
                 if "orderId" in r:
-                    tp = rq_price(bp + spread * 2.5, flt["tick"])  # TP at 2.5x spread
+                    tp = rq_price(bp + spread * 2.5, flt["tick"])
                     orders[r["orderId"]] = {"s": "B", "p": bp, "q": buy_qty, "tp": tp, "t": time.time()}
 
-    # SELL orders above market
+    # SELL orders above adjusted center
     sell_qty = rq_qty(sell_ada / levels, flt["lot_step"])
-    if sell_qty >= flt["lot_min"] and sell_qty * px >= flt["min_notional"]:
+    if sell_qty >= flt["lot_min"] and sell_qty * px_center < flt["min_notional"]:
+        sell_qty = rq_qty_ceil(flt["min_notional"] / px_center, flt["lot_step"])
+    if sell_qty >= flt["lot_min"] and sell_qty * px_center >= flt["min_notional"]:
         for i in range(1, levels + 1):
-            spx = rq_price(px + spread * i, flt["tick"])
+            spx = rq_price(px_center + spread * i, flt["tick"])
             r = sp("/api/v3/order", {"symbol": SYMBOL, "side": "SELL", "type": "LIMIT",
                                      "timeInForce": "GTC", "quantity": f"{sell_qty:.{flt['qprec']}f}",
                                      "price": f"{spx:.{flt['pprec']}f}"})
@@ -187,9 +240,12 @@ def place_grid():
 
     last_rebalance = time.time()
     save_state(state)
-    print(f"  📋 Grid: {len(orders)} ordini @ spread={spread:.4f} ATR={atr:.4f} USDC={bal_us:.1f} ADA={bal_base:.1f}")
+    log(f"  📋 Grid: {len(orders)} ordini | bias={bias:+.3f} off={grid_offset:+.4f} "
+          f"pos={position_scale:.1f}x vol={volatility} spread={spread:.4f} "
+          f"center=${px_center:.4f} (raw=${px:.4f})")
     if len(orders) == 0:
-        print(f"  ⚠️ Grid empty: buy_qty={buy_qty} buy_notional={buy_qty*px if buy_qty>0 else 0} sell_qty={sell_qty} sell_notional={sell_qty*px if sell_qty>0 else 0}")
+        log(f"  ⚠️ Grid empty: buy_qty={buy_qty} buy_ntl={buy_qty*px_center if buy_qty>0 else 0:.2f}"
+              f" sell_qty={sell_qty} sell_ntl={sell_qty*px_center if sell_qty>0 else 0:.2f}")
 
 def check_fills():
     global trades, pnl, wins, losses, orders
@@ -219,14 +275,14 @@ def check_fills():
                                          "price": f"{tp:.{flt['pprec']}f}"})
                 if "orderId" in r:
                     orders[r["orderId"]] = {"s": "TP", "p": tp, "q": rq, "bq": qty, "bp": px, "t": time.time()}
-                    print(f"  📈 BUY fill @ {px} → TP SELL @ {tp}")
+                    log(f"  📈 BUY fill @ {px} → TP SELL @ {tp}")
         elif side == "S":
             # SELL filled → record PnL (we sold from inventory)
             pnl_est = qty * px * 0.001  # rough estimate if bought at ~same level
             pnl += pnl_est
             wins += 1 if pnl_est > 0 else 0
             losses += 1 if pnl_est <= 0 else 0
-            print(f"  📉 SELL fill @ {px} | est PnL=${pnl_est:.2f}")
+            log(f"  📉 SELL fill @ {px} | est PnL=${pnl_est:.2f}")
         elif side == "TP":
             # TP SELL filled → profit locked
             bp = fill.get("bp", 0)
@@ -237,7 +293,7 @@ def check_fills():
                 pnl += pnl_trade
                 wins += 1 if pnl_trade > 0 else 0
                 losses += 1 if pnl_trade <= 0 else 0
-                print(f"  💰 TP fill @ {px} | PnL=${pnl_trade:.2f}")
+                log(f"  💰 TP fill @ {px} | PnL=${pnl_trade:.2f}")
 
     # Save state after fills
     state["orders"] = {k: v for k, v in orders.items() if isinstance(k, str)}
@@ -249,8 +305,8 @@ def check_fills():
     save_state(state)
 
 # === MAIN LOOP ===
-print(f"  Equity: USDC={balance('USDC'):.1f} ADA={balance('ADA'):.1f} @ ${price(SYMBOL):.4f}")
-print(f"  Placing initial grid...")
+log(f"  Equity: USDC={balance('USDC'):.1f} ADA={balance('ADA'):.1f} @ ${price(SYMBOL):.4f}")
+log(f"  Placing initial grid...")
 
 # Cancel any stale orders on startup
 try:
@@ -289,13 +345,13 @@ while True:
             eq = (usdc + usdc_locked) + (ada + ada_locked) * px
             total_t = trades + state.get("trades", 0)
             wr = f"{wins/(wins+losses)*100:.0f}%" if wins + losses > 0 else "N/A"
-            print(f"  ⚡ C{cycle} | T:{trades} PnL:${pnl:.2f} WR:{wr} | Eq:${eq:.1f} | "
+            log(f"  ⚡ C{cycle} | T:{trades} PnL:${pnl:.2f} WR:{wr} | Eq:${eq:.1f} | "
                   f"Ord:{len(orders)} | ${px:.4f}")
 
         time.sleep(10)
     except KeyboardInterrupt:
-        print("\n  ⚔️ Stop")
+        log("\n  ⚔️ Stop")
         break
     except Exception as e:
-        print(f"  ❌ {str(e)[:80]}")
+        log(f"  ❌ {str(e)[:80]}")
         time.sleep(30)
