@@ -61,7 +61,7 @@ def rq(qty, step):
     return math.floor(qty / step) * step
 
 def rp(price, tick):
-    prec = len(str(tick).split(".")[1]) if "." in str(tick) else 0
+    prec = max(0, -math.floor(math.log10(abs(tick)))) if tick > 0 else 0
     return round(round(price / tick) * tick, prec)
 
 # === VOLATILITY SCALPER ===

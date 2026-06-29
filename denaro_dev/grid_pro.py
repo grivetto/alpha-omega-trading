@@ -98,8 +98,8 @@ def rq_qty(qty, step):
     if step >= 1: return math.floor(qty)
     return math.floor(qty / step) * step
 
-def rq_price(price, tick):
-    prec = len(str(tick).split(".")[1]) if "." in str(tick) else 0
+def rp(price, tick):
+    prec = max(0, -math.floor(math.log10(abs(tick)))) if tick > 0 else 0
     return round(round(price / tick) * tick, prec)
 
 # === ATR ===
@@ -216,13 +216,13 @@ def place_grid():
         buy_qty = rq_qty_ceil(flt["min_notional"] / px_center, flt["lot_step"])
     if buy_qty > 0 and buy_qty * px_center >= flt["min_notional"]:
         for i in range(1, levels + 1):
-            bp = rq_price(px_center - spread * i, flt["tick"])
+            bp = rp(px_center - spread * i, flt["tick"])
             if bp >= flt["tick"]:
                 r = sp("/api/v3/order", {"symbol": SYMBOL, "side": "BUY", "type": "LIMIT",
                                          "timeInForce": "GTC", "quantity": f"{buy_qty:.{flt['qprec']}f}",
                                          "price": f"{bp:.{flt['pprec']}f}"})
                 if "orderId" in r:
-                    tp = rq_price(bp + spread * 2.5, flt["tick"])
+                    tp = rp(bp + spread * 2.5, flt["tick"])
                     orders[r["orderId"]] = {"s": "B", "p": bp, "q": buy_qty, "tp": tp, "t": time.time()}
 
     # SELL orders above adjusted center
@@ -231,7 +231,7 @@ def place_grid():
         sell_qty = rq_qty_ceil(flt["min_notional"] / px_center, flt["lot_step"])
     if sell_qty >= flt["lot_min"] and sell_qty * px_center >= flt["min_notional"]:
         for i in range(1, levels + 1):
-            spx = rq_price(px_center + spread * i, flt["tick"])
+            spx = rp(px_center + spread * i, flt["tick"])
             r = sp("/api/v3/order", {"symbol": SYMBOL, "side": "SELL", "type": "LIMIT",
                                      "timeInForce": "GTC", "quantity": f"{sell_qty:.{flt['qprec']}f}",
                                      "price": f"{spx:.{flt['pprec']}f}"})
@@ -305,7 +305,33 @@ def check_fills():
     save_state(state)
 
 # === MAIN LOOP ===
+def get_full_equity():
+    """Get total equity including locked balances and SOL."""
+    d = sg("/api/v3/account", {})
+    if "balances" not in d:
+        return 0.0
+    totals = {}
+    for b in d["balances"]:
+        t = float(b["free"]) + float(b["locked"])
+        if t > 0.01:
+            totals[b["asset"]] = t
+    px_ada = price("ADAUSDC")
+    px_sol = price_optional("SOLUSDC")
+    eq = totals.get("USDC", 0) + totals.get("ADA", 0) * px_ada
+    if px_sol and totals.get("SOL", 0) > 0:
+        eq += totals["SOL"] * px_sol
+    return eq
+
+def price_optional(sym):
+    """Get price, return None if pair doesn't exist."""
+    try:
+        return float(requests.get(f"{BASE}/api/v3/ticker/price?symbol={sym}", timeout=5).json()["price"])
+    except:
+        return None
+
 log(f"  Equity: USDC={balance('USDC'):.1f} ADA={balance('ADA'):.1f} @ ${price(SYMBOL):.4f}")
+eq0 = get_full_equity()
+log(f"  Total equity: ${eq0:.2f}")
 log(f"  Placing initial grid...")
 
 # Cancel any stale orders on startup
@@ -332,17 +358,7 @@ while True:
         # Status every 30 cycles (5min)
         if cycle % 30 == 0:
             px = price(SYMBOL)
-            usdc = balance("USDC")
-            # Get locked balance too
-            d = sg("/api/v3/account", {})
-            usdc_locked = 0.0
-            ada_locked = 0.0
-            if "balances" in d:
-                for b in d["balances"]:
-                    if b["asset"] == "USDC": usdc_locked = float(b["locked"])
-                    if b["asset"] == "ADA": ada_locked = float(b["locked"])
-            ada = balance("ADA")
-            eq = (usdc + usdc_locked) + (ada + ada_locked) * px
+            eq = get_full_equity()
             total_t = trades + state.get("trades", 0)
             wr = f"{wins/(wins+losses)*100:.0f}%" if wins + losses > 0 else "N/A"
             log(f"  ⚡ C{cycle} | T:{trades} PnL:${pnl:.2f} WR:{wr} | Eq:${eq:.1f} | "
