@@ -54,8 +54,9 @@ class Feeder:
 
         # 4. Recent trades + volume
         trades = self.ws.get_recent_trades(self.symbol)
-        if trades:
-            self._volume_history.extend(trades)
+        vols = self.ws.get_recent_volumes(self.symbol)
+        if vols:
+            self._volume_history.extend(vols)
             if len(self._volume_history) > 100:
                 self._volume_history = self._volume_history[-100:]
 

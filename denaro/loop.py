@@ -58,57 +58,55 @@ class TradingLoop:
     # ── Main Run ──────────────────────────────────────────────────────
 
     async def run(self) -> None:
-        """One cycle. Called in a while True with asyncio.sleep."""
-        if not self._running:
-            return
+        """Main loop. Runs indefinitely every cfg.loop_interval seconds."""
+        while self._running:
+            self._cycle_count += 1
 
-        self._cycle_count += 1
+            try:
+                # 1. Feed: update WS data
+                self.feeder.update()
+                state = self.state
 
-        try:
-            # 1. Feed: update WS data
-            self.feeder.update()
-            state = self.state
+                # 2. Risk check
+                state = self.risk.check(state)
+                if self.risk.is_global_stopped:
+                    log.critical("[%s] GLOBAL STOP — all trading halted", self.pair)
+                    os._exit(1)
 
-            # 2. Risk check
-            state = self.risk.check(state)
-            if self.risk.is_global_stopped:
-                log.critical("[%s] GLOBAL STOP — all trading halted", self.pair)
-                os._exit(1)
+                # 3. Balance refresh (every 30s)
+                now = time.time()
+                if now - self._last_balance_refresh > self.cfg.balance_interval:
+                    await self._refresh_balance()
+                    self._last_balance_refresh = now
 
-            # 3. Balance refresh (every 30s)
-            now = time.time()
-            if now - self._last_balance_refresh > self.cfg.balance_interval:
-                await self._refresh_balance()
-                self._last_balance_refresh = now
+                # 4. Grid sync
+                if state.cb_state != CBState.OPEN:
+                    state = await self.grid.sync(state)
+                    self.state = state
 
-            # 4. Grid sync
-            if state.cb_state != CBState.OPEN:
-                state = await self.grid.sync(state)
-                # Update state reference if grid returned new
-                self.state = state
+                # 5. Scalp tick
+                if state.cb_state not in (CBState.OPEN, CBState.GLOBAL_STOP):
+                    state = await self.scalper.tick(state)
+                    self.state = state
 
-            # 5. Scalp tick
-            if state.cb_state not in (CBState.OPEN, CBState.GLOBAL_STOP):
-                state = await self.scalper.tick(state)
-                self.state = state
+                # 6. Update capital (RiskManager)
+                await self.risk.update_capital({self.pair: state})
 
-            # 6. Update capital (RiskManager)
-            self.risk.update_capital({self.pair: state})
+                # 7. Health write (every 5s)
+                if now - self._last_health_write > self.cfg.health_interval:
+                    self._write_health()
+                    self._last_health_write = now
 
-            # 7. Health write (every 5s)
-            if now - self._last_health_write > self.cfg.health_interval:
-                self._write_health()
-                self._last_health_write = now
+                # 8. Performance log
+                if self._cycle_count % max(self.cfg.perf_log_interval, 10) == 0:
+                    self._log_performance(state)
 
-            # 8. Performance log
-            if self._cycle_count % max(self.cfg.perf_log_interval, 10) == 0:
-                self._log_performance(state)
+            except asyncio.CancelledError:
+                raise
+            except Exception:
+                log.exception("[%s] Fatal loop error", self.pair)
 
-        except asyncio.CancelledError:
-            raise
-        except Exception:
-            log.exception("[%s] Fatal loop error", self.pair)
-            await asyncio.sleep(2)
+            await asyncio.sleep(self.cfg.loop_interval)
 
     def stop(self) -> None:
         self._running = False

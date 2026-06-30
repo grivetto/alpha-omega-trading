@@ -2,6 +2,7 @@
 Capital protection embedded at every level. Zero-touch recovery."""
 
 from __future__ import annotations
+import asyncio
 import logging
 import math
 import time
@@ -22,6 +23,7 @@ class RiskManager:
     def __init__(self, cfg: Config, total_capital: float = 200.0) -> None:
         self.cfg = cfg
         self.cb = cfg.cb
+        self._lock = asyncio.Lock()
 
         # ── Capital tracking ──
         self._initial_capital = total_capital
@@ -29,6 +31,7 @@ class RiskManager:
         self._current_capital = total_capital
         self._total_pnl = 0.0
         self._daily_pnl = 0.0
+        self._day_start_capital = total_capital
         self._daily_reset_ts = self._next_daily_reset()
 
         # ── Global CB state ──
@@ -75,6 +78,7 @@ class RiskManager:
         now = time.time()
         if now >= self._daily_reset_ts:
             self._daily_pnl = 0.0
+            self._day_start_capital = self._current_capital
             self._global_consecutive_losses = 0
             self._daily_reset_ts = self._next_daily_reset()
             log.info("Daily PnL reset — new trading day")
@@ -126,22 +130,21 @@ class RiskManager:
 
     # ── Update Capital (after grid/scalp execution) ───────────────────
 
-    def update_capital(self, pair_states: dict[str, PairState]) -> None:
+    async def update_capital(self, pair_states: dict[str, PairState]) -> None:
         """Called after grid+scalp execution. Accumulates pair states,
-        computes current total capital (with USDC dedup)."""
-        # Accumulate live pair states
-        for k, v in pair_states.items():
-            if v.is_alive:
-                self._pair_cache[k] = v
+        computes current total capital (with USDC dedup). Thread/multiloop safe."""
+        async with self._lock:
+            for k, v in pair_states.items():
+                if v.is_alive:
+                    self._pair_cache[k] = v
 
-        # Compute total with USDC dedup (each pair holds FULL USDC)
-        total = sum(s.total_equity for s in self._pair_cache.values())
-        if len(self._pair_cache) > 0:
-            n = len(self.cfg.pairs)
+            # Compute total with USDC dedup (each pair holds FULL USDC)
+            total = sum(s.total_equity for s in self._pair_cache.values())
+            n = max(len(self.cfg.pairs), 1)
             usdc_sum = sum(
                 s.free_quote + s.locked_quote
                 for s in self._pair_cache.values()
-            )
+            ) if self._pair_cache else 0.0
             total -= usdc_sum * (1.0 - 1.0 / n)
 
         # Apply floor at 10% of initial capital
@@ -191,7 +194,7 @@ class RiskManager:
 
         # PnL
         self._total_pnl = self._current_capital - self._initial_capital
-        self._daily_pnl += (self._current_capital - self._peak_capital)
+        self._daily_pnl = self._current_capital - self._day_start_capital
 
     # ── Kelly Position Sizing ──────────────────────────────────────────
 
@@ -239,16 +242,22 @@ class RiskManager:
         win_rate = len(wins) / len(recent)
 
         # Kelly formula: f* = (p * b - q) / b
-        # where b = avg_win/avg_loss, p = win_rate, q = 1-p
         if avg_loss > 0:
             b = avg_win / avg_loss
             k = (win_rate * b - (1 - win_rate)) / b
             # Clamp to [0.05, 0.50] and apply 25% safety factor
             self._kelly_fraction = max(0.05, min(0.50, k * 0.25))
-            log.info("Kelly updated: win_rate=%.1f%% avg_win=%.2f%% "
-                     "avg_loss=%.2f%% kelly=%.2f%%",
-                     win_rate * 100, avg_win * 100, avg_loss * 100,
-                     self._kelly_fraction * 100)
+
+        # Boost Kelly on sustained win rate > 60% with enough history
+        if self._total_trades >= 20 and win_rate > 0.60:
+            self._kelly_fraction = min(0.50, self._kelly_fraction * 1.5)
+        elif self._total_trades >= 20 and win_rate > 0.70:
+            self._kelly_fraction = min(0.50, self._kelly_fraction * 2.0)
+
+        log.info("Kelly updated: win_rate=%.1f%% avg_win=%.2f%% "
+                 "avg_loss=%.2f%% kelly=%.2f%%",
+                 win_rate * 100, avg_win * 100, avg_loss * 100,
+                 self._kelly_fraction * 100)
 
     def net_position_size(self, pair_capital: float, alloc_pct: float) -> float:
         """Compute final position size: base_alloc * Kelly * sizing_mult * volatility_adj."""

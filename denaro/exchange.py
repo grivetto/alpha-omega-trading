@@ -620,6 +620,7 @@ class WSClient:
         self._prices: dict[str, float] = {}
         self._depths: dict[str, dict[str, Any]] = {}
         self._trades: dict[str, list[float]] = {}
+        self._volumes: dict[str, list[float]] = {}
         self._running = False
         self._task: Optional[asyncio.Task] = None
 
@@ -656,6 +657,10 @@ class WSClient:
     def get_recent_trades(self, symbol: str) -> list[float]:
         nkey = symbol.replace("/", "").upper()
         return self._trades.get(nkey, [])
+
+    def get_recent_volumes(self, symbol: str) -> list[float]:
+        nkey = symbol.replace("/", "").upper()
+        return self._volumes.get(nkey, [])
 
     def get_vwap(self, symbol: str, lookback: int = 20) -> float:
         """Volume-weighted average price from recent trades."""
@@ -745,5 +750,8 @@ class WSClient:
             if sym and price:
                 trades = self._trades.setdefault(sym, [])
                 trades.append(price)
+                vols = self._volumes.setdefault(sym, [])
+                vols.append(qty)
                 if len(trades) > 100:
                     self._trades[sym] = trades[-100:]
+                    self._volumes[sym] = vols[-100:]

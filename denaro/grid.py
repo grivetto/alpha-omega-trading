@@ -86,8 +86,17 @@ class GridEngine:
             log.info("[%s] %.0f%% grid filled — re-deploying",
                      symbol, (1 - len(open_ords) / (n_levels * 2)) * 100)
 
-        # Cancel existing
-        await self.exchange.cancel_all_orders(symbol)
+        # Cancel existing grid orders only (skip scalp positions)
+        if state.scalp_position:
+            # Cancel only orders matching expected grid size
+            grid_order_ids = [o["orderId"] for o in open_ords
+                            if float(o.get("price", 0)) < price * 0.99
+                            or float(o.get("price", 0)) > price * 1.01]
+            for oid in grid_order_ids:
+                await self.exchange.cancel_order(symbol, oid)
+                await asyncio.sleep(0.05)
+        else:
+            await self.exchange.cancel_all_orders(symbol)
 
         # ── Generate levels ──
         buy_levels = [price * (1 - spread * (i + 1)) for i in range(n_levels)]

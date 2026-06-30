@@ -79,6 +79,14 @@ class ScalpEngine:
         if side is None:
             return state
 
+        # ── Balance check for SHORT on spot ──
+        if side == OrderSide.SELL:
+            base_available = state.free_base + state.locked_base
+            if base_available <= 0:
+                log.debug("[%s] SHORT skipped — no %s balance", state.symbol,
+                          state.symbol.split("/")[0])
+                return state
+
         # ── Position sizing via RiskManager ──
         size_pct = self.config.risk.kelly_size * 0.15  # Max 15% of pair capital per scalp
         if state.perf.consecutive_wins >= 3:
@@ -102,6 +110,13 @@ class ScalpEngine:
         base_qty = self.exchange.round_amount(
             state.symbol, quote_qty / entry_price
         )
+        # Cap SELL to available base balance
+        if side == OrderSide.SELL:
+            base_available = state.free_base + state.locked_base
+            base_qty = min(base_qty, self.exchange.round_amount(state.symbol, base_available * 0.5))
+
+        if base_qty <= 0:
+            return state
 
         # Place LIMIT order
         result = await self.exchange.place_limit_order(
