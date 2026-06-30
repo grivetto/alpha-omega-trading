@@ -1,0 +1,8 @@
+[Unit]
+Description=Denaro Health Check Timer (%I)
+
+[Service]
+Type=oneshot
+User=%i
+Group=%i
+ExecStart=/bin/bash -c 'if [ $(echo "$(date +%s) - $(stat -c %Y /tmp/denaro.health)" | bc) -gt 60 ]; then echo "DENARO HEALTH STALE — killing"; systemctl --user stop denaro-%i.service; fi'

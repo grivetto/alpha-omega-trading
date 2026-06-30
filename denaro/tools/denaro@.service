@@ -1,0 +1,34 @@
+[Unit]
+Description=Denaro GRID+SCALP Trading Bot
+Documentation=https://github.com/sergio/denaro
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=%i
+Group=%i
+WorkingDirectory=/home/%i/denaro
+EnvironmentFile=/home/%i/denaro/.env
+ExecStart=/home/%i/denaro/.venv/bin/python -m denaro.main
+Restart=on-failure
+RestartSec=10
+StartLimitInterval=300
+StartLimitBurst=3
+
+# Watchdog — health file must be touched every 30s
+WatchdogSec=30
+
+# Security hardening
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=full
+ProtectHome=read-only
+ReadWritePaths=/home/%i/denaro /tmp
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

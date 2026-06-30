@@ -1,0 +1,31 @@
+[Unit]
+Description=Denaro GRID+SCALP Trading Bot (%I)
+Documentation=https://github.com/sergio/denaro
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=sergio
+Group=sergio
+WorkingDirectory=/home/sergio/alpha-omega-trading
+EnvironmentFile=/home/sergio/alpha-omega-trading/.env
+ExecStart=/usr/bin/python3 -m denaro.main
+Restart=on-failure
+RestartSec=10
+StartLimitInterval=300
+StartLimitBurst=3
+
+# Security hardening
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=full
+ProtectHome=read-only
+ReadWritePaths=/home/sergio/alpha-omega-trading /tmp
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

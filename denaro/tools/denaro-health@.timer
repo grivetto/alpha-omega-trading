@@ -1,0 +1,10 @@
+[Unit]
+Description=Denaro Health Check Timer (%I)
+
+[Timer]
+OnBootSec=30
+OnUnitActiveSec=30
+Unit=denaro-health@%i.service
+
+[Install]
+WantedBy=timers.target
