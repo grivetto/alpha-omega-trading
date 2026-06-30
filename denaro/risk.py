@@ -248,11 +248,12 @@ class RiskManager:
             # Clamp to [0.05, 0.50] and apply 25% safety factor
             self._kelly_fraction = max(0.05, min(0.50, k * 0.25))
 
-        # Boost Kelly on sustained win rate > 60% with enough history
-        if self._total_trades >= 20 and win_rate > 0.60:
-            self._kelly_fraction = min(0.50, self._kelly_fraction * 1.5)
-        elif self._total_trades >= 20 and win_rate > 0.70:
+        # Boost Kelly on sustained win rate with enough history
+        # Check higher thresholds FIRST (descending order)
+        if self._total_trades >= 20 and win_rate > 0.70:
             self._kelly_fraction = min(0.50, self._kelly_fraction * 2.0)
+        elif self._total_trades >= 20 and win_rate > 0.60:
+            self._kelly_fraction = min(0.50, self._kelly_fraction * 1.5)
 
         log.info("Kelly updated: win_rate=%.1f%% avg_win=%.2f%% "
                  "avg_loss=%.2f%% kelly=%.2f%%",
