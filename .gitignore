@@ -79,7 +79,6 @@ STATUS_CHECK
 HEAL_REPORT.md
 __init__.py
 zabbix_*
-denaro_core.py
 denaro_navigator.py
 denaro_shared.py
 dashboard_server.py
