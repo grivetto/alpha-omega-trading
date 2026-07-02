@@ -6,8 +6,8 @@ Wants=network-online.target
 [Service]
 Type=simple
 User=marco
-WorkingDirectory=/home/marco/denaro/kraken_bot
-EnvironmentFile=/home/marco/denaro/kraken_bot/.env
+WorkingDirectory=/home/marco/denaro
+EnvironmentFile=/home/marco/denaro/.env
 ExecStart=/home/marco/denaro/venv/bin/python3 -u main.py
 Restart=on-failure
 RestartSec=15
