@@ -9,6 +9,7 @@ from pathlib import Path
 from logging.handlers import RotatingFileHandler
 from typing import Dict, Tuple
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 from kraken_engine import KrakenEngine, SYMBOL, _fix_base64_secret
 from denaro_core import DenaroCore, CBState
 
