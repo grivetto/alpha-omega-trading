@@ -16,14 +16,14 @@ from typing import Optional, List
 # Enums
 # ──────────────────────────────────────────────────────────────
 
-class CBState(Enum):
+class CBState(str, Enum):
     """Circuit breaker state."""
     CLOSED = "CLOSED"
     HALF_OPEN = "HALF_OPEN"
     OPEN = "OPEN"
 
 
-class Trend(Enum):
+class Trend(str, Enum):
     """Market trend for adaptive sizing."""
     BULL = "BULL"
     BEAR = "BEAR"
