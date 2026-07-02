@@ -271,10 +271,10 @@ class DenaroCore:
         else:
             drawdown = 0.0
 
-        self.cb.state.value = CBState.CLOSED
-        self.cb.reason = ""
-        self.cb.since = 0.0
-        self.cb.consecutive_losses = 0
+        self.state.cb.state = CBState.CLOSED
+        self.state.cb.reason = ""
+        self.state.cb.since = 0.0
+        self.state.cb.consecutive_losses = 0
 
         if daily_pnl_pct <= -self._daily_loss_limit:
             self.state.cb.state = CBState.OPEN
