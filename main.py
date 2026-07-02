@@ -219,7 +219,7 @@ def main():
         log.critical(f"Engine init failed: {e}")
         sys.exit(1)
 
-    core = DenaroCore(initial_capital=CAPITAL, state_path=Path("/tmp/denaro_cb_state.json"))
+    core = DenaroCore(initial_capital=CAPITAL, state_path=STATE_FILE)
 
     # Cancel orphans
     log.info("Cancelling orphaned orders...")
