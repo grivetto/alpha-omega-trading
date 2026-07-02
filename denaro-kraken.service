@@ -1,0 +1,17 @@
+[Unit]
+Description=Denaro Kraken Bot v2 - DOGE/EUR Grid
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=sergio
+WorkingDirectory=/home/sergio/denaro/kraken_bot
+EnvironmentFile=/home/sergio/denaro/kraken_bot/.env
+ExecStart=/home/sergio/denaro/venv/bin/python3 -u main.py
+Restart=on-failure
+RestartSec=15
+TimeoutStopSec=20
+
+[Install]
+WantedBy=multi-user.target
