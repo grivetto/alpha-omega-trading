@@ -207,7 +207,12 @@ class KrakenEngine:
             "enableRateLimit": True, "rateLimit": 150,
             "options": {"defaultType": "spot"},
         })
-        self.ex.load_markets()
+        try:
+            self.ex.load_markets()
+        except Exception as e:
+            log.error(f"load_markets failed: {e} — retrying in 5s")
+            time.sleep(5)
+            self.ex.load_markets()
         self._last_request: float = 0.0
         self._min_interval = 0.15
         self._ws = _KrakenWSFeed(SYMBOL)

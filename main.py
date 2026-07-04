@@ -448,7 +448,7 @@ def main() -> None:
                     kelly_pct=core.kelly_fraction * 100,
                     atr_pct=core.state.regime.atr_pct,
                     last_cycle_ts=time.time(), last_cycle_ok=True,
-                    uptime_sec=time.time() - time.time(),
+                    uptime_sec=time.time() - grid._started_at,
                     ws_connected=getattr(engine, "ws_connected", False),
                     error_count=0,
                     strategy=core.state.exec.active_strategy.value,

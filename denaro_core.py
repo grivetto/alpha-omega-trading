@@ -436,6 +436,8 @@ class DenaroCore:
                 self.state.cb.since = 0.0
                 self.state.cb.daily_loss_pct = 0.0
                 self.state.cb.consecutive_losses = 0
+                from notifier import notify_cb_close
+                notify_cb_close(current_equity)
             elif prev == CBState.OPEN and dd < self._max_drawdown_limit and daily_pnl_pct > -self._daily_loss_limit:
                 self.state.cb.state = CBState.HALF_OPEN
                 self.state.cb.reason = "recovering"

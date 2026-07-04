@@ -102,3 +102,11 @@ stella_grid_state.json
 .keys.json
 .hermes/
 enhanced/__pycache__/
+
+# Local artifacts (not for deployment)
+.deepseek/
+opencode-v2/
+tools/
+setup_docker.py
+README_V2.md
+kraken_state.json

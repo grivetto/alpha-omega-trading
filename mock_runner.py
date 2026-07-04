@@ -163,7 +163,7 @@ def run_mock_test(cycles: int = 100, verbose: bool = True) -> dict:
     sys.path.insert(0, str(Path(__file__).resolve().parent))
 
     from denaro_core import DenaroCore
-    from main import EnhancedGrid, CAPITAL, LEVELS, COOLDOWN
+    from main import TradingEngine, CAPITAL, LEVELS, COOLDOWN
 
     STATE_FILE = Path("/tmp/kraken_state_mock.json")
 
@@ -176,8 +176,8 @@ def run_mock_test(cycles: int = 100, verbose: bool = True) -> dict:
     core.state.perf.total_trades = 0
     core.state.perf.win_trades = 0
     core.state.perf.loss_trades = 0
-    core.state.perf.total_pnl = 0.0
-    core.state.perf.daily_pnl = 0.0
+    core.state.perf.total_pnl_pct = 0.0
+    core.state.perf.daily_pnl_pct = 0.0
     core.state.perf.consecutive_wins = 0
     core.state.perf.consecutive_losses = 0
     core.state.perf.last_trade_ts = 0.0
