@@ -241,6 +241,9 @@ class DenaroCore:
             try:
                 with open(self._state_path) as f:
                     d = json.load(f)
+                cb_data = d.get("cb", {})
+                regime_data = d.get("regime", {})
+                exec_data = d.get("exec", {})
                 return CoreState(
                     initial_capital=d.get("initial_capital", initial_capital),
                     current_capital=d.get("current_capital", initial_capital),
@@ -250,13 +253,41 @@ class DenaroCore:
                     trade_results=d.get("trade_results", []),
                     kelly_fraction=d.get("kelly_fraction", 0.25),
                     sizing_multiplier=d.get("sizing_multiplier", 1.0),
-                    cb=CircuitBreakerState(**d.get("cb", {})),
+                    cb=CircuitBreakerState(
+                        state=CBState(cb_data.get("state", "CLOSED")),
+                        reason=cb_data.get("reason", ""),
+                        since=cb_data.get("since", 0.0),
+                        daily_loss_pct=cb_data.get("daily_loss_pct", 0.0),
+                        max_drawdown_pct=cb_data.get("max_drawdown_pct", 0.0),
+                        consecutive_losses=cb_data.get("consecutive_losses", 0),
+                    ),
                     perf=PerfMetrics(**d.get("perf", {})),
-                    regime=RegimeState(**d.get("regime", {})),
+                    regime=RegimeState(
+                        trend=Trend(regime_data.get("trend", "RANGING")),
+                        trend_strength=regime_data.get("trend_strength", 0.0),
+                        volatility_regime=regime_data.get("volatility_regime", "normal"),
+                        atr_pct=regime_data.get("atr_pct", 0.002),
+                        volume_regime=regime_data.get("volume_regime", "normal"),
+                        volume_ratio=regime_data.get("volume_ratio", 1.0),
+                        momentum_1h=regime_data.get("momentum_1h", 0.0),
+                        momentum_24h=regime_data.get("momentum_24h", 0.0),
+                        regime_confidence=regime_data.get("regime_confidence", 0.7),
+                        regime_duration_cycles=regime_data.get("regime_duration_cycles", 0),
+                    ),
                     micro=MicroState(**d.get("micro", {})),
                     var=VaRState(**d.get("var", {})),
                     dca=DCAState(**d.get("dca", {})),
-                    exec=ExecutionState(**d.get("exec", {})),
+                    exec=ExecutionState(
+                        active_strategy=StrategyMode(exec_data.get("active_strategy", "GRID")),
+                        grid_levels_active=exec_data.get("grid_levels_active", 0),
+                        grid_target_levels=exec_data.get("grid_target_levels", 5),
+                        dca_position_active=exec_data.get("dca_position_active", False),
+                        profit_take_order_id=exec_data.get("profit_take_order_id", ""),
+                        last_rebalance_ts=exec_data.get("last_rebalance_ts", 0.0),
+                        last_cycle_ms=exec_data.get("last_cycle_ms", 0.0),
+                        errors_this_hour=exec_data.get("errors_this_hour", 0),
+                        cycle_count=exec_data.get("cycle_count", 0),
+                    ),
                 )
             except Exception:
                 pass

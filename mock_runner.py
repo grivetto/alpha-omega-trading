@@ -2,8 +2,9 @@
 """
 Mock Kraken Engine — simula orderbook, fill probabilistici, balance.
 Usato da MOCK_MODE per testare la griglia senza toccare Kraken reale.
+Compatibile con l'interfaccia attesa da main.py (CCXT-like).
 """
-import time, random, math, json
+import time, random, math
 from pathlib import Path
 from typing import Dict, List, Optional
 
@@ -15,129 +16,97 @@ class MockKrakenEngine:
         self.eur_balance = initial_eur
         self.doge_balance = initial_doge
         self.base_price = start_price
-        self._orders: Dict[str, dict] = {}  # order_id -> order dict
+        self._orders: Dict[str, dict] = {}
         self._next_id = 1000
-        self._volatility = 0.0005  # ~0.8% per tick
-        self._trend = 0.0  # -1 to +1, slight random walk
+        self._volatility = 0.0005
+        self._trend = 0.0
         self._cycle = 0
-        self._fill_probability = 0.08  # 8% chance per cycle that an order fills
-        self._ticks_since_start = 0
+        self._fill_probability = 0.08
+        self.ws_connected = False
 
-    # ── Price simulation ──
+    @property
+    def ex(self):
+        return self
+
     def fetch_ticker(self, symbol: str) -> float:
-        """Simula movimento di prezzo random walk."""
         self._cycle += 1
-        # Random walk with trend
         drift = self._trend * 0.0001
         noise = random.gauss(0, self._volatility)
         self.base_price *= (1 + drift + noise)
-        self.base_price = max(0.001, min(2.0, self.base_price))  # Clamp
-        # Trend shifts slowly
+        self.base_price = max(0.001, min(2.0, self.base_price))
         self._trend += random.uniform(-0.02, 0.02)
         self._trend = max(-1.0, min(1.0, self._trend))
-        self._ticks_since_start += 1
         return self.base_price
 
-    def fetch_balance(self, asset: str = "") -> float:
-        """Return single-currency balance. Without args, returns 0 (use fetch_balance_full for dict)."""
-        if not asset:
-            return 0.0
+    def fetch_balance(self, asset: str = None) -> dict | float:
+        """CCXT-compatible: returns dict when called without args, float when asset specified."""
+        if asset is None:
+            return {"total": {"EUR": self.eur_balance, "DOGE": self.doge_balance},
+                    "free": {"EUR": self.eur_balance, "DOGE": self.doge_balance}}
         if asset.upper() == "EUR":
             return self.eur_balance
         if asset.upper() == "DOGE":
             return self.doge_balance
         return 0.0
 
-    @property
-    def ex(self):
-        """Compatibility shim — MockKrakenEngine is also its own .ex for fetch_ohlcv."""
-        return self
-
     def fetch_ohlcv(self, symbol: str, timeframe: str = "1h", limit: int = 15):
-        """Return synthetic OHLCV data for ATR calculation."""
         ohlcv = []
         price = self.base_price * 0.95
         for i in range(limit):
             high = price * (1 + random.uniform(0, 0.015))
             low = price * (1 - random.uniform(0, 0.015))
             ohlcv.append([
-                int((time.time() - (limit - i) * 3600) * 1000),  # timestamp
-                price,  # open
-                high,   # high
-                low,    # low
-                price * (1 + random.uniform(-0.005, 0.005)),  # close
-                100000 * random.uniform(0.5, 2.0),  # volume
+                int((time.time() - (limit - i) * 3600) * 1000),
+                price, high, low,
+                price * (1 + random.uniform(-0.005, 0.005)),
+                100000 * random.uniform(0.5, 2.0),
             ])
-            price = ohlcv[-1][4]  # next open = prev close
+            price = ohlcv[-1][4]
         return ohlcv
 
-    # ── Order simulation ──
-    def fetch_open_orders(self, symbol: str) -> List[dict]:
-        """Simula fill probabilistici: gli ordini più vicini al prezzo hanno più probabilità di riempirsi."""
-        filled_ids = []
-        for oid, order in list(self._orders.items()):
-            if order.get("_side") not in ("buy", "sell"):
-                continue
-            distance_pct = abs(order["_price"] - self.base_price) / self.base_price
-            # Probabilità inversamente proporzionale alla distanza
-            prob = self._fill_probability * (1.0 / (1.0 + distance_pct * 100))
-            # Se il prezzo ha attraversato il livello, probabilità alta
-            if order["_side"] == "buy" and self.base_price <= order["_price"] * 0.998:
-                prob = 0.5  # Price dropped below buy level — high fill chance
-            if order["_side"] == "sell" and self.base_price >= order["_price"] * 1.002:
-                prob = 0.5  # Price rose above sell level — high fill chance
+    def get_microstructure(self) -> dict:
+        p = self.base_price
+        return {
+            "bid": p * 0.999, "ask": p * 1.001,
+            "bid_vol": random.uniform(1000, 5000),
+            "ask_vol": random.uniform(1000, 5000),
+            "cum_bid": random.uniform(5000, 20000),
+            "cum_ask": random.uniform(5000, 20000),
+            "price": p,
+        }
 
-            if random.random() < prob:
-                # Fill!
+    def fetch_open_orders(self, symbol: str) -> list:
+        result = []
+        for oid, order in list(self._orders.items()):
+            if random.random() < self._fill_probability * 0.2:
                 if order["_side"] == "buy":
                     self.eur_balance -= order["_amount"] * order["_price"]
-                    self.doge_balance += order["_amount"] * 0.998  # ~0.2% fee
+                    self.doge_balance += order["_amount"] * 0.998
                 else:
                     self.eur_balance += order["_amount"] * order["_price"] * 0.998
                     self.doge_balance -= order["_amount"]
-                filled_ids.append(oid)
-
-        # Remove filled orders
-        for oid in filled_ids:
-            del self._orders[oid]
-
-        # Return remaining open orders in ccxt-compatible format
-        result = []
-        for oid, order in self._orders.items():
+                del self._orders[oid]
+                continue
             result.append({
-                "id": oid,
-                "symbol": symbol,
-                "side": order["_side"],
-                "price": order["_price"],
-                "amount": order["_amount"],
-                "filled": 0.0,
-                "status": "open",
+                "id": oid, "symbol": symbol, "side": order["_side"],
+                "price": order["_price"], "amount": order["_amount"],
+                "filled": 0.0, "status": "open",
             })
         return result
 
     def create_limit_buy_order(self, symbol: str, amount: float, price: float) -> Optional[dict]:
         oid = str(self._next_id)
         self._next_id += 1
-        self._orders[oid] = {
-            "_side": "buy",
-            "_price": price,
-            "_amount": amount,
-            "_time": time.time(),
-        }
+        self._orders[oid] = {"_side": "buy", "_price": price, "_amount": amount, "_time": time.time()}
         return {"id": oid, "symbol": symbol, "side": "buy", "amount": amount, "price": price}
 
     def create_limit_sell_order(self, symbol: str, amount: float, price: float) -> Optional[dict]:
         oid = str(self._next_id)
         self._next_id += 1
-        self._orders[oid] = {
-            "_side": "sell",
-            "_price": price,
-            "_amount": amount,
-            "_time": time.time(),
-        }
+        self._orders[oid] = {"_side": "sell", "_price": price, "_amount": amount, "_time": time.time()}
         return {"id": oid, "symbol": symbol, "side": "sell", "amount": amount, "price": price}
 
-    def cancel_all_orders(self, symbol: str):
+    def cancel_all_orders(self, symbol: str) -> None:
         self._orders.clear()
 
     def round_price(self, price: float) -> float:
@@ -145,13 +114,6 @@ class MockKrakenEngine:
 
     def round_amount(self, amount: float) -> float:
         return round(amount, 8)
-
-    def fetch_balance_full(self):
-        """Return full balance dict compatible with ccxt format."""
-        return {
-            "total": {"DOGE": self.doge_balance, "EUR": self.eur_balance},
-            "free": {"DOGE": self.doge_balance, "EUR": self.eur_balance},
-        }
 
 
 def run_mock_test(cycles: int = 100, verbose: bool = True) -> dict:
@@ -162,17 +124,18 @@ def run_mock_test(cycles: int = 100, verbose: bool = True) -> dict:
     import os, sys
     sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-    from denaro_core import DenaroCore
+    from denaro_core import DenaroCore, CBState
     from main import TradingEngine, CAPITAL, LEVELS, COOLDOWN
 
     STATE_FILE = Path("/tmp/kraken_state_mock.json")
+    if STATE_FILE.exists():
+        STATE_FILE.unlink()
 
-    # Override globals per il test
     import main as main_mod
     engine = MockKrakenEngine(initial_eur=CAPITAL, start_price=0.064)
     core = DenaroCore(initial_capital=CAPITAL, state_path=STATE_FILE)
 
-    # Reset state
+    # Reset state clean
     core.state.perf.total_trades = 0
     core.state.perf.win_trades = 0
     core.state.perf.loss_trades = 0
@@ -181,25 +144,34 @@ def run_mock_test(cycles: int = 100, verbose: bool = True) -> dict:
     core.state.perf.consecutive_wins = 0
     core.state.perf.consecutive_losses = 0
     core.state.perf.last_trade_ts = 0.0
+    core.state.cb.state = CBState.CLOSED
+    core.state.cb.reason = ""
+    core.state.cb.since = 0.0
+    core.state.cb.daily_loss_pct = 0.0
+    core.state.cb.consecutive_losses = 0
+    core.state.current_capital = CAPITAL
+    core.state.initial_capital = CAPITAL
+    core.state.peak_capital = CAPITAL
+    core.state.day_start_capital = CAPITAL
     core._save_state()
 
-    # Override SHADOW_MODE e DRY_RUN — in MOCK non si piazzano ordini reali
     main_mod.SHADOW_MODE = False
     main_mod.DRY_RUN = False
 
-    # Patchiamo la classe EnhancedGrid per usare il mock engine
-    grid = EnhancedGrid.__new__(EnhancedGrid)
+    # Properly initialize TradingEngine (not __new__ bypass)
+    grid = TradingEngine.__new__(TradingEngine)
     grid.eng = engine
     grid.core = core
     grid.state = {"levels": []}
     grid._last_ohlcv_fetch = 0.0
+    grid._started_at = time.time()
+    grid._error_count = 0
+    grid._last_perf_log = 0.0
 
     fills_log = []
     cycle_log = []
-    trade_count_at_start = core.state.perf.total_trades
 
     for cycle in range(1, cycles + 1):
-        # Mock fetch_ohlcv per ATR
         if cycle == 1 or cycle % 5 == 0:
             try:
                 ohlcv = engine.fetch_ohlcv("DOGE/EUR", "1h", limit=15)
@@ -208,58 +180,39 @@ def run_mock_test(cycles: int = 100, verbose: bool = True) -> dict:
             except Exception:
                 pass
 
-        pre_eur = engine.eur_balance
-        pre_doge = engine.doge_balance
-        pre_price = engine.base_price
         pre_trades = core.state.perf.total_trades
 
         try:
             grid.run()
         except Exception as e:
-            fills_log.append(f"CYCLE {cycle}: ERROR {e}")
             if verbose:
                 print(f"  ! Cycle {cycle}: {type(e).__name__}: {e}")
             continue
 
         post_trades = core.state.perf.total_trades
-        post_eur = engine.eur_balance
-        post_doge = engine.doge_balance
-        post_price = engine.base_price
-
-        equity = post_eur + post_doge * post_price
+        equity = engine.eur_balance + engine.doge_balance * engine.base_price
         pnl_pct = (equity - CAPITAL) / CAPITAL * 100
 
         if post_trades > pre_trades:
-            delta = post_trades - pre_trades
-            fills_log.append(f"CYCLE {cycle}: {delta} FILL(s) @ {post_price:.6f} | "
-                             f"Eq=€{equity:.2f} PnL={pnl_pct:+.2f}%")
+            fills_log.append(f"CYCLE {cycle}: {post_trades - pre_trades} FILL(s) | Eq={equity:.2f} PnL={pnl_pct:+.2f}%")
 
         cycle_log.append({
-            "cycle": cycle,
-            "price": post_price,
-            "equity": equity,
-            "pnl_pct": pnl_pct,
-            "trades": post_trades,
-            "kelly": core.kelly_fraction,
-            "eur_bal": post_eur,
-            "doge_bal": post_doge,
-            "levels": len(grid.state.get("levels", [])),
+            "cycle": cycle, "price": engine.base_price, "equity": equity,
+            "pnl_pct": pnl_pct, "trades": post_trades,
+            "kelly": core.kelly_fraction, "eur_bal": engine.eur_balance,
+            "doge_bal": engine.doge_balance, "levels": len(grid.state.get("levels", [])),
         })
 
         if verbose and cycle % 10 == 0:
-            equity = engine.eur_balance + engine.doge_balance * engine.base_price
-            pnl = (equity - CAPITAL) / CAPITAL * 100
             print(f"  [{cycle:3d}/{cycles}] price={engine.base_price:.6f} "
-                  f"eq=€{equity:.2f} pnl={pnl:+.2f}% "
+                  f"eq={equity:.2f} pnl={pnl_pct:+.2f}% "
                   f"trades={core.state.perf.total_trades} "
                   f"win={core.state.perf.win_rate*100:.0f}% "
                   f"kelly={core.kelly_fraction*100:.0f}% "
                   f"lvls={len(grid.state.get('levels', []))}")
 
-        # Simula tempo reale ridotto per test veloce
         time.sleep(0.05)
 
-    # ── Final stats ──
     final_equity = engine.eur_balance + engine.doge_balance * engine.base_price
     final_pnl = (final_equity - CAPITAL) / CAPITAL * 100
 
@@ -277,7 +230,6 @@ def run_mock_test(cycles: int = 100, verbose: bool = True) -> dict:
         "cycle_log": cycle_log,
     }
 
-    # Pulizia
     try:
         STATE_FILE.unlink()
     except OSError:
@@ -300,25 +252,23 @@ if __name__ == "__main__":
     print(f"  Wins:             {result['win_trades']}")
     print(f"  Losses:           {result['loss_trades']}")
     print(f"  Win rate:         {result['win_rate']*100:.1f}%")
-    print(f"  Final equity:     €{result['final_equity']:.2f}")
+    print(f"  Final equity:     {result['final_equity']:.2f}")
     print(f"  Final PnL:        {result['final_pnl_pct']:+.2f}%")
     print(f"  Final Kelly:      {result['final_kelly']*100:.0f}%")
-    print(f"  Initial capital:  €{result['initial_capital']:.2f}")
+    print(f"  Initial capital:  {result['initial_capital']:.2f}")
 
-    # PASS/FAIL criteria
     ok = True
     if result["total_trades"] == 0:
-        print("\n❌ FAIL: Zero trades after 100 cycles — fill simulation broken")
+        print("\nFAIL: Zero trades after 100 cycles — fill simulation broken")
         ok = False
     elif result["total_trades"] < 5:
-        print(f"\n⚠️  WARN: Only {result['total_trades']} trades — fill rate too low")
+        print(f"\nWARN: Only {result['total_trades']} trades — fill rate too low")
     else:
-        print(f"\n✅ PASS: {result['total_trades']} trades, Kelly={result['final_kelly']*100:.0f}%")
+        print(f"\nPASS: {result['total_trades']} trades, Kelly={result['final_kelly']*100:.0f}%")
 
     if result["final_kelly"] == 0.25:
-        print("⚠️  WARN: Kelly never moved from 0.25 — trade recording may be broken")
+        print("WARN: Kelly never moved from 0.25 — trade recording may be broken")
 
-    # Print fill samples
     if result["fills_log"]:
         print(f"\nFill samples ({len(result['fills_log'])} total):")
         for entry in result["fills_log"][:10]:
