@@ -1,0 +1,29 @@
+version: "3.9"
+
+services:
+  denaro-mock:
+    build: .
+    container_name: denaro-mock
+    environment:
+      - MOCK_MODE=1
+      - SHADOW_MODE=0
+      - CAPITAL=100.0
+      - LEVELS=5
+      - SPREAD=0.025
+      - TAKE_PROFIT=0.03
+      - COOLDOWN=10
+      - HEALTH_PORT=8909
+      - LOG_LEVEL=DEBUG
+    ports:
+      - "8909:8909"
+    volumes:
+      - ./kraken_state.json:/denaro/kraken_state.json
+      - ./denaro_core_state.json:/denaro/denaro_core_state.json
+
+  denaro-test:
+    build: .
+    container_name: denaro-test
+    entrypoint: ["python", "-m", "pytest", "-v", "--tb=short"]
+    command: ["test_denaro_core.py", "test_kraken_engine.py"]
+    environment:
+      - PYTHONPATH=/denaro

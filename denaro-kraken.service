@@ -1,5 +1,6 @@
 [Unit]
-Description=Denaro Kraken Bot v2 - DOGE/EUR Grid
+Description=Denaro Kraken Bot v2 - DOGE/EUR Grid (nuvola)
+Documentation=https://github.com/sergio-grivetto/denaro
 After=network-online.target
 Wants=network-online.target
 
@@ -11,7 +12,31 @@ EnvironmentFile=/home/sergio/denaro/.env
 ExecStart=/home/sergio/denaro/venv/bin/python3 -u main.py
 Restart=on-failure
 RestartSec=15
-TimeoutStopSec=20
+TimeoutStopSec=25
+
+# ── Resource limits ──
+MemoryMax=512M
+MemoryHigh=384M
+CPUQuota=50%
+OOMScoreAdjust=500
+IOWeight=200
+
+# ── Sandboxing ──
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=read-only
+NoNewPrivileges=true
+CapabilityBoundingSet=
+ProtectKernelModules=true
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=true
+
+# ── Logging ──
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=denaro-kraken
 
 [Install]
 WantedBy=multi-user.target
