@@ -278,6 +278,9 @@ class TradingEngine:
             bb = price * 0.98
             for i in range(active_count, levels):
                 bp = self.eng.round_price(bb * (1 - spread * i))
+                if bp <= 0:
+                    log.warning(f"Invalid bp={bp} (bb={bb}, spread={spread}, i={i}), skipping grid level")
+                    continue
                 sp = self.eng.round_price(bp * (1 + TAKE_PROFIT * grid_params.get("take_profit_mult", 1.0)))
                 amt = self.eng.round_amount(per_level / bp)
                 order = {"id": f"dry-run-buy-{i}"} if DRY_RUN else None
