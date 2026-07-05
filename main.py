@@ -5,7 +5,7 @@ Macchina a profitto autonoma: sceglie strategia in base al regime di mercato.
 """
 from __future__ import annotations
 
-import json, logging, os, signal, sys, time
+import json, logging, os, signal, sys, time, traceback
 from datetime import datetime
 from pathlib import Path
 from logging.handlers import RotatingFileHandler
@@ -462,7 +462,7 @@ def main() -> None:
             break
         except Exception as e:
             grid._error_count += 1
-            log.error(f"Cycle {cycle}: {type(e).__name__}: {e}")
+            log.error(f"Cycle {cycle}: {type(e).__name__}: {e}\n{traceback.format_exc()}")
             if health:
                 health.update(status="degraded" if grid._error_count < 5 else "down",
                               last_cycle_ok=False, error_count=grid._error_count)

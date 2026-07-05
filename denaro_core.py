@@ -243,7 +243,10 @@ class DenaroCore:
                     d = json.load(f)
                 cb_data = d.get("cb", {})
                 regime_data = d.get("regime", {})
+                perf_data = d.get("perf", {})
+                dca_data = d.get("dca", {})
                 exec_data = d.get("exec", {})
+                # JSON deserializes all numbers as float — coerce integer fields
                 return CoreState(
                     initial_capital=d.get("initial_capital", initial_capital),
                     current_capital=d.get("current_capital", initial_capital),
@@ -259,9 +262,30 @@ class DenaroCore:
                         since=cb_data.get("since", 0.0),
                         daily_loss_pct=cb_data.get("daily_loss_pct", 0.0),
                         max_drawdown_pct=cb_data.get("max_drawdown_pct", 0.0),
-                        consecutive_losses=cb_data.get("consecutive_losses", 0),
+                        consecutive_losses=int(cb_data.get("consecutive_losses", 0)),
                     ),
-                    perf=PerfMetrics(**d.get("perf", {})),
+                    perf=PerfMetrics(
+                        total_trades=int(perf_data.get("total_trades", 0)),
+                        win_trades=int(perf_data.get("win_trades", 0)),
+                        loss_trades=int(perf_data.get("loss_trades", 0)),
+                        total_pnl_pct=perf_data.get("total_pnl_pct", 0.0),
+                        daily_pnl_pct=perf_data.get("daily_pnl_pct", 0.0),
+                        peak_capital=perf_data.get("peak_capital", 0.0),
+                        consecutive_wins=int(perf_data.get("consecutive_wins", 0)),
+                        consecutive_losses=int(perf_data.get("consecutive_losses", 0)),
+                        wins_streak_max=int(perf_data.get("wins_streak_max", 0)),
+                        losses_streak_max=int(perf_data.get("losses_streak_max", 0)),
+                        sharpe_ratio=perf_data.get("sharpe_ratio", 0.0),
+                        sortino_ratio=perf_data.get("sortino_ratio", 0.0),
+                        calmar_ratio=perf_data.get("calmar_ratio", 0.0),
+                        recovery_factor=perf_data.get("recovery_factor", 0.0),
+                        profit_factor=perf_data.get("profit_factor", 0.0),
+                        expectancy=perf_data.get("expectancy", 0.0),
+                        avg_win=perf_data.get("avg_win", 0.0),
+                        avg_loss=perf_data.get("avg_loss", 0.0),
+                        win_rate=perf_data.get("win_rate", 0.0),
+                        last_trade_ts=perf_data.get("last_trade_ts", 0.0),
+                    ),
                     regime=RegimeState(
                         trend=Trend(regime_data.get("trend", "RANGING")),
                         trend_strength=regime_data.get("trend_strength", 0.0),
@@ -272,21 +296,34 @@ class DenaroCore:
                         momentum_1h=regime_data.get("momentum_1h", 0.0),
                         momentum_24h=regime_data.get("momentum_24h", 0.0),
                         regime_confidence=regime_data.get("regime_confidence", 0.7),
-                        regime_duration_cycles=regime_data.get("regime_duration_cycles", 0),
+                        regime_duration_cycles=int(regime_data.get("regime_duration_cycles", 0)),
                     ),
                     micro=MicroState(**d.get("micro", {})),
                     var=VaRState(**d.get("var", {})),
-                    dca=DCAState(**d.get("dca", {})),
+                    dca=DCAState(
+                        active=dca_data.get("active", False),
+                        entry_price=dca_data.get("entry_price", 0.0),
+                        avg_entry_price=dca_data.get("avg_entry_price", 0.0),
+                        total_size=dca_data.get("total_size", 0.0),
+                        total_cost=dca_data.get("total_cost", 0.0),
+                        num_entries=int(dca_data.get("num_entries", 0)),
+                        max_entries=int(dca_data.get("max_entries", 5)),
+                        entry_spacing_pct=dca_data.get("entry_spacing_pct", 0.03),
+                        last_entry_price=dca_data.get("last_entry_price", 0.0),
+                        target_pnl_pct=dca_data.get("target_pnl_pct", 0.03),
+                        trailing_activation=dca_data.get("trailing_activation", 0.0),
+                        trailing_stop_pct=dca_data.get("trailing_stop_pct", 0.015),
+                    ),
                     exec=ExecutionState(
                         active_strategy=StrategyMode(exec_data.get("active_strategy", "GRID")),
-                        grid_levels_active=exec_data.get("grid_levels_active", 0),
-                        grid_target_levels=exec_data.get("grid_target_levels", 5),
+                        grid_levels_active=int(exec_data.get("grid_levels_active", 0)),
+                        grid_target_levels=int(exec_data.get("grid_target_levels", 5)),
                         dca_position_active=exec_data.get("dca_position_active", False),
                         profit_take_order_id=exec_data.get("profit_take_order_id", ""),
                         last_rebalance_ts=exec_data.get("last_rebalance_ts", 0.0),
                         last_cycle_ms=exec_data.get("last_cycle_ms", 0.0),
-                        errors_this_hour=exec_data.get("errors_this_hour", 0),
-                        cycle_count=exec_data.get("cycle_count", 0),
+                        errors_this_hour=int(exec_data.get("errors_this_hour", 0)),
+                        cycle_count=int(exec_data.get("cycle_count", 0)),
                     ),
                 )
             except Exception:
