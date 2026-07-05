@@ -107,7 +107,7 @@ def _send_sync(text: str) -> bool:
     payload = json.dumps({
         "chat_id": _CHAT_ID,
         "text": text,
-        "parse_mode": None,  # plain text — avoid HTML corruption with &, <, >
+        "parse_mode": "HTML",
         "disable_web_page_preview": True,
     }).encode()
 
