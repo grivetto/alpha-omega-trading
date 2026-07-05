@@ -18,9 +18,11 @@ Env vars:
 
 from __future__ import annotations
 
+import html as _html
 import json
 import logging
 import os
+import re
 import time
 import urllib.request
 import urllib.error
@@ -183,7 +185,7 @@ def notify(msg: str, severity: str = "info") -> None:
 
 def notify_startup(symbol: str, mode: str, capital: float) -> None:
     """Formatted startup notification with key params."""
-    msg = (f"<b>Kraken Grid v2</b>\n"
+    msg = (f"Kraken Grid v2\n"
            f"Pair: {symbol}\n"
            f"Mode: {mode}\n"
            f"Capital: €{capital:.2f}")
@@ -199,18 +201,18 @@ def notify_trade(symbol: str, side: str, amount: float,
                  price: float, pnl_pct: float) -> None:
     """Formatted trade fill notification."""
     emoji = "🟢" if pnl_pct >= 0 else "🔴"
-    msg = (f"{emoji} <b>{side.upper()}</b> {amount:.2f} @ €{price:.6f} "
+    msg = (f"{emoji} {side.upper()} {amount:.2f} @ €{price:.6f} "
            f"({pnl_pct:+.2f}%)")
     notify(msg, severity="trade" if pnl_pct >= 0 else "error")
 
 
 def notify_cb_open(reason: str, equity: float) -> None:
     """Circuit breaker opened."""
-    notify(f"<b>CB OPEN</b> — {reason} | Equity: €{equity:.2f}",
+    notify(f"CB OPEN — {reason} | Equity: €{equity:.2f}",
            severity="cb_open")
 
 
 def notify_cb_close(equity: float) -> None:
     """Circuit breaker closed — trading resumed."""
-    notify(f"<b>CB CLOSED</b> — Trading resumed | Equity: €{equity:.2f}",
+    notify(f"CB CLOSED — Trading resumed | Equity: €{equity:.2f}",
            severity="cb_close")
