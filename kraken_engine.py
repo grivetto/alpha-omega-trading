@@ -327,10 +327,10 @@ class KrakenEngine:
     # --- Precision -----------------------------------------------------------
 
     def round_amount(self, qty: float, symbol: str = SYMBOL) -> float:
-        return round(qty, self._amount_precision)
+        return round(qty, int(self._amount_precision))
 
     def round_price(self, price: float, symbol: str = SYMBOL) -> float:
-        return round(price, self._price_precision)
+        return round(price, int(self._price_precision))
 
     # --- Cleanup -------------------------------------------------------------
 
