@@ -5,7 +5,7 @@ Machine a profit: order book microstructure, fee-aware routing, VaR-grade reliab
 """
 from __future__ import annotations
 
-import json, logging, os, random, time
+import json, logging, os, random, time, math
 from typing import Optional, Tuple
 from urllib.error import URLError, HTTPError
 import ccxt
@@ -217,10 +217,12 @@ class KrakenEngine:
         self._min_interval = 0.15
         self._ws = _KrakenWSFeed(SYMBOL)
         self._ws.start()
-        # Cache market precision
+        # Cache market precision — CCXT returns tick size, convert to decimal places
         m = self.ex.market(SYMBOL)
-        self._amount_precision = m.get("precision", {}).get("amount", 8)
-        self._price_precision = m.get("precision", {}).get("price", 8)
+        tick_amount = m.get("precision", {}).get("amount", 1e-8)
+        tick_price = m.get("precision", {}).get("price", 1e-8)
+        self._amount_precision = max(0, int(round(-math.log10(tick_amount)))) if tick_amount and tick_amount > 0 else 8
+        self._price_precision = max(0, int(round(-math.log10(tick_price)))) if tick_price and tick_price > 0 else 8
         self._taker_fee = m.get("taker", 0.0026)
         self._maker_fee = m.get("maker", 0.0016)
 
