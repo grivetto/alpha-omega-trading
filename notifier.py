@@ -106,12 +106,13 @@ def _send_sync(text: str) -> bool:
         return False
 
     url = f"{_API_BASE}/sendMessage"
-    payload = json.dumps({
+    # parse_mode OMITTED entirely — None → null in JSON → Telegram HTTP 400
+    payload_data = {
         "chat_id": _CHAT_ID,
         "text": text,
-        "parse_mode": "HTML",
         "disable_web_page_preview": True,
-    }).encode()
+    }
+    payload = json.dumps(payload_data).encode()
 
     req = urllib.request.Request(
         url,
