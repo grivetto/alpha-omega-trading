@@ -127,13 +127,17 @@ def main():
     if price > 0:
         data_m["price"] = price
     
-    # Calculate totals
-    total_equity = data_n.get("equity", 0) + data_m.get("equity", 0)
+    # Calculate totals (SAME account — non sommare! entrambi vedono stesso saldo)
+    real_equity = data_n.get("equity", 0)  # singola fonte di verità
     total_trades = data_n.get("trades", 0) + data_m.get("trades", 0)
+    
+    # MARCODG1 condivide lo stesso conto — equity=0 per non doppiare
+    data_m["equity"] = 0
+    data_m["note"] = "shared account"
     
     stats = {
         "updated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-        "total_profit": round(total_equity - 200, 2),  # 2 machines x 100 EUR initial
+        "total_profit": round(real_equity - 100, 2),  # 100€ initial
         "total_trades": total_trades,
         "nuvola": data_n,
         "marcodg1": data_m,
