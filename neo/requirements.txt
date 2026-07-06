@@ -1,0 +1,6 @@
+aiohttp>=3.10
+aiosqlite>=0.20
+psutil>=6.0
+# Opzionali — installa solo se servono:
+# polars>=1.0   # Calcoli vettoriali alternativi a Numpy
+# numpy>=2.0    # Solo se stretto necessario
