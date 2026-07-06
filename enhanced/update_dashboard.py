@@ -93,16 +93,18 @@ def make_machine_data(state, health, pair="DOGE/EUR"):
     }
 
 def get_price_from_log():
-    """Extract last price from bot log quickly."""
+    """Extract last price from bot log using tail (fast, no full file read)."""
+    import subprocess
     try:
-        log = DENARO_DIR / "kraken_bot.log"
-        if log.exists():
-            for line in reversed(log.read_text().splitlines()):
-                if "price=" in line and "equity=" in line:
-                    # Parse: DENARO STATUS | DOGE/EUR price=0.067214 equity=...
-                    parts = line.split("price=")
-                    if len(parts) > 1:
-                        return float(parts[1].split()[0])
+        r = subprocess.run(
+            ["tail", "-100", str(DENARO_DIR / "kraken_bot.log")],
+            capture_output=True, text=True, timeout=5
+        )
+        for line in reversed(r.stdout.splitlines()):
+            if "DENARO STATUS" in line and "price=" in line:
+                parts = line.split("price=")
+                if len(parts) > 1:
+                    return float(parts[1].split()[0].split()[0])
     except Exception:
         pass
     return 0
