@@ -137,7 +137,7 @@ class TradingEngine:
 
     def run(self) -> None:
         now = time.time()
-        eur = doge = price = equity = 0.0
+        eur = base_bal = price = equity = 0.0
 
         # ── Price + microstructure ──
         try:
@@ -166,8 +166,9 @@ class TradingEngine:
         try:
             eur = self.eng.fetch_balance("EUR")
             bal = self.eng.ex.fetch_balance()
-            doge = float(bal.get("total", {}).get("DOGE", 0) or 0)
-            equity = eur + doge * price
+            base_asset = SYMBOL.split("/")[0]
+            base_bal = float(bal.get("total", {}).get(base_asset, 0) or 0)
+            equity = eur + base_bal * price
             self._last_known_equity = equity
             self._error_count = max(0, self._error_count - 1)
         except Exception as e:
@@ -191,11 +192,11 @@ class TradingEngine:
 
         # ── DCA operations (if HYBRID or DCA mode) ──
         if strategy in (StrategyMode.DCA, StrategyMode.HYBRID):
-            self._run_dca(price, equity, doge)
+            self._run_dca(price, equity, base_bal)
 
         # ── Grid operations (if GRID or HYBRID) ──
         if strategy in (StrategyMode.GRID, StrategyMode.HYBRID):
-            self._run_grid(price, equity, eur, doge)
+            self._run_grid(price, equity, eur, base_bal)
         elif strategy == StrategyMode.COOLDOWN:
             log.info(f"COOLDOWN: extreme volatility — skipping grid")
 
@@ -208,7 +209,7 @@ class TradingEngine:
         # ── Perf log ──
         self._log_perf()
 
-    def _run_grid(self, price: float, equity: float, eur: float, doge: float) -> None:
+    def _run_grid(self, price: float, equity: float, eur: float, base_bal: float) -> None:
         """Adaptive grid strategy with ATR-based spread (v4 fix)."""
         grid_params = self.core.get_grid_params()
         spread = grid_params["spread"]
@@ -239,7 +240,7 @@ class TradingEngine:
 
             if stage == "buy" and not b_open and bid:
                 # Buy was filled — place sell
-                if SHADOW_MODE or doge >= lvl["amount"] * 0.5:
+                if SHADOW_MODE or base_bal >= lvl["amount"] * 0.5:
                     try:
                         so = {"id": f"shadow-sell-{len(levels_data)}"} if SHADOW_MODE else \
                              self.eng.create_limit_sell_order(SYMBOL, self.eng.round_amount(lvl["amount"]), self.eng.round_price(lvl["sell_price"]))
@@ -299,7 +300,7 @@ class TradingEngine:
                     self._error_count += 1
                     log.error(f"BUY failed (level {i}): {e}")
 
-    def _run_dca(self, price: float, equity: float, doge: float) -> None:
+    def _run_dca(self, price: float, equity: float, base_bal: float) -> None:
         """DCA operations."""
         dca = self.core.state.dca
         if not dca.active:
