@@ -17,7 +17,6 @@ services:
     ports:
       - "8909:8909"
     volumes:
-      - ./kraken_state.json:/denaro/kraken_state.json
       - ./denaro_core_state.json:/denaro/denaro_core_state.json
 
   denaro-test:

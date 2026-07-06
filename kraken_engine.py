@@ -40,7 +40,11 @@ def _with_retry(max_attempts=3, base_delay=0.5):
                     last = e
                     if not _is_retryable(e) or a == max_attempts:
                         raise
+                    msg = str(getattr(e, "message", str(e))).lower()
+                    is_rate_limit = isinstance(e, ccxt.RateLimitExceeded) or "rate limit" in msg
                     delay = base_delay * (2 ** (a - 1))
+                    if is_rate_limit:
+                        delay *= 5  # longer backoff for rate limits
                     jitter = random.uniform(0, delay * 0.1)
                     total = delay + jitter
                     log.warning(f"{fn.__name__}: {e.__class__.__name__} retry {a}/{max_attempts} in {total:.1f}s")
@@ -207,24 +211,35 @@ class KrakenEngine:
             "enableRateLimit": True, "rateLimit": 150,
             "options": {"defaultType": "spot"},
         })
-        try:
-            self.ex.load_markets()
-        except Exception as e:
-            log.error(f"load_markets failed: {e} — retrying in 5s")
-            time.sleep(5)
-            self.ex.load_markets()
+        for attempt in range(3):
+            try:
+                self.ex.load_markets()
+                break
+            except Exception as e:
+                log.warning(f"load_markets attempt {attempt+1}/3: {e}")
+                if attempt < 2:
+                    time.sleep(5)
+        else:
+            log.error("load_markets failed after 3 attempts — using defaults")
         self._last_request: float = 0.0
         self._min_interval = 0.15
         self._ws = _KrakenWSFeed(SYMBOL)
         self._ws.start()
         # Cache market precision — CCXT returns tick size, convert to decimal places
-        m = self.ex.market(SYMBOL)
-        tick_amount = m.get("precision", {}).get("amount", 1e-8)
-        tick_price = m.get("precision", {}).get("price", 1e-8)
-        self._amount_precision = max(0, int(round(-math.log10(tick_amount)))) if tick_amount and tick_amount > 0 else 8
-        self._price_precision = max(0, int(round(-math.log10(tick_price)))) if tick_price and tick_price > 0 else 8
-        self._taker_fee = m.get("taker", 0.0026)
-        self._maker_fee = m.get("maker", 0.0016)
+        self._amount_precision = 8
+        self._price_precision = 7
+        self._taker_fee = 0.0026
+        self._maker_fee = 0.0016
+        try:
+            m = self.ex.market(SYMBOL)
+            tick_amount = m.get("precision", {}).get("amount", 1e-8)
+            tick_price = m.get("precision", {}).get("price", 1e-8)
+            self._amount_precision = max(0, int(round(-math.log10(tick_amount)))) if tick_amount and tick_amount > 0 else 8
+            self._price_precision = max(0, int(round(-math.log10(tick_price)))) if tick_price and tick_price > 0 else 7
+            self._taker_fee = m.get("taker", 0.0026)
+            self._maker_fee = m.get("maker", 0.0016)
+        except Exception:
+            log.warning("market precision fetch failed — using defaults")
 
     def _throttle(self) -> None:
         now = time.time()

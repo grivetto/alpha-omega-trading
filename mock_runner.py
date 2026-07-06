@@ -127,13 +127,9 @@ def run_mock_test(cycles: int = 100, verbose: bool = True) -> dict:
     from denaro_core import DenaroCore, CBState
     from main import TradingEngine, CAPITAL, LEVELS, COOLDOWN
 
-    STATE_FILE = Path("/tmp/kraken_state_mock.json")
-    if STATE_FILE.exists():
-        STATE_FILE.unlink()
-
     import main as main_mod
     engine = MockKrakenEngine(initial_eur=CAPITAL, start_price=0.064)
-    core = DenaroCore(initial_capital=CAPITAL, state_path=STATE_FILE)
+    core = DenaroCore(initial_capital=CAPITAL)
 
     # Reset state clean
     core.state.perf.total_trades = 0
@@ -153,20 +149,11 @@ def run_mock_test(cycles: int = 100, verbose: bool = True) -> dict:
     core.state.initial_capital = CAPITAL
     core.state.peak_capital = CAPITAL
     core.state.day_start_capital = CAPITAL
-    core._save_state()
 
     main_mod.SHADOW_MODE = False
-    main_mod.DRY_RUN = False
 
-    # Properly initialize TradingEngine (not __new__ bypass)
-    grid = TradingEngine.__new__(TradingEngine)
-    grid.eng = engine
-    grid.core = core
-    grid.state = {"levels": []}
-    grid._last_ohlcv_fetch = 0.0
-    grid._started_at = time.time()
-    grid._error_count = 0
-    grid._last_perf_log = 0.0
+    # Initialized via constructor, not __new__
+    grid = TradingEngine(engine, core)
 
     fills_log = []
     cycle_log = []
@@ -200,7 +187,7 @@ def run_mock_test(cycles: int = 100, verbose: bool = True) -> dict:
             "cycle": cycle, "price": engine.base_price, "equity": equity,
             "pnl_pct": pnl_pct, "trades": post_trades,
             "kelly": core.kelly_fraction, "eur_bal": engine.eur_balance,
-            "doge_bal": engine.doge_balance, "levels": len(grid.state.get("levels", [])),
+            "doge_bal": engine.doge_balance, "levels": len(grid.core.state.grid_levels),
         })
 
         if verbose and cycle % 10 == 0:
@@ -209,7 +196,7 @@ def run_mock_test(cycles: int = 100, verbose: bool = True) -> dict:
                   f"trades={core.state.perf.total_trades} "
                   f"win={core.state.perf.win_rate*100:.0f}% "
                   f"kelly={core.kelly_fraction*100:.0f}% "
-                  f"lvls={len(grid.state.get('levels', []))}")
+                  f"lvls={len(grid.core.state.grid_levels)}")
 
         time.sleep(0.05)
 
@@ -229,11 +216,6 @@ def run_mock_test(cycles: int = 100, verbose: bool = True) -> dict:
         "fills_log": fills_log,
         "cycle_log": cycle_log,
     }
-
-    try:
-        STATE_FILE.unlink()
-    except OSError:
-        pass
 
     return result
 

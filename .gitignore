@@ -109,4 +109,10 @@ opencode-v2/
 tools/
 setup_docker.py
 README_V2.md
+requirements-dev.txt
 kraken_state.json
+kraken_state.json.*
+denaro_core_state.json
+denaro_core_state.json.*
+kraken_bot.log
+.pytest_cache/

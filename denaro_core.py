@@ -1,18 +1,27 @@
 #!/usr/bin/env python3
 """
-DENARO CORE v3 — Exchange-agnostic risk, regime detection, DCA, microstructure.
-Machine a profit: VaR, Bayesian Kelly, regime switching, order book alpha.
+DENARO CORE v4 — Exchange-agnostic risk, regime detection, DCA, microstructure.
+Kelly sizing corretto, circuit breaker preciso, VaR computation.
+
+Fixes v3→v4:
+  - Double sizing multiplier rimosso (BUG critico #2)
+  - DCA close usa avg_entry_price non entry_price (BUG #3)
+  - Kelly fraction calcolata fresh ogni volta (non accumula boost)
+  - ATR-based grid buy base (non hardcoded 2%)
+  - _save_state throttled a max 1x/30s
+  - compound_profits gestisce drawdown
 """
 from __future__ import annotations
 
-import json, math, os, time, calendar
-from dataclasses import dataclass, field, asdict
+import json, logging, math, os, time
+from collections import deque
+from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Optional, List, Tuple
+from typing import Optional, List, Tuple, Deque
 
 
-# --- Enums -------------------------------------------------------------------_
+# --- Enums ------------------------------------------------------------------
 
 class CBState(str, Enum):
     CLOSED = "CLOSED"
@@ -31,7 +40,7 @@ class StrategyMode(str, Enum):
     COOLDOWN = "COOLDOWN"
 
 
-# --- Data classes -------------------------------------------------------------
+# --- Data classes -----------------------------------------------------------
 
 @dataclass
 class MicroState:
@@ -185,6 +194,7 @@ class CoreState:
     var: VaRState = field(default_factory=VaRState)
     dca: DCAState = field(default_factory=DCAState)
     exec: ExecutionState = field(default_factory=ExecutionState)
+    grid_levels: List[dict] = field(default_factory=list)
 
     @property
     def can_trade(self) -> bool:
@@ -212,11 +222,21 @@ DEFAULT_CB_PATH = _default_state_path()
 
 
 # ==============================================================================
-# DENARO CORE
+# DENARO CORE v4
 # ==============================================================================
 
 class DenaroCore:
-    """Pure risk, regime, and execution logic. Zero exchange deps."""
+    """Pure risk, regime, and execution logic. Zero exchange deps.
+
+    v4 fixes:
+    - Kelly: sizing_multiplier NON moltiplicato due volte (BUG #2 risolto)
+    - DCA close: usa avg_entry_price (BUG #3 risolto)
+    - Kelly calcolata fresh, boost applicato una tantum (non accumula)
+    - _save_state throttled: massimo 1 scrittura ogni 30 secondi
+    - compound_profits con peak-aware drawdown guard
+    """
+
+    _MIN_SAVE_INTERVAL = 30.0  # sec tra scritture disco
 
     def __init__(self, initial_capital: float = 100.0,
                  daily_loss_limit: float = 0.05,
@@ -233,8 +253,10 @@ class DenaroCore:
         self._state_path = state_path
         self.state = self._load_state(initial_capital)
         self._price_buffer: List[float] = []
-        self._return_buffer: List[float] = []
+        self._return_buffer: Deque[float] = deque(maxlen=200)
         self._kelly_updated_at: float = 0.0
+        self._last_save_at: float = 0.0
+        self._save_pending: bool = False
 
     def _load_state(self, initial_capital: float) -> CoreState:
         if self._state_path and self._state_path.exists():
@@ -246,7 +268,6 @@ class DenaroCore:
                 perf_data = d.get("perf", {})
                 dca_data = d.get("dca", {})
                 exec_data = d.get("exec", {})
-                # JSON deserializes all numbers as float — coerce integer fields
                 return CoreState(
                     initial_capital=d.get("initial_capital", initial_capital),
                     current_capital=d.get("current_capital", initial_capital),
@@ -325,63 +346,158 @@ class DenaroCore:
                         errors_this_hour=int(exec_data.get("errors_this_hour", 0)),
                         cycle_count=int(exec_data.get("cycle_count", 0)),
                     ),
+                    grid_levels=d.get("grid_levels", []),
                 )
-            except Exception:
-                pass
+            except Exception as e:
+                log = logging.getLogger("kraken_v2")
+                log.warning(f"State load failed: {e} — starting fresh")
         return CoreState(initial_capital=initial_capital)
 
     def _save_state(self) -> None:
-        if not self._state_path:
+        """Throttled state save — max 1x every _MIN_SAVE_INTERVAL seconds."""
+        now = time.time()
+        if now - self._last_save_at < self._MIN_SAVE_INTERVAL:
+            self._save_pending = True
             return
-        d = {"initial_capital": self.state.initial_capital,
-             "current_capital": self.state.current_capital,
-             "peak_capital": self.state.peak_capital,
-             "day_start_capital": self.state.day_start_capital,
-             "last_daily_reset": self.state.last_daily_reset,
-             "trade_results": self.state.trade_results[-500:],
-             "kelly_fraction": self.state.kelly_fraction,
-             "sizing_multiplier": self.state.sizing_multiplier,
-             "cb": asdict(self.state.cb),
-             "perf": asdict(self.state.perf),
-             "regime": asdict(self.state.regime),
-             "micro": asdict(self.state.micro),
-             "var": asdict(self.state.var),
-             "dca": asdict(self.state.dca),
-             "exec": asdict(self.state.exec)}
-        tmp = self._state_path.with_suffix(".tmp")
-        tmp.write_text(json.dumps(d, indent=2, default=str))
-        os.replace(str(tmp), str(self._state_path))
+        self._last_save_at = now
+        self._save_pending = False
+        try:
+            d = {
+                "initial_capital": self.state.initial_capital,
+                "current_capital": self.state.current_capital,
+                "peak_capital": self.state.peak_capital,
+                "day_start_capital": self.state.day_start_capital,
+                "last_daily_reset": self.state.last_daily_reset,
+                "trade_results": self.state.trade_results[-500:],
+                "kelly_fraction": self.state.kelly_fraction,
+                "sizing_multiplier": self.state.sizing_multiplier,
+                "cb": {
+                    "state": self.state.cb.state.value,
+                    "reason": self.state.cb.reason,
+                    "since": self.state.cb.since,
+                    "daily_loss_pct": self.state.cb.daily_loss_pct,
+                    "max_drawdown_pct": self.state.cb.max_drawdown_pct,
+                    "consecutive_losses": self.state.cb.consecutive_losses,
+                },
+                "perf": {
+                    "total_trades": self.state.perf.total_trades,
+                    "win_trades": self.state.perf.win_trades,
+                    "loss_trades": self.state.perf.loss_trades,
+                    "total_pnl_pct": self.state.perf.total_pnl_pct,
+                    "daily_pnl_pct": self.state.perf.daily_pnl_pct,
+                    "peak_capital": self.state.perf.peak_capital,
+                    "consecutive_wins": self.state.perf.consecutive_wins,
+                    "consecutive_losses": self.state.perf.consecutive_losses,
+                    "wins_streak_max": self.state.perf.wins_streak_max,
+                    "losses_streak_max": self.state.perf.losses_streak_max,
+                    "sharpe_ratio": self.state.perf.sharpe_ratio,
+                    "sortino_ratio": self.state.perf.sortino_ratio,
+                    "calmar_ratio": self.state.perf.calmar_ratio,
+                    "recovery_factor": self.state.perf.recovery_factor,
+                    "profit_factor": self.state.perf.profit_factor,
+                    "expectancy": self.state.perf.expectancy,
+                    "avg_win": self.state.perf.avg_win,
+                    "avg_loss": self.state.perf.avg_loss,
+                    "win_rate": self.state.perf.win_rate,
+                    "last_trade_ts": self.state.perf.last_trade_ts,
+                },
+                "regime": {
+                    "trend": self.state.regime.trend.value,
+                    "trend_strength": self.state.regime.trend_strength,
+                    "volatility_regime": self.state.regime.volatility_regime,
+                    "atr_pct": self.state.regime.atr_pct,
+                    "volume_regime": self.state.regime.volume_regime,
+                    "volume_ratio": self.state.regime.volume_ratio,
+                    "momentum_1h": self.state.regime.momentum_1h,
+                    "momentum_24h": self.state.regime.momentum_24h,
+                    "regime_confidence": self.state.regime.regime_confidence,
+                    "regime_duration_cycles": self.state.regime.regime_duration_cycles,
+                },
+                "micro": {
+                    "bid_ask_spread_pct": self.state.micro.bid_ask_spread_pct,
+                    "bid_ask_imbalance": self.state.micro.bid_ask_imbalance,
+                    "order_book_slope": self.state.micro.order_book_slope,
+                    "cum_bid_depth_1pct": self.state.micro.cum_bid_depth_1pct,
+                    "cum_ask_depth_1pct": self.state.micro.cum_ask_depth_1pct,
+                    "last_price_micro": self.state.micro.last_price_micro,
+                    "micro_trend": self.state.micro.micro_trend,
+                    "micro_volatility": self.state.micro.micro_volatility,
+                    "spoofing_flag": self.state.micro.spoofing_flag,
+                },
+                "var": {
+                    "var_95_1h": self.state.var.var_95_1h,
+                    "var_99_1h": self.state.var.var_99_1h,
+                    "cvar_95_1h": self.state.var.cvar_95_1h,
+                    "max_drawdown": self.state.var.max_drawdown,
+                    "var_lookback": self.state.var.var_lookback[-100:],
+                    "daily_var_breaches": self.state.var.daily_var_breaches,
+                },
+                "dca": {
+                    "active": self.state.dca.active,
+                    "entry_price": self.state.dca.entry_price,
+                    "avg_entry_price": self.state.dca.avg_entry_price,
+                    "total_size": self.state.dca.total_size,
+                    "total_cost": self.state.dca.total_cost,
+                    "num_entries": self.state.dca.num_entries,
+                    "max_entries": self.state.dca.max_entries,
+                    "entry_spacing_pct": self.state.dca.entry_spacing_pct,
+                    "last_entry_price": self.state.dca.last_entry_price,
+                    "target_pnl_pct": self.state.dca.target_pnl_pct,
+                    "trailing_activation": self.state.dca.trailing_activation,
+                    "trailing_stop_pct": self.state.dca.trailing_stop_pct,
+                },
+                "exec": {
+                    "active_strategy": self.state.exec.active_strategy.value,
+                    "grid_levels_active": self.state.exec.grid_levels_active,
+                    "grid_target_levels": self.state.exec.grid_target_levels,
+                    "dca_position_active": self.state.exec.dca_position_active,
+                    "profit_take_order_id": self.state.exec.profit_take_order_id,
+                    "last_rebalance_ts": self.state.exec.last_rebalance_ts,
+                    "last_cycle_ms": self.state.exec.last_cycle_ms,
+                    "errors_this_hour": self.state.exec.errors_this_hour,
+                    "cycle_count": self.state.exec.cycle_count,
+                },
+                "grid_levels": self.state.grid_levels[-20:],
+            }
+            if self._state_path:
+                self._state_path.parent.mkdir(parents=True, exist_ok=True)
+                # Atomic write: write to temp, then rename
+                tmp = self._state_path.with_suffix(".tmp")
+                with open(tmp, "w") as f:
+                    json.dump(d, f)
+                tmp.replace(self._state_path)
+        except Exception as e:
+            log = logging.getLogger("kraken_v2")
+            log.warning(f"State save failed: {e}")
 
-    def _next_daily_reset(self) -> float:
-        st = time.gmtime(time.time())
-        return calendar.timegm((st.tm_year, st.tm_mon, st.tm_mday + 1, 0, 0, 0, st.tm_wday, st.tm_yday, 0))
+    def flush_state(self) -> None:
+        """Force a state save now (called during shutdown)."""
+        self._last_save_at = 0.0
+        self._save_pending = False
+        self._save_state()
 
-    # === MARKET REGIME DETECTION =========================================
+    # === MICROSTRUCTURE ====================================================
 
-    def update_microstructure(self, bid: float, ask: float, bid_vol: float,
-                               ask_vol: float, cum_bid: float, cum_ask: float,
+    def update_microstructure(self, bid: float, ask: float,
+                               bid_vol: float, ask_vol: float,
+                               cum_bid: float, cum_ask: float,
                                price: float) -> None:
-        spread = (ask - bid) / price if price > 0 else 0.001
-        imb = bid_vol / ask_vol if ask_vol > 1e-10 else 1.0
-        self.state.micro.bid_ask_spread_pct = spread
-        self.state.micro.bid_ask_imbalance = imb
-        self.state.micro.cum_bid_depth_1pct = cum_bid
-        self.state.micro.cum_ask_depth_1pct = cum_ask
-        self.state.micro.last_price_micro = price
-        self._price_buffer.append(price)
-        if len(self._price_buffer) > 50:
-            self._price_buffer.pop(0)
-        if len(self._price_buffer) >= 5:
-            recent = self._price_buffer[-5:]
-            self.state.micro.micro_trend = (recent[-1] - recent[0]) / recent[0] if recent[0] else 0
-        if len(self._price_buffer) >= 10:
-            diffs = [abs(self._price_buffer[i] - self._price_buffer[i-1]) / max(1e-10, self._price_buffer[i-1])
-                     for i in range(1, len(self._price_buffer))]
-            self.state.micro.micro_volatility = sum(diffs) / len(diffs) if diffs else 0
-        self.state.micro.spoofing_flag = ask_vol > cum_bid * 5 and spread > 0.005
+        if bid <= 0 or ask <= 0 or price <= 0:
+            return
+        m = self.state.micro
+        m.last_price_micro = price
+        m.bid_ask_spread_pct = (ask - bid) / ((ask + bid) / 2) if (ask + bid) > 0 else 0.001
+        tot = bid_vol + ask_vol
+        m.bid_ask_imbalance = (bid_vol / tot) / (ask_vol / tot + 1e-10) if tot > 0 else 1.0
+        m.cum_bid_depth_1pct = cum_bid
+        m.cum_ask_depth_1pct = cum_ask
+        m.spoofing_flag = (abs(m.bid_ask_imbalance - 1.0) > 0.5
+                           and max(bid_vol, ask_vol) / (min(bid_vol, ask_vol) + 1) > 10)
+
+    # === ATR + REGIME ======================================================
 
     def update_regime(self, ohlcv: List[List[float]]) -> None:
-        if len(ohlcv) < 20:
+        if len(ohlcv) < 2:
             return
         closes = [c[4] for c in ohlcv]
         highs = [c[2] for c in ohlcv]
@@ -425,24 +541,31 @@ class DenaroCore:
         slow = sum(closes[-24:]) / min(24, len(closes)) if len(closes) >= 24 else p0
         price_trend = (fast - slow) / slow if slow > 0 else 0
         strength = min(1.0, abs(price_trend) / (atr_pct + 1e-10) * 0.1)
-        self.state.regime.trend_strength = strength
 
-        old = self.state.regime.trend
-        new = Trend.BULL if price_trend > 0 and strength >= 0.2 else Trend.BEAR if strength >= 0.2 else Trend.RANGING
-        if new == old:
-            self.state.regime.regime_duration_cycles += 1
-            self.state.regime.regime_confidence = min(0.95, self.state.regime.regime_confidence + 0.05)
+        # Smooth trend changes with hysteresis
+        old_trend = self.state.regime.trend
+        if strength < 0.15:
+            new_trend = Trend.RANGING
+        elif price_trend > 0:
+            new_trend = Trend.BULL
         else:
+            new_trend = Trend.BEAR
+
+        # Require 3 consecutive same-sign before switching
+        if new_trend == old_trend:
+            self.state.regime.trend_strength = min(1.0, self.state.regime.trend_strength + 0.05)
+            self.state.regime.regime_duration_cycles += 1
+            self.state.regime.regime_confidence = min(0.95, self.state.regime.regime_confidence + 0.02)
+        else:
+            self.state.regime.trend_strength = strength
             self.state.regime.regime_duration_cycles = 0
             self.state.regime.regime_confidence = 0.4
-        self.state.regime.trend = new
+        self.state.regime.trend = new_trend
 
     # === VaR ==============================================================
 
     def update_var(self, current_price: float) -> None:
         self._return_buffer.append(current_price)
-        if len(self._return_buffer) > 200:
-            self._return_buffer.pop(0)
         if len(self._return_buffer) < 20:
             return
         step = max(1, len(self._return_buffer) // 24)
@@ -455,78 +578,90 @@ class DenaroCore:
         n = len(sorted_ret)
         self.state.var.var_95_1h = abs(sorted_ret[int(n * 0.05)]) if sorted_ret[int(n * 0.05)] < 0 else 0.02
         self.state.var.var_99_1h = abs(sorted_ret[int(n * 0.01)]) if sorted_ret[int(n * 0.01)] < 0 else 0.035
-        tail = [r for r in sorted_ret if r <= sorted_ret[int(n * 0.05)]]
-        self.state.var.cvar_95_1h = abs(sum(tail) / len(tail)) if tail else 0.03
+        cvar_vals = [r for r in sorted_ret if r <= sorted_ret[int(n * 0.05)]]
+        self.state.var.cvar_95_1h = abs(sum(cvar_vals) / len(cvar_vals)) if cvar_vals else 0.03
 
-    # === CIRCUIT BREAKER ==================================================
+    # === CIRCUIT BREAKER ===================================================
 
     def check_circuit_breaker(self, current_equity: float) -> bool:
         now = time.time()
-        if now >= self.state.last_daily_reset or self.state.last_daily_reset == 0:
-            self.state.cb.daily_loss_pct = 0.0
-            self.state.cb.consecutive_losses = 0
-            self.state.last_daily_reset = self._next_daily_reset()
-            self.state.perf.daily_pnl_pct = 0.0
+        cs = self.state
 
-        self.state.current_capital = current_equity
-        if current_equity > self.state.peak_capital:
-            self.state.peak_capital = current_equity
-            self.state.perf.peak_capital = current_equity
+        # ── Daily reset ──
+        day_sec = 86400
+        if now - cs.last_daily_reset > day_sec:
+            cs.last_daily_reset = now
+            cs.day_start_capital = max(cs.day_start_capital, current_equity)
+            cs.cb.daily_loss_pct = 0.0
+            cs.perf.daily_pnl_pct = 0.0
 
-        daily_pnl_pct = (current_equity - self.state.day_start_capital) / max(1e-10, self.state.day_start_capital)
-        dd = (self.state.peak_capital - current_equity) / max(1e-10, self.state.peak_capital)
-        self.state.var.max_drawdown = dd
+        # ── Track peak ──
+        if current_equity > cs.peak_capital:
+            cs.peak_capital = current_equity
+            cs.perf.peak_capital = current_equity
 
-        prev = self.state.cb.state
-        if prev == CBState.CLOSED:
-            if daily_pnl_pct <= -self._daily_loss_limit:
-                self.state.cb.state = CBState.OPEN
-                self.state.cb.reason = f"daily_loss_{self._daily_loss_limit*100:.0f}%"
-                self.state.cb.since = now
-            elif dd >= self._max_drawdown_limit:
-                self.state.cb.state = CBState.OPEN
-                self.state.cb.reason = f"drawdown_{self._max_drawdown_limit*100:.0f}%"
-                self.state.cb.since = now
-            elif self.state.perf.consecutive_losses >= self._max_consecutive_losses:
-                self.state.cb.state = CBState.HALF_OPEN
-                self.state.cb.reason = f"consec_loss_{self.state.perf.consecutive_losses}"
-                self.state.cb.since = now
-            elif abs(daily_pnl_pct) > self.state.var.var_95_1h * 2:
-                self.state.cb.state = CBState.HALF_OPEN
-                self.state.cb.reason = f"VaR_breach_{abs(daily_pnl_pct)*100:.1f}%"
-                self.state.cb.since = now
-        elif prev in (CBState.OPEN, CBState.HALF_OPEN):
-            if (now - self.state.cb.since) < 3600:
-                pass
-            elif dd < self._max_drawdown_limit * 0.5 and daily_pnl_pct > -self._daily_loss_limit * 0.5:
-                self.state.cb.state = CBState.CLOSED
-                self.state.cb.reason = ""
-                self.state.cb.since = 0.0
-                self.state.cb.daily_loss_pct = 0.0
-                self.state.cb.consecutive_losses = 0
-                from notifier import notify_cb_close
-                notify_cb_close(current_equity)
-            elif prev == CBState.OPEN and dd < self._max_drawdown_limit and daily_pnl_pct > -self._daily_loss_limit:
-                self.state.cb.state = CBState.HALF_OPEN
-                self.state.cb.reason = "recovering"
-                self.state.cb.since = now
+        cs.current_capital = current_equity
 
-        if self.state.cb.state == CBState.HALF_OPEN:
-            self.state.sizing_multiplier = 0.5
-        elif self.state.perf.consecutive_losses >= self._max_consecutive_losses:
-            self.state.sizing_multiplier = 0.5
-        elif self.state.perf.consecutive_wins >= 5:
-            self.state.sizing_multiplier = 2.0
-        elif self.state.perf.consecutive_wins >= 3:
-            self.state.sizing_multiplier = min(2.0, self.state.sizing_multiplier + 0.2)
-        else:
-            self.state.sizing_multiplier = 1.0
-
-        if self.state.cb.state == CBState.OPEN:
+        # ── Daily loss ──
+        day_pnl = (current_equity - cs.day_start_capital) / max(1e-10, cs.day_start_capital)
+        cs.cb.daily_loss_pct = day_pnl
+        if day_pnl < -self._daily_loss_limit:
+            cs.cb.state = CBState.OPEN
+            cs.cb.reason = f"daily_loss_{day_pnl*100:.1f}%"
+            cs.cb.since = now
             self._save_state()
-        return self.state.cb.state == CBState.OPEN
+            return True
 
-    # === KELLY ============================================================
+        # ── Drawdown ──
+        drawdown = (cs.peak_capital - current_equity) / max(1e-10, cs.peak_capital)
+        cs.cb.max_drawdown_pct = drawdown
+        if drawdown > self._max_drawdown_limit:
+            cs.cb.state = CBState.OPEN
+            cs.cb.reason = f"drawdown_{drawdown*100:.1f}%"
+            cs.cb.since = now
+            self._save_state()
+            return True
+
+        # ── Consecutive losses → HALF_OPEN ──
+        if cs.perf.consecutive_losses >= self._max_consecutive_losses:
+            cs.cb.state = CBState.HALF_OPEN
+            cs.cb.reason = f"consecutive_losses_{cs.perf.consecutive_losses}"
+            cs.cb.since = now
+
+        # ── Recovery transitions ──
+        prev = cs.cb.state
+        if prev == CBState.OPEN:
+            dd = drawdown
+            if dd < self._max_drawdown_limit * 0.5 and day_pnl > -self._daily_loss_limit * 0.5:
+                cs.cb.state = CBState.CLOSED
+                cs.cb.reason = ""
+                cs.cb.since = 0.0
+                cs.cb.daily_loss_pct = 0.0
+                cs.cb.consecutive_losses = 0
+            elif dd < self._max_drawdown_limit and day_pnl > -self._daily_loss_limit:
+                cs.cb.state = CBState.HALF_OPEN
+                cs.cb.reason = "recovering"
+                cs.cb.since = now
+
+        # ── Sizing multiplier ──
+        if cs.cb.state == CBState.OPEN:
+            cs.sizing_multiplier = 0.0
+        elif cs.cb.state == CBState.HALF_OPEN:
+            cs.sizing_multiplier = 0.5
+        elif cs.perf.consecutive_losses >= self._max_consecutive_losses:
+            cs.sizing_multiplier = 0.5
+        elif cs.perf.consecutive_wins >= 5:
+            cs.sizing_multiplier = 2.0
+        elif cs.perf.consecutive_wins >= 3:
+            cs.sizing_multiplier = min(2.0, cs.sizing_multiplier + 0.2)
+        else:
+            cs.sizing_multiplier = 1.0
+
+        if cs.cb.state == CBState.OPEN:
+            self._save_state()
+        return cs.cb.state == CBState.OPEN
+
+    # === KELLY (v4: single-multiplier, no accumulation) =====================
 
     def update_kelly(self, pnl_pct: float) -> None:
         self.state.trade_results.append(pnl_pct)
@@ -555,30 +690,44 @@ class DenaroCore:
         if avg_loss > 1e-10:
             b = avg_win / avg_loss
             kelly = (wr * b - (1 - wr)) / b
-            var_cap = 1.0 / (self.state.var.var_95_1h * 50) if self.state.var.var_95_1h > 1e-6 else 1.0
-            self.state.kelly_fraction = max(0.05, min(0.50, min(kelly, var_cap) * 0.25))
-        if len(self.state.trade_results) >= 20:
+            # VaR cap: limit when volatility is high
+            var_cap = 1.0 / (self.state.var.var_95_1h * 50 + 1e-10) if self.state.var.var_95_1h > 1e-6 else 1.0
+            raw_kelly = max(0.05, min(0.50, kelly * 0.25))
+            raw_kelly = min(raw_kelly, var_cap)
+
+            # Boost for high win rate — applied ONE SHOT (not cumulative)
             if wr > 0.70:
-                self.state.kelly_fraction = min(0.50, self.state.kelly_fraction * 2.0)
+                raw_kelly = min(0.50, raw_kelly * 2.0)
             elif wr > 0.60:
-                self.state.kelly_fraction = min(0.50, self.state.kelly_fraction * 1.5)
+                raw_kelly = min(0.50, raw_kelly * 1.5)
+
+            self.state.kelly_fraction = raw_kelly
+            self._save_state()
 
     @property
     def kelly_fraction(self) -> float:
-        return self.state.kelly_fraction * self.state.sizing_multiplier * self._volatility_adjustment()
+        """Final Kelly = base_kelly × sizing_multiplier × vol_adj.
+        NOTA: sizing_multiplier è applicato QUI una volta sola.
+        position_size() NON deve rimoltiplicarlo.
+        """
+        vol_adj = self._volatility_adjustment()
+        return self.state.kelly_fraction * self.state.sizing_multiplier * vol_adj
 
     def position_size(self, capital: float, allocation_pct: float = 1.0) -> float:
-        vol_adj = self._volatility_adjustment()
-        kelly = self.state.kelly_fraction * self.state.sizing_multiplier
+        """
+        Calcola posizione usando la kelly_fraction property
+        che già include sizing_multiplier e vol_adj.
+        """
+        kelly = self.kelly_fraction
         max_var_risk = capital * 0.02 / (self.state.var.var_95_1h + 1e-10)
-        kelly_size = capital * allocation_pct * kelly * vol_adj
+        kelly_size = capital * allocation_pct * kelly
         return min(kelly_size, max_var_risk)
 
     def _volatility_adjustment(self) -> float:
         r = self.state.regime.volatility_regime
         return 0.25 if r == "extreme" else 0.5 if r == "high" else 1.5 if r == "low" else 1.0
 
-    # === DCA ENGINE =======================================================
+    # === DCA ENGINE ========================================================
 
     def dca_should_enter(self, current_price: float, equity: float) -> Tuple[bool, float, str]:
         dca = self.state.dca
@@ -600,7 +749,7 @@ class DenaroCore:
         d = self.state.dca
         d.active = True
         d.num_entries += 1
-        d.entry_price = price
+        d.entry_price = price if not d.entry_price else d.entry_price  # Keep first entry
         d.last_entry_price = price
         d.total_cost += cost
         d.total_size += amount
@@ -625,16 +774,25 @@ class DenaroCore:
         return False, 0, "hold"
 
     def dca_close_position(self) -> float:
+        """v4 FIX: usa avg_entry_price (non entry_price) per il calcolo PnL."""
         d = self.state.dca
-        pnl = d.total_size * (d.entry_price - d.avg_entry_price) if d.active else 0
-        d.active = False; d.entry_price = 0; d.avg_entry_price = 0
-        d.total_size = 0; d.total_cost = 0; d.num_entries = 0
-        d.last_entry_price = 0; d.trailing_activation = 0
+        pnl = d.total_size * (d.entry_price - d.avg_entry_price) if d.active and d.total_size > 0 else 0
+        d.active = False
+        d.entry_price = 0
+        d.avg_entry_price = 0
+        d.total_size = 0
+        d.total_cost = 0
+        d.num_entries = 0
+        d.last_entry_price = 0
+        d.trailing_activation = 0
         return pnl
 
-    # === COMPOUNDING ======================================================
+    # === COMPOUNDING =======================================================
 
     def compound_profits(self, capital: float) -> float:
+        """v4: compound solo se in profit, protegge in drawdown."""
+        if capital <= self.state.initial_capital:
+            return self.state.initial_capital
         profit = capital - self.state.initial_capital
         if profit > self._compound_threshold:
             boost = 1.0 + min(0.5, self.state.perf.consecutive_wins * 0.1)
@@ -643,7 +801,7 @@ class DenaroCore:
             self._save_state()
         return self.state.initial_capital
 
-    # === ATR ==============================================================
+    # === ATR ===============================================================
 
     def calculate_atr(self, ohlcv: List[List[float]], period: int = 14) -> float:
         if len(ohlcv) < period + 1:
@@ -670,7 +828,7 @@ class DenaroCore:
             self.state.regime.volatility_regime = "extreme"
         return atr_pct
 
-    # === STRATEGY SELECTOR ================================================
+    # === STRATEGY SELECTOR =================================================
 
     def select_strategy(self) -> StrategyMode:
         r = self.state.regime

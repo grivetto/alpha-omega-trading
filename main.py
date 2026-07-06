@@ -1,7 +1,14 @@
 #!/usr/bin/env python3
 """
-DENARO v3 — Orchestratore strategico: Grid adattivo + DCA + microstructure.
-Macchina a profitto autonoma: sceglie strategia in base al regime di mercato.
+DENARO v4 — Orchestratore strategico adattivo.
+Grid Trading + DCA + regime detection su Kraken spot DOGE/EUR.
+
+v4 rispetto a v3:
+  - Grid buy base usa spread ATR (non hardcoded 2%)
+  - Import tutti in testa (zero lazy import nel loop)
+  - Config reading centralizzato
+  - _save_state throttled (max 1x/30s)
+  - Gestione errori più pulita
 """
 from __future__ import annotations
 
@@ -12,10 +19,8 @@ from logging.handlers import RotatingFileHandler
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from denaro_core import DenaroCore, CBState, Trend, StrategyMode
-
-def _get_kraken_engine():
-    from kraken_engine import KrakenEngine, SYMBOL, _fix_base64_secret
-    return KrakenEngine, SYMBOL, _fix_base64_secret
+from kraken_engine import KrakenEngine, SYMBOL, _fix_base64_secret
+from notifier import notify as tg_notify, notify_startup, notify_shutdown, notify_cb_open, notify_cb_close
 
 # ─── .env loader ──────────────────────────────────────────────────────────
 
@@ -42,9 +47,7 @@ COOLDOWN    = int(os.environ.get("COOLDOWN", "30"))
 SHADOW_MODE = os.environ.get("SHADOW_MODE", "1") == "1"
 SHADOW_FACTOR = float(os.environ.get("SHADOW_FACTOR", "0.10"))
 MOCK_MODE   = os.environ.get("MOCK_MODE", "0") == "1"
-DRY_RUN     = os.environ.get("DRY_RUN", "0") == "1"
 LOG_FILE    = Path(os.environ.get("LOG_FILE", str(Path(__file__).parent / "kraken_bot.log")))
-STATE_FILE  = Path(os.environ.get("STATE_FILE", str(Path(__file__).parent / "kraken_state.json")))
 CORE_STATE_FILE = Path(os.environ.get("CORE_STATE_FILE", str(Path(__file__).parent / "denaro_core_state.json")))
 HEALTH_PORT = int(os.environ.get("HEALTH_PORT", "8909"))
 
@@ -69,15 +72,6 @@ def load_env(env_path: str) -> dict:
                     r[k.strip()] = v.strip().strip('"').strip("'")
     return r
 
-def load_state() -> dict:
-    try:
-        return json.loads(STATE_FILE.read_text())
-    except (FileNotFoundError, json.JSONDecodeError):
-        return {"levels": [], "total_pnl": 0.0, "initial_capital": CAPITAL}
-
-def save_state(s: dict) -> None:
-    STATE_FILE.write_text(json.dumps(s, indent=2))
-
 def health_write() -> None:
     try:
         Path("/tmp/denaro.health").write_text(f"{time.time():.1f}\n")
@@ -85,7 +79,7 @@ def health_write() -> None:
         pass
 
 def mode_label() -> str:
-    return "SHADOW" if SHADOW_MODE else "DRY" if DRY_RUN else "MOCK" if MOCK_MODE else "LIVE"
+    return "SHADOW" if SHADOW_MODE else "MOCK" if MOCK_MODE else "LIVE"
 
 def validate_config() -> list:
     w = []
@@ -103,14 +97,14 @@ def validate_config() -> list:
 
 
 # ═══════════════════════════════════════════════════════════════════════════
-# ENHANCED GRID + DCA ENGINE
+# TRADING ENGINE v4 — Grid + DCA adattivo
 # ═══════════════════════════════════════════════════════════════════════════
 
 class TradingEngine:
     def __init__(self, engine, core: DenaroCore):
         self.eng = engine
         self.core = core
-        self.state = load_state()
+        self._last_known_equity: float = core.state.current_capital
         self._last_ohlcv_fetch = 0.0
         self._error_count = 0
         self._started_at = time.time()
@@ -121,25 +115,25 @@ class TradingEngine:
         return self._error_count
 
     def _log_perf(self) -> None:
-        """Log performance metrics every 50 cycles."""
+        """Log performance metrics every 300s."""
         now = time.time()
         if now - self._last_perf_log < 300:
             return
         self._last_perf_log = now
         p = self.core.state.perf
         r = self.core.state.regime
-        log.info("─" * 60)
+        log.info("-" * 60)
         log.info(f"PERF: Trades={p.total_trades} WR={p.win_rate*100:.0f}% "
                  f"Sharpe={p.sharpe_ratio:.2f} Sortino={p.sortino_ratio:.2f} "
                  f"PF={p.profit_factor:.2f}")
-        log.info(f"PERF: Kelly={self.core.state.kelly_fraction*100:.0f}% "
+        log.info(f"PERF: Kelly={self.core.kelly_fraction*100:.0f}% "
                  f"SizeMult={self.core.state.sizing_multiplier:.2f} "
                  f"VaR95={self.core.state.var.var_95_1h*100:.2f}%")
         log.info(f"REGIME: {r.trend.value} strength={r.trend_strength:.2f} "
                  f"vol={r.volatility_regime} vol_r={r.volume_ratio:.1f}")
         log.info(f"STRAT: {self.core.state.exec.active_strategy.value} "
                  f"DCA={self.core.state.dca.active}")
-        log.info("─" * 60)
+        log.info("-" * 60)
 
     def run(self) -> None:
         now = time.time()
@@ -173,15 +167,17 @@ class TradingEngine:
             eur = self.eng.fetch_balance("EUR")
             bal = self.eng.ex.fetch_balance()
             doge = float(bal.get("total", {}).get("DOGE", 0) or 0)
+            equity = eur + doge * price
+            self._last_known_equity = equity
+            self._error_count = max(0, self._error_count - 1)
         except Exception as e:
             self._error_count += 1
-            log.warning(f"balance: {e}")
-        equity = eur + doge * price
+            equity = self._last_known_equity
+            log.warning(f"balance fetch failed: {e} — using last known equity EUR {equity:.2f}")
 
         # ── Circuit Breaker ──
         blocked = self.core.check_circuit_breaker(equity)
         if blocked:
-            from notifier import notify_cb_open
             log.critical(f"CB OPEN: {self.core.state.cb.reason}")
             notify_cb_open(self.core.state.cb.reason, equity)
             return
@@ -206,15 +202,14 @@ class TradingEngine:
         # ── Status ──
         self._log_status(price, equity, eur)
 
-        # ── Save ──
-        save_state(self.state)
+        # ── Save unified state ──
         self.core._save_state()
 
         # ── Perf log ──
         self._log_perf()
 
     def _run_grid(self, price: float, equity: float, eur: float, doge: float) -> None:
-        """Adaptive grid strategy."""
+        """Adaptive grid strategy with ATR-based spread (v4 fix)."""
         grid_params = self.core.get_grid_params()
         spread = grid_params["spread"]
         levels = grid_params["levels"]
@@ -232,7 +227,7 @@ class TradingEngine:
             self._error_count += 1
             log.warning(f"fetch_open_orders: {e}")
         open_ids = {o["id"] for o in open_orders if o.get("id")}
-        levels_data = self.state.get("levels", [])
+        levels_data = self.core.state.grid_levels
         active_levels = []
 
         for lvl in levels_data:
@@ -243,15 +238,16 @@ class TradingEngine:
             s_open = sid and sid in open_ids
 
             if stage == "buy" and not b_open and bid:
-                if SHADOW_MODE or DRY_RUN or doge >= lvl["amount"] * 0.5:
+                # Buy was filled — place sell
+                if SHADOW_MODE or doge >= lvl["amount"] * 0.5:
                     try:
-                        so = {"id": f"dry-run-sell-{len(levels_data)}"} if DRY_RUN else \
+                        so = {"id": f"shadow-sell-{len(levels_data)}"} if SHADOW_MODE else \
                              self.eng.create_limit_sell_order(SYMBOL, self.eng.round_amount(lvl["amount"]), self.eng.round_price(lvl["sell_price"]))
                         if so:
                             lvl["sell_order_id"] = so.get("id")
                             lvl["stage"] = "sell"
                             log.info(f"FILL BUY EUR {lvl['buy_price']} -> SELL {lvl['amount']} EUR {lvl['sell_price']}")
-                            if not DRY_RUN:
+                            if not SHADOW_MODE:
                                 time.sleep(0.5)
                     except Exception as e:
                         self._error_count += 1
@@ -268,95 +264,84 @@ class TradingEngine:
                 lvl["stage"] = "sell" if s_open else "buy"
                 active_levels.append(lvl)
 
-        self.state["levels"] = active_levels
+        self.core.state.grid_levels = active_levels
 
         # ── Deploy new grid levels ──
         active_count = len(active_levels)
         per_level = pos_capital / levels if pos_capital > 0 else CAPITAL / levels
 
         if active_count < levels and eur >= per_level:
-            bb = price * 0.98
+            # v4 FIX: usa spread da grid_params (ATR-based) invece di hardcoded 0.98
+            bb = price * (1 - spread)
             for i in range(active_count, levels):
                 bp = self.eng.round_price(bb * (1 - spread * i))
                 if bp <= 0:
-                    log.warning(f"Invalid bp={bp} (bb={bb}, spread={spread}, i={i}), skipping grid level")
+                    log.warning(f"Invalid bp={bp} (price={price}, spread={spread}, i={i}), skipping grid level")
                     continue
-                sp = self.eng.round_price(bp * (1 + TAKE_PROFIT * grid_params.get("take_profit_mult", 1.0)))
+                sp = self.eng.round_price(bp * (1 + spread + TAKE_PROFIT))
                 amt = self.eng.round_amount(per_level / bp)
-                order = {"id": f"dry-run-buy-{i}"} if DRY_RUN else None
-                if not DRY_RUN:
-                    try:
-                        order = self.eng.create_limit_buy_order(SYMBOL, amt, bp)
-                    except Exception as e:
-                        self._error_count += 1
-                        log.error(f"BUY failed EUR {bp}: {e}")
-                        continue
-                if order:
-                    self.state["levels"].append({
-                        "buy_price": bp, "sell_price": sp, "amount": amt,
-                        "buy_order_id": order.get("id"), "stage": "buy",
-                        "time": datetime.now().isoformat(),
-                    })
-                    log.info(f"GRID {'[SHADOW]' if SHADOW_MODE else ''} BUY {amt} EUR {bp} spread={spread*100:.2f}%")
-                    if not DRY_RUN:
-                        time.sleep(1)
+                if amt <= 0:
+                    continue
+                try:
+                    bo = {"id": f"shadow-buy-{i}"} if SHADOW_MODE else \
+                         self.eng.create_limit_buy_order(SYMBOL, amt, bp)
+                    if bo:
+                        lvl = {
+                            "buy_order_id": bo.get("id"), "order_id": bo.get("id"),
+                            "buy_price": bp, "sell_price": sp, "amount": amt,
+                            "stage": "buy", "time": datetime.now().isoformat(),
+                        }
+                        self.core.state.grid_levels.append(lvl)
+                        log.info(f"GRID BUY {len(self.core.state.grid_levels)}/{levels} EUR {bp} amt {amt} ({per_level:.2f}€)")
+                        if not SHADOW_MODE:
+                            time.sleep(0.5)
+                except Exception as e:
+                    self._error_count += 1
+                    log.error(f"BUY failed (level {i}): {e}")
 
     def _run_dca(self, price: float, equity: float, doge: float) -> None:
-        """Dollar-cost averaging operations."""
+        """DCA operations."""
         dca = self.core.state.dca
-
-        # Check entry
-        should_enter, enter_amount, reason = self.core.dca_should_enter(price, equity)
-        if should_enter and enter_amount > 0:
-            buy_doge = enter_amount / price
-            try:
-                if DRY_RUN:
-                    self.core.dca_open_position(price, buy_doge, enter_amount)
-                    log.info(f"DCA ENTER [DRY] {buy_doge:.2f} @ EUR {price:.6f} reason={reason}")
+        if not dca.active:
+            should, size, reason = self.core.dca_should_enter(price, equity)
+            if should:
+                if SHADOW_MODE:
+                    log.info(f"DCA ENTER (shadow) {reason} size={size:.2f}€")
+                    self.core.dca_open_position(price, size / price, size)
+                elif MOCK_MODE:
+                    log.info(f"DCA ENTER (mock) {reason} size={size:.2f}€")
+                    self.core.dca_open_position(price, size / price, size)
                 else:
-                    order = self.eng.create_limit_buy_order(SYMBOL, self.eng.round_amount(buy_doge),
-                                                            self.eng.round_price(price * 0.998))
-                    if order:
-                        self.core.dca_open_position(price, buy_doge, enter_amount)
-                        log.info(f"DCA ENTER {buy_doge:.2f} @ EUR {price:.6f} reason={reason}")
-                        time.sleep(0.5)
-            except Exception as e:
-                log.error(f"DCA entry failed: {e}")
+                    try:
+                        amt = self.eng.round_amount(size / price)
+                        bo = self.eng.create_limit_buy_order(SYMBOL, amt, price)
+                        if bo:
+                            self.core.dca_open_position(price, amt, size)
+                            log.info(f"DCA BUY {amt} DOGE @ EUR {price} = EUR {size:.2f}")
+                    except Exception as e:
+                        log.error(f"DCA buy order failed: {e}")
 
-        # Check exit
-        if dca.active:
-            should_exit, exit_size, exit_reason = self.core.dca_should_exit(price)
-            if should_exit:
+        should_exit, amount, reason = self.core.dca_should_exit(price)
+        if should_exit:
+            if not SHADOW_MODE and not MOCK_MODE:
                 try:
-                    if DRY_RUN:
+                    so = self.eng.create_limit_sell_order(SYMBOL, self.eng.round_amount(amount), self.eng.round_price(price))
+                    if so:
                         pnl = self.core.dca_close_position()
-                        log.info(f"DCA EXIT [DRY] {exit_size:.2f} @ EUR {price:.6f} +{pnl:.4f} reason={exit_reason}")
-                    else:
-                        # Sell via limit order
-                        if doge >= exit_size * 0.5:
-                            sell_price = self.eng.round_price(price * 1.002)
-                            order = self.eng.create_limit_sell_order(SYMBOL, self.eng.round_amount(exit_size), sell_price)
-                            if order:
-                                pnl = self.core.dca_close_position()
-                                log.info(f"DCA EXIT {exit_size:.2f} @ EUR {sell_price:.6f} reason={exit_reason}")
+                        log.info(f"DCA EXIT {reason} size={amount:.2f} PnL={pnl:.4f}")
                 except Exception as e:
-                    log.error(f"DCA exit failed: {e}")
+                    log.error(f"DCA sell order failed: {e}")
+            else:
+                pnl = self.core.dca_close_position()
+                log.info(f"DCA EXIT (shadow) {reason} size={amount:.2f} PnL={pnl:.4f}")
 
     def _log_status(self, price: float, equity: float, eur: float) -> None:
-        pnl_pct = (equity - self.state.get("initial_capital", CAPITAL)) / max(1e-10, self.state.get("initial_capital", CAPITAL)) * 100
-        atr = self.core.state.regime.atr_pct
-        active = len(self.state.get("levels", []))
-        log.info(f"Eq:EUR {equity:.2f} PnL:{pnl_pct:+.1f}% "
-                 f"Grid:{active}/{self.core.state.exec.grid_target_levels} "
-                 f"Strat:{self.core.state.exec.active_strategy.value} "
-                 f"CB:{self.core.state.cb.state.value} "
-                 f"Kelly:{self.core.kelly_fraction*100:.0f}% "
-                 f"ATR:{atr*100:.2f}% "
-                 f"VaR:{self.core.state.var.var_95_1h*100:.2f}% "
-                 f"WS:{'OK' if getattr(self.eng, 'ws_connected', False) else 'POLL'} "
-                 f"Trend:{self.core.state.regime.trend.value} "
-                 f"DCA:{'ACTIVE' if self.core.state.dca.active else 'IDLE'} "
-                 f"{mode_label()}")
+        """Log current trading status."""
+        cs = self.core.state
+        pnl = (equity - cs.initial_capital) / cs.initial_capital * 100 if cs.initial_capital > 0 else 0
+        log.info(f"DENARO STATUS | {SYMBOL} price={price:.6f} equity={equity:.2f} "
+                 f"EUR={eur:.2f} PnL={pnl:+.2f}% grid={len(cs.grid_levels)}/{cs.exec.grid_target_levels} "
+                 f"CB={cs.cb.state.value} mode={mode_label()}")
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -367,22 +352,21 @@ def main() -> None:
     from notifier import notify as tg_notify, notify_startup, notify_shutdown, notify_cb_open, notify_cb_close
 
     for w in validate_config():
-        log.warning(f"Config: {w}")
-
-    mode = mode_label()
-    log.info(f"Mode: {mode} | Grid: {LEVELS} | Spread: {BASE_SPREAD*100:.1f}%")
+        log.warning(f"Config warning: {w}")
+    log.info(f"Starting Denaro v4 | {SYMBOL} | {mode_label()} | CAPITAL={CAPITAL}")
 
     # ── Health server ──
     health = None
     try:
-        from enhanced.health_server import start_default
-        health = start_default(port=HEALTH_PORT)
-        health.update(mode=mode, max_levels=LEVELS, symbol=SYMBOL)
+        from enhanced.health_server import HealthServer
+        health = HealthServer(port=HEALTH_PORT)
+        health.start()
+        health.update(mode=mode_label(), max_levels=LEVELS, symbol=SYMBOL)
         health.set_degraded("starting")
     except Exception as e:
         log.warning(f"Health server: {e}")
 
-    notify_startup(SYMBOL, mode, CAPITAL)
+    notify_startup(SYMBOL, mode_label(), CAPITAL)
 
     # ── Credentials ──
     env = {}
@@ -403,15 +387,14 @@ def main() -> None:
         log.info("MOCK_MODE enabled")
     else:
         try:
-            Ke, _, _ = _get_kraken_engine()
-            engine = Ke(api_key, api_secret)
+            engine = KrakenEngine(api_key, api_secret)
         except Exception as e:
             log.critical(f"Engine init: {e}"); sys.exit(1)
 
     core = DenaroCore(initial_capital=CAPITAL, state_path=CORE_STATE_FILE)
     log.info(f"Core loaded: {CORE_STATE_FILE}")
 
-    if not DRY_RUN and not MOCK_MODE:
+    if not MOCK_MODE:
         log.info("Cancelling orphan orders...")
         try:
             engine.cancel_all_orders(SYMBOL)
@@ -446,7 +429,7 @@ def main() -> None:
                 pnl = (eq - initial) / initial * 100 if initial > 0 else 0
                 health.update(
                     status="ok", equity=eq, pnl_pct=pnl,
-                    grid_levels=len(grid.state.get("levels", [])),
+                    grid_levels=len(grid.core.state.grid_levels),
                     cb_state=core.state.cb.state.value,
                     kelly_pct=core.kelly_fraction * 100,
                     atr_pct=core.state.regime.atr_pct,
@@ -495,7 +478,7 @@ def main() -> None:
     except Exception:
         pass
     try:
-        core._save_state()
+        core.flush_state()
     except Exception:
         pass
     if health:
