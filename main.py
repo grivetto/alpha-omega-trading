@@ -162,13 +162,21 @@ class TradingEngine:
             except Exception as e:
                 log.debug(f"OHLCV/regime fetch: {e}")
 
-        # ── Equity ──
+        # ── Equity (totale: EUR + DOGE residue + asset corrente) ──
         try:
             eur = self.eng.fetch_balance("EUR")
             bal = self.eng.ex.fetch_balance()
             base_asset = SYMBOL.split("/")[0]
             base_bal = float(bal.get("total", {}).get(base_asset, 0) or 0)
+            # Conta anche asset residui (es. DOGE rimasto da swap precedente)
+            doge = float(bal.get("total", {}).get("DOGE", 0) or 0)
             equity = eur + base_bal * price
+            if doge > 0 and base_asset != "DOGE":
+                try:
+                    doge_ticker = self.eng.ex.fetch_ticker("DOGE/EUR")
+                    equity += doge * float(doge_ticker["last"])
+                except Exception:
+                    pass
             self._last_known_equity = equity
             self._error_count = max(0, self._error_count - 1)
         except Exception as e:
