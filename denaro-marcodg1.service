@@ -1,0 +1,43 @@
+[Unit]
+Description=Denaro Exchange - unified trading bot
+Documentation=https://github.com/grivetto/alpha-omega-trading
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=marco
+WorkingDirectory=/home/marco/denaro
+EnvironmentFile=/home/marco/denaro/.env
+ExecStart=/home/marco/denaro/venv/bin/python3 -u run.py
+Restart=on-failure
+RestartSec=15
+TimeoutStopSec=25
+
+# ── Resource limits ──
+MemoryMax=512M
+MemoryHigh=384M
+CPUQuota=50%
+OOMScoreAdjust=500
+IOWeight=200
+
+# ── Sandboxing ──
+ReadWritePaths=/home/marco/denaro/
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=read-only
+NoNewPrivileges=true
+CapabilityBoundingSet=
+ProtectKernelModules=true
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=true
+
+# ── Logging ──
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=denaro-exchange
+
+[Install]
+WantedBy=multi-user.target
