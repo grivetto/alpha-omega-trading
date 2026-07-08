@@ -1,6 +1,7 @@
 # Credenziali - MAI pushare su Git
 .env
 .env.prod.*
+_deploy_env_*
 .env.bak.*
 .env.backup_*
 .env.clean
