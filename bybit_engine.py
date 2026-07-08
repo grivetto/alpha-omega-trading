@@ -187,20 +187,21 @@ class _BybitWSFeed:
             pass
 
     def get_micro_data(self) -> dict:
+        """Interfaccia compatibile con KrakenEngine — stesse chiavi."""
         bids = self._order_book.get("bid", [])
         asks = self._order_book.get("ask", [])
         best_bid = bids[0][0] if bids else 0.0
         best_ask = asks[0][0] if asks else 0.0
-        spread_abs = best_ask - best_bid if best_bid > 0 and best_ask > 0 else 0.0
-        spread_pct = (spread_abs / best_bid * 100) if best_bid > 0 else 0.0
-        bid_volume_1pct = sum(q for p, q in bids if p >= best_bid * 0.99)
-        ask_volume_1pct = sum(q for p, q in asks if p <= best_ask * 1.01)
+        best_bid_vol = bids[0][1] if bids else 0.0
+        best_ask_vol = asks[0][1] if asks else 0.0
+        cum_bid = sum(v for _, v in bids)
+        cum_ask = sum(v for _, v in asks)
+        mid = self._latest_price or ((best_bid + best_ask) / 2 if best_bid > 0 and best_ask > 0 else 0)
         return {
-            "bid_ask_spread_pct": spread_pct,
-            "bid_ask_imbalance": (bid_volume_1pct / max(ask_volume_1pct, 1)),
-            "cum_bid_depth_1pct": bid_volume_1pct,
-            "cum_ask_depth_1pct": ask_volume_1pct,
-            "order_book_slope": 0.0,
+            "bid": best_bid, "ask": best_ask,
+            "bid_vol": best_bid_vol, "ask_vol": best_ask_vol,
+            "cum_bid": cum_bid, "cum_ask": cum_ask,
+            "price": mid,
         }
 
 
