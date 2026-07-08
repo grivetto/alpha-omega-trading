@@ -435,7 +435,7 @@ def main() -> None:
         log.info("MOCK_MODE enabled")
     else:
         try:
-            engine = KrakenEngine(api_key, api_secret)
+            engine = KrakenEngine(api_key, api_secret, symbol=SYMBOL)
         except Exception as e:
             log.critical(f"Engine init: {e}"); sys.exit(1)
 

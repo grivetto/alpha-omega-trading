@@ -204,7 +204,8 @@ class _KrakenWSFeed:
 class KrakenEngine:
     """CCXT Kraken adapter with WS ticker, order book, retry, fee awareness."""
 
-    def __init__(self, api_key: str, api_secret: str):
+    def __init__(self, api_key: str, api_secret: str, symbol: str = SYMBOL):
+        self.symbol = symbol
         secret = _fix_base64_secret(api_secret)
         self.ex = ccxt.kraken({
             "apiKey": api_key, "secret": secret,
@@ -223,7 +224,7 @@ class KrakenEngine:
             log.error("load_markets failed after 3 attempts — using defaults")
         self._last_request: float = 0.0
         self._min_interval = 0.15
-        self._ws = _KrakenWSFeed(SYMBOL)
+        self._ws = _KrakenWSFeed(self.symbol)
         self._ws.start()
         # Cache market precision — CCXT returns tick size, convert to decimal places
         self._amount_precision = 8
@@ -231,7 +232,7 @@ class KrakenEngine:
         self._taker_fee = 0.0026
         self._maker_fee = 0.0016
         try:
-            m = self.ex.market(SYMBOL)
+            m = self.ex.market(self.symbol)
             tick_amount = m.get("precision", {}).get("amount", 1e-8)
             tick_price = m.get("precision", {}).get("price", 1e-8)
             self._amount_precision = max(0, int(round(-math.log10(tick_amount)))) if tick_amount and tick_amount > 0 else 8
