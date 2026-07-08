@@ -186,6 +186,15 @@ class TradingEngine:
             equity = self._last_known_equity
             log.warning(f"balance fetch failed: {e} — using last known equity EUR {equity:.2f}")
 
+        # ── v4.1: Allinea day_start_capital all'equity reale al primo ciclo ──
+        # Previene CB spurio dopo restart con stato vecchio
+        cs = self.core.state
+        day_pnl = (equity - cs.day_start_capital) / max(1e-10, cs.day_start_capital)
+        if cs.exec.cycle_count < 3 and day_pnl < -self.core._daily_loss_limit:
+            old = cs.day_start_capital
+            cs.day_start_capital = equity
+            log.warning(f"Day capital realigned: {old:.2f} → {equity:.2f} (equity reale dopo restart)")
+
         # ── Circuit Breaker ──
         blocked = self.core.check_circuit_breaker(equity)
         if blocked:
