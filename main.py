@@ -254,9 +254,12 @@ class TradingEngine:
         max_grid_eur = equity * MAX_DEPLOYED
         remaining_capital = max(0, max_grid_eur - deployed_eur)
 
-        pos_capital = self.core.position_size(min(equity, max_grid_eur), 1.0)
+        # v4.1: Grid usa allocazione diretta (non Kelly/CB sizing).
+        # I limit order grid NON sono posizioni aperte — si riempiono solo se
+        # il mercato li raggiunge. Kelly/CB sizing è per posizioni market/entry.
+        per_level_raw = remaining_capital / levels
         if SHADOW_MODE:
-            pos_capital *= SHADOW_FACTOR
+            per_level_raw *= SHADOW_FACTOR
 
         # ── Reconcile open orders ──
         open_orders = []
@@ -309,8 +312,7 @@ class TradingEngine:
 
         # ── Deploy new grid levels ──
         active_count = len(active_levels)
-        deployable = min(pos_capital, remaining_capital)
-        per_level = deployable / levels if deployable > 0 else (CAPITAL * MAX_DEPLOYED) / levels
+        per_level = per_level_raw if per_level_raw > 0 else (CAPITAL * MAX_DEPLOYED) / levels
 
         if active_count < levels and eur >= per_level and remaining_capital > MIN_ORDER_EUR:
             bb = price * (1 - spread)
