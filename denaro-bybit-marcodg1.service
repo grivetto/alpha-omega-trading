@@ -1,0 +1,42 @@
+[Unit]
+Description=Denaro v5 Bybit Bot - DOGE/USDT Grid (MARCODG1)
+Documentation=https://github.com/sergio-grivetto/denaro
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=marco
+WorkingDirectory=/home/marco/denaro
+EnvironmentFile=/home/marco/denaro/.env
+ExecStart=/home/marco/denaro/venv/bin/python3 -u main_v5.py
+Restart=on-failure
+RestartSec=15
+TimeoutStopSec=25
+
+# ── Resource limits ──
+MemoryMax=512M
+MemoryHigh=384M
+CPUQuota=50%
+OOMScoreAdjust=500
+IOWeight=200
+
+# ── Sandboxing ──
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=read-only
+NoNewPrivileges=true
+CapabilityBoundingSet=
+ProtectKernelModules=true
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=true
+
+# ── Logging ──
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=denaro-bybit
+
+[Install]
+WantedBy=multi-user.target

@@ -240,7 +240,7 @@ class DenaroCore:
 
     def __init__(self, initial_capital: float = 100.0,
                  daily_loss_limit: float = 0.05,
-                 max_drawdown_limit: float = 0.02,
+                 max_drawdown_limit: float = 0.15,
                  max_consecutive_losses: int = 4,
                  compound_threshold: float = 1.0,
                  compound_ratio: float = 0.5,
@@ -773,10 +773,17 @@ class DenaroCore:
             return True, d.total_size, f"stop_{pnl*100:.1f}%"
         return False, 0, "hold"
 
-    def dca_close_position(self) -> float:
-        """v4 FIX: usa avg_entry_price (non entry_price) per il calcolo PnL."""
+    def dca_close_position(self, exit_price: float = 0.0) -> float:
+        """
+        Calcola PnL reale: (exit_price * total_size - total_cost) / total_cost.
+        v4.1 FIX: usa exit_price passato, non entry_price (era BUG #3 mal-fissato).
+        """
         d = self.state.dca
-        pnl = d.total_size * (d.entry_price - d.avg_entry_price) if d.active and d.total_size > 0 else 0
+        if d.active and d.total_size > 0 and d.total_cost > 0:
+            actual_exit = exit_price if exit_price > 0 else d.entry_price
+            pnl = (actual_exit * d.total_size - d.total_cost) / d.total_cost
+        else:
+            pnl = 0.0
         d.active = False
         d.entry_price = 0
         d.avg_entry_price = 0

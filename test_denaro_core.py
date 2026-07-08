@@ -32,9 +32,11 @@ def test_cb_daily_loss():
     assert "daily" in c.state.cb.reason.lower()
 
 def test_cb_drawdown():
-    c = make_core(initial_capital=100.0, max_drawdown_limit=0.02)
+    c = make_core(initial_capital=100.0, max_drawdown_limit=0.15)
+    c.state.last_daily_reset = time.time()
+    c.state.day_start_capital = 85.0  # Daily loss check won't trigger (84 > 85*0.95=80.75)
     c.check_circuit_breaker(100.0)
-    blocked = c.check_circuit_breaker(97.5)
+    blocked = c.check_circuit_breaker(84.0)  # 16% drawdown > 15% limit
     assert blocked
     assert "drawdown" in c.state.cb.reason.lower()
 

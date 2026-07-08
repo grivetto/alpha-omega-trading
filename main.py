@@ -42,8 +42,10 @@ SYMBOL      = os.environ.get("SYMBOL", "DOGE/EUR")
 CAPITAL     = float(os.environ.get("CAPITAL", "100.0"))
 LEVELS      = int(os.environ.get("LEVELS", "5"))
 BASE_SPREAD = float(os.environ.get("SPREAD", "0.025"))
-TAKE_PROFIT = float(os.environ.get("TAKE_PROFIT", "0.03"))
+TAKE_PROFIT = float(os.environ.get("TAKE_PROFIT", "0.03"))  # v4.1: overridden by ATR scaling below
 COOLDOWN    = int(os.environ.get("COOLDOWN", "30"))
+MAX_DEPLOYED = float(os.environ.get("MAX_DEPLOYED", "0.50"))  # v4.1: max 50% of capital in grid
+MIN_ORDER_EUR = float(os.environ.get("MIN_ORDER_EUR", "1.0")) # Kraken min notional ~1 EUR
 SHADOW_MODE = os.environ.get("SHADOW_MODE", "1") == "1"
 SHADOW_FACTOR = float(os.environ.get("SHADOW_FACTOR", "0.10"))
 MOCK_MODE   = os.environ.get("MOCK_MODE", "0") == "1"
@@ -218,13 +220,32 @@ class TradingEngine:
         self._log_perf()
 
     def _run_grid(self, price: float, equity: float, eur: float, base_bal: float) -> None:
-        """Adaptive grid strategy with ATR-based spread (v4 fix)."""
+        """Adaptive grid strategy with ATR-based spread (v4.1 fix: prezzo valido, ATR TP, min notional)."""
+        # ── v4.1: Price validation ──
+        if price <= 0 or price * 100 < 0.01:  # Prezzo realistico (non 0, non 2.4e-06)
+            log.error(f"INVALID PRICE {price} — skipping grid deployment (probably WS not ready)")
+            return
+
         grid_params = self.core.get_grid_params()
         spread = grid_params["spread"]
         levels = grid_params["levels"]
         atr_pct = self.core.state.regime.atr_pct
+        tp_mult = grid_params.get("take_profit_mult", 1.2)
 
-        pos_capital = self.core.position_size(equity, 1.0)
+        # v4.1: ATR-scaled take-profit (non hardcoded 3%)
+        effective_tp = max(0.01, atr_pct * 1.5) * tp_mult
+        effective_tp = max(TAKE_PROFIT * 0.5, min(TAKE_PROFIT * 2.0, effective_tp))
+        log.debug(f"Grid: price={price:.6f} spread={spread*100:.2f}% TP={effective_tp*100:.2f}% levels={levels}")
+
+        # v4.1: Max deployed capital
+        deployed_eur = sum(
+            lvl.get("amount", 0) * lvl.get("buy_price", 0)
+            for lvl in self.core.state.grid_levels
+        )
+        max_grid_eur = equity * MAX_DEPLOYED
+        remaining_capital = max(0, max_grid_eur - deployed_eur)
+
+        pos_capital = self.core.position_size(min(equity, max_grid_eur), 1.0)
         if SHADOW_MODE:
             pos_capital *= SHADOW_FACTOR
 
@@ -255,7 +276,7 @@ class TradingEngine:
                         if so:
                             lvl["sell_order_id"] = so.get("id")
                             lvl["stage"] = "sell"
-                            log.info(f"FILL BUY EUR {lvl['buy_price']} -> SELL {lvl['amount']} EUR {lvl['sell_price']}")
+                            log.info(f"FILL BUY EUR {lvl['buy_price']} -> SELL {lvl['amount']} @ EUR {lvl['sell_price']}")
                             if not SHADOW_MODE:
                                 time.sleep(0.5)
                     except Exception as e:
@@ -269,6 +290,8 @@ class TradingEngine:
                 pnl = (pp - cb) / cb
                 self.core.update_kelly(pnl)
                 log.info(f"ROUND: EUR {lvl['buy_price']} -> EUR {lvl['sell_price']} = {pnl*100:+.2f}%  Kelly:{self.core.kelly_fraction*100:.0f}%")
+                # v4.1: Update grid deployed capital
+                remaining_capital += cb
             elif b_open or s_open:
                 lvl["stage"] = "sell" if s_open else "buy"
                 active_levels.append(lvl)
@@ -277,19 +300,24 @@ class TradingEngine:
 
         # ── Deploy new grid levels ──
         active_count = len(active_levels)
-        per_level = pos_capital / levels if pos_capital > 0 else CAPITAL / levels
+        deployable = min(pos_capital, remaining_capital)
+        per_level = deployable / levels if deployable > 0 else (CAPITAL * MAX_DEPLOYED) / levels
 
-        if active_count < levels and eur >= per_level:
-            # v4 FIX: usa spread da grid_params (ATR-based) invece di hardcoded 0.98
+        if active_count < levels and eur >= per_level and remaining_capital > MIN_ORDER_EUR:
             bb = price * (1 - spread)
             for i in range(active_count, levels):
                 bp = self.eng.round_price(bb * (1 - spread * i))
                 if bp <= 0:
                     log.warning(f"Invalid bp={bp} (price={price}, spread={spread}, i={i}), skipping grid level")
                     continue
-                sp = self.eng.round_price(bp * (1 + spread + TAKE_PROFIT))
+                sp = self.eng.round_price(bp * (1 + spread + effective_tp))
                 amt = self.eng.round_amount(per_level / bp)
                 if amt <= 0:
+                    continue
+                # v4.1: Min notional check (Kraken ~1 EUR)
+                notional = amt * bp
+                if notional < MIN_ORDER_EUR:
+                    log.warning(f"Order too small: {amt} @ {bp} = EUR {notional:.2f} (min EUR {MIN_ORDER_EUR}), skipping")
                     continue
                 try:
                     bo = {"id": f"shadow-buy-{i}"} if SHADOW_MODE else \
@@ -301,7 +329,7 @@ class TradingEngine:
                             "stage": "buy", "time": datetime.now().isoformat(),
                         }
                         self.core.state.grid_levels.append(lvl)
-                        log.info(f"GRID BUY {len(self.core.state.grid_levels)}/{levels} EUR {bp} amt {amt} ({per_level:.2f}€)")
+                        log.info(f"GRID BUY {len(self.core.state.grid_levels)}/{levels} EUR {bp} amt {amt} ({per_level:.2f}€) TP={effective_tp*100:.1f}%")
                         if not SHADOW_MODE:
                             time.sleep(0.5)
                 except Exception as e:
@@ -336,13 +364,13 @@ class TradingEngine:
                 try:
                     so = self.eng.create_limit_sell_order(SYMBOL, self.eng.round_amount(amount), self.eng.round_price(price))
                     if so:
-                        pnl = self.core.dca_close_position()
-                        log.info(f"DCA EXIT {reason} size={amount:.2f} PnL={pnl:.4f}")
+                        pnl = self.core.dca_close_position(exit_price=price)
+                        log.info(f"DCA EXIT {reason} size={amount:.2f} PnL={pnl*100:+.2f}%")
                 except Exception as e:
                     log.error(f"DCA sell order failed: {e}")
             else:
-                pnl = self.core.dca_close_position()
-                log.info(f"DCA EXIT (shadow) {reason} size={amount:.2f} PnL={pnl:.4f}")
+                pnl = self.core.dca_close_position(exit_price=price)
+                log.info(f"DCA EXIT (shadow) {reason} size={amount:.2f} PnL={pnl*100:+.2f}%")
 
     def _log_status(self, price: float, equity: float, eur: float) -> None:
         """Log current trading status."""

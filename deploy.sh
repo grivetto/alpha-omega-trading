@@ -30,29 +30,36 @@ MARCO_USER="marco"
 MARCO_PATH="/home/marco/denaro"
 MARCO_SERVICE="denaro-kraken-marcodg1.service"
 
+# ─── Bybit v5 (MARCODG1) ─────────────────────────────────────────────────────
+MARCO_BYBIT_SERVICE="denaro-bybit-marcodg1.service"
+MARCO_BYBIT_HEALTH_PORT=8911
+
 # ─── Flags ───────────────────────────────────────────────────────────────────
 DRY_RUN=true
 DEPLOY_NUVOLA=false
 DEPLOY_MARCO=false
+DEPLOY_MARCO_BYBIT=false
 
 for arg in "$@"; do
     case "$arg" in
-        --live)      DRY_RUN=false ;;
-        --nuvola)    DEPLOY_NUVOLA=true ;;
-        --marcodg1)  DEPLOY_MARCO=true ;;
+        --live)          DRY_RUN=false ;;
+        --nuvola)        DEPLOY_NUVOLA=true ;;
+        --marcodg1)      DEPLOY_MARCO=true ;;
+        --marcodg1-bybit) DEPLOY_MARCO_BYBIT=true ;;
         --dry-run|--help)
-            echo "Usage: $0 [--live] [--nuvola] [--marcodg1]"
+            echo "Usage: $0 [--live] [--nuvola] [--marcodg1] [--marcodg1-bybit]"
             echo ""
-            echo "  --live       Execute deploy (default: dry-run)"
-            echo "  --nuvola     Deploy only to nuvola"
-            echo "  --marcodg1   Deploy only to MARCODG1"
+            echo "  --live            Execute deploy (default: dry-run)"
+            echo "  --nuvola          Deploy only to nuvola (Kraken v4)"
+            echo "  --marcodg1        Deploy only to MARCODG1 (Kraken v4)"
+            echo "  --marcodg1-bybit  Deploy Bybit v5 to MARCODG1"
             exit 0
             ;;
     esac
 done
 
-# Default: deploy to both
-if ! $DEPLOY_NUVOLA && ! $DEPLOY_MARCO; then
+# Default: deploy to both Kraken nodes
+if ! $DEPLOY_NUVOLA && ! $DEPLOY_MARCO && ! $DEPLOY_MARCO_BYBIT; then
     DEPLOY_NUVOLA=true
     DEPLOY_MARCO=true
 fi
@@ -64,6 +71,7 @@ deploy_to() {
     local user="$2"
     local path="$3"
     local service="$4"
+    local health_port="${5:-8909}"
 
     echo ""
     echo "══════════════════════════════════════════════════════════════"
@@ -103,7 +111,7 @@ deploy_to() {
     # Step 4: Verify service + logs + health endpoint
     echo "  [4/4] Verifying..."
     if $DRY_RUN; then
-        echo "        ssh $user@$host 'systemctl is-active $service && journalctl -u $service -n 10 --no-pager && curl -sf http://127.0.0.1:8909/health'"
+        echo "        ssh $user@$host 'systemctl is-active $service && journalctl -u $service -n 10 --no-pager && curl -sf http://127.0.0.1:${health_port}/health'"
         echo "        [DRY-RUN — skipped]"
     else
         echo ""
@@ -113,10 +121,10 @@ deploy_to() {
         echo "  ── Last 8 log lines ──"
         ssh "$user@$host" "journalctl -u $service -n 8 --no-pager"
         echo ""
-        echo "  ── Health endpoint (port 8909) ──"
+        echo "  ── Health endpoint (port ${health_port}) ──"
         # Retry a few times — service may still be starting
         for i in 1 2 3; do
-            result=$(ssh "$user@$host" "curl -sf http://127.0.0.1:8909/health 2>/dev/null || echo 'FAIL'")
+            result=$(ssh "$user@$host" "curl -sf http://127.0.0.1:${health_port}/health 2>/dev/null || echo 'FAIL'")
             if [ "$result" != "FAIL" ]; then
                 echo "       $result"
                 break
@@ -134,7 +142,7 @@ echo "║           Denaro Deploy Script                             ║"
 echo "╚══════════════════════════════════════════════════════════════╝"
 echo ""
 echo "  Mode:    $($DRY_RUN && echo 'DRY-RUN (add --live to deploy)' || echo 'LIVE')"
-echo "  Target:  $($DEPLOY_NUVOLA && echo 'nuvola ')$($DEPLOY_MARCO && echo 'MARCODG1')"
+echo "  Target:  $($DEPLOY_NUVOLA && echo 'nuvola ')$($DEPLOY_MARCO && echo 'MARCODG1(Kraken) ')$($DEPLOY_MARCO_BYBIT && echo 'MARCODG1(Bybit) ')"
 echo "  Repo:    $REPO_DIR"
 echo ""
 
@@ -145,6 +153,7 @@ fi
 
 $DEPLOY_NUVOLA && deploy_to "$NUVOLA_HOST" "$NUVOLA_USER" "$NUVOLA_PATH" "$NUVOLA_SERVICE"
 $DEPLOY_MARCO && deploy_to "$MARCO_HOST" "$MARCO_USER" "$MARCO_PATH" "$MARCO_SERVICE"
+$DEPLOY_MARCO_BYBIT && deploy_to "$MARCO_HOST" "$MARCO_USER" "$MARCO_PATH" "$MARCO_BYBIT_SERVICE" "$MARCO_BYBIT_HEALTH_PORT"
 
 echo ""
 echo "══════════════════════════════════════════════════════════════"
