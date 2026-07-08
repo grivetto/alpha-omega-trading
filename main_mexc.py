@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 """
-DENARO MEXC — Bybit Spot Grid Trading.
-Stessa architettura di v4 (denaro_core.py + TradingEngine) ma su Bybit.
+DENARO MEXC v5 — Orchestratore strategico adattivo per MEXC spot.
+Grid Trading + DCA + regime detection.
 
-Differenze da v4/Kraken:
-  - Bybit spot pairs in USDT (default SOL/USDT)
-  - Logger separato "mexc_v1"
-  - Stato su mexc_core_state.json
-  - Health server su porta 8911
+v5 fixes (stessa pattern di main.py v5):
+  - Cache-aware balance + orders
+  - Lockout mode + deep sleep
+  - Permanent error detection → shutdown
+  - Graceful degradation
+  - EUR+DOGE tracking separato
 """
 from __future__ import annotations
 
@@ -18,10 +19,8 @@ from logging.handlers import RotatingFileHandler
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from denaro_core import DenaroCore, CBState, Trend, StrategyMode
-from mexc_engine import MexcEngine, SYMBOL as _DEFAULT_SYMBOL
+from mexc_engine import MexcEngine, SYMBOL as _DEF_SYM, MexcPermanentError
 from notifier import notify as tg_notify, notify_startup, notify_shutdown, notify_cb_open, notify_cb_close
-
-# ─── .env loader ──────────────────────────────────────────────────────────
 
 def _load_dotenv() -> None:
     for p in [Path(__file__).parent / ".env", Path.home() / "denaro" / ".env", Path(".env")]:
@@ -37,7 +36,7 @@ def _load_dotenv() -> None:
             break
 _load_dotenv()
 
-SYMBOL      = os.environ.get("SYMBOL", _DEFAULT_SYMBOL)
+SYMBOL      = os.environ.get("SYMBOL", _DEF_SYM)
 CURRENCY    = os.environ.get("CURRENCY", "USDT")
 CAPITAL     = float(os.environ.get("CAPITAL", "100.0"))
 LEVELS      = int(os.environ.get("LEVELS", "5"))
@@ -53,9 +52,13 @@ LOG_FILE    = Path(os.environ.get("LOG_FILE", str(Path(__file__).parent / "mexc_
 CORE_STATE_FILE = Path(os.environ.get("CORE_STATE_FILE", str(Path(__file__).parent / "mexc_core_state.json")))
 HEALTH_PORT = int(os.environ.get("HEALTH_PORT", "8911"))
 
-# ─── LOGGING ─────────────────────────────────────────────────────────────
+# v5 cache config
+BALANCE_CACHE_TTL = float(os.environ.get("BALANCE_CACHE_TTL", "15"))
+ORDERS_CACHE_TTL = float(os.environ.get("ORDERS_CACHE_TTL", "10"))
+LOCKOUT_RETRY_INTERVAL = float(os.environ.get("LOCKOUT_RETRY_INTERVAL", "60"))
+DEEP_SLEEP_CYCLES = int(os.environ.get("DEEP_SLEEP_CYCLES", "5"))
 
-log = logging.getLogger("mexc_v1")
+log = logging.getLogger("mexc_v5")
 log.setLevel(os.environ.get("LOG_LEVEL", "INFO"))
 fh = RotatingFileHandler(LOG_FILE, maxBytes=5*1024*1024, backupCount=3)
 fh.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(message)s"))
@@ -76,7 +79,7 @@ def load_env(env_path: str) -> dict:
 
 def health_write() -> None:
     try:
-        Path("/tmp/bybit.health").write_text(f"{time.time():.1f}\n")
+        Path("/tmp/mexc.health").write_text(f"{time.time():.1f}\n")
     except OSError:
         pass
 
@@ -93,17 +96,10 @@ def validate_config() -> list:
         w.append(f"SPREAD={BASE_SPREAD} outside [0.001,0.5]")
     if COOLDOWN < 5 or COOLDOWN > 300:
         w.append(f"COOLDOWN={COOLDOWN}s outside [5,300]")
-    if SHADOW_FACTOR < 0.01 or SHADOW_FACTOR > 1.0:
-        w.append(f"SHADOW_FACTOR={SHADOW_FACTOR} outside [0.01,1.0]")
     return w
 
-
-# ═══════════════════════════════════════════════════════════════════════════
-# TRADING ENGINE mexc — identico a v4 ma per Bybit
-# ═══════════════════════════════════════════════════════════════════════════
-
 class TradingEngine:
-    def __init__(self, engine, core: DenaroCore):
+    def __init__(self, engine: MexcEngine, core: DenaroCore):
         self.eng = engine
         self.core = core
         self._last_known_equity: float = core.state.current_capital
@@ -111,112 +107,105 @@ class TradingEngine:
         self._error_count = 0
         self._started_at = time.time()
         self._last_perf_log = 0.0
-
-    @property
-    def error_count(self) -> int:
-        return self._error_count
-
-    def _log_perf(self) -> None:
-        now = time.time()
-        if now - self._last_perf_log < 300:
-            return
-        self._last_perf_log = now
-        p = self.core.state.perf
-        r = self.core.state.regime
-        log.info("-" * 60)
-        log.info(f"PERF: Trades={p.total_trades} WR={p.win_rate*100:.0f}% "
-                 f"Sharpe={p.sharpe_ratio:.2f} Sortino={p.sortino_ratio:.2f} "
-                 f"PF={p.profit_factor:.2f}")
-        log.info(f"PERF: Kelly={self.core.kelly_fraction*100:.0f}% "
-                 f"SizeMult={self.core.state.sizing_multiplier:.2f} "
-                 f"VaR95={self.core.state.var.var_95_1h*100:.2f}%")
-        log.info(f"REGIME: {r.trend.value} strength={r.trend_strength:.2f} "
-                 f"vol={r.volatility_regime} vol_r={r.volume_ratio:.1f}")
-        log.info(f"STRAT: {self.core.state.exec.active_strategy.value} "
-                 f"DCA={self.core.state.dca.active}")
-        log.info("-" * 60)
+        self._consecutive_api_failures = 0
+        self._last_deploy_attempt = 0.0
+        self._deploy_cooldown = 10.0
 
     def run(self) -> None:
         now = time.time()
-        usdt = base_bal = price = equity = 0.0
+        price = base_bal = equity = quote_bal = 0.0
 
-        # ── Price + microstructure ──
+        if hasattr(self.eng, 'in_lockout') and self.eng.in_lockout:
+            remaining = self.eng.lockout_remaining
+            if remaining > 0:
+                log.warning(f"LOCKOUT: {remaining:.0f}s remaining")
+                self.core.flush_state()
+                return
+            log.info("LOCKOUT: backoff expired")
+
         try:
             price = self.eng.fetch_ticker(SYMBOL)
             micro = self.eng.get_microstructure()
             self.core.update_microstructure(
                 micro["bid"], micro["ask"], micro["bid_vol"], micro["ask_vol"],
                 micro["cum_bid"], micro["cum_ask"], micro["price"])
+            self._consecutive_api_failures = 0
+        except MexcPermanentError as e:
+            log.critical(f"PERMANENT ERROR (ticker): {e}")
+            raise
         except Exception as e:
             self._error_count += 1
-            log.warning(f"ticker/micro failed: {e}")
+            self._consecutive_api_failures += 1
+            log.error(f"ticker/micro failed: {e}")
             return
 
-        # ── ATR + regime update (ogni 5 min) ──
         if now - self._last_ohlcv_fetch > 300:
             try:
-                ohlcv = self.eng.ex.fetch_ohlcv(SYMBOL, "5m", limit=48)
+                ohlcv = self.eng.ex.fetch_ohlcv(SYMBOL, "1h", limit=24)
                 self.core.calculate_atr(ohlcv)
                 self.core.update_regime(ohlcv)
+                self.core.update_var(price)
                 self._last_ohlcv_fetch = now
             except Exception as e:
-                log.debug(f"OHLCV/regime fetch: {e}")
+                log.debug(f"OHLCV fetch: {e}")
 
-        # ── Equity (USDT + base_asset) ──
         try:
-            usdt = self.eng.fetch_balance(CURRENCY)
-            bal = self.eng.ex.fetch_balance()
-            base_asset = SYMBOL.split("/")[0]
-            base_bal = float(bal.get("total", {}).get(base_asset, 0) or 0)
-            equity = usdt + base_bal * price
-            self._last_known_equity = equity
-            self._error_count = max(0, self._error_count - 1)
+            full_bal = self.eng.fetch_balance("FULL")
+        except MexcPermanentError as e:
+            log.critical(f"PERMANENT ERROR (balance): {e}")
+            raise
         except Exception as e:
             self._error_count += 1
+            log.warning(f"balance fetch failed: {e}")
             equity = self._last_known_equity
-            log.warning(f"balance fetch failed: {e} — using last known equity USDT {equity:.2f}")
+            quote_bal = 0.0; base_bal = 0.0
+        else:
+            quote_bal = full_bal.get(CURRENCY, 0.0)
+            base_asset = SYMBOL.split("/")[0]
+            base_bal = full_bal.get(base_asset, 0.0)
+            equity = quote_bal + base_bal * price
+            self._last_known_equity = equity
+            self._error_count = max(0, self._error_count - 1)
+            self._consecutive_api_failures = 0
 
-        # ── Allinea day_start_capital al primo ciclo ──
         cs = self.core.state
         day_pnl = (equity - cs.day_start_capital) / max(1e-10, cs.day_start_capital)
         if cs.exec.cycle_count < 3 and day_pnl < -self.core._daily_loss_limit:
             old = cs.day_start_capital
             cs.day_start_capital = equity
-            log.warning(f"Day capital realigned: {old:.2f} → {equity:.2f}")
+            log.warning(f"Day capital realigned: {old:.2f} -> {equity:.2f}")
 
-        # ── Circuit Breaker ──
         blocked = self.core.check_circuit_breaker(equity)
         if blocked:
             log.critical(f"CB OPEN: {self.core.state.cb.reason}")
             notify_cb_open(self.core.state.cb.reason, equity)
             return
 
-        # ── Compounding ──
         self.core.compound_profits(equity)
-
-        # ── Strategy selection ──
         strategy = self.core.select_strategy()
         self.core.state.exec.active_strategy = strategy
 
-        # ── DCA ──
-        if strategy in (StrategyMode.DCA, StrategyMode.HYBRID):
-            self._run_dca(price, equity, base_bal)
-
-        # ── Grid ──
         if strategy in (StrategyMode.GRID, StrategyMode.HYBRID):
-            self._run_grid(price, equity, usdt, base_bal)
+            self._run_grid(price, equity, quote_bal, base_bal)
         elif strategy == StrategyMode.COOLDOWN:
-            log.info(f"COOLDOWN: extreme volatility — skipping grid")
+            log.info(f"COOLDOWN: skipping grid")
 
-        # ── Status ──
-        self._log_status(price, equity, usdt)
+        self._log_status(price, equity, quote_bal, base_bal)
         self.core._save_state()
         self._log_perf()
 
-    def _run_grid(self, price: float, equity: float, usdt: float, base_bal: float) -> None:
-        """Adaptive grid strategy (v4.1: prezzo valido, ATR TP, min notional)."""
-        if price <= 0 or price * 100 < 0.01:
-            log.error(f"INVALID PRICE {price} — skipping grid deployment")
+    def _log_status(self, price: float, equity: float, quote: float, base: float) -> None:
+        cs = self.core.state
+        pnl = (equity - cs.initial_capital) / cs.initial_capital * 100 if cs.initial_capital > 0 else 0
+        ws = "[WS]" if (hasattr(self.eng, 'ws_connected') and self.eng.ws_connected) else "[!WS]"
+        log.info(f"MEXC STATUS | {ws} {SYMBOL} price={price:.4f} equity={equity:.2f} "
+                 f"{CURRENCY}={quote:.2f} {base=:.2f} PnL={pnl:+.2f}% "
+                 f"grid={len(cs.grid_levels)}/{cs.exec.grid_target_levels} "
+                 f"CB={cs.cb.state.value} mode={mode_label()}")
+
+    def _run_grid(self, price: float, equity: float, quote: float, base_bal: float) -> None:
+        if price <= 0:
+            log.error(f"INVALID PRICE {price}")
             return
 
         grid_params = self.core.get_grid_params()
@@ -224,32 +213,24 @@ class TradingEngine:
         levels = grid_params["levels"]
         atr_pct = self.core.state.regime.atr_pct
         tp_mult = grid_params.get("take_profit_mult", 1.2)
-
         effective_tp = max(0.01, atr_pct * 1.5) * tp_mult
         effective_tp = max(TAKE_PROFIT * 0.5, min(TAKE_PROFIT * 2.0, effective_tp))
-        log.debug(f"Grid: price={price:.6f} spread={spread*100:.2f}% TP={effective_tp*100:.2f}% levels={levels}")
 
-        # Max deployed capital
-        deployed_usdt = sum(
-            lvl.get("amount", 0) * lvl.get("buy_price", 0)
-            for lvl in self.core.state.grid_levels
-        )
-        max_grid_usdt = equity * MAX_DEPLOYED
-        remaining_capital = max(0, max_grid_usdt - deployed_usdt)
-        per_level_raw = remaining_capital / levels
-        if SHADOW_MODE:
-            per_level_raw *= SHADOW_FACTOR
-
-        # ── Reconcile open orders ──
         open_orders = []
         try:
             open_orders = self.eng.fetch_open_orders(SYMBOL)
+        except MexcPermanentError as e:
+            log.critical(f"PERMANENT ERROR (orders): {e}")
+            return
         except Exception as e:
-            self._error_count += 1
             log.warning(f"fetch_open_orders: {e}")
+            return
+
         open_ids = {o["id"] for o in open_orders if o.get("id")}
         levels_data = self.core.state.grid_levels
         active_levels = []
+        filled_updates = []
+        deployed = 0.0
 
         for lvl in levels_data:
             bid = lvl.get("buy_order_id") or lvl.get("order_id")
@@ -257,56 +238,63 @@ class TradingEngine:
             stage = lvl.get("stage", "buy")
             b_open = bid and bid in open_ids
             s_open = sid and sid in open_ids
+            cost = lvl.get("actual_cost", lvl["amount"] * lvl["buy_price"])
+            deployed += cost
 
             if stage == "buy" and not b_open and bid:
-                actual_filled = False
+                filled = False
                 try:
                     if not SHADOW_MODE and not MOCK_MODE:
-                        order_info = self.eng.ex.fetch_order(bid, SYMBOL)
-                        actual_filled = order_info.get("status") == "closed" and float(order_info.get("filled", 0)) > 0
-                        if order_info.get("status") == "canceled":
-                            log.info(f"Order {bid} cancelled — removing level")
+                        info = self.eng.fetch_order(bid, SYMBOL)
+                        filled = info.get("status") == "closed" and float(info.get("filled", 0)) > 0
+                        if info.get("status") == "canceled":
                             continue
+                except MexcPermanentError:
+                    continue
                 except Exception:
-                    actual_filled = True
-
-                if actual_filled:
+                    filled = True
+                if filled:
                     try:
                         so = {"id": f"shadow-sell-{len(levels_data)}"} if SHADOW_MODE else \
                              self.eng.create_limit_sell_order(SYMBOL, self.eng.round_amount(lvl["amount"]), self.eng.round_price(lvl["sell_price"]))
                         if so:
                             lvl["sell_order_id"] = so.get("id")
                             lvl["stage"] = "sell"
+                            lvl["actual_cost"] = cost
                             log.info(f"FILL BUY USDT {lvl['buy_price']} -> SELL {lvl['amount']} @ USDT {lvl['sell_price']}")
-                            if not SHADOW_MODE:
-                                time.sleep(0.5)
+                    except MexcPermanentError:
+                        return
                     except Exception as e:
-                        self._error_count += 1
                         log.error(f"SELL failed: {e}")
                     active_levels.append(lvl)
             elif stage == "sell" and not b_open and not s_open:
-                cb = lvl.get("actual_cost", lvl["amount"] * lvl["buy_price"])
-                pp = lvl["amount"] * lvl["sell_price"]
-                pnl = (pp - cb) / cb
-                self.core.update_kelly(pnl)
-                log.info(f"ROUND: USDT {lvl['buy_price']} -> USDT {lvl['sell_price']} = {pnl*100:+.2f}%  Kelly:{self.core.kelly_fraction*100:.0f}%")
-                remaining_capital += cb
+                sp = lvl.get("sell_price", 0)
+                pp = lvl["amount"] * sp
+                pnl = (pp - cost) / cost if cost > 0 else 0
+                filled_updates.append(pnl)
+                log.info(f"ROUND: USDT {lvl['buy_price']} -> USDT {sp} = {pnl*100:+.2f}%")
             elif b_open or s_open:
                 lvl["stage"] = "sell" if s_open else "buy"
                 active_levels.append(lvl)
 
         self.core.state.grid_levels = active_levels
+        for pnl in filled_updates:
+            self.core.update_kelly(pnl)
 
-        # ── Deploy new grid levels ──
         active_count = len(active_levels)
-        per_level = per_level_raw if per_level_raw > 0 else (CAPITAL * MAX_DEPLOYED) / levels
+        max_grid = equity * MAX_DEPLOYED
+        remaining = max(0, max_grid - deployed)
+        avail = min(remaining, quote)
+        per_level = avail / levels if levels > 0 else 0
 
-        if active_count < levels and usdt >= per_level and remaining_capital > MIN_ORDER_USDT:
+        if SHADOW_MODE:
+            per_level *= SHADOW_FACTOR
+
+        if active_count < levels and per_level >= MIN_ORDER_USDT and quote >= per_level:
             bb = price * (1 - spread)
             for i in range(active_count, levels):
                 bp = self.eng.round_price(bb * (1 - spread * i))
                 if bp <= 0:
-                    log.warning(f"Invalid bp={bp} (price={price}, spread={spread}, i={i}), skipping")
                     continue
                 sp = self.eng.round_price(bp * (1 + spread + effective_tp))
                 amt = self.eng.round_amount(per_level / bp)
@@ -314,7 +302,6 @@ class TradingEngine:
                     continue
                 notional = amt * bp
                 if notional < MIN_ORDER_USDT:
-                    log.warning(f"Order too small: {amt} @ {bp} = USDT {notional:.2f} (min {MIN_ORDER_USDT}), skipping")
                     continue
                 try:
                     bo = {"id": f"shadow-buy-{i}"} if SHADOW_MODE else \
@@ -324,68 +311,34 @@ class TradingEngine:
                             "buy_order_id": bo.get("id"), "order_id": bo.get("id"),
                             "buy_price": bp, "sell_price": sp, "amount": amt,
                             "stage": "buy", "time": datetime.now().isoformat(),
+                            "actual_cost": notional,
                         }
                         self.core.state.grid_levels.append(lvl)
-                        log.info(f"GRID BUY {len(self.core.state.grid_levels)}/{levels} USDT {bp} amt {amt} ({per_level:.2f}USDT) TP={effective_tp*100:.1f}%")
-                        if not SHADOW_MODE:
-                            time.sleep(0.5)
+                        log.info(f"GRID BUY {len(self.core.state.grid_levels)}/{levels} USDT {bp} amt {amt} ({notional:.2f}) TP={effective_tp*100:.1f}%")
+                except MexcPermanentError:
+                    return
                 except Exception as e:
-                    self._error_count += 1
                     log.error(f"BUY failed (level {i}): {e}")
 
-    def _run_dca(self, price: float, equity: float, base_bal: float) -> None:
-        dca = self.core.state.dca
-        if not dca.active:
-            should, size, reason = self.core.dca_should_enter(price, equity)
-            if should:
-                if SHADOW_MODE:
-                    log.info(f"DCA ENTER (shadow) {reason} size={size:.2f}USDT")
-                    self.core.dca_open_position(price, size / price, size)
-                elif MOCK_MODE:
-                    log.info(f"DCA ENTER (mock) {reason} size={size:.2f}USDT")
-                    self.core.dca_open_position(price, size / price, size)
-                else:
-                    try:
-                        amt = self.eng.round_amount(size / price)
-                        bo = self.eng.create_limit_buy_order(SYMBOL, amt, price)
-                        if bo:
-                            self.core.dca_open_position(price, amt, size)
-                            log.info(f"DCA BUY {amt} @ USDT {price} = USDT {size:.2f}")
-                    except Exception as e:
-                        log.error(f"DCA buy order failed: {e}")
+    def _log_perf(self) -> None:
+        now = time.time()
+        if now - self._last_perf_log < 300:
+            return
+        self._last_perf_log = now
+        p = self.core.state.perf
+        log.info("-" * 60)
+        log.info(f"PERF: Trades={p.total_trades} WR={p.win_rate*100:.0f}% "
+                 f"Sharpe={p.sharpe_ratio:.2f} Sortino={p.sortino_ratio:.2f}")
+        log.info(f"PERF: Kelly={self.core.kelly_fraction*100:.0f}% "
+                 f"SizeMult={self.core.state.sizing_multiplier:.2f}")
+        log.info("-" * 60)
 
-        should_exit, amount, reason = self.core.dca_should_exit(price)
-        if should_exit:
-            if not SHADOW_MODE and not MOCK_MODE:
-                try:
-                    so = self.eng.create_limit_sell_order(SYMBOL, self.eng.round_amount(amount), self.eng.round_price(price))
-                    if so:
-                        pnl = self.core.dca_close_position(exit_price=price)
-                        log.info(f"DCA EXIT {reason} size={amount:.2f} PnL={pnl*100:+.2f}%")
-                except Exception as e:
-                    log.error(f"DCA sell order failed: {e}")
-            else:
-                pnl = self.core.dca_close_position(exit_price=price)
-                log.info(f"DCA EXIT (shadow) {reason} size={amount:.2f} PnL={pnl*100:+.2f}%")
-
-    def _log_status(self, price: float, equity: float, usdt: float) -> None:
-        cs = self.core.state
-        pnl = (equity - cs.initial_capital) / cs.initial_capital * 100 if cs.initial_capital > 0 else 0
-        log.info(f"DENARO STATUS | {SYMBOL} price={price:.6f} equity={equity:.2f} "
-                 f"USDT={usdt:.2f} PnL={pnl:+.2f}% grid={len(cs.grid_levels)}/{cs.exec.grid_target_levels} "
-                 f"CB={cs.cb.state.value} mode={mode_label()}")
-
-
-# ═══════════════════════════════════════════════════════════════════════════
-# MAIN
-# ═══════════════════════════════════════════════════════════════════════════
 
 def main() -> None:
     for w in validate_config():
         log.warning(f"Config warning: {w}")
-    log.info(f"Starting Denaro MEXC | {SYMBOL} | {mode_label()} | CAPITAL={CAPITAL}")
+    log.info(f"Starting Denaro MEXC v5 | {SYMBOL} | {mode_label()} | CAPITAL={CAPITAL} | LEVELS={LEVELS}")
 
-    # ── Health server ──
     health = None
     try:
         from enhanced.health_server import HealthServer
@@ -398,7 +351,6 @@ def main() -> None:
 
     notify_startup(SYMBOL, mode_label(), CAPITAL)
 
-    # ── Credentials ──
     env = {}
     for p in [Path(__file__).parent / ".env", Path.home() / "denaro" / ".env", Path(".env")]:
         if p.exists():
@@ -410,7 +362,6 @@ def main() -> None:
     if not api_key or not api_secret:
         log.critical("MEXC_API or MEXC_SECRET not found"); sys.exit(1)
 
-    # ── Engine ──
     if MOCK_MODE:
         from mock_runner import MockKrakenEngine
         engine = MockKrakenEngine(initial_eur=CAPITAL)
@@ -418,45 +369,74 @@ def main() -> None:
     else:
         try:
             engine = MexcEngine(api_key, api_secret, symbol=SYMBOL)
+        except MexcPermanentError as e:
+            log.critical(f"MEXC credentials invalid: {e}")
+            sys.exit(1)
         except Exception as e:
             log.critical(f"Engine init: {e}"); sys.exit(1)
 
-    core = DenaroCore(initial_capital=CAPITAL, state_path=CORE_STATE_FILE)
-    log.info(f"Core loaded: {CORE_STATE_FILE}")
+    max_dd = float(os.environ.get("MAX_DRAWDOWN_PCT", "15.0")) / 100.0
+    max_dl = float(os.environ.get("MAX_DAILY_LOSS_PCT", "5.0")) / 100.0
+    max_cl = int(os.environ.get("MAX_CONSECUTIVE_LOSSES", "4"))
+    compound = float(os.environ.get("COMPOUND_RATIO", "0.5"))
+    core = DenaroCore(
+        initial_capital=CAPITAL,
+        daily_loss_limit=max_dl,
+        max_drawdown_limit=max_dd,
+        max_consecutive_losses=max_cl,
+        compound_ratio=compound,
+        state_path=CORE_STATE_FILE,
+    )
+    log.info(f"Core loaded: {CORE_STATE_FILE} | DD={max_dd*100:.0f}% DL={max_dl*100:.0f}% CL={max_cl}")
 
     if not MOCK_MODE:
-        log.info("Cancelling orphan orders...")
         try:
             engine.cancel_all_orders(SYMBOL)
+            log.info("Orphan orders cancelled")
         except Exception as e:
             log.warning(f"Cancel orphans: {e}")
 
     grid = TradingEngine(engine, core)
     cycle = 0
-
+    deep_sleep = False
     shutdown = {"flag": False}
+
     def _handle(sig, frame):
         if shutdown["flag"]:
-            log.warning("Second signal — force exit"); sys.exit(1)
-        log.info(f"Signal {sig} — graceful shutdown...")
+            sys.exit(1)
+        log.info(f"Signal {sig} — shutdown...")
         shutdown["flag"] = True
     signal.signal(signal.SIGTERM, _handle)
     signal.signal(signal.SIGINT, _handle)
 
-    degraded = False
-
     while not shutdown["flag"]:
         cycle += 1
         cycle_ok = False
+
+        if deep_sleep:
+            log.info(f"DEEP SLEEP — checking every {LOCKOUT_RETRY_INTERVAL}s")
+            for _ in range(int(LOCKOUT_RETRY_INTERVAL)):
+                if shutdown["flag"]:
+                    break
+                time.sleep(1)
+            try:
+                price = engine.fetch_ticker(SYMBOL)
+                if price > 0:
+                    deep_sleep = False
+                    log.info("DEEP SLEEP: exchange responsive")
+            except Exception:
+                continue
+            health_write()
+            continue
+
         try:
             grid.run()
             cycle_ok = True
             grid._error_count = 0
-
+            grid._consecutive_api_failures = 0
             if health and cycle % 5 == 0:
                 eq = core.state.current_capital
-                initial = core.state.initial_capital
-                pnl = (eq - initial) / initial * 100 if initial > 0 else 0
+                pnl = (eq - CAPITAL) / CAPITAL * 100 if CAPITAL > 0 else 0
                 health.update(
                     status="ok", equity=eq, pnl_pct=pnl,
                     grid_levels=len(grid.core.state.grid_levels),
@@ -466,43 +446,30 @@ def main() -> None:
                     last_cycle_ts=time.time(), last_cycle_ok=True,
                     uptime_sec=time.time() - grid._started_at,
                     ws_connected=getattr(engine, "ws_connected", False),
-                    error_count=0,
                     strategy=core.state.exec.active_strategy.value,
                     trend=core.state.regime.trend.value,
-                    dca_active=core.state.dca.active,
                 )
-            if degraded and cycle_ok:
-                degraded = False
-                log.info("Recovered — normal cycle")
+        except MexcPermanentError as e:
+            log.critical(f"PERMANENT ERROR: {e} — shutdown")
+            break
         except KeyboardInterrupt:
             break
         except Exception as e:
             grid._error_count += 1
-            log.error(f"Cycle {cycle}: {type(e).__name__}: {e}\n{traceback.format_exc()}")
-            if health:
-                health.update(status="degraded" if grid._error_count < 5 else "down",
-                              last_cycle_ok=False, error_count=grid._error_count)
+            grid._consecutive_api_failures += 1
+            log.error(f"Cycle {cycle}: {e}")
             if grid._error_count >= 3:
-                if not degraded:
-                    degraded = True
-                    log.warning(f"Degradation: {grid._error_count} errors — backing off")
+                if grid._consecutive_api_failures >= DEEP_SLEEP_CYCLES:
+                    deep_sleep = True
+                    log.warning(f"Entering DEEP SLEEP")
                 time.sleep(min(COOLDOWN * 3, 120))
                 continue
 
-        if cycle % 30 == 0:
-            health_write()
-
-        sleep_sec = COOLDOWN * (3 if degraded else 1)
-        if shutdown["flag"]:
-            break
-        for _ in range(int(min(sleep_sec, 5))):
+        for _ in range(int(min(COOLDOWN, 5))):
             if shutdown["flag"]:
                 break
             time.sleep(1)
 
-    # ── Shutdown ──
-    tg_notify(f"Shutting down | {SYMBOL}")
-    log.info("Shutdown — cancelling orders...")
     try:
         engine.cancel_all_orders(SYMBOL)
     except Exception:
@@ -512,13 +479,10 @@ def main() -> None:
     except Exception:
         pass
     if health:
-        health.set_down("shutdown"); health.stop()
+        health.stop()
     if hasattr(engine, "close"):
-        try:
-            engine.close()
-        except Exception:
-            pass
-    log.info("Denaro MEXC shut down.")
+        engine.close()
+    log.info("MEXC Denaro shut down.")
 
 if __name__ == "__main__":
     main()
