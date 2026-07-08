@@ -216,7 +216,8 @@ class _KrakenWSFeed:
             log.warning("websockets not installed")
             return
 
-        ws_symbol = self.symbol.replace("/", "")
+        # Kraken WS v2: symbol format = "DOGE/EUR" (con slash, NON "DOGEEUR")
+        ws_symbol = self.symbol  # Mantiene lo slash per Kraken WS v2
         subscribe = json.dumps({
             "method": "subscribe",
             "params": {"channel": "ticker", "symbol": [ws_symbol]},
@@ -242,7 +243,19 @@ class _KrakenWSFeed:
                             data = json.loads(raw)
                         except json.JSONDecodeError:
                             continue
+                        # Log subscription status (success/failure)
+                        # Log subscription status (success/failure)
+                        if isinstance(data, dict) and data.get("method") == "subscribe":
+                            success = data.get("success", False)
+                            channel = data.get("result", {}).get("channel", "?") if success else "?"
+                            if success:
+                                log.info(f"WS subscribed: {channel} ✓")
+                            else:
+                                log.warning(f"WS subscription failed: {data.get('error', 'unknown')}")
+                            continue
                         if data.get("channel") == "heartbeat":
+                            # Update last ticker ts on heartbeat to prevent stale detection
+                            self._last_ticker_ts = time.time()
                             continue
                         if data.get("channel") == "ticker":
                             self._process_ticker(data)
@@ -261,10 +274,13 @@ class _KrakenWSFeed:
             ticker = data["data"][0]
             p = float(ticker.get("last", 0))
             if p > 0:
+                changed = self._latest_price != p
                 self._latest_price = p
                 self._last_ticker_ts = time.time()
-        except (KeyError, IndexError, TypeError, ValueError):
-            pass
+                if changed:
+                    log.debug(f"WS ticker: {p} @ {self.symbol}")
+        except (KeyError, IndexError, TypeError, ValueError) as e:
+            log.debug(f"WS ticker parse: {e}")
 
     def _process_book(self, data: dict) -> None:
         try:
