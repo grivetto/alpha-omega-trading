@@ -280,8 +280,22 @@ class TradingEngine:
             s_open = sid and sid in open_ids
 
             if stage == "buy" and not b_open and bid:
-                # Buy was filled — place sell
-                if SHADOW_MODE or base_bal >= lvl["amount"] * 0.5:
+                # v4.1: Verifica stato reale dell'ordine su Kraken
+                # Potrebbe essere stato FILLED, CANCELLED, o EXPIRED
+                actual_filled = False
+                try:
+                    if not SHADOW_MODE and not MOCK_MODE:
+                        order_info = self.eng.ex.fetch_order(bid, SYMBOL)
+                        actual_filled = order_info.get("status") == "closed" and float(order_info.get("filled", 0)) > 0
+                        if order_info.get("status") == "canceled":
+                            log.info(f"Order {bid} cancelled — removing level")
+                            continue  # skip this level entirely
+                except Exception:
+                    # Fallback: se non riusciamo a verificare, assumiamo filled
+                    actual_filled = True
+
+                if actual_filled:
+                    # Buy was filled — place sell
                     try:
                         so = {"id": f"shadow-sell-{len(levels_data)}"} if SHADOW_MODE else \
                              self.eng.create_limit_sell_order(SYMBOL, self.eng.round_amount(lvl["amount"]), self.eng.round_price(lvl["sell_price"]))
@@ -294,7 +308,8 @@ class TradingEngine:
                     except Exception as e:
                         self._error_count += 1
                         log.error(f"SELL failed: {e}")
-                active_levels.append(lvl)
+                    active_levels.append(lvl)
+                # else: order was cancelled/expired — level silently removed
             elif stage == "sell" and not b_open and not s_open:
                 # Round complete
                 cb = lvl.get("actual_cost", lvl["amount"] * lvl["buy_price"])
