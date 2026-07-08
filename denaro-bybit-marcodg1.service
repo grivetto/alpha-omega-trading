@@ -1,6 +1,6 @@
 [Unit]
-Description=Denaro v5 Bybit Bot - DOGE/USDT Grid (MARCODG1)
-Documentation=https://github.com/sergio-grivetto/denaro
+Description=Denaro v5 Bybit - SOL/USDT Grid (MARCODG1)
+Documentation=https://github.com/grivetto/alpha-omega-trading
 After=network-online.target
 Wants=network-online.target
 
@@ -21,7 +21,8 @@ CPUQuota=50%
 OOMScoreAdjust=500
 IOWeight=200
 
-# ── Sandboxing ──
+# ── Sandboxing (log file e stato devono essere scrivibili) ──
+ReadWritePaths=/home/marco/denaro/
 PrivateTmp=true
 ProtectSystem=full
 ProtectHome=read-only
