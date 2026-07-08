@@ -10,7 +10,8 @@ from typing import Dict, List, Optional
 
 
 class MockKrakenEngine:
-    """Simula completamente Kraken REST API con state tracking realistico."""
+    """Simula completamente Kraken REST API con state tracking realistico.
+    Compatibile con KrakenEngine v5 (cache, lockout, stats)."""
 
     def __init__(self, initial_eur=100.0, initial_doge=0.0, start_price=0.064):
         self.eur_balance = initial_eur
@@ -23,10 +24,41 @@ class MockKrakenEngine:
         self._cycle = 0
         self._fill_probability = 0.08
         self.ws_connected = False
+        # v5: Compat
+        self._lockout_mode = False
+        self._api_calls = 0
+        self._cache_hits = 0
 
     @property
     def ex(self):
         return self
+
+    @property
+    def in_lockout(self) -> bool:
+        return self._lockout_mode
+
+    @property
+    def lockout_remaining(self) -> float:
+        return 0.0
+
+    @property
+    def ws_stale(self) -> bool:
+        return False
+
+    def get_stats(self) -> dict:
+        return {
+            "api_calls": self._api_calls,
+            "cache_hits": self._cache_hits,
+            "cache_misses": self._api_calls - self._cache_hits,
+            "lockout": self._lockout_mode,
+            "lockout_remaining_s": 0.0,
+            "ws_connected": False,
+            "ws_stale": False,
+            "balance_cached": False,
+            "balance_cache_age_s": -1,
+            "orders_cached": False,
+            "orders_cache_age_s": -1,
+        }
 
     def fetch_ticker(self, symbol: str) -> float:
         self._cycle += 1
@@ -39,10 +71,15 @@ class MockKrakenEngine:
         return self.base_price
 
     def fetch_balance(self, asset: str = None) -> dict | float:
-        """CCXT-compatible: returns dict when called without args, float when asset specified."""
+        """v5: supporta 'FULL' per dict completo."""
         if asset is None:
             return {"total": {"EUR": self.eur_balance, "DOGE": self.doge_balance},
                     "free": {"EUR": self.eur_balance, "DOGE": self.doge_balance}}
+        if asset.upper() == "FULL":
+            return {"EUR": self.eur_balance, "DOGE": self.doge_balance,
+                    "total": {"EUR": self.eur_balance, "DOGE": self.doge_balance},
+                    "free": {"EUR": self.eur_balance, "DOGE": self.doge_balance},
+                    "used": {"EUR": 0.0, "DOGE": 0.0}}
         if asset.upper() == "EUR":
             return self.eur_balance
         if asset.upper() == "DOGE":

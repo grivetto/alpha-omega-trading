@@ -216,3 +216,19 @@ def notify_cb_close(equity: float) -> None:
     """Circuit breaker closed — trading resumed."""
     notify(f"CB CLOSED — Trading resumed | Equity: €{equity:.2f}",
            severity="cb_close")
+
+
+def notify_lockout(backoff: float) -> None:
+    """Kraken lockout notification."""
+    notify(f"KRAKEN LOCKOUT — backoff {backoff:.0f}s", severity="error")
+
+
+def notify_lockout_cleared() -> None:
+    """Kraken lockout cleared."""
+    notify("KRAKEN — Lockout cleared, resuming", severity="success")
+
+
+def notify_invalid_key() -> None:
+    """Kraken API key invalid."""
+    notify("🔑 KRAKEN API KEY INVALID — trading stopped",
+           severity="critical")

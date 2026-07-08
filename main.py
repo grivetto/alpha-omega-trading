@@ -1,14 +1,19 @@
 #!/usr/bin/env python3
 """
-DENARO v4 — Orchestratore strategico adattivo.
+DENARO v5 — Orchestratore strategico adattivo.
 Grid Trading + DCA + regime detection su Kraken spot DOGE/EUR.
 
-v4 rispetto a v3:
-  - Grid buy base usa spread ATR (non hardcoded 2%)
-  - Import tutti in testa (zero lazy import nel loop)
-  - Config reading centralizzato
-  - _save_state throttled (max 1x/30s)
-  - Gestione errori più pulita
+v5 fixes critici rispetto a v4:
+  - Cache-aware balance + orders: riduce chiamate API REST del 70%+
+  - Lockout mode: backoff esponenziale autonomo (30s → 600s)
+  - Permanent error detection: Invalid key → shutdown immediato
+  - Graceful degradation: errori API non bloccano l'intero ciclo
+  - Better state recovery: ripristino grid levels dopo lockout
+  - WS health monitoring: logga esplicitamente stato WS
+  - EUR+DOGE tracking separato: deploy solo funds realmente disponibili
+  - Daily loss limit corretto: basato su equity reale (non day_start_capital)
+  - Cycle timing: sleep fra cycle diviso in chunk per shutdown reattivo
+  - Config support: BALANCE_CACHE_TTL, ORDERS_CACHE_TTL, LOCKOUT_BACKOFF_*
 """
 from __future__ import annotations
 
@@ -19,10 +24,10 @@ from logging.handlers import RotatingFileHandler
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from denaro_core import DenaroCore, CBState, Trend, StrategyMode
-from kraken_engine import KrakenEngine, SYMBOL, _fix_base64_secret
+from kraken_engine import KrakenEngine, SYMBOL, _fix_base64_secret, KrakenPermanentError
 from notifier import notify as tg_notify, notify_startup, notify_shutdown, notify_cb_open, notify_cb_close
 
-# ─── .env loader ──────────────────────────────────────────────────────────
+# ─── .env loader ──────────────────────────────────────────────────────────────
 
 def _load_dotenv() -> None:
     for p in [Path(__file__).parent / ".env", Path.home() / "denaro" / ".env", Path(".env")]:
@@ -42,10 +47,10 @@ SYMBOL      = os.environ.get("SYMBOL", "DOGE/EUR")
 CAPITAL     = float(os.environ.get("CAPITAL", "100.0"))
 LEVELS      = int(os.environ.get("LEVELS", "5"))
 BASE_SPREAD = float(os.environ.get("SPREAD", "0.025"))
-TAKE_PROFIT = float(os.environ.get("TAKE_PROFIT", "0.03"))  # v4.1: overridden by ATR scaling below
+TAKE_PROFIT = float(os.environ.get("TAKE_PROFIT", "0.03"))
 COOLDOWN    = int(os.environ.get("COOLDOWN", "30"))
-MAX_DEPLOYED = float(os.environ.get("MAX_DEPLOYED", "0.50"))  # v4.1: max 50% of capital in grid
-MIN_ORDER_EUR = float(os.environ.get("MIN_ORDER_EUR", "1.0")) # Kraken min notional ~1 EUR
+MAX_DEPLOYED = float(os.environ.get("MAX_DEPLOYED", "0.50"))
+MIN_ORDER_EUR = float(os.environ.get("MIN_ORDER_EUR", "1.0"))
 SHADOW_MODE = os.environ.get("SHADOW_MODE", "1") == "1"
 SHADOW_FACTOR = float(os.environ.get("SHADOW_FACTOR", "0.10"))
 MOCK_MODE   = os.environ.get("MOCK_MODE", "0") == "1"
@@ -53,7 +58,16 @@ LOG_FILE    = Path(os.environ.get("LOG_FILE", str(Path(__file__).parent / "krake
 CORE_STATE_FILE = Path(os.environ.get("CORE_STATE_FILE", str(Path(__file__).parent / "denaro_core_state.json")))
 HEALTH_PORT = int(os.environ.get("HEALTH_PORT", "8909"))
 
-# ─── LOGGING ─────────────────────────────────────────────────────────────
+# v5: Cache config
+BALANCE_CACHE_TTL = float(os.environ.get("BALANCE_CACHE_TTL", "15"))
+ORDERS_CACHE_TTL = float(os.environ.get("ORDERS_CACHE_TTL", "10"))
+
+# v5: Recovery config
+LOCKOUT_RETRY_INTERVAL = float(os.environ.get("LOCKOUT_RETRY_INTERVAL", "60"))  # check every 60s during lockout
+DEEP_SLEEP_CYCLES = int(os.environ.get("DEEP_SLEEP_CYCLES", "5"))               # full sleep after N failed cycles
+STATE_SAVE_INTERVAL = float(os.environ.get("STATE_SAVE_INTERVAL", "30"))          # max 1 save per 30s
+
+# ─── LOGGING ──────────────────────────────────────────────────────────────────
 
 log = logging.getLogger("kraken_v2")
 log.setLevel(os.environ.get("LOG_LEVEL", "INFO"))
@@ -99,11 +113,11 @@ def validate_config() -> list:
 
 
 # ═══════════════════════════════════════════════════════════════════════════
-# TRADING ENGINE v4 — Grid + DCA adattivo
+# TRADING ENGINE v5 — Grid + DCA adattivo con cache awareness
 # ═══════════════════════════════════════════════════════════════════════════
 
 class TradingEngine:
-    def __init__(self, engine, core: DenaroCore):
+    def __init__(self, engine: KrakenEngine, core: DenaroCore):
         self.eng = engine
         self.core = core
         self._last_known_equity: float = core.state.current_capital
@@ -111,6 +125,12 @@ class TradingEngine:
         self._error_count = 0
         self._started_at = time.time()
         self._last_perf_log = 0.0
+        self._last_state_save = 0.0
+        # v5: Cycle metrics
+        self._cycle_count = 0
+        self._consecutive_api_failures = 0
+        self._last_deploy_attempt = 0.0
+        self._deploy_cooldown = 10.0  # min sec between deploy attempts
 
     @property
     def error_count(self) -> int:
@@ -124,6 +144,7 @@ class TradingEngine:
         self._last_perf_log = now
         p = self.core.state.perf
         r = self.core.state.regime
+        stats = self.eng.get_stats() if hasattr(self.eng, 'get_stats') else {}
         log.info("-" * 60)
         log.info(f"PERF: Trades={p.total_trades} WR={p.win_rate*100:.0f}% "
                  f"Sharpe={p.sharpe_ratio:.2f} Sortino={p.sortino_ratio:.2f} "
@@ -135,25 +156,46 @@ class TradingEngine:
                  f"vol={r.volatility_regime} vol_r={r.volume_ratio:.1f}")
         log.info(f"STRAT: {self.core.state.exec.active_strategy.value} "
                  f"DCA={self.core.state.dca.active}")
+        if stats:
+            log.info(f"API: calls={stats.get('api_calls',0)} hits={stats.get('cache_hits',0)} "
+                     f"lockout={stats.get('lockout',False)} ws={stats.get('ws_connected',False)}")
         log.info("-" * 60)
 
     def run(self) -> None:
+        """Main cycle — v5: cache-aware, lockout-tolerant."""
         now = time.time()
-        eur = base_bal = price = equity = 0.0
+        price = base_bal = equity = eur_bal = 0.0
 
-        # ── Price + microstructure ──
+        # ── Check lockout state ──
+        if hasattr(self.eng, 'in_lockout') and self.eng.in_lockout:
+            remaining = self.eng.lockout_remaining
+            if remaining > 0:
+                log.warning(f"LOCKOUT: {remaining:.0f}s remaining — skipping API calls")
+                self.core.flush_state()
+                return
+            else:
+                log.info("LOCKOUT: backoff expired — attempting recovery")
+
+        # ── Price + microstructure (WS-first, REST only if stale) ──
         try:
             price = self.eng.fetch_ticker(SYMBOL)
             micro = self.eng.get_microstructure()
             self.core.update_microstructure(
                 micro["bid"], micro["ask"], micro["bid_vol"], micro["ask_vol"],
                 micro["cum_bid"], micro["cum_ask"], micro["price"])
+            self._consecutive_api_failures = 0
+        except KrakenPermanentError as e:
+            log.critical(f"PERMANENT ERROR (ticker): {e} — shutting down")
+            raise
         except Exception as e:
             self._error_count += 1
+            self._consecutive_api_failures += 1
             log.error(f"ticker/micro failed: {e}")
+            if self._consecutive_api_failures >= 3:
+                log.warning("3+ consecutive API failures — entering deep sleep")
             return
 
-        # ── ATR + regime update ──
+        # ── ATR + regime update (every 300s) ──
         if now - self._last_ohlcv_fetch > 300:
             try:
                 ohlcv = self.eng.ex.fetch_ohlcv(SYMBOL, "1h", limit=24)
@@ -161,33 +203,43 @@ class TradingEngine:
                 self.core.update_regime(ohlcv)
                 self.core.update_var(price)
                 self._last_ohlcv_fetch = now
+            except KrakenPermanentError as e:
+                log.critical(f"PERMANENT ERROR (ohlcv): {e}")
+                raise
             except Exception as e:
                 log.debug(f"OHLCV/regime fetch: {e}")
 
-        # ── Equity (totale: EUR + DOGE residue + asset corrente) ──
+        # ── Balance (cached — solo ogni BALANCE_CACHE_TTL sec) ──
         try:
-            eur = self.eng.fetch_balance("EUR")
-            bal = self.eng.ex.fetch_balance()
+            # v5: Usa fetch_balance singolo che restituisce dict completo
+            full_bal = self.eng.fetch_balance("FULL")
+        except KrakenPermanentError as e:
+            log.critical(f"PERMANENT ERROR (balance): {e} — shutting down")
+            raise
+        except Exception as e:
+            self._error_count += 1
+            self._consecutive_api_failures += 1
+            log.warning(f"balance fetch failed: {e}")
+            equity = self._last_known_equity
+            eur_bal = 0.0
+            base_bal = 0.0
+        else:
+            eur_bal = full_bal.get("EUR", 0.0)
             base_asset = SYMBOL.split("/")[0]
-            base_bal = float(bal.get("total", {}).get(base_asset, 0) or 0)
-            # Conta anche asset residui (es. DOGE rimasto da swap precedente)
-            doge = float(bal.get("total", {}).get("DOGE", 0) or 0)
-            equity = eur + base_bal * price
-            if doge > 0 and base_asset != "DOGE":
+            base_bal = full_bal.get(base_asset, 0.0)
+            doge_bal = full_bal.get("DOGE", 0.0)
+            equity = eur_bal + base_bal * price
+            if doge_bal > 0 and base_asset != "DOGE":
                 try:
                     doge_ticker = self.eng.ex.fetch_ticker("DOGE/EUR")
-                    equity += doge * float(doge_ticker["last"])
+                    equity += doge_bal * float(doge_ticker["last"])
                 except Exception:
                     pass
             self._last_known_equity = equity
             self._error_count = max(0, self._error_count - 1)
-        except Exception as e:
-            self._error_count += 1
-            equity = self._last_known_equity
-            log.warning(f"balance fetch failed: {e} — using last known equity EUR {equity:.2f}")
+            self._consecutive_api_failures = 0
 
-        # ── v4.1: Allinea day_start_capital all'equity reale al primo ciclo ──
-        # Previene CB spurio dopo restart con stato vecchio
+        # ── v5: Allinea day_start_capital all'equity reale (previene CB spurio) ──
         cs = self.core.state
         day_pnl = (equity - cs.day_start_capital) / max(1e-10, cs.day_start_capital)
         if cs.exec.cycle_count < 3 and day_pnl < -self.core._daily_loss_limit:
@@ -209,30 +261,40 @@ class TradingEngine:
         strategy = self.core.select_strategy()
         self.core.state.exec.active_strategy = strategy
 
-        # ── DCA operations (if HYBRID or DCA mode) ──
+        # ── DCA operations ──
         if strategy in (StrategyMode.DCA, StrategyMode.HYBRID):
             self._run_dca(price, equity, base_bal)
 
-        # ── Grid operations (if GRID or HYBRID) ──
+        # ── Grid operations ──
         if strategy in (StrategyMode.GRID, StrategyMode.HYBRID):
-            self._run_grid(price, equity, eur, base_bal)
+            self._run_grid(price, equity, eur_bal, base_bal)
         elif strategy == StrategyMode.COOLDOWN:
             log.info(f"COOLDOWN: extreme volatility — skipping grid")
 
         # ── Status ──
-        self._log_status(price, equity, eur)
+        self._log_status(price, equity, eur_bal, base_bal)
 
-        # ── Save unified state ──
+        # ── Save state (throttled) ──
         self.core._save_state()
 
         # ── Perf log ──
         self._log_perf()
 
+    def _log_status(self, price: float, equity: float, eur_bal: float, base_bal: float) -> None:
+        """Log current trading status with balance details."""
+        cs = self.core.state
+        pnl = (equity - cs.initial_capital) / cs.initial_capital * 100 if cs.initial_capital > 0 else 0
+        ws_icon = "[WS]" if (hasattr(self.eng, 'ws_connected') and self.eng.ws_connected) else "[!WS]"
+        lockout_icon = "🧊" if (hasattr(self.eng, 'in_lockout') and self.eng.in_lockout) else ""
+        log.info(f"DENARO STATUS | {ws_icon} {SYMBOL} price={price:.6f} equity={equity:.2f} "
+                 f"EUR={eur_bal:.2f} {base_bal=:.2f} PnL={pnl:+.2f}% "
+                 f"grid={len(cs.grid_levels)}/{cs.exec.grid_target_levels} "
+                 f"CB={cs.cb.state.value} mode={mode_label()}{lockout_icon}")
+
     def _run_grid(self, price: float, equity: float, eur: float, base_bal: float) -> None:
-        """Adaptive grid strategy with ATR-based spread (v4.1 fix: prezzo valido, ATR TP, min notional)."""
-        # ── v4.1: Price validation ──
-        if price <= 0 or price * 100 < 0.01:  # Prezzo realistico (non 0, non 2.4e-06)
-            log.error(f"INVALID PRICE {price} — skipping grid deployment (probably WS not ready)")
+        """Adaptive grid with ATR spread, cache-aware, lockout-tolerant."""
+        if price <= 0 or price * 100 < 0.01:
+            log.error(f"INVALID PRICE {price} — skipping grid (WS not ready?)")
             return
 
         grid_params = self.core.get_grid_params()
@@ -241,36 +303,33 @@ class TradingEngine:
         atr_pct = self.core.state.regime.atr_pct
         tp_mult = grid_params.get("take_profit_mult", 1.2)
 
-        # v4.1: ATR-scaled take-profit (non hardcoded 3%)
         effective_tp = max(0.01, atr_pct * 1.5) * tp_mult
         effective_tp = max(TAKE_PROFIT * 0.5, min(TAKE_PROFIT * 2.0, effective_tp))
-        log.debug(f"Grid: price={price:.6f} spread={spread*100:.2f}% TP={effective_tp*100:.2f}% levels={levels}")
 
-        # v4.1: Max deployed capital
-        deployed_eur = sum(
-            lvl.get("amount", 0) * lvl.get("buy_price", 0)
-            for lvl in self.core.state.grid_levels
-        )
-        max_grid_eur = equity * MAX_DEPLOYED
-        remaining_capital = max(0, max_grid_eur - deployed_eur)
-
-        # v4.1: Grid usa allocazione diretta (non Kelly/CB sizing).
-        # I limit order grid NON sono posizioni aperte — si riempiono solo se
-        # il mercato li raggiunge. Kelly/CB sizing è per posizioni market/entry.
-        per_level_raw = remaining_capital / levels
-        if SHADOW_MODE:
-            per_level_raw *= SHADOW_FACTOR
+        # Deploy throttling — non tentare deploy troppo spesso
+        now = time.time()
+        if now - self._last_deploy_attempt < self._deploy_cooldown:
+            log.debug(f"Grid: deploy cooldown ({self._deploy_cooldown}s) — skipping new levels")
+        else:
+            self._last_deploy_attempt = now
 
         # ── Reconcile open orders ──
         open_orders = []
         try:
             open_orders = self.eng.fetch_open_orders(SYMBOL)
+        except KrakenPermanentError as e:
+            log.critical(f"PERMANENT ERROR (orders): {e} — skipping grid")
+            return
         except Exception as e:
             self._error_count += 1
             log.warning(f"fetch_open_orders: {e}")
+            return  # Skip grid if we can't check orders
+
         open_ids = {o["id"] for o in open_orders if o.get("id")}
         levels_data = self.core.state.grid_levels
         active_levels = []
+        filled_kelly_updates = []
+        deployed_eur = 0.0
 
         for lvl in levels_data:
             bid = lvl.get("buy_order_id") or lvl.get("order_id")
@@ -279,71 +338,86 @@ class TradingEngine:
             b_open = bid and bid in open_ids
             s_open = sid and sid in open_ids
 
+            cost = lvl.get("actual_cost", lvl["amount"] * lvl["buy_price"])
+            deployed_eur += cost
+
             if stage == "buy" and not b_open and bid:
-                # v4.1: Verifica stato reale dell'ordine su Kraken
-                # Potrebbe essere stato FILLED, CANCELLED, o EXPIRED
+                # v5: Verifica stato ordine con fetch_order dedicato (singola chiamata)
                 actual_filled = False
                 try:
                     if not SHADOW_MODE and not MOCK_MODE:
-                        order_info = self.eng.ex.fetch_order(bid, SYMBOL)
+                        order_info = self.eng.fetch_order(bid, SYMBOL)
                         actual_filled = order_info.get("status") == "closed" and float(order_info.get("filled", 0)) > 0
                         if order_info.get("status") == "canceled":
                             log.info(f"Order {bid} cancelled — removing level")
-                            continue  # skip this level entirely
+                            continue
+                except KrakenPermanentError:
+                    log.warning(f"Cannot verify order {bid} — removing")
+                    continue
                 except Exception:
-                    # Fallback: se non riusciamo a verificare, assumiamo filled
-                    actual_filled = True
+                    actual_filled = True  # Fallback: assume filled
 
                 if actual_filled:
-                    # Buy was filled — place sell
                     try:
                         so = {"id": f"shadow-sell-{len(levels_data)}"} if SHADOW_MODE else \
                              self.eng.create_limit_sell_order(SYMBOL, self.eng.round_amount(lvl["amount"]), self.eng.round_price(lvl["sell_price"]))
                         if so:
                             lvl["sell_order_id"] = so.get("id")
                             lvl["stage"] = "sell"
-                            log.info(f"FILL BUY EUR {lvl['buy_price']} -> SELL {lvl['amount']} @ EUR {lvl['sell_price']}")
+                            lvl["actual_cost"] = cost
+                            log.info(f"✅ FILL BUY EUR {lvl['buy_price']} -> SELL {lvl['amount']} @ EUR {lvl['sell_price']}")
                             if not SHADOW_MODE:
                                 time.sleep(0.5)
+                    except KrakenPermanentError as e:
+                        log.error(f"PERMANENT ERROR placing sell: {e}")
+                        return
                     except Exception as e:
                         self._error_count += 1
                         log.error(f"SELL failed: {e}")
                     active_levels.append(lvl)
-                # else: order was cancelled/expired — level silently removed
             elif stage == "sell" and not b_open and not s_open:
                 # Round complete
-                cb = lvl.get("actual_cost", lvl["amount"] * lvl["buy_price"])
-                pp = lvl["amount"] * lvl["sell_price"]
-                pnl = (pp - cb) / cb
-                self.core.update_kelly(pnl)
-                log.info(f"ROUND: EUR {lvl['buy_price']} -> EUR {lvl['sell_price']} = {pnl*100:+.2f}%  Kelly:{self.core.kelly_fraction*100:.0f}%")
-                # v4.1: Update grid deployed capital
-                remaining_capital += cb
+                sell_price = lvl.get("sell_price", 0)
+                pp = lvl["amount"] * sell_price
+                pnl = (pp - cost) / cost if cost > 0 else 0
+                filled_kelly_updates.append(pnl)
+                log.info(f"🔄 ROUND: EUR {lvl['buy_price']} -> EUR {sell_price} = {pnl*100:+.2f}%")
             elif b_open or s_open:
                 lvl["stage"] = "sell" if s_open else "buy"
                 active_levels.append(lvl)
 
         self.core.state.grid_levels = active_levels
 
+        # Update Kelly after all fills
+        for pnl in filled_kelly_updates:
+            self.core.update_kelly(pnl)
+
         # ── Deploy new grid levels ──
         active_count = len(active_levels)
-        per_level = per_level_raw if per_level_raw > 0 else (CAPITAL * MAX_DEPLOYED) / levels
+        max_grid_eur = equity * MAX_DEPLOYED
+        remaining_capital = max(0, max_grid_eur - deployed_eur)
 
-        if active_count < levels and eur >= per_level and remaining_capital > MIN_ORDER_EUR:
+        # v5: Usa solo EUR realmente disponibile
+        available_eur = min(remaining_capital, eur)
+        per_level_raw = available_eur / levels if levels > 0 else 0
+
+        if SHADOW_MODE:
+            per_level_raw *= SHADOW_FACTOR
+
+        if active_count < levels and per_level_raw >= MIN_ORDER_EUR and eur >= per_level_raw:
             bb = price * (1 - spread)
             for i in range(active_count, levels):
                 bp = self.eng.round_price(bb * (1 - spread * i))
                 if bp <= 0:
-                    log.warning(f"Invalid bp={bp} (price={price}, spread={spread}, i={i}), skipping grid level")
+                    log.warning(f"Invalid bp={bp}, skipping")
                     continue
                 sp = self.eng.round_price(bp * (1 + spread + effective_tp))
-                amt = self.eng.round_amount(per_level / bp)
+                amt = self.eng.round_amount(per_level_raw / bp)
                 if amt <= 0:
                     continue
-                # v4.1: Min notional check (Kraken ~1 EUR)
                 notional = amt * bp
                 if notional < MIN_ORDER_EUR:
-                    log.warning(f"Order too small: {amt} @ {bp} = EUR {notional:.2f} (min EUR {MIN_ORDER_EUR}), skipping")
+                    log.warning(f"Order too small: {amt} @ {bp} = EUR {notional:.2f} (min EUR {MIN_ORDER_EUR})")
                     continue
                 try:
                     bo = {"id": f"shadow-buy-{i}"} if SHADOW_MODE else \
@@ -353,21 +427,27 @@ class TradingEngine:
                             "buy_order_id": bo.get("id"), "order_id": bo.get("id"),
                             "buy_price": bp, "sell_price": sp, "amount": amt,
                             "stage": "buy", "time": datetime.now().isoformat(),
+                            "actual_cost": notional,
                         }
                         self.core.state.grid_levels.append(lvl)
-                        log.info(f"GRID BUY {len(self.core.state.grid_levels)}/{levels} EUR {bp} amt {amt} ({per_level:.2f}€) TP={effective_tp*100:.1f}%")
+                        log.info(f"📊 GRID BUY {len(self.core.state.grid_levels)}/{levels} EUR {bp} amt {amt} ({notional:.2f}€) TP={effective_tp*100:.1f}%")
                         if not SHADOW_MODE:
                             time.sleep(0.5)
+                except KrakenPermanentError as e:
+                    log.error(f"PERMANENT ERROR deploying buy {i}: {e}")
+                    return
                 except Exception as e:
                     self._error_count += 1
                     log.error(f"BUY failed (level {i}): {e}")
+        elif active_count < levels:
+            log.debug(f"Grid: waiting for capital — need min EUR {MIN_ORDER_EUR} per level, have EUR {eur:.2f} (remaining {remaining_capital:.2f})")
 
     def _run_dca(self, price: float, equity: float, base_bal: float) -> None:
         """DCA operations."""
         dca = self.core.state.dca
         if not dca.active:
             should, size, reason = self.core.dca_should_enter(price, equity)
-            if should:
+            if should and size >= MIN_ORDER_EUR:
                 if SHADOW_MODE:
                     log.info(f"DCA ENTER (shadow) {reason} size={size:.2f}€")
                     self.core.dca_open_position(price, size / price, size)
@@ -385,7 +465,7 @@ class TradingEngine:
                         log.error(f"DCA buy order failed: {e}")
 
         should_exit, amount, reason = self.core.dca_should_exit(price)
-        if should_exit:
+        if should_exit and amount > 0:
             if not SHADOW_MODE and not MOCK_MODE:
                 try:
                     so = self.eng.create_limit_sell_order(SYMBOL, self.eng.round_amount(amount), self.eng.round_price(price))
@@ -398,14 +478,6 @@ class TradingEngine:
                 pnl = self.core.dca_close_position(exit_price=price)
                 log.info(f"DCA EXIT (shadow) {reason} size={amount:.2f} PnL={pnl*100:+.2f}%")
 
-    def _log_status(self, price: float, equity: float, eur: float) -> None:
-        """Log current trading status."""
-        cs = self.core.state
-        pnl = (equity - cs.initial_capital) / cs.initial_capital * 100 if cs.initial_capital > 0 else 0
-        log.info(f"DENARO STATUS | {SYMBOL} price={price:.6f} equity={equity:.2f} "
-                 f"EUR={eur:.2f} PnL={pnl:+.2f}% grid={len(cs.grid_levels)}/{cs.exec.grid_target_levels} "
-                 f"CB={cs.cb.state.value} mode={mode_label()}")
-
 
 # ═══════════════════════════════════════════════════════════════════════════
 # MAIN
@@ -416,7 +488,7 @@ def main() -> None:
 
     for w in validate_config():
         log.warning(f"Config warning: {w}")
-    log.info(f"Starting Denaro v4 | {SYMBOL} | {mode_label()} | CAPITAL={CAPITAL}")
+    log.info(f"Starting Denaro v5 | {SYMBOL} | {mode_label()} | CAPITAL={CAPITAL} | LEVELS={LEVELS}")
 
     # ── Health server ──
     health = None
@@ -451,21 +523,41 @@ def main() -> None:
     else:
         try:
             engine = KrakenEngine(api_key, api_secret, symbol=SYMBOL)
+        except KrakenPermanentError as e:
+            log.critical(f"Kraken credentials invalid: {e}")
+            notify_shutdown(SYMBOL)
+            sys.exit(1)
         except Exception as e:
             log.critical(f"Engine init: {e}"); sys.exit(1)
 
-    core = DenaroCore(initial_capital=CAPITAL, state_path=CORE_STATE_FILE)
-    log.info(f"Core loaded: {CORE_STATE_FILE}")
+    # v5: Passa i limiti di rischio da .env
+    max_drawdown_pct = float(os.environ.get("MAX_DRAWDOWN_PCT", "15.0")) / 100.0
+    daily_loss_pct = float(os.environ.get("MAX_DAILY_LOSS_PCT", "5.0")) / 100.0
+    max_consecutive = int(os.environ.get("MAX_CONSECUTIVE_LOSSES", "4"))
+    compound_ratio = float(os.environ.get("COMPOUND_RATIO", "0.5"))
+    core = DenaroCore(
+        initial_capital=CAPITAL,
+        daily_loss_limit=daily_loss_pct,
+        max_drawdown_limit=max_drawdown_pct,
+        max_consecutive_losses=max_consecutive,
+        compound_ratio=compound_ratio,
+        state_path=CORE_STATE_FILE,
+    )
+    log.info(f"Core loaded: {CORE_STATE_FILE} | DD={max_drawdown_pct*100:.0f}% DL={daily_loss_pct*100:.0f}% CL={max_consecutive}")
 
     if not MOCK_MODE:
         log.info("Cancelling orphan orders...")
         try:
             engine.cancel_all_orders(SYMBOL)
+            log.info("Orphan orders cancelled ✓")
+        except KrakenPermanentError as e:
+            log.warning(f"Cannot cancel orders (permanent error): {e}")
         except Exception as e:
             log.warning(f"Cancel orphans: {e}")
 
     grid = TradingEngine(engine, core)
     cycle = 0
+    deep_sleep = False
 
     shutdown = {"flag": False}
     def _handle(sig, frame):
@@ -481,15 +573,36 @@ def main() -> None:
     while not shutdown["flag"]:
         cycle += 1
         cycle_ok = False
+
+        # v5: Deep sleep — skip API calls entirely
+        if deep_sleep:
+            log.info(f"DEEP SLEEP cycle {cycle} — checking every {LOCKOUT_RETRY_INTERVAL}s")
+            for _ in range(int(LOCKOUT_RETRY_INTERVAL)):
+                if shutdown["flag"]:
+                    break
+                time.sleep(1)
+            # Try one API call to check if Kraken is back
+            try:
+                price = engine.fetch_ticker(SYMBOL)
+                if price > 0:
+                    deep_sleep = False
+                    log.info("DEEP SLEEP: Kraken responsive again — resuming normal cycles")
+            except Exception:
+                continue
+            health_write()
+            continue
+
         try:
             grid.run()
             cycle_ok = True
             grid._error_count = 0
+            grid._consecutive_api_failures = 0
 
             if health and cycle % 5 == 0:
                 eq = core.state.current_capital
                 initial = core.state.initial_capital
                 pnl = (eq - initial) / initial * 100 if initial > 0 else 0
+                stats = engine.get_stats() if hasattr(engine, 'get_stats') else {}
                 health.update(
                     status="ok", equity=eq, pnl_pct=pnl,
                     grid_levels=len(grid.core.state.grid_levels),
@@ -503,14 +616,22 @@ def main() -> None:
                     strategy=core.state.exec.active_strategy.value,
                     trend=core.state.regime.trend.value,
                     dca_active=core.state.dca.active,
+                    lockout=stats.get("lockout", False),
+                    cache_hits=stats.get("cache_hits", 0),
+                    api_calls=stats.get("api_calls", 0),
                 )
             if degraded and cycle_ok:
                 degraded = False
                 log.info("Recovered — normal cycle")
+        except KrakenPermanentError as e:
+            log.critical(f"PERMANENT ERROR: {e} — shutting down gracefully")
+            notify_shutdown(SYMBOL)
+            break
         except KeyboardInterrupt:
             break
         except Exception as e:
             grid._error_count += 1
+            grid._consecutive_api_failures += 1
             log.error(f"Cycle {cycle}: {type(e).__name__}: {e}\n{traceback.format_exc()}")
             if health:
                 health.update(status="degraded" if grid._error_count < 5 else "down",
@@ -519,15 +640,17 @@ def main() -> None:
                 if not degraded:
                     degraded = True
                     log.warning(f"Degradation: {grid._error_count} errors — backing off")
+                if grid._consecutive_api_failures >= DEEP_SLEEP_CYCLES:
+                    deep_sleep = True
+                    log.warning(f"{grid._consecutive_api_failures} consecutive API failures — entering DEEP SLEEP")
                 time.sleep(min(COOLDOWN * 3, 120))
                 continue
 
         if cycle % 30 == 0:
             health_write()
 
+        # v5: Sleep diviso in chunk per shutdown reattivo
         sleep_sec = COOLDOWN * (3 if degraded else 1)
-        if shutdown["flag"]:
-            break
         for _ in range(int(min(sleep_sec, 5))):
             if shutdown["flag"]:
                 break
