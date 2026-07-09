@@ -1,4 +1,4 @@
-# Denaro — Kraken/Bybit Grid Trading v5
+# Denaro — Kraken/Bybit Grid Trading v6
 
 > **DOGE/EUR grid trading su Kraken (LIVE) + SOL/USDT Bybit (SHADOW)** con SHADOW_MODE, **Kelly sizing**, **Circuit Breaker**, **ATR volatility scaling**, **caching intelligente**, **lockout protection**.
 > Progetto di **Sergio Grivetto** con **Hermes AI** — co-autori.
@@ -27,6 +27,44 @@
 |----------|------|----------|----------|-------|
 | **nuvola** | DOGE/EUR | Kraken | 100 EUR | **LIVE** ✅ |
 | **MARCODG1** | SOL/USDT | Bybit | 100 USDT | SHADOW (key invalida) |
+
+---
+
+## v6 — Cosa è cambiato (fix critici produzione)
+
+### 🔥 Circuit Breaker Auto-Recovery (ERA IL #1 BUG)
+- **CB NON si blocca più per sempre** — dopo `CB_RECOVERY_MINUTES` (default 30 minuti)
+  in stato OPEN, il bot forza automaticamente HALF_OPEN e riprova a fare trading.
+- **Fix critico**: il recovery time-based ora viene valutato PRIMA dei check drawdown/daily-loss,
+  così anche se il drawdown è ancora alto dopo il timeout, il bot sblocca il trading.
+- **`since` preservato**: il timestamp originale del CB non viene sovrascritto a ogni restart,
+  quindi il timer di recovery non si azzera.
+- **Telegram notification rate-limit**: CB OPEN notificato massimo 1 volta ogni 5 minuti.
+  Transizioni di stato (OPEN→HALF_OPEN→CLOSED) notificate singolarmente, non a ogni ciclo.
+
+### 🛡️ Risk Limits (produzione)
+- **MAX_DRAWDOWN_PCT=5%** (era 15% — troppo alto, ormai in drawdown era irreversibile)
+- **MAX_DAILY_LOSS_PCT=2%** (era 5%)
+- **CB_RECOVERY_MINUTES=30** (nuvola) / **60** (MARCODG1)
+
+### 🔧 MARCODG1 — Bybit SHADOW Mode con fallback
+- **BybitEngine init fallback**: se le chiavi API sono invalide, in SHADOW_MODE
+  il bot usa MockKrakenEngine invece di crashare (exit(1)).
+- **MockKrakenEngine flessibile**: supporta coppie USDT/qualsiasi base currency.
+- **Service unificato**: `denaro.service` su MARCODG1 usa `run.py` → EXCHANGE=bybit.
+  Vecchio `botv5.service` disabilitato (puntava a `bot_v5.py` rimosso).
+
+### 🧹 Pulizia remota
+- Rimossi 10+ file stale su nuvola e MARCODG1 (`_test_*.py`, `_gen_*.py`,
+  `bot_v5.py`, `denaro_zabbix.py`, `deploy.py`, ecc.)
+- **deploy.sh v6**: `sudo -n` per compatibilità MARCODG1, service name corretto,
+  stop old `botv5.service` prima del deploy.
+
+### 📊 Stato attuale
+| Macchina | Pair | Exchange | Capitale | Equity | Stato |
+|----------|------|----------|----------|--------|-------|
+| **nuvola** | DOGE/EUR | Kraken | 100 EUR | **73.76 EUR** | **LIVE** ✅ (CB CLOSED) |
+| **MARCODG1** | SOL/USDT | Bybit | 100 USDT | 100 USDT | SHADOW (key invalida → mock) |
 
 ---
 
@@ -188,7 +226,7 @@ TELEGRAM_CHAT_ID=
 | v3 Grid | Giu 2026 | Grid trading puro | ARCHIVIATO |
 | v6 Nuvola | Giu-Lug 2026 | Nuvola cloud orchestration | ARCHIVIATO |
 | WAR Engine | Giu 2026 | News/reactor, whale tracking | ARCHIVIATO |
-| **v5 Denaro** | **Lug 2026 →** | **Grid + caching + lockout protection** | **LIVE** ✅ |
+| **v6 Denaro** | **Lug 2026 →** | **Grid + caching + lockout + CB auto-recovery** | **LIVE** ✅ |
 
 ---
 

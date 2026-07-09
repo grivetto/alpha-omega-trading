@@ -244,13 +244,15 @@ class DenaroCore:
                  max_consecutive_losses: int = 4,
                  compound_threshold: float = 1.0,
                  compound_ratio: float = 0.5,
-                 state_path: Optional[Path] = DEFAULT_CB_PATH):
+                 state_path: Optional[Path] = DEFAULT_CB_PATH,
+                 cb_recovery_minutes: float = 60.0):
         self._daily_loss_limit = daily_loss_limit
         self._max_drawdown_limit = max_drawdown_limit
         self._max_consecutive_losses = max_consecutive_losses
         self._compound_threshold = compound_threshold
         self._compound_ratio = compound_ratio
         self._state_path = state_path
+        self._cb_recovery_timeout = cb_recovery_minutes * 60.0  # convert to seconds
         self.state = self._load_state(initial_capital)
         self._price_buffer: List[float] = []
         self._return_buffer: Deque[float] = deque(maxlen=200)
@@ -588,8 +590,7 @@ class DenaroCore:
         cs = self.state
 
         # ── Daily reset ──
-        day_sec = 86400
-        if now - cs.last_daily_reset > day_sec:
+        if now - cs.last_daily_reset > 86400:
             cs.last_daily_reset = now
             cs.day_start_capital = max(cs.day_start_capital, current_equity)
             cs.cb.daily_loss_pct = 0.0
@@ -602,51 +603,71 @@ class DenaroCore:
 
         cs.current_capital = current_equity
 
-        # ── Daily loss ──
         day_pnl = (current_equity - cs.day_start_capital) / max(1e-10, cs.day_start_capital)
         cs.cb.daily_loss_pct = day_pnl
-        if day_pnl < -self._daily_loss_limit:
+        drawdown = (cs.peak_capital - current_equity) / max(1e-10, cs.peak_capital)
+        cs.cb.max_drawdown_pct = drawdown
+
+        # ── Recovery transitions ── (MUST be checked BEFORE opening CB again)
+        prev = cs.cb.state
+
+        # v6 CRITICAL: Time-based auto-recovery deve essere valutato SEMPRE,
+        # anche se drawdown supera ancora il limite. Senza questo, il CB
+        # rimane OPEN per sempre (era il #1 bug critico di produzione).
+        if prev == CBState.OPEN:
+            cb_duration = now - cs.cb.since if cs.cb.since > 0 else 0
+            if cb_duration > self._cb_recovery_timeout:
+                # Forza HALF_OPEN nonostante drawdown ancora alto
+                cs.cb.state = CBState.HALF_OPEN
+                cs.cb.reason = f"recovering_timeout_{cb_duration/60:.0f}m"
+                cs.cb.since = now
+                log = logging.getLogger("kraken_v2")
+                log.warning(f"CB AUTO-RECOVERY: OPEN da {cb_duration/60:.0f}m → HALF_OPEN (timeout {self._cb_recovery_timeout/60:.0f}m)")
+                # Non facciamo return — continuiamo per gestire sizing
+            else:
+                # Equity-based recovery (solo se non è scattato il timeout)
+                dd = drawdown
+                if dd < self._max_drawdown_limit * 0.5 and day_pnl > -self._daily_loss_limit * 0.5:
+                    cs.cb.state = CBState.CLOSED
+                    cs.cb.reason = ""
+                    cs.cb.since = 0.0
+                    cs.cb.daily_loss_pct = 0.0
+                    cs.cb.consecutive_losses = 0
+                elif dd < self._max_drawdown_limit and day_pnl > -self._daily_loss_limit:
+                    cs.cb.state = CBState.HALF_OPEN
+                    cs.cb.reason = "recovering"
+                    cs.cb.since = now
+
+        # ── Daily loss check ── (dopo recovery, così non blocca auto-recovery)
+        if day_pnl < -self._daily_loss_limit and cs.cb.state != CBState.HALF_OPEN:
             cs.cb.state = CBState.OPEN
             cs.cb.reason = f"daily_loss_{day_pnl*100:.1f}%"
-            cs.cb.since = now
+            if prev != CBState.OPEN:  # Preserva since originale se già OPEN
+                cs.cb.since = now
             self._save_state()
             return True
 
-        # ── Drawdown ──
-        drawdown = (cs.peak_capital - current_equity) / max(1e-10, cs.peak_capital)
-        cs.cb.max_drawdown_pct = drawdown
-        if drawdown > self._max_drawdown_limit:
+        # ── Drawdown check ── (dopo recovery, così non blocca auto-recovery)
+        if drawdown > self._max_drawdown_limit and cs.cb.state != CBState.HALF_OPEN:
             cs.cb.state = CBState.OPEN
             cs.cb.reason = f"drawdown_{drawdown*100:.1f}%"
-            cs.cb.since = now
+            if prev != CBState.OPEN:  # Preserva since originale se già OPEN
+                cs.cb.since = now
             self._save_state()
             return True
 
         # ── Consecutive losses → HALF_OPEN ──
-        if cs.perf.consecutive_losses >= self._max_consecutive_losses:
+        if cs.perf.consecutive_losses >= self._max_consecutive_losses and cs.cb.state != CBState.OPEN:
             cs.cb.state = CBState.HALF_OPEN
             cs.cb.reason = f"consecutive_losses_{cs.perf.consecutive_losses}"
             cs.cb.since = now
-
-        # ── Recovery transitions ──
-        prev = cs.cb.state
-        if prev == CBState.OPEN:
-            dd = drawdown
-            if dd < self._max_drawdown_limit * 0.5 and day_pnl > -self._daily_loss_limit * 0.5:
-                cs.cb.state = CBState.CLOSED
-                cs.cb.reason = ""
-                cs.cb.since = 0.0
-                cs.cb.daily_loss_pct = 0.0
-                cs.cb.consecutive_losses = 0
-            elif dd < self._max_drawdown_limit and day_pnl > -self._daily_loss_limit:
-                cs.cb.state = CBState.HALF_OPEN
-                cs.cb.reason = "recovering"
-                cs.cb.since = now
 
         # ── Sizing multiplier ──
         if cs.cb.state == CBState.OPEN:
             cs.sizing_multiplier = 0.0
         elif cs.cb.state == CBState.HALF_OPEN:
+            # v6: In HALF_OPEN per timeout, sizing piu' aggressivo di half standard
+            # per permettere recupero piu' rapido (ma sempre cauto)
             cs.sizing_multiplier = 0.5
         elif cs.perf.consecutive_losses >= self._max_consecutive_losses:
             cs.sizing_multiplier = 0.5

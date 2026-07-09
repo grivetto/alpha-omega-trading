@@ -40,6 +40,7 @@ _RATE_LIMIT_SEC = 1.0        # 1 msg / sec
 _RETRY_MAX = 3
 _RETRY_BASE_DELAY = 1.0
 _DEDUP_WINDOW = 60.0         # seconds — collapse identical msgs
+_CB_NOTIFY_COOLDOWN = 300.0  # 5 min between consecutive CB notifications
 
 
 # ─── Rate limiter ─────────────────────────────────────────────────────────────
@@ -206,8 +207,17 @@ def notify_trade(symbol: str, side: str, amount: float,
     notify(msg, severity="trade" if pnl_pct >= 0 else "error")
 
 
+# Track last CB notification time to avoid spam
+_cb_last_notify_ts: float = 0.0
+
 def notify_cb_open(reason: str, equity: float) -> None:
-    """Circuit breaker opened."""
+    """Circuit breaker opened — rate-limited to 1 per 5 min."""
+    global _cb_last_notify_ts
+    now = time.time()
+    if now - _cb_last_notify_ts < _CB_NOTIFY_COOLDOWN:
+        log.debug(f"[CB NOTIFY SKIP] {reason} — cooldown {now - _cb_last_notify_ts:.0f}s / {_CB_NOTIFY_COOLDOWN:.0f}s")
+        return
+    _cb_last_notify_ts = now
     notify(f"CB OPEN — {reason} | Equity: €{equity:.2f}",
            severity="cb_open")
 

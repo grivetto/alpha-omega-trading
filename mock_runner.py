@@ -13,10 +13,13 @@ class MockKrakenEngine:
     """Simula completamente Kraken REST API con state tracking realistico.
     Compatibile con KrakenEngine v5 (cache, lockout, stats)."""
 
-    def __init__(self, initial_eur=100.0, initial_doge=0.0, start_price=0.064):
+    def __init__(self, initial_eur=100.0, initial_doge=0.0, start_price=0.064,
+                 quote_currency="EUR", base_currency="DOGE"):
         self.eur_balance = initial_eur
         self.doge_balance = initial_doge
         self.base_price = start_price
+        self._quote_currency = quote_currency.upper()
+        self._base_currency = base_currency.upper()
         self._orders: Dict[str, dict] = {}
         self._next_id = 1000
         self._volatility = 0.0005
@@ -72,17 +75,19 @@ class MockKrakenEngine:
 
     def fetch_balance(self, asset: str = None) -> dict | float:
         """v5: supporta 'FULL' per dict completo."""
+        q = self._quote_currency
+        b = self._base_currency
         if asset is None:
-            return {"total": {"EUR": self.eur_balance, "DOGE": self.doge_balance},
-                    "free": {"EUR": self.eur_balance, "DOGE": self.doge_balance}}
+            return {"total": {q: self.eur_balance, b: self.doge_balance},
+                    "free": {q: self.eur_balance, b: self.doge_balance}}
         if asset.upper() == "FULL":
-            return {"EUR": self.eur_balance, "DOGE": self.doge_balance,
-                    "total": {"EUR": self.eur_balance, "DOGE": self.doge_balance},
-                    "free": {"EUR": self.eur_balance, "DOGE": self.doge_balance},
-                    "used": {"EUR": 0.0, "DOGE": 0.0}}
-        if asset.upper() == "EUR":
+            return {q: self.eur_balance, b: self.doge_balance,
+                    "total": {q: self.eur_balance, b: self.doge_balance},
+                    "free": {q: self.eur_balance, b: self.doge_balance},
+                    "used": {q: 0.0, b: 0.0}}
+        if asset.upper() == q:
             return self.eur_balance
-        if asset.upper() == "DOGE":
+        if asset.upper() == b:
             return self.doge_balance
         return 0.0
 

@@ -185,10 +185,23 @@ class TradingEngine:
             log.warning(f"Day capital realigned: {old:.2f} → {equity:.2f}")
 
         # ── Circuit Breaker ──
+        prev_cb_state = self.core.state.cb.state
         blocked = self.core.check_circuit_breaker(equity)
+        new_cb_state = self.core.state.cb.state
+
+        # Notifica solo su transizioni di stato, NON ogni ciclo
+        if prev_cb_state != new_cb_state:
+            if new_cb_state == CBState.OPEN:
+                log.critical(f"CB OPEN: {self.core.state.cb.reason}")
+                notify_cb_open(self.core.state.cb.reason, equity)
+            elif new_cb_state == CBState.HALF_OPEN and prev_cb_state == CBState.OPEN:
+                log.warning(f"CB HALF_OPEN (recovery): {self.core.state.cb.reason}")
+                tg_notify(f"CB RECOVERING — {self.core.state.cb.reason} | Equity: €{equity:.2f}", severity="warning")
+            elif new_cb_state == CBState.CLOSED and prev_cb_state in (CBState.OPEN, CBState.HALF_OPEN):
+                log.info(f"CB CLOSED — trading resumed")
+                notify_cb_close(equity)
+
         if blocked:
-            log.critical(f"CB OPEN: {self.core.state.cb.reason}")
-            notify_cb_open(self.core.state.cb.reason, equity)
             return
 
         # ── Compounding ──
@@ -415,14 +428,37 @@ def main() -> None:
         from mock_runner import MockKrakenEngine
         engine = MockKrakenEngine(initial_eur=CAPITAL)
         log.info("MOCK_MODE enabled")
+    elif SHADOW_MODE:
+        # In SHADOW, prova engine reale ma fallback a mock se key invalide
+        try:
+            engine = BybitEngine(api_key, api_secret, symbol=SYMBOL)
+            log.info("BybitEngine initialized (SHADOW mode)")
+        except Exception as e:
+            log.warning(f"BybitEngine init failed in SHADOW: {e} — using MockKrakenEngine")
+            from mock_runner import MockKrakenEngine
+            base_asset = SYMBOL.split("/")[0]
+            engine = MockKrakenEngine(initial_eur=CAPITAL, start_price=0.065,
+                                      quote_currency=CURRENCY, base_currency=base_asset)
+            log.info("MockKrakenEngine fallback (SHADOW mode)")
     else:
         try:
             engine = BybitEngine(api_key, api_secret, symbol=SYMBOL)
         except Exception as e:
             log.critical(f"Engine init: {e}"); sys.exit(1)
 
-    core = DenaroCore(initial_capital=CAPITAL, state_path=CORE_STATE_FILE)
-    log.info(f"Core loaded: {CORE_STATE_FILE}")
+    max_drawdown_pct = float(os.environ.get("MAX_DRAWDOWN_PCT", "15.0")) / 100.0
+    daily_loss_pct = float(os.environ.get("MAX_DAILY_LOSS_PCT", "5.0")) / 100.0
+    max_consecutive = int(os.environ.get("MAX_CONSECUTIVE_LOSSES", "4"))
+    cb_recovery_minutes = float(os.environ.get("CB_RECOVERY_MINUTES", "60"))
+    core = DenaroCore(
+        initial_capital=CAPITAL,
+        daily_loss_limit=daily_loss_pct,
+        max_drawdown_limit=max_drawdown_pct,
+        max_consecutive_losses=max_consecutive,
+        state_path=CORE_STATE_FILE,
+        cb_recovery_minutes=cb_recovery_minutes,
+    )
+    log.info(f"Core loaded: {CORE_STATE_FILE} | DD={max_drawdown_pct*100:.0f}% DL={daily_loss_pct*100:.0f}% CL={max_consecutive}")
 
     if not MOCK_MODE:
         log.info("Cancelling orphan orders...")

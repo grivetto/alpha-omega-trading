@@ -38,7 +38,8 @@ NUVOLA_SERVICE="denaro-kraken.service"
 MARCO_HOST="MARCODG1"
 MARCO_USER="marco"
 MARCO_PATH="/home/marco/denaro"
-MARCO_SERVICE="denaro-kraken-marcodg1.service"
+MARCO_SERVICE="denaro.service"
+MARCO_OLD_SERVICE="botv5.service"
 
 # ─── Flags ───────────────────────────────────────────────────────────────────
 DRY_RUN=true
@@ -109,9 +110,9 @@ deploy_to() {
     # Step 0: Stop service gracefully
     echo "  [0/5] Stopping $service..."
     if $DRY_RUN; then
-        echo "        $ssh_prefix 'sudo systemctl stop $service || true'"
+        echo "        $ssh_prefix 'sudo -n systemctl stop $service || true'"
     else
-        $ssh_prefix "sudo systemctl stop $service || true" && echo "        ✅ Stopped" || echo "        ⚠️  Could not stop (may already be down)"
+        $ssh_prefix "sudo -n systemctl stop $service || true" && echo "        ✅ Stopped" || echo "        ⚠️  Could not stop (may already be down)"
     fi
 
     # Step 1: Rsync code
@@ -149,9 +150,9 @@ deploy_to() {
     # Step 4: Restart service
     echo "  [4/5] Restarting $service..."
     if $DRY_RUN; then
-        echo "        $ssh_prefix 'sudo systemctl restart $service'"
+        echo "        $ssh_prefix 'sudo -n systemctl restart $service || true'"
     else
-        $ssh_prefix "sudo systemctl restart $service" && echo "        ✅ Restarted" || echo "        ⚠️  Restart failed"
+        $ssh_prefix "sudo -n systemctl restart $service || true" && echo "        ✅ Restarted" || echo "        ⚠️  Restart failed"
     fi
 
     # Step 5: Verify
@@ -214,6 +215,11 @@ if $DEPLOY_MARCO; then
             echo "  ⚠️  nuvola→MARCODG1: $SSH_RESULT"
             echo "  Will try deploy anyway via proxy jump..."
         fi
+    fi
+    # v6: Stop old botv5.service first (riferimento a bot_v5.py rimosso)
+    if ! $DRY_RUN; then
+        ssh sergio@nuvola "ssh marco@MARCODG1 'sudo -n systemctl stop $MARCO_OLD_SERVICE 2>/dev/null || true; sudo -n systemctl disable $MARCO_OLD_SERVICE 2>/dev/null || true'" || true
+        echo "  ✅ Old $MARCO_OLD_SERVICE stopped"
     fi
     deploy_to "$MARCO_HOST" "$MARCO_USER" "$MARCO_PATH" "$MARCO_SERVICE" "8910" "sergio@nuvola"
 fi
