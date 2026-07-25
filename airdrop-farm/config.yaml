@@ -1,0 +1,111 @@
+# Airdrop Farm Configuration
+# Copy to config.yaml and fill in your values
+
+# Budget (EUR)
+budget:
+  virtual_capital: 250          # Capitale virtuale per simulazione pre-5 agosto
+  real_capital: 100             # Capitale reale deployabile dal 5 agosto
+  max_wallets: 20               # Numero wallet dal vault BIP39
+
+# Exchange / API
+exchanges:
+  mexc:
+    api_key: ""
+    api_secret: ""
+    testnet: false
+  bybit:
+    api_key: ""
+    api_secret: ""
+    testnet: false
+
+# RPC Endpoints (one per chain, add more for redundancy)
+rpc:
+  ethereum: "https://eth.llamarpc.com"
+  base: "https://mainnet.base.org"
+  scroll: "https://rpc.scroll.io"
+  abstract: "https://api.mainnet.abs.xyz"
+  linea: "https://rpc.linea.build"
+  monad: "https://rpc.monad.xyz"          # Mainnet Monad (post-Nov 2025)
+  hyperliquid: "https://api.hyperliquid.xyz"
+
+# Gas settings per chain (gwei, 0 = auto)
+gas:
+  ethereum: 0
+  base: 0
+  scroll: 0
+  abstract: 0
+  linea: 0
+  monad: 0
+  hyperliquid: 0
+
+# Protocol configs per strategy
+protocols:
+  # Airdrop farming - chains & protocols
+  airdrop:
+    base:
+      - "aerodrome"
+      - "friendtech"
+      - "based"
+    scroll:
+      - "scroll_domain"
+      - "layerbank"
+    abstract:
+      - "abstract_domain"
+      - "nft_mint"
+    linea:
+      - "linea_domain"
+      - "velocore"
+
+  # Hyperliquid points
+  hyperliquid:
+    perp_dex: true
+    spot_dex: false
+    min_volume_usd: 1000
+    target_apr_points: 15.0
+
+  # Yield on idle funds
+  yield:
+    base:
+      - "aerodrome_pools"
+      - "moonwell"
+    scroll:
+      - "layerbank"
+    linea:
+      - "velocore_pools"
+    monad:
+      - "monad_lending"
+    max_allocation_pct: 30
+
+  # MEXC Launchpad
+  mexc_launchpad:
+    hold_mx_min: 1000
+    auto_participate: true
+    max_allocation_usd: 50
+
+# Poisson timing (min/max hours between actions per wallet)
+timing:
+  min_hours: 6
+  max_hours: 48
+  jitter_pct: 0.2
+
+# Circuit breaker
+circuit_breaker:
+  max_daily_loss_pct: 5
+  max_consecutive_failures: 10
+  cooldown_hours: 24
+
+# Telegram alerts
+telegram:
+  bot_token: ""
+  chat_id: ""
+  enabled: true
+
+# Dry run (set false for live)
+dry_run: true
+
+# Zabbix monitoring
+zabbix:
+  enabled: true
+  url: "http://localhost:1080/api_jsonrpc.php"
+  host: "airdrop-farm"
+  push_interval_minutes: 60

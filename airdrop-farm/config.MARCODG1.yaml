@@ -1,0 +1,97 @@
+# Airdrop Farm Configuration - MARCODG1
+# Strategie: Hyperliquid Points + Yield (Aerodrome, Moonwell, Monad Lending)
+
+# Budget (EUR)
+budget:
+  virtual_capital: 250          # Capitale virtuale per simulazione pre-5 agosto
+  real_capital: 100             # Capitale reale deployabile dal 5 agosto
+  max_wallets: 20               # Numero wallet dal vault BIP39
+
+# Exchange / API
+exchanges:
+  mexc:
+    api_key: ""
+    api_secret: ""
+    testnet: false
+  bybit:
+    api_key: ""
+    api_secret: ""
+    testnet: false
+
+# RPC Endpoints
+rpc:
+  ethereum: "https://eth.llamarpc.com"
+  base: "https://mainnet.base.org"
+  scroll: "https://rpc.scroll.io"
+  abstract: "https://api.mainnet.abs.xyz"
+  linea: "https://rpc.linea.build"
+  monad: "https://rpc.monad.xyz"
+  hyperliquid: "https://api.hyperliquid.xyz"
+
+# Gas settings per chain (gwei, 0 = auto)
+gas:
+  ethereum: 0
+  base: 0
+  scroll: 0
+  abstract: 0
+  linea: 0
+  monad: 0
+  hyperliquid: 0
+
+# Protocol configs per strategy - SOLO strategie MARCODG1
+protocols:
+  # Disabled on MARCODG1
+  airdrop:
+    enabled: false
+  mexc_launchpad:
+    enabled: false
+
+  # Hyperliquid points (NUOVA STRATEGIA)
+  hyperliquid:
+    enabled: true
+    perp_dex: true
+    spot_dex: false
+    min_volume_usd: 1000
+    target_apr_points: 15.0
+
+  # Yield on idle funds (NUOVA STRATEGIA)
+  yield:
+    enabled: true
+    base:
+      - "aerodrome_pools"
+      - "moonwell"
+    scroll:
+      - "layerbank"
+    linea:
+      - "velocore_pools"
+    monad:
+      - "monad_lending"
+    max_allocation_pct: 30
+
+# Poisson timing (min/max hours between actions per wallet)
+timing:
+  min_hours: 6
+  max_hours: 48
+  jitter_pct: 0.2
+
+# Circuit breaker
+circuit_breaker:
+  max_daily_loss_pct: 5
+  max_consecutive_failures: 10
+  cooldown_hours: 24
+
+# Telegram alerts
+telegram:
+  bot_token: ""
+  chat_id: ""
+  enabled: true
+
+# Dry run (set false for live)
+dry_run: true
+
+# Zabbix monitoring
+zabbix:
+  enabled: true
+  url: "http://10.0.2.15:1080/api_jsonrpc.php"  # MC2 Zabbix
+  host: "airdrop-farm-MARCODG1"
+  push_interval_minutes: 60

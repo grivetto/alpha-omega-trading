@@ -1,0 +1,18 @@
+[Unit]
+Description=Airdrop Farm Orchestrator - NUVOLA (Airdrop + MEXC Launchpad)
+After=network.target
+
+[Service]
+Type=simple
+User=sergio
+WorkingDirectory=/home/sergio/airdrop-farm
+Environment=PYTHONPATH=/home/sergio/airdrop-farm
+Environment=MNEMONIC=${MNEMONIC}
+ExecStart=/home/sergio/airdrop-farm/venv/bin/python -m main --config config.yaml
+Restart=always
+RestartSec=30
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

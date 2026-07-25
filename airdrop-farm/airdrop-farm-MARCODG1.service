@@ -1,0 +1,17 @@
+[Unit]
+Description=Airdrop Farm Orchestrator - MARCODG1 (Hyperliquid + Yield)
+After=network.target
+
+[Service]
+Type=simple
+User=marco
+WorkingDirectory=/home/marco/airdrop-farm
+Environment=PYTHONPATH=/home/marco/airdrop-farm
+ExecStart=/home/marco/airdrop-farm/venv/bin/python -m main --config config.yaml --wallets 10
+Restart=always
+RestartSec=30
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
