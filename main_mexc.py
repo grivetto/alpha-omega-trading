@@ -160,10 +160,16 @@ class TradingEngine:
             equity = self._last_known_equity
             quote_bal = 0.0; base_bal = 0.0
         else:
-            quote_bal = full_bal.get(CURRENCY, 0.0)
-            base_asset = SYMBOL.split("/")[0]
-            base_bal = full_bal.get(base_asset, 0.0)
-            equity = quote_bal + base_bal * price
+            if SHADOW_MODE:
+                # In shadow mode, use virtual equity from core state
+                quote_bal = 0.0
+                base_bal = 0.0
+                equity = self.core.state.current_capital
+            else:
+                quote_bal = full_bal.get(CURRENCY, 0.0)
+                base_asset = SYMBOL.split("/")[0]
+                base_bal = full_bal.get(base_asset, 0.0)
+                equity = quote_bal + base_bal * price
             self._last_known_equity = equity
             self._error_count = max(0, self._error_count - 1)
             self._consecutive_api_failures = 0
@@ -357,8 +363,8 @@ def main() -> None:
             env = load_env(str(p))
             if env:
                 break
-    api_key = os.environ.get("MEXC_API") or env.get("MEXC_API", "")
-    api_secret = os.environ.get("MEXC_SECRET") or env.get("MEXC_SECRET", "")
+    api_key = os.environ.get("MEXC_API_KEY") or env.get("MEXC_API_KEY", "")
+    api_secret = os.environ.get("MEXC_API_SECRET") or env.get("MEXC_API_SECRET", "")
     if not api_key or not api_secret:
         log.critical("MEXC_API or MEXC_SECRET not found"); sys.exit(1)
 

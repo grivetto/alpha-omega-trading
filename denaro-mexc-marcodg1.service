@@ -1,0 +1,20 @@
+[Unit]
+Description=Denaro MEXC Grid Trading - MARCODG1
+After=network.target
+
+[Service]
+Type=simple
+User=marco
+WorkingDirectory=/home/marco/alpha-omega-trading
+Environment=PYTHONPATH=/home/marco/alpha-omega-trading
+Environment=EXCHANGE=mexc
+Environment=SHADOW_MODE=1
+EnvironmentFile=/home/marco/alpha-omega-trading/.env
+ExecStart=/home/marco/alpha-omega-trading/venv/bin/python main_mexc.py
+Restart=always
+RestartSec=30
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
