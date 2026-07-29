@@ -345,16 +345,6 @@ def main() -> None:
         log.warning(f"Config warning: {w}")
     log.info(f"Starting Denaro MEXC v5 | {SYMBOL} | {mode_label()} | CAPITAL={CAPITAL} | LEVELS={LEVELS}")
 
-    health = None
-    try:
-        from enhanced.health_server import HealthServer
-        health = HealthServer(port=HEALTH_PORT)
-        health.start()
-        health.update(mode=mode_label(), max_levels=LEVELS, symbol=SYMBOL)
-        health.set_degraded("starting")
-    except Exception as e:
-        log.warning(f"Health server: {e}")
-
     notify_startup(SYMBOL, mode_label(), CAPITAL)
 
     env = {}
@@ -402,6 +392,15 @@ def main() -> None:
         except Exception as e:
             log.warning(f"Cancel orphans: {e}")
 
+    # VaR Hydration (Task 1.2)
+    try:
+        ohlcv = engine.fetch_ohlcv(SYMBOL, timeframe="1m", limit=50)
+        closes = [c[4] for c in ohlcv if isinstance(c, (list, tuple)) and len(c) > 4]
+        core.hydrate_var_buffer(closes)
+        log.info(f"VaR buffer hydrated with {len(closes)} historical prices")
+    except Exception as e:
+        log.warning(f"VaR hydration skipped: {e}")
+
     grid = TradingEngine(engine, core)
     cycle = 0
     deep_sleep = False
@@ -414,6 +413,8 @@ def main() -> None:
         shutdown["flag"] = True
     signal.signal(signal.SIGTERM, _handle)
     signal.signal(signal.SIGINT, _handle)
+    if hasattr(signal, "SIGHUP"):
+        signal.signal(signal.SIGHUP, _handle)
 
     while not shutdown["flag"]:
         cycle += 1
@@ -440,21 +441,6 @@ def main() -> None:
             cycle_ok = True
             grid._error_count = 0
             grid._consecutive_api_failures = 0
-            if health and cycle % 5 == 0:
-                eq = core.state.current_capital
-                pnl = (eq - CAPITAL) / CAPITAL * 100 if CAPITAL > 0 else 0
-                health.update(
-                    status="ok", equity=eq, pnl_pct=pnl,
-                    grid_levels=len(grid.core.state.grid_levels),
-                    cb_state=core.state.cb.state.value,
-                    kelly_pct=core.kelly_fraction * 100,
-                    atr_pct=core.state.regime.atr_pct,
-                    last_cycle_ts=time.time(), last_cycle_ok=True,
-                    uptime_sec=time.time() - grid._started_at,
-                    ws_connected=getattr(engine, "ws_connected", False),
-                    strategy=core.state.exec.active_strategy.value,
-                    trend=core.state.regime.trend.value,
-                )
         except MexcPermanentError as e:
             log.critical(f"PERMANENT ERROR: {e} — shutdown")
             break
@@ -484,8 +470,6 @@ def main() -> None:
         core.flush_state()
     except Exception:
         pass
-    if health:
-        health.stop()
     if hasattr(engine, "close"):
         engine.close()
     log.info("MEXC Denaro shut down.")

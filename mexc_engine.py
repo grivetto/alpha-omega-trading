@@ -455,6 +455,15 @@ class MexcEngine:
         self._throttle()
         return self.ex.fetch_order(order_id, symbol)
 
+    # --- OHLCV (for VaR hydration) ---------------------------------------------
+
+    @_with_retry(max_attempts=2)
+    def fetch_ohlcv(self, symbol: str = SYMBOL, timeframe: str = "1m", limit: int = 50) -> list[float]:
+        self._api_calls += 1
+        self._throttle()
+        ohlcv = self.ex.fetch_ohlcv(symbol, timeframe=timeframe, limit=limit) or []
+        return [c[4] for c in ohlcv if len(c) >= 5]
+
     # --- Precision -----------------------------------------------------------
 
     def round_amount(self, qty: float, symbol: str = SYMBOL) -> float:

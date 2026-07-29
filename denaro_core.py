@@ -11,14 +11,23 @@ Fixes v3→v4:
   - _save_state throttled a max 1x/30s
   - compound_profits gestisce drawdown
 """
-from __future__ import annotations
+# --- Imports ------------------------------------------------------------------
 
-import json, logging, math, os, time
+import asyncio
+import json
+import logging
+import math
+import os
+import time
 from collections import deque
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Optional, List, Tuple, Deque
+from typing import Optional, List, Tuple, Deque, Any
+
+# Thread pool for non-blocking I/O
+_SAVE_EXECUTOR = ThreadPoolExecutor(max_workers=1, thread_name_prefix="denaro-save")
 
 
 # --- Enums ------------------------------------------------------------------
@@ -354,121 +363,124 @@ class DenaroCore:
         return CoreState(initial_capital=initial_capital)
 
     def _save_state(self) -> None:
-        """Throttled state save — max 1x every _MIN_SAVE_INTERVAL seconds."""
+        """Throttled state save — max 1x every _MIN_SAVE_INTERVAL seconds.
+        Snapshot built on main thread; disk I/O offloaded to thread pool."""
         now = time.time()
         if now - self._last_save_at < self._MIN_SAVE_INTERVAL:
             self._save_pending = True
             return
         self._last_save_at = now
         self._save_pending = False
-        try:
-            d = {
-                "initial_capital": self.state.initial_capital,
-                "current_capital": self.state.current_capital,
-                "peak_capital": self.state.peak_capital,
-                "day_start_capital": self.state.day_start_capital,
-                "last_daily_reset": self.state.last_daily_reset,
-                "trade_results": self.state.trade_results[-500:],
-                "kelly_fraction": self.state.kelly_fraction,
-                "sizing_multiplier": self.state.sizing_multiplier,
-                "cb": {
-                    "state": self.state.cb.state.value,
-                    "reason": self.state.cb.reason,
-                    "since": self.state.cb.since,
-                    "daily_loss_pct": self.state.cb.daily_loss_pct,
-                    "max_drawdown_pct": self.state.cb.max_drawdown_pct,
-                    "consecutive_losses": self.state.cb.consecutive_losses,
-                },
-                "perf": {
-                    "total_trades": self.state.perf.total_trades,
-                    "win_trades": self.state.perf.win_trades,
-                    "loss_trades": self.state.perf.loss_trades,
-                    "total_pnl_pct": self.state.perf.total_pnl_pct,
-                    "daily_pnl_pct": self.state.perf.daily_pnl_pct,
-                    "peak_capital": self.state.perf.peak_capital,
-                    "consecutive_wins": self.state.perf.consecutive_wins,
-                    "consecutive_losses": self.state.perf.consecutive_losses,
-                    "wins_streak_max": self.state.perf.wins_streak_max,
-                    "losses_streak_max": self.state.perf.losses_streak_max,
-                    "sharpe_ratio": self.state.perf.sharpe_ratio,
-                    "sortino_ratio": self.state.perf.sortino_ratio,
-                    "calmar_ratio": self.state.perf.calmar_ratio,
-                    "recovery_factor": self.state.perf.recovery_factor,
-                    "profit_factor": self.state.perf.profit_factor,
-                    "expectancy": self.state.perf.expectancy,
-                    "avg_win": self.state.perf.avg_win,
-                    "avg_loss": self.state.perf.avg_loss,
-                    "win_rate": self.state.perf.win_rate,
-                    "last_trade_ts": self.state.perf.last_trade_ts,
-                },
-                "regime": {
-                    "trend": self.state.regime.trend.value,
-                    "trend_strength": self.state.regime.trend_strength,
-                    "volatility_regime": self.state.regime.volatility_regime,
-                    "atr_pct": self.state.regime.atr_pct,
-                    "volume_regime": self.state.regime.volume_regime,
-                    "volume_ratio": self.state.regime.volume_ratio,
-                    "momentum_1h": self.state.regime.momentum_1h,
-                    "momentum_24h": self.state.regime.momentum_24h,
-                    "regime_confidence": self.state.regime.regime_confidence,
-                    "regime_duration_cycles": self.state.regime.regime_duration_cycles,
-                },
-                "micro": {
-                    "bid_ask_spread_pct": self.state.micro.bid_ask_spread_pct,
-                    "bid_ask_imbalance": self.state.micro.bid_ask_imbalance,
-                    "order_book_slope": self.state.micro.order_book_slope,
-                    "cum_bid_depth_1pct": self.state.micro.cum_bid_depth_1pct,
-                    "cum_ask_depth_1pct": self.state.micro.cum_ask_depth_1pct,
-                    "last_price_micro": self.state.micro.last_price_micro,
-                    "micro_trend": self.state.micro.micro_trend,
-                    "micro_volatility": self.state.micro.micro_volatility,
-                    "spoofing_flag": self.state.micro.spoofing_flag,
-                },
-                "var": {
-                    "var_95_1h": self.state.var.var_95_1h,
-                    "var_99_1h": self.state.var.var_99_1h,
-                    "cvar_95_1h": self.state.var.cvar_95_1h,
-                    "max_drawdown": self.state.var.max_drawdown,
-                    "var_lookback": self.state.var.var_lookback[-100:],
-                    "daily_var_breaches": self.state.var.daily_var_breaches,
-                },
-                "dca": {
-                    "active": self.state.dca.active,
-                    "entry_price": self.state.dca.entry_price,
-                    "avg_entry_price": self.state.dca.avg_entry_price,
-                    "total_size": self.state.dca.total_size,
-                    "total_cost": self.state.dca.total_cost,
-                    "num_entries": self.state.dca.num_entries,
-                    "max_entries": self.state.dca.max_entries,
-                    "entry_spacing_pct": self.state.dca.entry_spacing_pct,
-                    "last_entry_price": self.state.dca.last_entry_price,
-                    "target_pnl_pct": self.state.dca.target_pnl_pct,
-                    "trailing_activation": self.state.dca.trailing_activation,
-                    "trailing_stop_pct": self.state.dca.trailing_stop_pct,
-                },
-                "exec": {
-                    "active_strategy": self.state.exec.active_strategy.value,
-                    "grid_levels_active": self.state.exec.grid_levels_active,
-                    "grid_target_levels": self.state.exec.grid_target_levels,
-                    "dca_position_active": self.state.exec.dca_position_active,
-                    "profit_take_order_id": self.state.exec.profit_take_order_id,
-                    "last_rebalance_ts": self.state.exec.last_rebalance_ts,
-                    "last_cycle_ms": self.state.exec.last_cycle_ms,
-                    "errors_this_hour": self.state.exec.errors_this_hour,
-                    "cycle_count": self.state.exec.cycle_count,
-                },
-                "grid_levels": self.state.grid_levels[-20:],
-            }
-            if self._state_path:
-                self._state_path.parent.mkdir(parents=True, exist_ok=True)
-                # Atomic write: write to temp, then rename
-                tmp = self._state_path.with_suffix(".tmp")
+
+        # Build snapshot synchronously (safe, state can't mutate here)
+        d = {
+            "initial_capital": self.state.initial_capital,
+            "current_capital": self.state.current_capital,
+            "peak_capital": self.state.peak_capital,
+            "day_start_capital": self.state.day_start_capital,
+            "last_daily_reset": self.state.last_daily_reset,
+            "trade_results": self.state.trade_results[-500:],
+            "kelly_fraction": self.state.kelly_fraction,
+            "sizing_multiplier": self.state.sizing_multiplier,
+            "cb": {
+                "state": self.state.cb.state.value,
+                "reason": self.state.cb.reason,
+                "since": self.state.cb.since,
+                "daily_loss_pct": self.state.cb.daily_loss_pct,
+                "max_drawdown_pct": self.state.cb.max_drawdown_pct,
+                "consecutive_losses": self.state.cb.consecutive_losses,
+            },
+            "perf": {
+                "total_trades": self.state.perf.total_trades,
+                "win_trades": self.state.perf.win_trades,
+                "loss_trades": self.state.perf.loss_trades,
+                "total_pnl_pct": self.state.perf.total_pnl_pct,
+                "daily_pnl_pct": self.state.perf.daily_pnl_pct,
+                "peak_capital": self.state.perf.peak_capital,
+                "consecutive_wins": self.state.perf.consecutive_wins,
+                "consecutive_losses": self.state.perf.consecutive_losses,
+                "wins_streak_max": self.state.perf.wins_streak_max,
+                "losses_streak_max": self.state.perf.losses_streak_max,
+                "sharpe_ratio": self.state.perf.sharpe_ratio,
+                "sortino_ratio": self.state.perf.sortino_ratio,
+                "calmar_ratio": self.state.perf.calmar_ratio,
+                "recovery_factor": self.state.perf.recovery_factor,
+                "profit_factor": self.state.perf.profit_factor,
+                "expectancy": self.state.perf.expectancy,
+                "avg_win": self.state.perf.avg_win,
+                "avg_loss": self.state.perf.avg_loss,
+                "win_rate": self.state.perf.win_rate,
+                "last_trade_ts": self.state.perf.last_trade_ts,
+            },
+            "regime": {
+                "trend": self.state.regime.trend.value,
+                "trend_strength": self.state.regime.trend_strength,
+                "volatility_regime": self.state.regime.volatility_regime,
+                "atr_pct": self.state.regime.atr_pct,
+                "volume_regime": self.state.regime.volume_regime,
+                "volume_ratio": self.state.regime.volume_ratio,
+                "momentum_1h": self.state.regime.momentum_1h,
+                "momentum_24h": self.state.regime.momentum_24h,
+                "regime_confidence": self.state.regime.regime_confidence,
+                "regime_duration_cycles": self.state.regime.regime_duration_cycles,
+            },
+            "micro": {
+                "bid_ask_spread_pct": self.state.micro.bid_ask_spread_pct,
+                "bid_ask_imbalance": self.state.micro.bid_ask_imbalance,
+                "order_book_slope": self.state.micro.order_book_slope,
+                "cum_bid_depth_1pct": self.state.micro.cum_bid_depth_1pct,
+                "cum_ask_depth_1pct": self.state.micro.cum_ask_depth_1pct,
+                "last_price_micro": self.state.micro.last_price_micro,
+                "micro_trend": self.state.micro.micro_trend,
+                "micro_volatility": self.state.micro.micro_volatility,
+                "spoofing_flag": self.state.micro.spoofing_flag,
+            },
+            "var": {
+                "var_95_1h": self.state.var.var_95_1h,
+                "var_99_1h": self.state.var.var_99_1h,
+                "cvar_95_1h": self.state.var.cvar_95_1h,
+                "max_drawdown": self.state.var.max_drawdown,
+                "var_lookback": self.state.var.var_lookback[-100:],
+                "daily_var_breaches": self.state.var.daily_var_breaches,
+            },
+            "dca": {
+                "active": self.state.dca.active,
+                "entry_price": self.state.dca.entry_price,
+                "avg_entry_price": self.state.dca.avg_entry_price,
+                "total_size": self.state.dca.total_size,
+                "total_cost": self.state.dca.total_cost,
+                "num_entries": self.state.dca.num_entries,
+                "max_entries": self.state.dca.max_entries,
+                "entry_spacing_pct": self.state.dca.entry_spacing_pct,
+                "last_entry_price": self.state.dca.last_entry_price,
+                "target_pnl_pct": self.state.dca.target_pnl_pct,
+                "trailing_activation": self.state.dca.trailing_activation,
+                "trailing_stop_pct": self.state.dca.trailing_stop_pct,
+            },
+            "exec": {
+                "active_strategy": self.state.exec.active_strategy.value,
+                "grid_levels_active": self.state.exec.grid_levels_active,
+                "grid_target_levels": self.state.exec.grid_target_levels,
+                "dca_position_active": self.state.exec.dca_position_active,
+                "profit_take_order_id": self.state.exec.profit_take_order_id,
+                "last_rebalance_ts": self.state.exec.last_rebalance_ts,
+                "last_cycle_ms": self.state.exec.last_cycle_ms,
+                "errors_this_hour": self.state.exec.errors_this_hour,
+                "cycle_count": self.state.exec.cycle_count,
+            },
+            "grid_levels": self.state.grid_levels[-20:],
+        }
+
+        # Offload blocking disk I/O to thread pool
+        if self._state_path:
+            def _write_disk(path: Path, data: dict):
+                path.parent.mkdir(parents=True, exist_ok=True)
+                tmp = path.with_suffix(".tmp")
                 with open(tmp, "w") as f:
-                    json.dump(d, f)
-                tmp.replace(self._state_path)
-        except Exception as e:
-            log = logging.getLogger("kraken_v2")
-            log.warning(f"State save failed: {e}")
+                    json.dump(data, f)
+                tmp.replace(path)
+
+            _SAVE_EXECUTOR.submit(_write_disk, self._state_path, d)
 
     def flush_state(self) -> None:
         """Force a state save now (called during shutdown)."""
@@ -580,6 +592,21 @@ class DenaroCore:
         self.state.var.var_99_1h = abs(sorted_ret[int(n * 0.01)]) if sorted_ret[int(n * 0.01)] < 0 else 0.035
         cvar_vals = [r for r in sorted_ret if r <= sorted_ret[int(n * 0.05)]]
         self.state.var.cvar_95_1h = abs(sum(cvar_vals) / len(cvar_vals)) if cvar_vals else 0.03
+
+    def hydrate_var_buffer(self, ohlcv: List[List[float]]) -> None:
+        """Pre-populate _return_buffer with historical 1m candles before live trading.
+        Expects list of [timestamp, open, high, low, close, volume]."""
+        if not ohlcv or len(ohlcv) < 2:
+            return
+        closes = [c[4] for c in ohlcv]
+        # Compute 1m returns between consecutive closes
+        for i in range(1, len(closes)):
+            if closes[i-1] > 0:
+                ret = (closes[i] - closes[i-1]) / closes[i-1]
+                self._return_buffer.append(ret)
+        # Keep maxlen=200 (deque handles truncation)
+        log = logging.getLogger("kraken_v2")
+        log.info(f"VaR buffer hydrated with {len(closes)-1} historical returns")
 
     # === CIRCUIT BREAKER ===================================================
 
