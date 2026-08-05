@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """
-ShadowGrid v1.0 — Paper trading grid bot.
-Zero capitale richiesto. Accumula track record reale su dati di mercato live.
+ShadowGrid v1.1 — Paper + LIVE trading grid bot.
+Paper (default, LIVE_MODE=0): zero capitale, track record su dati di mercato live.
+LIVE (LIVE_MODE=1): ordini limit REALI via ccxt — richiede chiavi API nel .env,
+IP statico whitelistato sull'exchange e parametri di rischio calibrati.
 
 Strategia: griglia di limit order equidistanti. Compra al livello N, vende a N+1.
-Funziona su qualsiasi exchange ccxt (candele OHLCV pubbliche, niente API key).
+Funziona su qualsiasi exchange ccxt (OHLCV/ticker pubblici in paper).
 """
 from __future__ import annotations
 import json, logging, os, signal, sys, time
@@ -30,6 +32,8 @@ FEE_PCT     = float(os.environ.get("FEE_PCT", "0.25"))  # fee % per lato (Kraken
 HEALTH_PORT = int(os.environ.get("HEALTH_PORT", "8911"))
 LOG_FILE    = os.environ.get("LOG_FILE", f"/tmp/shadowgrid_{EXCHANGE.lower()}_{SYMBOL.replace('/', '_').lower()}.log")
 STATE_FILE  = os.environ.get("STATE_FILE", f"/tmp/shadowgrid_{EXCHANGE.lower()}_{SYMBOL.replace('/', '_').lower()}_state.json")
+LIVE_MODE   = int(os.environ.get("LIVE_MODE", "0"))   # 0=paper (default), 1=ordini reali ccxt
+DRIFT_PCT   = float(os.environ.get("DRIFT", "1.0"))   # drift % prezzo -> cancel-all + rebuild (live)
 
 # ─── Logging ──────────────────────────────────────────────────────────────
 log = logging.getLogger("shadowgrid")
@@ -41,9 +45,33 @@ sh.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(message)s"))
 log.handlers = [fh, sh]
 
 # ─── Exchange ─────────────────────────────────────────────────────────────
-def _make_exchange():
+def _make_exchange(live: bool = False):
     cls = getattr(ccxt, EXCHANGE.lower())
-    return cls({"enableRateLimit": True})
+    if live:
+        # Chiavi SOLO in LIVE_MODE=1, lette dal .env (MAI stampate nei log)
+        cfg = {
+            "enableRateLimit": True,
+            "apiKey": os.environ.get(f"{EXCHANGE.upper()}_API", ""),
+            "secret": os.environ.get(f"{EXCHANGE.upper()}_SECRET", ""),
+        }
+    else:
+        cfg = {"enableRateLimit": True}
+    return cls(cfg)
+
+
+def _load_dotenv() -> None:
+    """Carica il .env accanto al modulo (serve le chiavi API in LIVE_MODE)."""
+    for p in [Path(__file__).parent / ".env", Path.home() / "denaro" / ".env"]:
+        if p.exists():
+            try:
+                with open(p) as f:
+                    for line in f:
+                        line = line.strip()
+                        if line and not line.startswith("#") and "=" in line:
+                            k, v = line.split("=", 1)
+                            os.environ.setdefault(k.strip(), v.strip())
+            except Exception:
+                pass
 
 # ─── State ────────────────────────────────────────────────────────────────
 class State:
@@ -112,11 +140,14 @@ class State:
 
 # ─── Grid Logic ───────────────────────────────────────────────────────────
 class GridEngine:
-    def __init__(self, state: State):
+    def __init__(self, state: State, ex=None, live: bool = False):
         self.state = state
         self.last_price: float = 0.0
         self.cycle_count = 0
         self.ccxt_errors = 0
+        self.ex = ex
+        self.live = live
+        self._anchor = 0.0  # prezzo ancora per il drift-detection (live)
 
     def _build_levels(self, price: float) -> list[dict]:
         """Costruisce N livelli sopra e sotto il prezzo corrente."""
@@ -139,89 +170,94 @@ class GridEngine:
         return levels
 
     def cycle(self, price: float) -> dict:
-        """Un ciclo di grid: controlla fill, piazza/cancella ordini, calcola PnL."""
+        """Un ciclo: LIVE -> ordini reali; PAPER -> simulazione locale (invariata)."""
         self.last_price = price
         self.cycle_count += 1
 
         events = []
 
-        # 1. Controlla fill sugli ordini esistenti
-        filled = []
-        for i, o in enumerate(self.state.orders):
-            if o["side"] == "buy" and price <= o["price"]:
-                # Guardia cassa AL FILL (fix 2026-08-05): se il cash non copre il cost,
-                # NON fillare — altrimenti gap-down su griglia 5x25% -> free_cash negativo.
-                # L'ordine resta pending e il placement non lo rimpiazza (gia' presente).
-                if self.state.free_cash < o["cost"]:
-                    events.append(f"BUY skipped @ {o['price']:.6f} (no cash)")
-                    continue
-                # BUY filled
-                self.state.free_cash -= o["cost"]
-                self.state.coins += o["amount"]
-                self.state.total_trades += 1
-                events.append(f"BUY filled @ {o['price']:.6f} x{o['amount']:.6f}")
-                filled.append(i)
-                # Piazza un ordine SELL corrispondente
-                sell_price = o["price"] * (1.0 + SPREAD_PCT / 100.0)
-                self.state.orders.append({
-                    "id": f"s{self.cycle_count}_{len(self.state.orders)}",
-                    "side": "sell",
-                    "price": sell_price,
-                    "amount": o["amount"] * (1.0 - FEE_PCT / 100.0),  # meno fee (FEE_PCT %)
-                    "cost": o["amount"] * (1.0 - FEE_PCT / 100.0) * sell_price,
-                })
-
-            elif o["side"] == "sell" and price >= o["price"]:
-                # SELL filled
-                if self.state.coins >= o["amount"]:
-                    revenue = o["amount"] * o["price"]
-                    self.state.coins -= o["amount"]
-                    self.state.free_cash += revenue
-                    # Calcola PnL: il costo originale del buy abbinato
-                    # Semplificazione: PnL = (sell_price - buy_price) * amount
-                    # Prendiamo il buy price dal livello corrispondente
-                    buy_price = o["price"] / (1.0 + SPREAD_PCT / 100.0)
-                    pnl = revenue - o["amount"] * buy_price
-                    self.state.realized_pnl += pnl
+        if self.live:
+            events.extend(self._live_cycle(price))
+            self._sync_balance(events)
+        else:
+            # ── PAPER: simulazione locale (comportamento storico invariato) ──
+            # 1. Controlla fill sugli ordini esistenti
+            filled = []
+            for i, o in enumerate(self.state.orders):
+                if o["side"] == "buy" and price <= o["price"]:
+                    # Guardia cassa AL FILL (fix 2026-08-05): se il cash non copre il cost,
+                    # NON fillare — altrimenti gap-down su griglia 5x25% -> free_cash negativo.
+                    # L'ordine resta pending e il placement non lo rimpiazza (gia' presente).
+                    if self.state.free_cash < o["cost"]:
+                        events.append(f"BUY skipped @ {o['price']:.6f} (no cash)")
+                        continue
+                    # BUY filled
+                    self.state.free_cash -= o["cost"]
+                    self.state.coins += o["amount"]
                     self.state.total_trades += 1
-                    if pnl > 0:
-                        self.state.winning_trades += 1
-                    events.append(f"SELL filled @ {o['price']:.6f} PnL={pnl:+.6f}")
+                    events.append(f"BUY filled @ {o['price']:.6f} x{o['amount']:.6f}")
                     filled.append(i)
+                    # Piazza un ordine SELL corrispondente
+                    sell_price = o["price"] * (1.0 + SPREAD_PCT / 100.0)
+                    self.state.orders.append({
+                        "id": f"s{self.cycle_count}_{len(self.state.orders)}",
+                        "side": "sell",
+                        "price": sell_price,
+                        "amount": o["amount"] * (1.0 - FEE_PCT / 100.0),  # meno fee (FEE_PCT %)
+                        "cost": o["amount"] * (1.0 - FEE_PCT / 100.0) * sell_price,
+                    })
 
-        # Rimuovi ordini filled (in ordine inverso)
-        for i in reversed(filled):
-            self.state.orders.pop(i)
+                elif o["side"] == "sell" and price >= o["price"]:
+                    # SELL filled
+                    if self.state.coins >= o["amount"]:
+                        revenue = o["amount"] * o["price"]
+                        self.state.coins -= o["amount"]
+                        self.state.free_cash += revenue
+                        # Calcola PnL: il costo originale del buy abbinato
+                        # Semplificazione: PnL = (sell_price - buy_price) * amount
+                        # Prendiamo il buy price dal livello corrispondente
+                        buy_price = o["price"] / (1.0 + SPREAD_PCT / 100.0)
+                        pnl = revenue - o["amount"] * buy_price
+                        self.state.realized_pnl += pnl
+                        self.state.total_trades += 1
+                        if pnl > 0:
+                            self.state.winning_trades += 1
+                        events.append(f"SELL filled @ {o['price']:.6f} PnL={pnl:+.6f}")
+                        filled.append(i)
 
-        # 2. Ricostruisci griglia se ordini insufficienti
-        target_buys = LEVELS - sum(1 for o in self.state.orders if o["side"] == "buy")
-        target_sells = LEVELS - sum(1 for o in self.state.orders if o["side"] == "sell")
+            # Rimuovi ordini filled (in ordine inverso)
+            for i in reversed(filled):
+                self.state.orders.pop(i)
 
-        if target_buys > 0 or target_sells > 0:
-            levels = self._build_levels(price)
-            existing_prices = {(o["side"], o["price"]) for o in self.state.orders}
+            # 2. Ricostruisci griglia se ordini insufficienti
+            target_buys = LEVELS - sum(1 for o in self.state.orders if o["side"] == "buy")
+            target_sells = LEVELS - sum(1 for o in self.state.orders if o["side"] == "sell")
 
-            for lvl in levels:
-                key = (lvl["side"], lvl["price"])
-                if key not in existing_prices:
-                    if lvl["side"] == "buy" and target_buys > 0 and self.state.free_cash >= lvl["cost"]:
-                        self.state.orders.append({
-                            "id": f"b{self.cycle_count}_{len(self.state.orders)}",
-                            "side": lvl["side"],
-                            "price": lvl["price"],
-                            "amount": lvl["amount"],
-                            "cost": lvl["cost"],
-                        })
-                        target_buys -= 1
-                    elif lvl["side"] == "sell" and target_sells > 0 and self.state.coins >= lvl["amount"]:
-                        self.state.orders.append({
-                            "id": f"s{self.cycle_count}_{len(self.state.orders)}",
-                            "side": lvl["side"],
-                            "price": lvl["price"],
-                            "amount": lvl["amount"],
-                            "cost": lvl["cost"],
-                        })
-                        target_sells -= 1
+            if target_buys > 0 or target_sells > 0:
+                levels = self._build_levels(price)
+                existing_prices = {(o["side"], o["price"]) for o in self.state.orders}
+
+                for lvl in levels:
+                    key = (lvl["side"], lvl["price"])
+                    if key not in existing_prices:
+                        if lvl["side"] == "buy" and target_buys > 0 and self.state.free_cash >= lvl["cost"]:
+                            self.state.orders.append({
+                                "id": f"b{self.cycle_count}_{len(self.state.orders)}",
+                                "side": lvl["side"],
+                                "price": lvl["price"],
+                                "amount": lvl["amount"],
+                                "cost": lvl["cost"],
+                            })
+                            target_buys -= 1
+                        elif lvl["side"] == "sell" and target_sells > 0 and self.state.coins >= lvl["amount"]:
+                            self.state.orders.append({
+                                "id": f"s{self.cycle_count}_{len(self.state.orders)}",
+                                "side": lvl["side"],
+                                "price": lvl["price"],
+                                "amount": lvl["amount"],
+                                "cost": lvl["cost"],
+                            })
+                            target_sells -= 1
 
         # 3. Calcola equity corrente
         equity = self.state.equity(price)
@@ -236,6 +272,145 @@ class GridEngine:
             "orders": len(self.state.orders),
             "trades": self.state.total_trades,
         }
+
+    # ─── LIVE EXECUTION LAYER (LIVE_MODE=1) ──────────────────────────────
+    def _live_cycle(self, price: float) -> list:
+        events: list = []
+        if self.ex is None:
+            events.append("live senza exchange (ex=None) — skip")
+            return events
+
+        # 1. Anchor + drift: prezzo che si muove > DRIFT_PCT% -> cancel-all + rebuild
+        if self._anchor == 0:
+            self._anchor = price
+            self._sync_open(events)
+        drift = abs(price - self._anchor) / self._anchor if self._anchor > 0 else 0
+        if drift > DRIFT_PCT / 100.0:
+            events.append(f"DRIFT {drift*100:.1f}% > {DRIFT_PCT}% -> cancel-all + rebuild")
+            self._cancel_all(events)
+            self._anchor = price
+            self.state.orders = []
+
+        # 2. Rileva fill sugli ordini registrati (chi non e' piu' open)
+        self._check_fills(events)
+
+        # 3. Piazza gli ordini mancanti (mantiene la griglia piena)
+        self._place_missing(price, events)
+
+        return events
+
+    def _sync_open(self, events: list) -> None:
+        """All'avvio: allinea state.orders agli ordini aperti reali (restart-safe)."""
+        try:
+            opens = self.ex.fetch_open_orders(SYMBOL)
+            if opens:
+                self.state.orders = [{
+                    "id": str(o["id"]),
+                    "side": o["side"],
+                    "price": float(o["price"]),
+                    "amount": float(o["amount"]),
+                    "cost": float(o["price"]) * float(o["amount"]),
+                } for o in opens]
+                events.append(f"sync: {len(opens)} ordini reali aperti ripristinati")
+        except Exception as e:
+            log.warning(f"sync_open fallito (continuo con stato locale): {e}")
+
+    def _check_fills(self, events: list) -> None:
+        """Un ordine registrato non piu' open = filled (o cancellato esterno)."""
+        try:
+            open_ids = {str(o["id"]) for o in self.ex.fetch_open_orders(SYMBOL)}
+        except Exception as e:
+            log.warning(f"fetch_open_orders fallito: {e}")
+            return
+
+        for o in list(self.state.orders):
+            if str(o["id"]) in open_ids:
+                continue
+            if o["side"] == "buy":
+                # Buy filled -> piazza il SELL paired al livello sopra
+                self.state.total_trades += 1
+                sell_price = o["price"] * (1.0 + SPREAD_PCT / 100.0)
+                sell_amount = o["amount"] * (1.0 - FEE_PCT / 100.0)
+                try:
+                    so = self.ex.create_limit_order(SYMBOL, "sell", sell_amount, sell_price)
+                    self.state.orders.append({
+                        "id": str(so["id"]),
+                        "side": "sell",
+                        "price": sell_price,
+                        "amount": sell_amount,
+                        "cost": sell_amount * sell_price,
+                    })
+                    events.append(f"BUY filled (real) @ {o['price']:.6f} -> SELL paired {sell_price:.6f} (id {so['id']})")
+                except Exception as e:
+                    events.append(f"PAIRED SELL FAILED @ {sell_price:.6f}: {str(e)[:80]}")
+            else:
+                # Sell filled -> ciclo completato, pnl stimato
+                buy_price = o["price"] / (1.0 + SPREAD_PCT / 100.0)
+                pnl = o["amount"] * (o["price"] - buy_price)
+                self.state.realized_pnl += pnl
+                self.state.total_trades += 1
+                if pnl > 0:
+                    self.state.winning_trades += 1
+                events.append(f"SELL filled (real) @ {o['price']:.6f} PnL~{pnl:+.6f}")
+            self.state.orders.remove(o)
+
+    def _place_missing(self, price: float, events: list) -> None:
+        """Piazza gli ordini limit mancanti (guardia min-cost e min-amount)."""
+        try:
+            market = self.ex.market(SYMBOL)
+            min_cost = (market.get("limits", {}).get("cost", {}).get("min") or 0) or 0
+            min_amount = (market.get("limits", {}).get("amount", {}).get("min") or 0) or 0
+        except Exception:
+            min_cost, min_amount = 0.0, 0.0
+
+        levels = self._build_levels(price)
+        existing = {(o["side"], round(o["price"], 8)) for o in self.state.orders}
+
+        for lvl in levels:
+            key = (lvl["side"], round(lvl["price"], 8))
+            if key in existing:
+                continue
+            if lvl["side"] == "sell" and self.state.coins < lvl["amount"]:
+                continue  # niente coins da vendere
+            if lvl["cost"] < min_cost:
+                events.append(f"skip (cost {lvl['cost']:.2f} < min {min_cost:.2f})")
+                continue
+            if lvl["amount"] < min_amount:
+                events.append(f"skip (amount {lvl['amount']:.6f} < min {min_amount:.6f})")
+                continue
+            try:
+                o = self.ex.create_limit_order(SYMBOL, lvl["side"], lvl["amount"], lvl["price"])
+                self.state.orders.append({
+                    "id": str(o["id"]),
+                    "side": lvl["side"],
+                    "price": lvl["price"],
+                    "amount": lvl["amount"],
+                    "cost": lvl["cost"],
+                })
+                events.append(f"{lvl['side'].upper()} placed {lvl['price']:.6f} x{lvl['amount']:.6f} (id {o['id']})")
+            except Exception as e:
+                events.append(f"{lvl['side'].upper()} FAILED {lvl['price']:.6f}: {str(e)[:80]}")
+
+    def _cancel_all(self, events: list) -> None:
+        """Cancella tutti gli ordini aperti (drift) — solo quelli registrati in state."""
+        for o in list(self.state.orders):
+            try:
+                self.ex.cancel_order(o["id"], SYMBOL)
+                events.append(f"cancel {o['id']} ({o['side']} @ {o['price']:.6f})")
+            except Exception as e:
+                events.append(f"cancel {o['id']} FAILED: {str(e)[:60]}")
+        self.state.orders = []
+
+    def _sync_balance(self, events: list) -> None:
+        """Sincronizza cash/coins dal balance reale dell'exchange (fonte di verita')."""
+        try:
+            bal = self.ex.fetch_balance()
+            free = bal.get("free", {})
+            self.state.free_cash = float(free.get(CURRENCY, 0.0) or 0.0)
+            base = SYMBOL.split("/")[0]
+            self.state.coins = float(free.get(base, 0.0) or 0.0)
+        except Exception as e:
+            events.append(f"balance sync fallito: {str(e)[:60]}")
 
 # ─── Health Server ────────────────────────────────────────────────────────
 class HealthHandler(BaseHTTPRequestHandler):
@@ -276,14 +451,15 @@ class HealthHandler(BaseHTTPRequestHandler):
 
 # ─── Main ─────────────────────────────────────────────────────────────────
 def main():
-    log.info(f"=== ShadowGrid v1.0 ===")
+    log.info(f"=== ShadowGrid v1.1 ===")
     log.info(f"Exchange: {EXCHANGE} | Symbol: {SYMBOL} | Capital: {CAPITAL} {CURRENCY}")
     log.info(f"Grid: {LEVELS} livelli, spread {SPREAD_PCT}%, {PER_LEVEL*100:.0f}% capitale/livello")
-    log.info(f"Health: :{HEALTH_PORT} | State: {STATE_FILE}")
+    log.info(f"Mode: {'LIVE' if LIVE_MODE else 'PAPER'} | Health: :{HEALTH_PORT} | State: {STATE_FILE}")
 
-    ex = _make_exchange()
+    _load_dotenv()
+    ex = _make_exchange(live=bool(LIVE_MODE))
     state = State()
-    engine = GridEngine(state)
+    engine = GridEngine(state, ex=ex, live=bool(LIVE_MODE))
 
     # Health server
     HealthHandler.engine_ref = engine

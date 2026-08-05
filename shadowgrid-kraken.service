@@ -1,5 +1,5 @@
 [Unit]
-Description=ShadowGrid Paper (Kraken SOL/EUR)
+Description=ShadowGrid Paper (Kraken SOL/EUR) — LIVE-ready v1.1
 After=network-online.target
 Wants=network-online.target
 
@@ -12,15 +12,20 @@ Environment=SYMBOL=SOL/EUR
 Environment=CURRENCY=EUR
 Environment=CAPITAL=100.0
 Environment=LEVELS=5
-Environment=SPREAD=0.5
-Environment=PER_LEVEL=0.20
+Environment=SPREAD=1.5
+Environment=PER_LEVEL=0.12
 Environment=COOLDOWN=30
+Environment=FEE_PCT=0.25
 Environment=HEALTH_PORT=8912
 Environment=LOG_FILE=/home/sergio/denaro/shadowgrid_kraken.log
 Environment=STATE_FILE=/home/sergio/denaro/shadowgrid_kraken_state.json
+Environment=LIVE_MODE=0
+Environment=DRIFT=1.0
 ExecStart=/usr/bin/python3 /home/sergio/denaro/shadowgrid.py
 Restart=on-failure
 RestartSec=10
+KillSignal=SIGTERM
+TimeoutStopSec=30
 
 [Install]
 WantedBy=multi-user.target
