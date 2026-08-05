@@ -36,10 +36,18 @@ STATO: LOGICA + PERSISTENZA VERIFICATE. NON DEPLOYATO.
   continua a tradare). Gap "sell path mai esercitato" CHIUSO.
 - Run live locale (ticker ccxt pubblico, zero chiavi): 5 ordini buy, equity 100, 0 errori.
 
-### 4. SCALPER
-STATO: CODICE MORTO in v5 (archiviato in archive/denaro_war/strategies/scalper.py,
-retired nel git). In v6 esiste ScalpStrategy (vedi sotto) — non e' un bot standalone.
-Se serve uno scalper standalone: va scritto da zero.
+### 4. SCALPER v2 (scalper_v2.py) — RISCRITTO DA ZERO
+STATO: CODICE NUOVO + HARNESS A/B/C/D ALL PASS + SMOKE LIVE OK. NON DEPLOYATO.
+- Entry mean-reversion: prezzo scende >= ENTRY_DROP% dal massimo recente (ratchet).
+- Exit: TARGET_PCT% (take-profit) OPPURE STOP_PCT% (stop-loss), fee incluse.
+- Guardia cassa al fill: cost = entry+fee, mai comprare se cash insufficiente.
+- Persistenza restart-safe: posizione + ratchet trade_high salvati e riletti.
+- Scenario A (entry->target): PASS, PnL +0.3034, fee incluse.
+- Scenario B (entry->stop):   PASS, perdita -0.6034 limitata allo stop.
+- Scenario C (guardia cassa): PASS, ENTRY skipped quando cost > cash.
+- Scenario D (persistenza):   PASS, posizione + ratchet ripristinati, continua a tradare.
+- Smoke live locale (ticker ccxt DOGE/EUR, zero chiavi): cicli + health OK.
+- Il vecchio scalper.py (archive/denaro_war/) era codice morto retired — non riusato.
 
 ### 5. STRATEGIE v6 (neo/) — harness offline, zero rete
 STATO: VERIFICATE (logica).
