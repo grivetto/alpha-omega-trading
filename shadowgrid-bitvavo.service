@@ -1,0 +1,29 @@
+[Unit]
+Description=ShadowGrid Paper (BITVAVO SOL/EUR)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=marco
+WorkingDirectory=/home/marco/dev/alpha-omega-trading/denaro
+Environment=EXCHANGE=bitvavo
+Environment=SYMBOL=SOL/EUR
+Environment=CURRENCY=EUR
+Environment=CAPITAL=50.0
+Environment=LEVELS=5
+Environment=SPREAD=1.0
+Environment=PER_LEVEL=0.20
+Environment=COOLDOWN=30
+Environment=FEE_PCT=0.15
+Environment=HEALTH_PORT=8911
+Environment=LOG_FILE=/home/marco/dev/alpha-omega-trading/denaro/shadowgrid_bitvavo.log
+Environment=STATE_FILE=/home/marco/dev/alpha-omega-trading/denaro/shadowgrid_bitvavo_state.json
+ExecStart=/usr/bin/python3 /home/marco/dev/alpha-omega-trading/denaro/shadowgrid.py
+Restart=on-failure
+RestartSec=10
+KillSignal=SIGTERM
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target
