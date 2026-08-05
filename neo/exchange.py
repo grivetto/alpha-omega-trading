@@ -99,7 +99,15 @@ class ExchangeAdapter:
         self._session = aiohttp.ClientSession(
             connector=connector,
             timeout=aiohttp.ClientTimeout(total=10),
-            headers={"User-Agent": "denaro-neo/1.0"},
+            headers={
+                "User-Agent": "denaro-neo/1.0",
+                # Fix 2026-08-05 (brotli): aiohttp negozia br ma non riesce a
+                # decodificarlo su questa pila -> Kraken risponde "br" e ogni
+                # fetch fallisce (errore cronico dal log 2026-07-11).
+                # Forzando gzip/deflate il server rispetta il negoziato e
+                # aiohttp decodifica nativamente via zlib.
+                "Accept-Encoding": "gzip, deflate",
+            },
         )
 
     async def stop(self) -> None:

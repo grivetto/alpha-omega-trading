@@ -143,7 +143,6 @@ class StateStore:
         batch = self._queue
         self._queue = []
         try:
-            await self._db.executemany("", batch)  # not valid — see below
             # Actually need manual loop
             for sql, params in batch:
                 await self._db.execute(sql, params)

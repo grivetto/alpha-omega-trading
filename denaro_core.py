@@ -763,12 +763,16 @@ class DenaroCore:
         pnl = (current_price - avg) / avg
         if pnl >= d.target_pnl_pct:
             return True, d.total_size, f"target_{pnl*100:.1f}%"
-        if current_price > d.trailing_activation:
+        # Fix 2026-08-05: trailing stop reso raggiungibile.
+        # PRIMA: il ratchet era DOPO il check, e trail era sempre >0 quando
+        # current>activation -> il ramo trailing non usciva mai (dead code).
+        # ORA: prima ratchet al nuovo picco, poi calcolo trail dall'attivazione.
+        if pnl > 0.01 and current_price > d.trailing_activation:
+            d.trailing_activation = current_price
+        if d.trailing_activation > 0:
             trail = (current_price - d.trailing_activation) / max(1e-10, d.trailing_activation)
             if trail < -d.trailing_stop_pct:
                 return True, d.total_size, f"trailing_{trail*100:.1f}%"
-        if pnl > 0.01 and current_price > d.trailing_activation:
-            d.trailing_activation = current_price
         if pnl < -0.10:
             return True, d.total_size, f"stop_{pnl*100:.1f}%"
         return False, 0, "hold"
@@ -791,7 +795,9 @@ class DenaroCore:
         d.total_cost = 0
         d.num_entries = 0
         d.last_entry_price = 0
-        d.trailing_activation = 0
+        d.trailing_activation = 0.0  # Fix 2026-08-05: senza reset, dopo la chiusura
+        # l'attivazione restava al picco precedente -> la posizione nuova usciva
+        # subito in "trailing" con pnl leggerissimo negativo.
         return pnl
 
     # === COMPOUNDING =======================================================
