@@ -1,0 +1,26 @@
+[Unit]
+Description=ShadowGrid Paper (MEXC SOL/USDT)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=marco
+WorkingDirectory=/home/marco/dev/alpha-omega-trading/denaro
+Environment=EXCHANGE=mexc
+Environment=SYMBOL=SOL/USDT
+Environment=CURRENCY=USDT
+Environment=CAPITAL=100.0
+Environment=LEVELS=5
+Environment=SPREAD=0.5
+Environment=PER_LEVEL=0.20
+Environment=COOLDOWN=30
+Environment=HEALTH_PORT=8911
+Environment=LOG_FILE=/home/marco/dev/alpha-omega-trading/denaro/shadowgrid_mexc.log
+Environment=STATE_FILE=/home/marco/dev/alpha-omega-trading/denaro/shadowgrid_mexc_state.json
+ExecStart=/usr/bin/python3 /home/marco/dev/alpha-omega-trading/denaro/shadowgrid.py
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

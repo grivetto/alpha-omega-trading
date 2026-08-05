@@ -1,0 +1,26 @@
+[Unit]
+Description=ShadowGrid Paper (Kraken SOL/EUR)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=sergio
+WorkingDirectory=/home/sergio/denaro
+Environment=EXCHANGE=kraken
+Environment=SYMBOL=SOL/EUR
+Environment=CURRENCY=EUR
+Environment=CAPITAL=100.0
+Environment=LEVELS=5
+Environment=SPREAD=0.5
+Environment=PER_LEVEL=0.20
+Environment=COOLDOWN=30
+Environment=HEALTH_PORT=8912
+Environment=LOG_FILE=/home/sergio/denaro/shadowgrid_kraken.log
+Environment=STATE_FILE=/home/sergio/denaro/shadowgrid_kraken_state.json
+ExecStart=/usr/bin/python3 /home/sergio/denaro/shadowgrid.py
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
