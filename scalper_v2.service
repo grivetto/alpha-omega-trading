@@ -1,0 +1,29 @@
+[Unit]
+Description=Scalper v2 — DOGE/EUR Mean-Reversion (PAPER)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=sergio
+WorkingDirectory=/home/sergio/denaro
+Environment=EXCHANGE=kraken
+Environment=SYMBOL=DOGE/EUR
+Environment=CURRENCY=EUR
+Environment=CAPITAL=100.0
+Environment=ENTRY_DROP=1.0
+Environment=TARGET_PCT=1.5
+Environment=STOP_PCT=1.0
+Environment=SIZE_FRAC=0.30
+Environment=COOLDOWN=5
+Environment=HEALTH_PORT=8913
+Environment=LOG_FILE=/home/sergio/denaro/scalper_v2.log
+Environment=STATE_FILE=/home/sergio/denaro/scalper_v2_state.json
+ExecStart=/usr/bin/python3 /home/sergio/denaro/scalper_v2.py
+Restart=on-failure
+RestartSec=10
+KillSignal=SIGTERM
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target

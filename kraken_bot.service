@@ -1,0 +1,25 @@
+[Unit]
+Description=Denaro Kraken Bot — DOGE/EUR Grid Strategy (PAPER MOCK)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=sergio
+WorkingDirectory=/home/sergio/denaro
+Environment=MOCK_MODE=1
+Environment=SHADOW_MODE=0
+Environment=SYMBOL=DOGE/EUR
+Environment=CAPITAL=100.0
+Environment=LEVELS=5
+Environment=SPREAD=0.025
+Environment=COOLDOWN=5
+ExecStart=/home/sergio/denaro/venv/bin/python3 /home/sergio/denaro/main.py
+ExecStartPost=/bin/bash -c 'sleep 5 && pgrep -f "python3.*denaro/main.py" > /dev/null || { echo "HEALTHCHECK: process not found"; exit 1; }'
+Restart=on-failure
+RestartSec=10
+KillSignal=SIGTERM
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target

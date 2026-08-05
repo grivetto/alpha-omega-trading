@@ -67,12 +67,30 @@ STATO: VERIFICATE (logica).
 - GAP (design): v6 genera segnali ma NON piazza ordini (observation mode) — il fill
   engine e' assente per design. Non e' verificabile un round-trip v6.
 
-## FIX APPLICATI IN QUESTA SESSIONE (NON COMMITTATI — decisione utente)
-- denaro_core.py: trailing stop DCA raggiungibile (787-796) + reset trailing_activation
-  in close (819). Harness harness_dca_v5.py ALL PASS.
-- neo/exchange.py: header Accept-Encoding gzip/deflate (fix brotli, 99-108).
-- Nuovi file harness (regression test): harness_v6_strategies.py, harness_sell_path.py
-  (A/B/C), harness_sg_persistence.py, harness_dca_v5.py.
+## FIX APPLICATI — COMMITTATI E PUSHATI su fix/paper-verification (NON su origin/main)
+Branch: fix/paper-verification → origin (verificato via ls-remote).
+- 2729327b: denaro_core.py trailing stop DCA raggiungibile + reset trailing_activation
+  in close; neo/exchange.py Accept-Encoding gzip/deflate (fix brotli); neo/state.py
+  executemany; harness v6/sell_path/persistenza/dca + report. Harness TUTTI PASS.
+- 9fb65b05: shadowgrid.py (548a4fae) + shadowgrid-*.service corrette (senza
+  StandardOutput=append — era la causa del crash-loop 7577/7683 restart sui nodi).
+- 1a9031f4: scalper_v2.py + harness_scalper_v2.py (A/B/C/D ALL PASS) + report.
+- backup/prequel-main = copia dei commit della vecchia lineage (d26f8976), NON cancellare.
+
+## STATO DEPLOY FINALE — TUTTO OPERATIVO IN PAPER (2026-08-05 22:45)
+Nessun ordine reale: MOCK_MODE=1 / SHADOW_MODE=0 / ticker ccxt pubblico. Zero chiavi usate.
+
+| Servizio | Nodo | Stato | Health |
+|----------|------|-------|--------|
+| kraken_bot.service (Grid v5 DOGE/EUR MOCK) | MC2 | ACTIVE (fix: puntava a kraken_bot/main.py inesistente -> 16.919 crash-loop; ora main.py MOCK_MODE=1) | log journal OK |
+| scalper_v2.service (DOGE/EUR mean-rev PAPER) | MC2 | ACTIVE (nuovo) | :8913 OK |
+| shadowgrid-kraken.service (SOL/EUR PAPER) | nuvola | ACTIVE, 0 restart, binario 548a4fae | :8912 OK |
+| shadowgrid-mexc.service (SOL/USDT PAPER) | MARCODG1 | ACTIVE, 0 restart, binario 548a4fae | :8911 OK |
+
+- Causa crash-loop originale (7577/7683 restart): log root-owned + StandardOutput=append.
+  Unit corrette senza quella riga; log root-owned rimossi su entrambi i nodi.
+- chown nuvola completato (binario sergio:sergio).
+- Scalper v2: deployato come servizio su MC2 (:8913).
 
 ## ARTEFATTI OBSOLETI / DA RIMUOVERE
 - state_load_fix.patch: STALE — targetta core/state.py (modulo PortfolioState rimosso).
@@ -82,15 +100,18 @@ STATO: VERIFICATE (logica).
 
 ## ALBERO GIT (modifiche pre-esistenti di altra sessione, NON mie)
 main.py (RECOVERY_MODE v6), mexc_engine.py, bybit_engine.py, neo/core.py (pair helpers),
-neo/main.py, neo/state.py (executemany) — diff della sessione handoff v6, da non attribuire
-a questa verifica. Nessun commit effettuato.
+neo/main.py, neo/state.py (executemany) — diff della sessione handoff v6, salvati in
+stash@{0} (wip-altra-sessione-v6). Da non attribuire a questa verifica.
 
 ## RISPOSTA ONESTA A "FUNZIONA ALLA PERFEZIONE?"
 - Grid v5: code-verified + restart-safe + fill MOCK osservati. LIVE-FILL su mercato
   reale dipende dal movimento dei prezzi (i livelli buy stanno sotto il mid).
-- DCA v5: verificato, 2 bug reali trovati e fixati.
-- ShadowGrid: round-trip completo + persistenza verificati, MAI deployato sui nodi.
+- DCA v5: verificato, 2 bug reali trovati e fixati (committati).
+- ShadowGrid: round-trip completo + persistenza verificati; DEPLOYATO in PAPER
+  su nuvola (SOL/EUR :8912) e MARCODG1 (SOL/USDT :8911), 0 restart.
 - Strategie v6: logica verificata, fill engine assente per design.
-- Scalper standalone: non esiste.
+- Scalper v2: riscritto da zero, harness A/B/C/D ALL PASS, smoke live OK,
+  DEPLOYATO in PAPER su MC2 (:8913).
+- Tutti i servizi girano in PAPER (MOCK_MODE=1, zero chiavi). LIVE richiede GO esplicito.
 
-Nessun deploy, nessun commit, nessun DRY_RUN=0 eseguito. 115 USDT chiuso.
+Nessun DRY_RUN=0 eseguito. 115 USDT chiuso (banca in carico). Tutto il deploy è PAPER.
