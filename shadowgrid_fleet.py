@@ -71,11 +71,12 @@ class FleetManager:
         self.processes[sym] = proc
 
     def supervise(self):
-        for pair_cfg in self.config.get("pairs", []):
+        all_pairs = self.config.get("pairs", []) + self.config.get("okx_pairs", [])
+        for pair_cfg in all_pairs:
             self.start_bot(pair_cfg)
 
         while self.running:
-            for pair_cfg in self.config.get("pairs", []):
+            for pair_cfg in all_pairs:
                 sym = pair_cfg["symbol"]
                 proc = self.processes.get(sym)
                 if proc is None or proc.poll() is not None:

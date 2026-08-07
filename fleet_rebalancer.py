@@ -1,95 +1,153 @@
 #!/usr/bin/env python3
 """
-Fleet Dynamic Capital Rebalancer.
-Periodically inspects performance metrics across all active ShadowGrid v2 instances.
-Reallocates capital allocation in fleet_config.json towards high win-rate / positive PnL pairs
-and scales down capital on stagnating/loss-making pairs.
+Fleet Capital Rebalancer - Only LOGS suggestions, does NOT modify config.
+
+Usage: python fleet_rebalancer.py --config /path/to/fleet_config.json --capital 100
 """
-from __future__ import annotations
+
 import json
-import logging
-import os
+import argparse
 import sys
-import time
-import urllib.request
+import os
+from datetime import datetime
 from pathlib import Path
-from typing import Dict, List
-
-log = logging.getLogger("fleet_rebalancer")
-log.setLevel(logging.INFO)
-sh = logging.StreamHandler(sys.stdout)
-sh.setFormatter(logging.Formatter("%(asctime)s [Rebalancer] %(message)s"))
-log.handlers = [sh]
-
-CONFIG_FILE = os.environ.get("FLEET_CONFIG", "fleet_config.json")
-TOTAL_CAPITAL = float(os.environ.get("TOTAL_CAPITAL", "100.0"))
-MIN_BOT_CAPITAL = 15.0
-MAX_BOT_CAPITAL = 45.0
 
 
-def fetch_bot_health(port: int) -> Dict:
-    try:
-        url = f"http://127.0.0.1:{port}/health"
-        req = urllib.request.Request(url, headers={"User-Agent": "FleetRebalancer/1.0"})
-        with urllib.request.urlopen(req, timeout=3) as resp:
-            if resp.status == 200:
-                return json.loads(resp.read().decode())
-    except Exception:
-        pass
+def load_state_for_bot(bot_name: str, base_dir: str = "/home/sergio/denaro") -> dict:
+    """Load shadowgrid state file for a bot."""
+    # Try multiple possible state file patterns
+    patterns = [
+        f"shadowgrid_{bot_name.replace('/', '_')}_state.json",
+        f"shadowgrid_{bot_name.replace('/', '_')}.json",
+        f"state_{bot_name.replace('/', '_')}.json",
+    ]
+    for pattern in patterns:
+        path = Path(base_dir) / pattern
+        if path.exists():
+            try:
+                with open(path) as f:
+                    return json.load(f)
+            except Exception:
+                pass
     return {}
 
 
-def rebalance_fleet():
-    cfg_path = Path(CONFIG_FILE)
-    if not cfg_path.exists():
-        log.warning(f"Config file {CONFIG_FILE} not found!")
-        return
+def compute_performance_score(bot: dict, base_dir: str) -> float:
+    """Compute performance score from live state."""
+    state = load_state_for_bot(bot["symbol"], base_dir)
+    
+    realized_pnl = state.get("realized_pnl", 0.0)
+    equity = state.get("equity", bot.get("capital", 25.0))
+    trades = state.get("trades_count", 0)
+    win_rate = state.get("win_rate", 0.0)
+    
+    # Score formula: PnL% * trades_weight + win_rate * win_weight
+    capital = bot.get("capital", 25.0)
+    if capital <= 0:
+        return 0.0
+    
+    pnl_pct = (equity - capital) / capital * 100
+    
+    # Only score if bot has actually traded
+    if trades < 3:
+        return max(0.1, pnl_pct / 100 + 0.1)
+    
+    score = (pnl_pct * 0.6) + (win_rate * 0.4)
+    return max(0.1, score)
 
-    with open(cfg_path) as f:
+
+def rebalance_fleet(config_path: str, total_capital: float, base_dir: str = None):
+    """Main rebalancing logic - ONLY LOGS suggestions."""
+    
+    if base_dir is None:
+        base_dir = os.path.dirname(config_path)
+    
+    with open(config_path) as f:
         config = json.load(f)
-
-    pairs = config.get("pairs", [])
-    if not pairs:
+    
+    # Collect ALL pairs from both kraken and okx
+    all_bots = []
+    for p in config.get("pairs", []):
+        p["exchange"] = p.get("exchange", "kraken")
+        all_bots.append(p)
+    for p in config.get("okx_pairs", []):
+        p["exchange"] = p.get("exchange", "okx")
+        all_bots.append(p)
+    
+    if not all_bots:
+        print(f"[{datetime.now()}] No bots found in config")
         return
-
-    log.info(f"Analyzing performance for {len(pairs)} bots...")
-    scores = []
     
-    for p in pairs:
-        sym = p["symbol"]
-        port = p["port"]
-        health = fetch_bot_health(port)
-        
-        pnl = health.get("realized_pnl", 0.0)
-        trades = health.get("total_trades", 0)
-        rsi = health.get("rsi", 50.0)
-        adx = health.get("adx", 15.0)
-        momentum_ok = health.get("momentum_ok", True)
-        
-        # Performance score: Base 1.0 + PnL bonus + activity bonus
-        score = 1.0 + (pnl * 2.0) + (0.1 if trades > 5 else 0.0) + (0.2 if momentum_ok else -0.3)
-        score = max(0.1, score)
-        
-        scores.append({"symbol": sym, "port": port, "score": score, "pnl": pnl, "trades": trades})
-        log.info(f"Bot {sym} (:port {port}): PnL={pnl:+.4f}, Trades={trades}, Score={score:.2f}")
-
-    total_score = sum(s["score"] for s in scores) or 1.0
-    log.info("Rebalancing capital based on performance scores...")
+    # Compute scores
+    scored = []
+    for bot in all_bots:
+        score = compute_performance_score(bot, base_dir)
+        scored.append((score, bot))
     
-    # Distribute capital proportional to score
-    for i, s in enumerate(scores):
-        weight = s["score"] / total_score
-        raw_cap = TOTAL_CAPITAL * weight
-        alloc_cap = max(MIN_BOT_CAPITAL, min(MAX_BOT_CAPITAL, round(raw_cap, 1)))
-        pairs[i]["capital"] = alloc_cap
-        log.info(f"Allocated {alloc_cap} EUR to {s['symbol']} (Weight: {weight*100:.1f}%)")
-
-    config["pairs"] = pairs
-    with open(cfg_path, "w") as f:
-        json.dump(config, f, indent=2)
+    # Sort by score descending
+    scored.sort(key=lambda x: x[0], reverse=True)
+    
+    # Calculate new allocations
+    min_cap = total_capital * 0.15  # 15% min per bot
+    max_cap = total_capital * 0.45  # 45% max per bot
+    
+    # Weighted allocation based on score
+    total_score = sum(s for s, _ in scored)
+    
+    suggestions = []
+    for score, bot in scored:
+        weight = score / total_score if total_score > 0 else 1.0 / len(scored)
+        new_capital = total_capital * weight
+        new_capital = max(min_cap, min(max_cap, new_capital))
         
-    log.info("Updated fleet_config.json successfully.")
+        old_capital = bot.get("capital", total_capital / len(scored))
+        delta = new_capital - old_capital
+        
+        suggestions.append({
+            "symbol": bot["symbol"],
+            "exchange": bot["exchange"],
+            "old_capital": round(old_capital, 2),
+            "new_capital": round(new_capital, 2),
+            "delta": round(delta, 2),
+            "score": round(score, 4),
+            "port": bot.get("port", "?")
+        })
+    
+    # Log results
+    print(f"\n=== FLEET REBALANCER [{datetime.now().isoformat()}] ===")
+    print(f"Config: {config_path}")
+    print(f"Total Capital: {total_capital} EUR")
+    print(f"Bots: {len(all_bots)} (Kraken: {len(config.get('pairs', []))}, OKX: {len(config.get('okx_pairs', []))})")
+    print(f"Min/Max per bot: {min_cap:.2f} / {max_cap:.2f} EUR")
+    print(f"\n{'SYMBOL':<12} {'EXCH':<6} {'PORT':>5} {'OLD':>8} {'NEW':>8} {'DELTA':>8} {'SCORE':>8}")
+    print("-" * 60)
+    
+    for s in suggestions:
+        print(f"{s['symbol']:<12} {s['exchange']:<6} {s['port']:>5} {s['old_capital']:>8.2f} {s['new_capital']:>8.2f} {s['delta']:>+8.2f} {s['score']:>8.4f}")
+    
+    # Summary
+    total_new = sum(s["new_capital"] for s in suggestions)
+    print(f"\nTotal allocated: {total_new:.2f} / {total_capital:.2f} EUR")
+    
+    # DO NOT write back to config - bots don't reload it anyway
+    print(f"\n[INFO] Suggestions logged. Config NOT modified (bots don't reload at runtime).")
+    print(f"[INFO] To apply: manually edit fleet_config.json and restart fleet.")
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Fleet Capital Rebalancer (read-only)")
+    parser.add_argument("--config", required=True, help="Path to fleet_config.json")
+    parser.add_argument("--capital", type=float, default=100.0, help="Total fleet capital")
+    parser.add_argument("--basedir", help="Base directory for state files (default: config dir)")
+    
+    args = parser.parse_args()
+    
+    if not os.path.exists(args.config):
+        print(f"[ERROR] Config file not found: {args.config}", file=sys.stderr)
+        sys.exit(1)
+    
+    rebalance_fleet(args.config, args.capital, args.basedir)
 
 
 if __name__ == "__main__":
-    rebalance_fleet()
+    main()
