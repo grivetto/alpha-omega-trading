@@ -6,13 +6,13 @@
 
 [![License: Unlicense](https://img.shields.io/badge/license-Unlicense-blue.svg)](http://unlicense.org/)
 [![Python](https://img.shields.io/badge/python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
-[![CCXT](https://img.shields.io/badge/exchange-CCXT%20%2F%20Kraken-5741D9?logo=bitcoin&logoColor=white)](https://github.com/ccxt/ccxt)
+[![CCXT](https://img.shields.io/badge/exchange-CCXT%20%2F%20Kraken%20%7C%20OKX-5741D9?logo=bitcoin&logoColor=white)](https://github.com/ccxt/ccxt)
 [![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20systemd-FCC624?logo=linux&logoColor=black)](https://www.freedesktop.org/wiki/Software/systemd/)
-[![Status](https://img.shields.io/badge/status-live%20paper%20trading-success)](https://github.com/grivetto/alpha-omega-trading)
+[![Status](https://img.shields.io/badge/status-live%20paper%20trading%20%7C%2014%20bots-success)](https://github.com/grivetto/alpha-omega-trading)
 [![Code Style](https://img.shields.io/badge/style-clean%20%26%20modular-brightgreen)](https://github.com/grivetto/alpha-omega-trading)
 [![Docker](https://img.shields.io/badge/docker-postgres%2016%20%2B%20redis%207-2496ED?logo=docker&logoColor=white)](docker/docker-compose.yml)
 
-**Modular paper trading engine for crypto markets. Real-time price feeds, grid strategies, zero real money at risk — and zero waste.**
+**Modular paper trading engine for crypto markets. Real-time price feeds, adaptive grid strategies, multi-exchange fleet orchestration, zero real money at risk — and zero waste.**
 
 [Architecture](#-architecture) · [Philosophy](#-philosophy) · [Docker](#-docker) · [Quick Start](#-quick-start) · [Deployment](#-deployment-systemd) · [Roadmap](#-roadmap)
 
@@ -54,39 +54,53 @@ This is not a get-rich-quick bot. It is an **engineering discipline applied to m
 | **💸 The 115 USDT Mystery** | 2026-07-22 | **115.74 USDT (ERC20) sent to Kraken deposit address `0x0e7b7d8634c36994571a0f82f6abb70cde283493` — TxID `0xc2a95bb787aa0cc7c46323840cc61ac550538f539faeabd95b1fb24f42e936e7`**. **Never arrived. Not on-chain (Etherscan: no such tx).** Kraken API lacks funding perms to query deposit status. Support ticket requires: TxID, amount, destination, timestamp, proof of non-arrival on-chain. Next step: enable `Deposit/Withdraw` on API key → fetch full `Ledgers`/`DepositStatus` JSON for evidence. |
 | **🤖 Airdrop Farm v1** | 2026-07-31 | **Autonomous multi-strategy airdrop farmer** deployed on nuvola (systemd service). 20 wallets from BIP39 mnemonic + Fernet encryption. 4 strategies: airdrop (Base/Scroll/Abstract/Linea), Hyperliquid points, yield, MEXC launchpad. €250 virtual, €100 real post-2026-08-05. Poisson scheduler, circuit breaker, idempotent execution. 22 modules. Zabbix monitoring on MC2 (15 trapper items + daily cron). |
 | **🔄 Full Reboot & Verification** | 2026-07-31 | Both nodes rebooted for kernel updates. Post-reboot: all systemd services healthy. nuvola: `denaro-kraken-health` (paper DOGE/EUR), `airdrop-farm-nuvola` (live), DDNS timer. MARCODG1: MEXC SHADOW mode (SOL/USDT, equity 100 USDT), DDNS timer, paper trading. |
-| **⚡ ShadowGrid v2.0 & Multi-Bot Fleet** | 2026-08-07 | **Complete transformation into an 8-bot Adaptive Fleet.** Upgraded grid engine with dynamic ATR-based spread, ADX/RSI momentum filter, 15% drawdown circuit breaker, and 6% dynamic re-anchoring. Added `shadowgrid_fleet.py` supervisor, `pair_scanner.py` for market discovery, and `fleet_rebalancer.py` for performance-driven capital allocation. Deployed across `nuvola` (4 bots) and `MARCODG1` (4 bots) with health dashboards on `:8900`. |
+| **⚡ ShadowGrid v2.0 & Multi-Bot Fleet** | 2026-08-07 | **Complete transformation into a 14-bot Adaptive Fleet across 2 exchanges.** Upgraded grid engine (`shadowgrid_v2.py`) with dynamic ATR-based spread, ADX/RSI momentum filter, 15% drawdown circuit breaker, 5% daily loss limit, and 6% dynamic re-anchoring. Added `shadowgrid_fleet.py` supervisor (7 bots/node, auto-restart, health dashboard `:8900`), `pair_scanner.py` for real-time market discovery (high ATR%, low ADX, tight spread), and `fleet_rebalancer.py` for hourly performance-driven capital allocation. Deployed across `nuvola` (4 Kraken EUR + 3 OKX USDT) and `MARCODG1` (4 Kraken EUR + 3 OKX USDT) — **14 bots total, 200€ paper capital**. Pair optimization: replaced underperforming OKX pairs (XSPCX/USDT, XSNDK/USDT — ADX >44) with **GRVT/USDT** (ADX 24.1, grid_score 0.923) and **ADA/USDT** (ADX 13.5). Swap 2GB added on MARCODG1. All legacy processes purged. |
 
 ---
 
 ## 🏗️ Architecture
 
 ```
-┌─────────────────────────────────────────────────────┐
-│                     PaperEngine                      │
-│  ┌─────────┐  ┌───────────┐  ┌──────┐  ┌──────┐   │
-│  │ Exchange │  │  Strategy  │  │ Risk │  │State │   │
-│  │ (paper)  │  │  (grid)   │  │  Mgr │  │ Port │   │
-│  └────┬────┘  └─────┬─────┘  └──┬───┘  └──┬───┘   │
-│       │              │           │         │        │
-│       └──────┬───────┴───────────┴─────────┘        │
-│              │                                      │
-│         ┌────▼────┐                                 │
-│         │   Tick  │  every 30s (configurable)       │
-│         │  Loop   │                                 │
-│         └─────────┘                                 │
-└─────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                      ShadowGrid Fleet Orchestrator                           │
+│  ┌─────────────────────────────┐         ┌─────────────────────────────┐    │
+│  │         nuvola              │         │        MARCODG1             │    │
+│  │  shadowgrid_fleet.py :8900  │         │  shadowgrid_fleet.py :8900  │    │
+│  │  (supervisor + health)      │         │  (supervisor + health)      │    │
+│  └──────────────┬──────────────┘         └──────────────┬──────────────┘    │
+│                 │                                        │                  │
+│   ┌─────┬─────┬─────┬─────┬─────┬─────┬─────┐  ┌─────┬─────┬─────┬─────┬─────┬─────┐
+│   │SOL/E│DOGE/│XRP/E│ADA/E│BICO/│GRVT/│ADA/U│  │BTC/E│ETH/E│LINK/│AVAX/│BICO/│GRVT/│ADA/U│
+│   │UR   │UR   │UR   │UR   │USDT │USDT │SDT  │  │UR   │UR   │UR   │UR   │USDT │USDT │SDT  │
+│   │8912 │8913 │8914 │8915 │8930 │8931 │8932 │  │8920 │8921 │8922 │8923 │8930 │8931 │8932 │
+│   └─────┴─────┴─────┴─────┴─────┴─────┴─────┘  └─────┴─────┴─────┴─────┴─────┴─────┘
+│        │     │     │     │     │     │     │         │     │     │     │     │     │     │
+│        └─────┴─────┴─────┴─────┴─────┴─────┴─────────┴─────┴─────┴─────┴─────┴─────┘
+│                                      │
+│                    ┌─────────────────┴─────────────────┐
+│                    ▼                                   ▼
+│           ┌─────────────────┐                 ┌─────────────────┐
+│           │     KRAKEN      │                 │      OKX        │
+│           │   (EUR pairs)   │                 │   (USDT pairs)  │
+│           │  REST + WS      │                 │  REST + WS      │
+│           └─────────────────┘                 └─────────────────┘
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 **Core modules:**
 
 | Module | File | Role |
 |--------|------|------|
-| **Engine** | `denaro/core/engine.py` | Main loop — tick timing, signal handling, orchestration |
-| **Exchange** | `denaro/exchange/paper_exchange.py` | Paper order book, fill simulation, balance tracking |
-| **Strategy** | `denaro/strategy/grid.py` | Grid strategy — buy below reference, sell above, trailing stop, recentering |
-| **Risk** | `denaro/core/risk.py` | Risk limits, circuit breaker state machine, position sizing gates |
-| **State** | `denaro/core/state.py` | Portfolio, position, and order dataclasses + serialization |
-| **Backtest** | `denaro/backtest/` | Historical data replay engine, trade journal, performance metrics |
+| **Fleet Supervisor** | `shadowgrid_fleet.py` | Multi-bot orchestration, auto-restart, health dashboard `:8900` |
+| **Grid Engine v2** | `shadowgrid_v2.py` | ATR-adaptive spread, ADX/RSI momentum filter, risk management, dynamic re-anchoring |
+| **Market Scanner** | `pair_scanner.py` | Real-time discovery of optimal grid pairs (high ATR%, low ADX <25, tight spread) |
+| **Capital Rebalancer** | `fleet_rebalancer.py` | Hourly performance-driven capital reallocation to best performers |
+| **Paper Engine (legacy)** | `denaro/core/engine.py` | Original tick loop — tick timing, signal handling, orchestration |
+| **Paper Exchange (legacy)** | `denaro/exchange/paper_exchange.py` | Paper order book, fill simulation, balance tracking |
+| **Grid Strategy (legacy)** | `denaro/strategy/grid.py` | Grid strategy — buy/sell grids, trailing stop, recentering |
+| **Risk (legacy)** | `denaro/core/risk.py` | Risk limits, circuit breaker state machine, position sizing gates |
+| **State (legacy)** | `denaro/core/state.py` | Portfolio, position, and order dataclasses + serialization |
+| **Backtest (legacy)** | `denaro/backtest/` | Historical data replay engine, trade journal, performance metrics |
 
 ---
 
@@ -102,20 +116,21 @@ This is not a get-rich-quick bot. It is an **engineering discipline applied to m
 │  └─────────────┘  └─────────────────┘  └─────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────────────────┘
                                     │
-                    ┌───────────────┴───────────────┐
-                    ▼                               ▼
+                    ┌───────────────┴───────────────────┐
+                    ▼                                   ▼
          ┌─────────────────────┐           ┌─────────────────────┐
          │      nuvola         │           │     MARCODG1        │
          │  (87.106.3.15)      │           │  (87.106.222.123)   │
          │ sgrivett.ddns.net   │           │ mgrivett.ddns.net   │
          ├─────────────────────┤           ├─────────────────────┤
-         │ denaro-kraken-health│           │ main_mexc.py        │
-         │ (paper DOGE/EUR)    │           │ (SHADOW SOL/USDT)   │
-         │ airdrop-farm-nuvola │           │ denaro-paper        │
-         │ (live, 20 wallets)  │           │ (paper trading)     │
-         │ DDNS timer 10m      │           │ DDNS timer 10m      │
-         │ Kraken: 1t3Jpcv...  │           │ Kraken: nVN31AX...  │
-         │ MEXC: mx0vgl1Tr...  │           │ MEXC: mx0vglZz...   │
+         │ shadowgrid-fleet    │           │ shadowgrid-fleet    │
+         │ (7 bots, :8900)     │           │ (7 bots, :8900)     │
+         │ airdrop-farm-nuvola │           │ MEXC SHADOW (SOL)   │
+         │ (live, 20 wallets)  │           │ DDNS timer 10m      │
+         │ DDNS timer 10m      │           │ Kraken: nVN31AX...  │
+         │ Kraken: 1t3Jpcv...  │           │ MEXC: mx0vglZz...   │
+         │ MEXC: mx0vgl1Tr...  │           │ Swap: 2GB           │
+         │ OKX: f28aa65d...    │           │ OKX: f28aa65d...    │
          └─────────────────────┘           └─────────────────────┘
 ```
 
@@ -143,11 +158,22 @@ See [docker/init_db.sql](docker/init_db.sql) for the schema (tables: `trades`, `
 
 ## 🚀 Quick Start
 
+**ShadowGrid Fleet (recommended):**
+
 ```bash
 git clone https://github.com/grivetto/alpha-omega-trading.git
 cd alpha-omega-trading
 python3 -m venv venv && source venv/bin/activate
-pip install ccxt
+pip install ccxt numpy
+
+# Configure .env with exchange API keys
+# Configure fleet_config.json with desired pairs
+python3 shadowgrid_fleet.py
+```
+
+**Legacy Paper Engine:**
+
+```bash
 python denaro/run_paper.py
 ```
 
@@ -160,25 +186,65 @@ docker compose -f docker/docker-compose.yml up -d
 
 *See [Docker](#-docker) for PostgreSQL/Redis details.*
 
-**Live output:**
+**Live output (ShadowGrid v2):**
 
 ```
-=== Paper Trade LIVE ===
-Exchange: kraken (sandbox=False)
-Symbol:   DOGE/EUR
-Capital:  100.00 EUR
-Tick:     every 30.0s
+=== ShadowGrid v2.0 Fleet ===
+Exchange: kraken | okx
+Bots:     7 per node (14 total)
+Capital:  100 EUR per node
+Tick:     every 30s (configurable)
 ==============================
-INFO     GRID BUY 262.84 @ 0.05706819
-INFO     GRID BUY 258.96 @ 0.05792421
-    Tick#1 | Equity=100.00 | Free=100.00 | Pos=0 Ord=7 | CB=closed DD=0.0%
+INFO [  142] price=0.888880 eq=25.07 spread=0.20% RSI=36.3 ADX=6.2 orders=12 trades=30 BUY creation paused by momentum filter (RSI=36.3, ADX=6.2)
 ```
 
 ---
 
 ## 🎛️ Configuration
 
-Environment variables (loaded from `.env` or shell):
+### ShadowGrid v2 Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `EXCHANGE` | `kraken` | Exchange: `kraken` or `okx` |
+| `SYMBOL` | `DOGE/EUR` | Trading pair (e.g., `SOL/EUR`, `BICO/USDT`) |
+| `CAPITAL` | `25` | Paper capital per bot in EUR/USDT |
+| `LEVELS` | `10` | Number of grid levels per side |
+| `SPREAD_PCT` | `0.5` | Base spread % (overridden by ATR-adaptive) |
+| `PER_LEVEL` | `0.1` | Fraction of capital per order (10%) |
+| `COOLDOWN` | `30` | Seconds between ticks |
+| `FEE_PCT` | `0.26` | Exchange fee % |
+| `HEALTH_PORT` | `8912` | HTTP health endpoint port |
+| `LIVE_MODE` | `0` | Set to `1` for live trading |
+| `USE_MOMENTUM_FILTER` | `1` | Enable ADX/RSI momentum filter |
+| `MAX_DRAWDOWN_PCT` | `0.15` | Hard stop at 15% max drawdown |
+| `MAX_DAILY_LOSS_PCT` | `0.05` | Freeze at 5% daily loss |
+| `ATR_SPREAD_MULTIPLIER` | `0.7` | ATR × multiplier for dynamic spread |
+| `MIN_SPREAD_PCT` | `0.2` | Minimum spread floor |
+| `MAX_SPREAD_PCT` | `2.5` | Maximum spread ceiling |
+
+### Fleet Config (`fleet_config.json`)
+
+```json
+{
+  "exchange": "kraken",
+  "capital_per_bot": 25.0,
+  "total_fleet_capital": 100.0,
+  "pairs": [
+    {"symbol": "SOL/EUR", "port": 8912, "capital": 25.0, "exchange": "kraken"},
+    {"symbol": "DOGE/EUR", "port": 8913, "capital": 25.0, "exchange": "kraken"},
+    {"symbol": "XRP/EUR", "port": 8914, "capital": 25.0, "exchange": "kraken"},
+    {"symbol": "ADA/EUR", "port": 8915, "capital": 25.0, "exchange": "kraken"}
+  ],
+  "okx_pairs": [
+    {"symbol": "BICO/USDT", "port": 8930, "capital": 25.0, "exchange": "okx"},
+    {"symbol": "GRVT/USDT", "port": 8931, "capital": 25.0, "exchange": "okx"},
+    {"symbol": "ADA/USDT", "port": 8932, "capital": 25.0, "exchange": "okx"}
+  ]
+}
+```
+
+### Legacy Denaro Config
 
 | Variable | Default | Description |
 |----------|---------|-------------|
@@ -202,34 +268,75 @@ Environment variables (loaded from `.env` or shell):
 ## 📁 Project Structure
 
 ```
-denaro/
-├── __init__.py
-├── run_paper.py              # Entry point — start paper trading
-├── core/
-│   ├── engine.py             # Main loop, tick orchestration, signal handling
-│   ├── risk.py               # Risk limits, circuit breaker, order gating
-│   ├── state.py              # Portfolio, position, order dataclasses
+alpha-omega-trading/
+├── shadowgrid_v2.py              # Adaptive grid engine (NEW)
+├── shadowgrid_fleet.py           # Multi-bot fleet supervisor (NEW)
+├── pair_scanner.py               # Real-time market scanner (NEW)
+├── fleet_rebalancer.py           # Hourly capital rebalancer (NEW)
+├── fleet_config.json             # Fleet configuration (NEW)
+├── README.md
+├── denaro/
+│   ├── run_paper.py              # Legacy entry point
+│   ├── core/
+│   │   ├── engine.py             # Legacy main loop
+│   │   ├── risk.py               # Legacy risk limits
+│   │   ├── state.py              # Legacy dataclasses
+│   │   └── __init__.py
+│   ├── exchange/
+│   │   ├── paper_exchange.py     # Legacy paper order book
+│   │   └── __init__.py
+│   ├── strategy/
+│   │   ├── grid.py               # Legacy grid strategy
+│   │   └── __init__.py
+│   ├── backtest/
+│   │   ├── engine.py             # Legacy backtest runner
+│   │   └── journal.py            # Legacy trade journal
 │   └── __init__.py
-├── exchange/
-│   ├── paper_exchange.py     # Paper order book, fill simulation, balance
+├── neo/                          # Modular scaffold (p1)
+│   ├── core.py
+│   ├── strategies.py
+│   ├── state.py
+│   ├── monitor.py
+│   ├── memory.py
+│   ├── exchange.py
+│   ├── main.py
+│   ├── types.py
+│   └── requirements.txt
+├── enhanced/                     # Health & dashboard
+│   ├── health_server.py
+│   ├── update_dashboard.py
 │   └── __init__.py
-├── strategy/
-│   ├── grid.py               # Grid strategy — buy/sell grids, trailing stop, recentering
-│   └── __init__.py
-├── backtest/
-│   ├── __init__.py
-│   ├── engine.py             # Historical data replay, trade journal
-│   └── journal.py            # Performance metrics, trade log
-tests/
-├── test_engine_loop.py       # Integration test: engine tick → grid → fill → TP
-├── test_grid_strategy.py     # Unit tests: grid construction, levels, recenter
-├── test_paper_exchange.py    # Unit tests: orders, fills, orderbook
-├── test_risk.py              # Unit tests: risk limits, circuit breaker
-├── test_backtest.py          # Backtest runner against historical data
-docker/
-├── docker-compose.yml        # PostgreSQL 16 + Redis 7
-├── .env.example              # Environment template
-└── init_db.sql               # Database schema
+├── airdrop-farm/                 # Multi-strategy airdrop farmer
+│   ├── main.py
+│   ├── core/
+│   ├── strategies/
+│   ├── chains/
+│   ├── monitoring/
+│   ├── activity/
+│   └── configs
+├── tests/                        # Legacy test suite (33 tests)
+│   ├── test_engine_loop.py
+│   ├── test_grid_strategy.py
+│   ├── test_paper_exchange.py
+│   ├── test_risk.py
+│   └── test_backtest.py
+├── docker/
+│   ├── docker-compose.yml
+│   ├── .env.example
+│   └── init_db.sql
+├── .github/workflows/ci.yml
+├── requirements.txt
+├── deploy.sh
+├── notifier.py
+├── denaro_core.py
+├── denaro_zabbix.py
+├── kraken_engine.py
+├── mexc_engine.py
+├── bybit_engine.py
+├── main.py
+├── main_mexc.py
+├── main_v5.py
+└── mock_runner.py
 ```
 
 ---
@@ -240,7 +347,7 @@ docker/
 source venv/bin/activate
 pip install pytest
 
-# All tests
+# All legacy tests
 python -m pytest tests/ -v
 
 # By module
@@ -249,7 +356,7 @@ python -m pytest tests/test_engine_loop.py -v
 python -m pytest tests/test_backtest.py -v
 ```
 
-**Test coverage:**
+**Legacy test coverage:**
 
 | Test file | Tests | Scope |
 |-----------|-------|-------|
@@ -263,16 +370,54 @@ python -m pytest tests/test_backtest.py -v
 
 ## 📈 Deployment (systemd)
 
+### ShadowGrid Fleet Service
+
 On each target node (nuvola, MARCODG1):
 
 ```bash
 git clone https://github.com/grivetto/alpha-omega-trading.git
 cd alpha-omega-trading
 python3 -m venv venv && source venv/bin/activate
-pip install ccxt
+pip install ccxt numpy
 ```
 
-**User service** (`~/.config/systemd/user/denaro-paper.service`):
+**User service** (`~/.config/systemd/user/shadowgrid-fleet.service`):
+
+```ini
+[Unit]
+Description=ShadowGrid Fleet Orchestrator (Multi-Bot Grid)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=%h/denaro/venv/bin/python %h/denaro/shadowgrid_fleet.py
+WorkingDirectory=%h/denaro
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=default.target
+```
+
+**Start it:**
+
+```bash
+systemctl --user daemon-reload
+systemctl --user enable --now shadowgrid-fleet
+systemctl --user status shadowgrid-fleet --no-pager
+
+# Follow live logs
+journalctl --user -u shadowgrid-fleet -f
+
+# Health dashboard
+curl http://localhost:8900/health | python3 -m json.tool
+```
+
+### Legacy Denaro Paper Service
 
 ```ini
 [Unit]
@@ -293,17 +438,6 @@ StandardError=journal
 WantedBy=default.target
 ```
 
-**Start it:**
-
-```bash
-systemctl --user daemon-reload
-systemctl --user enable --now denaro-paper
-systemctl --user status denaro-paper --no-pager
-
-# Follow live logs
-journalctl --user -u denaro-paper -f
-```
-
 ---
 
 ## 🧘 Principles
@@ -313,6 +447,7 @@ journalctl --user -u denaro-paper -f
 - **Deterministic backtesting** — same data, same results, every time
 - **Transparent execution** — every order and fill logged to JSONL trade journal
 - **Production-ready** — systemd service, graceful shutdown, state persistence
+- **Adaptive intelligence** — ATR-based spread, momentum filtering, dynamic capital allocation
 
 ---
 
@@ -325,9 +460,11 @@ journalctl --user -u denaro-paper -f
 - [x] p4.5 — DDNS + multi-node automation (No-IP, systemd timers, secure creds)
 - [x] p4.6 — API key rotation & validation (Kraken/MEXC, perms audit, Bybit deprecated)
 - [x] p4.7 — Airdrop Farm v1 (20 wallets, 4 strategies, live on nuvola)
-- [ ] p5 — Live deploy to Kraken (real orders, sub-account isolation, daily PnL)
+- [x] **⚡ ShadowGrid v2.0 & 14-Bot Fleet** — ATR-adaptive grid, ADX/RSI filter, fleet supervisor, pair scanner, rebalancer
+- [ ] p5 — Live deploy to Kraken/OKX (real orders, sub-account isolation, daily PnL)
 - [ ] p6 — Grid performance dashboard (landing page, metrics, trade journal viewer)
 - [ ] p7 — Multi-strategy engine (momentum, funding rate, arbitrage runner)
+- [ ] p8 — ML-enhanced pair selection & regime detection
 
 ---
 
