@@ -1,120 +1,43 @@
-# Credenziali - MAI pushare su Git
-.env
-.env.prod.*
-_deploy_env_*
-.env.bak.*
-.env.backup_*
-.env.clean
-.env.master
-.env.new
-.env.tmp
-.env.tmp2
-
-# Key leaks
-*_keys.tmp
-*_keys.txt
-tmp_*.txt
-tmp_*.py
-mc2_keys.tmp
-real_main_keys.txt
-vault.json
-
-# Backup / dead code
-*.bak
-core/__init__.py.bak
-strategies/__init__.py.bak
-strategies/grid.py.bak
-
-# One-shot patch scripts
-patch_*.py
-
-# Auto-generated review spam
-meta/reviews/
-
-# Log e DB runtime
-squadra/squadra.log
-squadra/*.log
-*.db
-*.sqlite3
-*.db-shm
-*.db-wal
-trades.db.*
-squadra/bot_lock.json
-squadra/state/
-
-# Python cache
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
-*.egg-info/
-dist/
-build/
+*.so
 
-# Virtual env
+# Virtual environments
 venv/
-.venv/
-denaro-venv/
+env/
+.env
+.env.*
+!.env.example
 
-# Backup locali
-backup_old/
+# State files
+*_state.json
+*_state.json.*
 
-# Dashboard (dati separati)
-dashboard/
+# Logs
+*.log
+*.out
 
 # IDE
 .vscode/
 .idea/
 *.swp
-*~
+*.swo
 
 # OS
 .DS_Store
 Thumbs.db
-.graphify_corpus/
-graphify-out/
-logs/
-squadra/squadra.log
-.graphify_*
-.tmp/
-_archive/
-STATUS_CHECK
-HEAL_REPORT.md
-__init__.py
-zabbix_*
-denaro_navigator.py
-denaro_shared.py
-dashboard_server.py
-check_*.py
-debug_*.py
-create_node_logs.py
-autohealer*
-*.log
 
-# Self-improve test artifacts
-squadra/self_improve/test_history*.json
-squadra/self_improve/*.log
-
-# Temporary state files
-.flash_crash_state.json
-bot_lock.json
-.status_check_cache
-.daily_baseline
-env_without_main.tmp
-stella_grid_state.json
-.keys.json
-.hermes/
-enhanced/__pycache__/
-
-# Local artifacts (not for deployment)
-.deepseek/
-opencode-v2/
-tools/
-setup_docker.py
-README_V2.md
-requirements-dev.txt
-kraken_state.json
-kraken_state.json.*
-denaro_core_state.json
-denaro_core_state.json.*
-kraken_bot.log
+# Test coverage
+.coverage
+htmlcov/
 .pytest_cache/
+
+# Archives
+*.tar.gz
+*.zip
+
+# Backup
+*.bak
+*.backup

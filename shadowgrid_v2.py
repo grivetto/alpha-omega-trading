@@ -317,10 +317,44 @@ class HealthHandler(BaseHTTPRequestHandler):
             self.send_header("Content-type", "application/json")
             self.end_headers()
             
+            # Unified health response schema matching BotInstance.get_status()
+            healthy = True
+            health_reason = "healthy"
+            state = "RUNNING"
+            pid = None
+            restart_count = 0
+            uptime = 0
+            
+            if self.bot_ref:
+                # Get bot-specific health info
+                if hasattr(self.bot_ref, 'last_fill_time') and self.bot_ref.last_fill_time > 0:
+                    if time.time() - self.bot_ref.last_fill_time > 3600:
+                        healthy = False
+                        health_reason = "stuck (no fills for 1h)"
+                
+                if hasattr(self.bot_ref, 'state'):
+                    state = self.bot_ref.state
+                
+                if hasattr(self.bot_ref, 'process') and self.bot_ref.process:
+                    pid = self.bot_ref.process.pid
+                
+                if hasattr(self.bot_ref, 'restart_count'):
+                    restart_count = self.bot_ref.restart_count
+                
+                if hasattr(self.bot_ref, 'start_time') and self.bot_ref.start_time:
+                    uptime = time.time() - self.bot_ref.start_time
+            
             base_response = {
-                "status": "healthy",
                 "symbol": SYMBOL,
                 "exchange": EXCHANGE,
+                "port": HEALTH_PORT,
+                "capital": CAPITAL,
+                "state": state,
+                "status": "running" if healthy else "stopped",
+                "pid": pid,
+                "restart_count": restart_count,
+                "uptime": round(uptime, 1),
+                "health_reason": health_reason,
                 "mode": "live" if LIVE_MODE else "paper",
                 "timestamp": datetime.now(timezone.utc).isoformat(),
             }
