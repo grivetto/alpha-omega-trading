@@ -13,6 +13,7 @@ Features:
 - Performance CSV logging
 - Health HTTP endpoint
 - State persistence
+- NEW v2.2: Portfolio risk management, volatility targeting, kill switch, alerts
 """
 
 import os
@@ -30,6 +31,22 @@ from typing import Dict, List, Optional, Tuple, Any
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
 import ccxt
+
+# ============================================================
+# RISK MANAGER & ALERT SYSTEM INTEGRATION
+# ============================================================
+try:
+    from risk_manager import init_risk_manager, get_risk_manager, RiskManager
+    from alert_system import init_alert_system, get_alert_system, AlertSystem
+    RISK_MANAGER_AVAILABLE = True
+    log_risk = logging.getLogger("shadowgrid.risk")
+    log_risk.setLevel(logging.INFO)
+except ImportError as e:
+    RISK_MANAGER_AVAILABLE = False
+    log_risk = None
+    RiskManager = None
+    AlertSystem = None
+    log.warning(f"Risk manager/alert system not available: {e}")
 
 # ============================================================
 # CONFIGURATION FROM ENV
@@ -56,6 +73,22 @@ ATR_SPREAD_MULTIPLIER = float(os.getenv("ATR_SPREAD_MULTIPLIER", "0.7"))
 MIN_SPREAD_PCT = float(os.getenv("MIN_SPREAD_PCT", "0.2"))
 MAX_SPREAD_PCT = float(os.getenv("MAX_SPREAD_PCT", "2.5"))
 HYBRID_MODE = os.getenv("HYBRID_MODE", "0") == "1"  # NEW: scalper in trend
+
+# NEW v2.2 Risk Management features
+RISK_MANAGER_ENABLED = os.getenv("RISK_MANAGER_ENABLED", "1") == "1"
+MAX_PORTFOLIO_DD = float(os.getenv("MAX_PORTFOLIO_DD", "0.20"))
+MAX_EXPOSURE_PER_BASE = float(os.getenv("MAX_EXPOSURE_PER_BASE", "0.30"))
+MAX_CORRELATION = float(os.getenv("MAX_CORRELATION", "0.7"))
+MAX_POSITIONS_PER_BASE = int(os.getenv("MAX_POSITIONS_PER_BASE", "2"))
+VOLATILITY_LOOKBACK_DAYS = int(os.getenv("VOLATILITY_LOOKBACK_DAYS", "30"))
+ATR_SPIKE_MULTIPLIER = float(os.getenv("ATR_SPIKE_MULTIPLIER", "2.0"))
+ATR_EXTREME_MULTIPLIER = float(os.getenv("ATR_EXTREME_MULTIPLIER", "3.0"))
+VOLATILITY_TARGETING = os.getenv("VOLATILITY_TARGETING", "1") == "1"
+
+# Alert system config
+ALERT_ENABLED = os.getenv("ALERT_ENABLED", "1") == "1"
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
+TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "")
 
 # Exchange-specific keys
 KRAKEN_API_KEY = os.getenv("KRAKEN_API_KEY", "")
@@ -99,6 +132,10 @@ def load_state() -> dict:
         "daily_loss": 0.0,
         "day_start_equity": CAPITAL,
         "last_day": datetime.now(timezone.utc).date().isoformat(),
+        # v2.2 additions
+        "peak_equity": CAPITAL,
+        "volatility_regime": "normal",
+        "kill_switch_triggered": False,
     }
 
 
@@ -221,8 +258,9 @@ def compute_indicators(ohlcv: List[List[float]]) -> Tuple[float, float, float]:
 # ============================================================
 # GRID BUILDING
 # ============================================================
-def build_levels(anchor_price: float, spread_pct: float, levels: int, per_level: float) -> List[Dict]:
+def build_levels(anchor_price: float, spread_pct: float, levels: int, per_level: float, capital: float = None) -> List[Dict]:
     """Build grid levels around anchor price."""
+    cap = capital if capital is not None else CAPITAL
     half_spread = spread_pct / 200.0  # convert to decimal
     grid = []
     for i in range(-levels, levels + 1):
@@ -233,7 +271,7 @@ def build_levels(anchor_price: float, spread_pct: float, levels: int, per_level:
         grid.append({
             "price": round(price, 6),
             "side": side,
-            "amount": round(per_level * CAPITAL / price, 6),
+            "amount": round(per_level * cap / price, 6),
             "filled": False,
             "order_id": None
         })
@@ -246,23 +284,72 @@ def compute_dynamic_spread(atr_pct: float) -> float:
     return max(MIN_SPREAD_PCT, min(MAX_SPREAD_PCT, spread))
 
 
+def adjust_grid_for_volatility(base_levels: int, base_spread: float, regime: Dict) -> Tuple[int, float]:
+    """Adjust grid levels and spread based on volatility regime."""
+    if not VOLATILITY_TARGETING:
+        return base_levels, base_spread
+    
+    action = regime.get("action", "normal")
+    ratio = regime.get("ratio", 1.0)
+    
+    if action == "pause_new_orders":
+        # Extreme volatility: minimal grid
+        return max(1, base_levels // 2), base_spread * 2.0
+    elif action == "reduce_grid":
+        # High volatility: reduce levels, widen spread
+        return max(2, int(base_levels * 0.6)), base_spread * 1.5
+    elif action == "expand_grid":
+        # Low volatility: expand levels, tighten spread
+        return min(10, int(base_levels * 1.5)), base_spread * 0.7
+    else:
+        return base_levels, base_spread
+
+
 # ============================================================
-# HEALTH SERVER
+# HEALTH SERVER (v2.2: binds to 127.0.0.1, includes risk status)
 # ============================================================
 class HealthHandler(BaseHTTPRequestHandler):
+    bot_ref = None
+    
     def do_GET(self):
         if self.path == "/health":
             self.send_response(200)
             self.send_header("Content-type", "application/json")
             self.end_headers()
-            response = json.dumps({
+            
+            base_response = {
                 "status": "healthy",
                 "symbol": SYMBOL,
                 "exchange": EXCHANGE,
                 "mode": "live" if LIVE_MODE else "paper",
-                "timestamp": datetime.now(timezone.utc).isoformat()
-            })
-            self.wfile.write(response.encode())
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            }
+            
+            # Add risk status if available
+            if self.bot_ref and RISK_MANAGER_AVAILABLE:
+                rm = get_risk_manager()
+                if rm:
+                    risk_status = rm.get_status()
+                    base_response["risk"] = {
+                        "portfolio_dd": risk_status["portfolio_dd"],
+                        "daily_loss": risk_status["daily_loss"],
+                        "exposure_per_base": risk_status["exposure_per_base"],
+                        "num_positions": risk_status["num_positions"],
+                        "kill_switch_triggered": risk_status["kill_switch_triggered"],
+                        "volatility_regimes": risk_status["volatility_regimes"],
+                    }
+            
+            self.wfile.write(json.dumps(base_response).encode())
+        elif self.path == "/risk" and self.bot_ref and RISK_MANAGER_AVAILABLE:
+            # Detailed risk endpoint
+            self.send_response(200)
+            self.send_header("Content-type", "application/json")
+            self.end_headers()
+            rm = get_risk_manager()
+            if rm:
+                self.wfile.write(json.dumps(rm.get_status(), indent=2).encode())
+            else:
+                self.wfile.write(json.dumps({"error": "Risk manager not available"}).encode())
         else:
             self.send_response(404)
             self.end_headers()
@@ -270,16 +357,18 @@ class HealthHandler(BaseHTTPRequestHandler):
     def log_message(self, format, *args):
         pass
 
-def start_health_server(port: int):
-    server = HTTPServer(('0.0.0.0', port), HealthHandler)
+def start_health_server(port: int, bot_ref=None):
+    if bot_ref:
+        HealthHandler.bot_ref = bot_ref
+    server = HTTPServer(('127.0.0.1', port), HealthHandler)
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
-    log.info(f"Health server started on port {port}")
+    log.info(f"Health server started on 127.0.0.1:{port}")
     return server
 
 
 # ============================================================
-# MAIN TRADING LOGIC
+# MAIN TRADING LOGIC (v2.2: Risk Manager + Alert System)
 # ============================================================
 class ShadowGridBot:
     def __init__(self):
@@ -288,6 +377,39 @@ class ShadowGridBot:
         self.running = True
         self.cycle_count = 0
         self.last_reanchor = time.time()
+        self.restart_count = 0
+        self.last_alert_cycle = 0
+        
+        # Initialize Risk Manager
+        self.risk_manager = None
+        self.alert_system = None
+        if RISK_MANAGER_AVAILABLE and RISK_MANAGER_ENABLED:
+            try:
+                self.risk_manager = init_risk_manager(
+                    total_capital=CAPITAL,
+                    max_portfolio_dd=MAX_PORTFOLIO_DD,
+                    max_daily_loss=MAX_DAILY_LOSS_PCT,
+                    max_exposure_per_base=MAX_EXPOSURE_PER_BASE,
+                    max_correlation=MAX_CORRELATION,
+                    max_positions_per_base=MAX_POSITIONS_PER_BASE,
+                    volatility_lookback_days=VOLATILITY_LOOKBACK_DAYS,
+                    atr_spike_multiplier=ATR_SPIKE_MULTIPLIER,
+                    atr_extreme_multiplier=ATR_EXTREME_MULTIPLIER,
+                )
+                log.info("Risk Manager initialized")
+            except Exception as e:
+                log.error(f"Failed to initialize Risk Manager: {e}")
+        
+        # Initialize Alert System
+        if RISK_MANAGER_AVAILABLE and ALERT_ENABLED:
+            try:
+                self.alert_system = init_alert_system({
+                    "telegram_bot_token": TELEGRAM_BOT_TOKEN,
+                    "telegram_chat_id": TELEGRAM_CHAT_ID,
+                })
+                log.info("Alert System initialized")
+            except Exception as e:
+                log.error(f"Failed to initialize Alert System: {e}")
         
         # Initialize grid anchor
         if self.state.get("grid_anchor") is None:
@@ -298,6 +420,10 @@ class ShadowGridBot:
             )
             save_state(self.state)
         
+        # Restore peak equity from state
+        if "peak_equity" not in self.state:
+            self.state["peak_equity"] = self.state.get("equity", CAPITAL)
+        
         # Daily loss tracking
         today = datetime.now(timezone.utc).date().isoformat()
         if self.state.get("last_day") != today:
@@ -306,19 +432,76 @@ class ShadowGridBot:
             self.state["last_day"] = today
             save_state(self.state)
     
+    def check_kill_switch(self) -> bool:
+        """Check kill switch: file-based + portfolio DD + daily loss."""
+        # File-based kill switch (global)
+        kill_file = Path("/tmp/shadowgrid_kill")
+        if kill_file.exists():
+            reason = kill_file.read_text().strip() or "Manual kill switch"
+            log.critical(f"KILL SWITCH (file): {reason}")
+            if self.alert_system:
+                self.alert_system.alert_kill_switch(reason, self.state.get("equity", CAPITAL))
+            self.running = False
+            return True
+        
+        # Per-symbol kill switch
+        symbol_kill = Path(f"/tmp/shadowgrid_kill_{SYMBOL.replace('/', '_')}")
+        if symbol_kill.exists():
+            reason = symbol_kill.read_text().strip() or f"Symbol kill switch for {SYMBOL}"
+            log.critical(f"KILL SWITCH (symbol): {reason}")
+            self.running = False
+            return True
+        
+        # Risk Manager kill switch
+        if self.risk_manager:
+            triggered, reason = self.risk_manager.check_kill_switch()
+            if triggered:
+                log.critical(f"KILL SWITCH (risk manager): {reason}")
+                if self.alert_system:
+                    self.alert_system.alert_kill_switch(reason, self.state.get("equity", CAPITAL))
+                self.running = False
+                return True
+        
+        return False
+    
     def check_risk_limits(self) -> bool:
-        """Check if risk limits are breached."""
+        """Check if risk limits are breached (legacy + portfolio)."""
         equity = self.state.get("equity", CAPITAL)
+        
+        # Legacy drawdown check
         drawdown = (CAPITAL - equity) / CAPITAL if CAPITAL > 0 else 0
         if drawdown >= MAX_DRAWDOWN_PCT:
             log.critical(f"MAX DRAWDOWN BREACHED: {drawdown*100:.2f}% >= {MAX_DRAWDOWN_PCT*100:.0f}%")
+            if self.alert_system:
+                self.alert_system.alert_portfolio_dd(drawdown, MAX_DRAWDOWN_PCT, equity, CAPITAL)
             return False
         
+        # Legacy daily loss check
         daily_loss = self.state.get("daily_loss", 0.0)
         day_start = self.state.get("day_start_equity", CAPITAL)
         if day_start > 0 and daily_loss >= MAX_DAILY_LOSS_PCT * day_start:
             log.critical(f"DAILY LOSS LIMIT: {daily_loss:.2f} >= {MAX_DAILY_LOSS_PCT*100:.0f}% of {day_start:.2f}")
+            if self.alert_system:
+                self.alert_system.alert_daily_loss(daily_loss / day_start, MAX_DAILY_LOSS_PCT, day_start, equity)
             return False
+        
+        # Portfolio risk manager checks (if enabled)
+        if self.risk_manager:
+            # Portfolio DD check
+            portfolio_dd = self.risk_manager.get_portfolio_dd()
+            if portfolio_dd >= MAX_PORTFOLIO_DD:
+                log.critical(f"PORTFOLIO DD LIMIT: {portfolio_dd*100:.2f}% >= {MAX_PORTFOLIO_DD*100:.0f}%")
+                if self.alert_system:
+                    self.alert_system.alert_portfolio_dd(portfolio_dd, MAX_PORTFOLIO_DD, equity, self.risk_manager.peak_equity)
+                return False
+            
+            # Daily loss check
+            daily_loss_pct = self.risk_manager.get_daily_loss()
+            if daily_loss_pct >= MAX_DAILY_LOSS_PCT:
+                log.critical(f"PORTFOLIO DAILY LOSS: {daily_loss_pct*100:.2f}% >= {MAX_DAILY_LOSS_PCT*100:.0f}%")
+                if self.alert_system:
+                    self.alert_system.alert_daily_loss(daily_loss_pct, MAX_DAILY_LOSS_PCT, day_start, equity)
+                return False
         
         return True
     
@@ -332,6 +515,11 @@ class ShadowGridBot:
         atr_pct, rsi, adx = compute_indicators(ohlcv)
         
         spread = compute_dynamic_spread(atr_pct) if atr_pct > 0 else SPREAD_PCT
+        
+        # Update risk manager with ATR for volatility regime detection
+        if self.risk_manager and atr_pct > 0:
+            self.risk_manager.update_atr(SYMBOL, atr_pct)
+            self.risk_manager.update_equity(self.state.get("equity", CAPITAL))
         
         return price, atr_pct, rsi, adx, spread
     
@@ -360,9 +548,19 @@ class ShadowGridBot:
             return "short", 1.5  # Short bias in downtrend
         return "none", 1.0
     
+    def get_volatility_regime(self) -> Dict:
+        """Get current volatility regime from risk manager."""
+        if self.risk_manager:
+            return self.risk_manager.get_volatility_regime(SYMBOL)
+        return {"regime": "unknown", "action": "normal", "ratio": 1.0}
+    
     def place_orders(self, price: float, spread: float, momentum_ok: bool, hybrid_dir: str):
-        """Place grid orders based on current state."""
+        """Place grid orders based on current state with risk checks."""
         if not self.check_risk_limits():
+            return
+        
+        # Kill switch check
+        if self.check_kill_switch():
             return
         
         # Cancel stale orders
@@ -385,9 +583,39 @@ class ShadowGridBot:
             anchor = price
             self.state["grid_levels"] = build_levels(anchor, current_spread, LEVELS, PER_LEVEL)
         
+        # Get volatility regime and adjust grid
+        regime = self.get_volatility_regime()
+        if regime.get("regime") != self.state.get("volatility_regime", "normal"):
+            old_regime = self.state.get("volatility_regime", "normal")
+            new_regime = regime.get("regime", "normal")
+            self.state["volatility_regime"] = new_regime
+            if self.alert_system and old_regime != new_regime:
+                self.alert_system.alert_volatility_regime(
+                    SYMBOL, new_regime, regime.get("action", "normal"), regime.get("ratio", 1.0)
+                )
+        
+        # Adjust grid for volatility
+        if VOLATILITY_TARGETING:
+            adj_levels, adj_spread = adjust_grid_for_volatility(LEVELS, current_spread, regime)
+            if adj_levels != len(self.state["grid_levels"]) // 2 or abs(adj_spread - current_spread) > 0.1:
+                log.info(f"VOLATILITY ADJUST: levels={adj_levels}, spread={adj_spread:.2f}% (regime: {regime.get('regime')})")
+                self.state["grid_levels"] = build_levels(anchor, adj_spread, adj_levels, PER_LEVEL)
+                current_spread = adj_spread
+        
         # If in hybrid trend mode, allow directional scalping
         if not momentum_ok and hybrid_dir != "none":
             log.info(f"HYBRID MODE: {hybrid_dir.upper()} trend scalping active (ADX>25)")
+            # Portfolio risk check for new position
+            if self.risk_manager:
+                ok, reason = self.risk_manager.check_exposure_limits(SYMBOL, PER_LEVEL * CAPITAL / price, price)
+                if not ok:
+                    log.warning(f"HYBRID BLOCKED: {reason}")
+                    return
+                ok, reason = self.risk_manager.check_correlation_limit(SYMBOL)
+                if not ok:
+                    log.warning(f"HYBRID BLOCKED: {reason}")
+                    return
+            
             # Place single directional order with tighter TP
             side = "buy" if hybrid_dir == "long" else "sell"
             offset = spread / 200.0 * 0.5  # half spread for scalping
@@ -406,8 +634,23 @@ class ShadowGridBot:
         
         # Normal grid mode (only if momentum OK)
         if not momentum_ok:
-            log.info(f"MOMENTUM BLOCK: Grid frozen - {hybrid_dir}")
+            log.info(f"MOMENTUM BLOCK: Grid frozen")
             return
+        
+        # Portfolio risk check before placing grid orders
+        if self.risk_manager:
+            ok, reason = self.risk_manager.check_exposure_limits(SYMBOL, PER_LEVEL * CAPITAL / price, price)
+            if not ok:
+                log.warning(f"GRID BLOCKED (exposure): {reason}")
+                if self.alert_system:
+                    self.alert_system.alert_exposure_limit(SYMBOL.split('/')[0], 
+                        self.risk_manager.get_exposure_per_base().get(SYMBOL.split('/')[0], 0), 
+                        MAX_EXPOSURE_PER_BASE)
+                return
+            ok, reason = self.risk_manager.check_correlation_limit(SYMBOL)
+            if not ok:
+                log.warning(f"GRID BLOCKED (correlation): {reason}")
+                return
         
         # Place grid orders
         for level in self.state["grid_levels"]:
@@ -441,7 +684,7 @@ class ShadowGridBot:
                     log.error(f"Grid sell failed: {e}")
     
     def check_fills(self):
-        """Check for filled orders and update state."""
+        """Check for filled orders and update state + risk manager."""
         for level in self.state["grid_levels"]:
             if not level["order_id"] or level["filled"]:
                 continue
@@ -458,6 +701,12 @@ class ShadowGridBot:
                         
                         if level["side"] == "buy":
                             self.state["equity"] -= cost + fee
+                            # Update risk manager position
+                            if self.risk_manager:
+                                self.risk_manager.update_position(
+                                    SYMBOL, filled_amount, filled_price, filled_price,
+                                    SYMBOL.split('/')[0], SYMBOL.split('/')[1]
+                                )
                         else:
                             self.state["equity"] += cost - fee
                             # Realized PnL on sell
@@ -472,6 +721,13 @@ class ShadowGridBot:
                             # Update daily loss tracking
                             day_start = self.state.get("day_start_equity", CAPITAL)
                             self.state["daily_loss"] = day_start - self.state["equity"]
+                            
+                            # Update risk manager
+                            if self.risk_manager:
+                                self.risk_manager.update_position(
+                                    SYMBOL, -filled_amount, buy_price, filled_price,
+                                    SYMBOL.split('/')[0], SYMBOL.split('/')[1]
+                                )
                         
                         self.state["trades_count"] += 1
                         log.info(f"FILL {level['side'].upper()} @ {filled_price:.6f} PnL={pnl:.4f} Equity={self.state['equity']:.2f}")
@@ -484,6 +740,11 @@ class ShadowGridBot:
                         cost = level["price"] * level["amount"]
                         fee = cost * FEE_PCT / 100
                         self.state["equity"] -= cost + fee
+                        if self.risk_manager:
+                            self.risk_manager.update_position(
+                                SYMBOL, level["amount"], level["price"], current_price,
+                                SYMBOL.split('/')[0], SYMBOL.split('/')[1]
+                            )
                         log.info(f"PAPER FILL BUY @ {level['price']:.6f} Equity={self.state['equity']:.2f}")
                     elif level["side"] == "sell" and current_price >= level["price"] * 0.999:
                         level["filled"] = True
@@ -499,10 +760,20 @@ class ShadowGridBot:
                             self.state["losses"] += 1
                         day_start = self.state.get("day_start_equity", CAPITAL)
                         self.state["daily_loss"] = day_start - self.state["equity"]
+                        if self.risk_manager:
+                            self.risk_manager.update_position(
+                                SYMBOL, -level["amount"], buy_price, level["price"],
+                                SYMBOL.split('/')[0], SYMBOL.split('/')[1]
+                            )
                         self.state["trades_count"] += 1
                         log.info(f"PAPER FILL SELL @ {level['price']:.6f} PnL={pnl:.4f} Equity={self.state['equity']:.2f}")
             except Exception as e:
                 log.debug(f"Fill check error: {e}")
+        
+        # Update peak equity
+        equity = self.state.get("equity", CAPITAL)
+        if equity > self.state.get("peak_equity", CAPITAL):
+            self.state["peak_equity"] = equity
     
     def log_performance(self):
         """Log performance to CSV."""
@@ -518,42 +789,68 @@ class ShadowGridBot:
         
         with open(perf_file, "a") as f:
             if write_header:
-                f.write("timestamp,equity,realized_pnl,trades,win_rate,drawdown_pct,spread_used,momentum_ok\n")
-            f.write(f"{datetime.now(timezone.utc).isoformat()},{equity:.4f},{realized:.4f},{trades},{win_rate:.2f},{drawdown:.2f},{SPREAD_PCT},{USE_MOMENTUM_FILTER}\n")
+                f.write("timestamp,equity,realized_pnl,trades,win_rate,drawdown_pct,spread_used,momentum_ok,volatility_regime\n")
+            f.write(f"{datetime.now(timezone.utc).isoformat()},{equity:.4f},{realized:.4f},{trades},{win_rate:.2f},{drawdown:.2f},{SPREAD_PCT},{USE_MOMENTUM_FILTER},{self.state.get('volatility_regime', 'normal')}\n")
     
     def run_cycle(self):
-        """Execute one trading cycle."""
+        """Execute one trading cycle with risk management."""
         self.cycle_count += 1
         
         try:
             price, atr_pct, rsi, adx, spread = self.fetch_market_data()
             momentum_ok, momentum_reason = self.check_momentum(rsi, adx)
             hybrid_dir, tp_mult = self.check_hybrid_signal(rsi, adx, price, self.state["grid_anchor"])
+            regime = self.get_volatility_regime()
             
-            log.info(f"Cycle {self.cycle_count}: {SYMBOL} @ {price:.6f} | ATR={atr_pct:.2f}% RSI={rsi:.1f} ADX={adx:.1f} | Spread={spread:.2f}% | Momentum={'OK' if momentum_ok else 'BLOCK'}({momentum_reason}) | Hybrid={hybrid_dir.upper()}")
+            log.info(f"Cycle {self.cycle_count}: {SYMBOL} @ {price:.6f} | ATR={atr_pct:.2f}% RSI={rsi:.1f} ADX={adx:.1f} | Spread={spread:.2f}% | Momentum={'OK' if momentum_ok else 'BLOCK'}({momentum_reason}) | Hybrid={hybrid_dir.upper()} | VolRegime={regime.get('regime')}")
             
             self.check_fills()
             self.place_orders(price, spread, momentum_ok, hybrid_dir)
             
-            # Log performance every 30 cycles
+            # Risk manager periodic alerts (every 30 cycles)
             if self.cycle_count % 30 == 0:
                 self.log_performance()
+                
+                # Portfolio DD alert
+                if self.risk_manager and self.alert_system:
+                    dd = self.risk_manager.get_portfolio_dd()
+                    if dd > MAX_PORTFOLIO_DD * 0.7:  # 70% threshold
+                        self.alert_system.alert_portfolio_dd(dd, MAX_PORTFOLIO_DD, 
+                            self.state.get("equity", CAPITAL), self.risk_manager.peak_equity)
+                    
+                    # Daily loss alert
+                    daily_loss = self.risk_manager.get_daily_loss()
+                    if daily_loss > MAX_DAILY_LOSS_PCT * 0.7:
+                        self.alert_system.alert_daily_loss(daily_loss, MAX_DAILY_LOSS_PCT,
+                            self.state.get("day_start_equity", CAPITAL), equity)
+                    
+                    # Exposure alerts
+                    exposure = self.risk_manager.get_exposure_per_base()
+                    for base, exp in exposure.items():
+                        if exp > MAX_EXPOSURE_PER_BASE * 0.8:
+                            self.alert_system.alert_exposure_limit(base, exp, MAX_EXPOSURE_PER_BASE)
             
             save_state(self.state)
             
         except Exception as e:
             log.error(f"Cycle error: {e}")
+            self.restart_count += 1
+            if self.alert_system and self.restart_count <= 5:
+                self.alert_system.alert_bot_crashed(SYMBOL, EXCHANGE, self.restart_count)
     
     def run(self):
         """Main loop."""
-        log.info(f"=== ShadowGrid v2.1 Starting ===")
+        log.info(f"=== ShadowGrid v2.2 Starting ===")
         log.info(f"Symbol: {SYMBOL} | Exchange: {EXCHANGE} | Mode: {'LIVE' if LIVE_MODE else 'PAPER'}")
         log.info(f"Capital: {CAPITAL} | Levels: {LEVELS} | Base Spread: {SPREAD_PCT}%")
         log.info(f"Momentum Filter: {'ON' if USE_MOMENTUM_FILTER else 'OFF'} | Hybrid Mode: {'ON' if HYBRID_MODE else 'OFF'}")
         log.info(f"Max Drawdown: {MAX_DRAWDOWN_PCT*100:.0f}% | Max Daily Loss: {MAX_DAILY_LOSS_PCT*100:.0f}%")
-        log.info(f"Health server: http://0.0.0.0:{HEALTH_PORT}/health")
+        log.info(f"Portfolio Max DD: {MAX_PORTFOLIO_DD*100:.0f}% | Max Exposure/Base: {MAX_EXPOSURE_PER_BASE*100:.0f}%")
+        log.info(f"Volatility Targeting: {'ON' if VOLATILITY_TARGETING else 'OFF'} | Risk Manager: {'ON' if RISK_MANAGER_ENABLED else 'OFF'}")
+        log.info(f"Alerts: {'ON' if ALERT_ENABLED else 'OFF'}")
+        log.info(f"Health server: http://127.0.0.1:{HEALTH_PORT}/health (risk: /risk)")
         
-        start_health_server(HEALTH_PORT)
+        start_health_server(HEALTH_PORT, bot_ref=self)
         
         while self.running:
             self.run_cycle()
@@ -568,7 +865,7 @@ def signal_handler(signum, frame):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="ShadowGrid v2.1 - Adaptive Grid Trading Bot")
+    parser = argparse.ArgumentParser(description="ShadowGrid v2.2 - Adaptive Grid Trading Bot with Risk Management")
     parser.add_argument("--test", action="store_true", help="Run one cycle and exit")
     args = parser.parse_args()
     
