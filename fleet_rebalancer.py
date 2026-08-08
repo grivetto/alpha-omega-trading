@@ -75,6 +75,15 @@ def rebalance_fleet(config_path: str, total_capital: float, base_dir: str = None
         all_bots.append(p)
     
     if not all_bots:
+        
+# Normalize allocations to fit within total_fleet_capital
+total_allocated = sum(new_allocations.values())
+if total_allocated > total_fleet_capital:
+    scale = total_fleet_capital / total_allocated
+    for sym in new_allocations:
+        new_allocations[sym] = round(new_allocations[sym] * scale, 2)
+
+
         print(f"[{datetime.now()}] No bots found in config")
         return
     

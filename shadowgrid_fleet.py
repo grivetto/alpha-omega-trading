@@ -141,7 +141,7 @@ def main():
     fm = FleetManager(config)
     FleetHealthHandler.fleet_ref = fm
 
-    health = HTTPServer(("0.0.0.0", FLEET_PORT), FleetHealthHandler)
+    health = HTTPServer(("127.0.0.1", FLEET_PORT), FleetHealthHandler)
     hthread = threading.Thread(target=health.serve_forever, daemon=True)
     hthread.start()
     log.info(f"Fleet Health dashboard listening on :{FLEET_PORT}")
