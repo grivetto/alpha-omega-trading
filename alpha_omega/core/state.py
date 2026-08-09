@@ -228,7 +228,7 @@ class StateStore:
         rows = await self.fetch_all(
             """
             SELECT 
-                symbol, exchange, side as base, 'USDT' as quote,
+                symbol, '' as exchange, side, '' as base, '' as quote,
                 amount as size, entry_price, exit_price as current_price,
                 pnl_abs as unrealized_pnl, 0 as realized_pnl,
                 entry_ts, strategy
@@ -242,9 +242,9 @@ class StateStore:
         rows = await self.fetch_all(
             """
             SELECT 
-                id, symbol, exchange, side, 'limit' as type,
+                id, symbol, '' as exchange, side, 'limit' as type,
                 price, amount, filled, status, 0 as fee, '' as fee_currency,
-                created_ts, strategy
+                created_ts, '' as strategy
             FROM orders 
             WHERE symbol = ? AND status IN ('pending', 'open', 'partial')
             """,
