@@ -280,6 +280,7 @@ class FleetConfig:
 
 
 class RiskLevel(int, Enum):
+    NORMAL = 0
     LOW = 0
     MEDIUM = 1
     HIGH = 2
