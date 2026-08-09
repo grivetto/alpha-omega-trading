@@ -109,6 +109,11 @@ This is not a get-rich-quick bot. It is an **engineering discipline applied to m
 | **Strategy Classes** | `alpha_omega.strategies.*` | Grid (ATR-adaptive), DCA, Scalp, MeanReversion, Momentum, Arbitrage — all with `Signal` output, regime-aware |
 | **StrategySelector** | `alpha_omega.strategies.selector` | Regime-based switching: ATR + momentum + trend strength → Grid/DCA/Scalp/Cooldown, min 5min between switches |
 | **ResourceMonitor** | `alpha_omega.monitoring.resource` | Async resource monitor: RAM/CPU/FD, SafeMode levels (NORMAL/CAUTION/SAFE/EMERGENCY), heartbeat to `/tmp/denaro-neo.health` |
+| **DCA Strategy** | `alpha_omega.strategies.dca` | Dollar-Cost Averaging with configurable entries, spacing, take-profit, trailing stop, max drawdown per position |
+| **Scalp Strategy** | `alpha_omega.strategies.scalp` | Fast scalping for trending markets with EMA crossover, volume confirmation, tight stops, max hold time |
+| **Mean Reversion** | `alpha_omega.strategies.mean_reversion` | Bollinger Bands + RSI oversold/overbought, middle band exit, configurable thresholds |
+| **Momentum Strategy** | `alpha_omega.strategies.momentum` | Donchian channel breakouts with ADX filter, trailing stops, volume confirmation |
+| **Grid Strategy** | `alpha_omega.strategies.grid` | ATR-adaptive grid with dynamic re-anchoring, momentum filter, hybrid mode for trending markets |
 
 ---
 
