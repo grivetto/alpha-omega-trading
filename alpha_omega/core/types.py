@@ -58,6 +58,7 @@ class PairLifecycleState(str, Enum):
 
 
 class MarketRegime(str, Enum):
+    UNKNOWN = "unknown"         # Initial/undetermined state
     RANGE = "range"           # ADX < 25, suitable for grid
     TREND = "trend"           # ADX > 30, suitable for momentum/DCA
     TRANSITIONAL = "transitional"  # 25 <= ADX <= 30
