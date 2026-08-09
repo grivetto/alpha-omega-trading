@@ -200,6 +200,58 @@ class StateStore:
         val = await self.get_state(key)
         return json.loads(val) if val else None
 
+    # Methods for engine state loading
+
+    async def get_equity_curve(self, node: str, limit: int = 100) -> List[Dict[str, Any]]:
+        """Get equity curve data for a node."""
+        # Query trades table for equity curve data
+        rows = await self.fetch_all(
+            """
+            SELECT 
+                SUM(pnl_abs) as total_pnl,
+                SUM(CASE WHEN pnl_abs > 0 THEN pnl_abs ELSE 0 END) as realized_pnl,
+                0 as unrealized_pnl,
+                0 as drawdown,
+                SUM(amount * exit_price) as total_equity,
+                MAX(exit_ts) as timestamp
+            FROM trades 
+            WHERE status = 'closed' AND exit_ts IS NOT NULL
+            ORDER BY exit_ts DESC
+            LIMIT ?
+            """,
+            (limit,)
+        )
+        return rows
+
+    async def get_open_positions(self) -> List[Dict[str, Any]]:
+        """Get all open positions."""
+        rows = await self.fetch_all(
+            """
+            SELECT 
+                symbol, exchange, side as base, 'USDT' as quote,
+                amount as size, entry_price, exit_price as current_price,
+                pnl_abs as unrealized_pnl, 0 as realized_pnl,
+                entry_ts, strategy
+            FROM trades 
+            WHERE status = 'open'
+            """)
+        return rows
+
+    async def get_open_orders(self, symbol: str) -> List[Dict[str, Any]]:
+        """Get open orders for a symbol."""
+        rows = await self.fetch_all(
+            """
+            SELECT 
+                id, symbol, exchange, side, 'limit' as type,
+                price, amount, filled, status, 0 as fee, '' as fee_currency,
+                created_ts, strategy
+            FROM orders 
+            WHERE symbol = ? AND status IN ('pending', 'open', 'partial')
+            """,
+            (symbol,)
+        )
+        return rows
+
     async def close(self) -> None:
         """Close the state store."""
         self._closed = True
