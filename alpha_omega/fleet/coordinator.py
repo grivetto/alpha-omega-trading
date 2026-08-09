@@ -398,7 +398,7 @@ class FleetCoordinator:
             self._zmq_sub.close()
         if self._zmq_ctx:
             self._zmq_ctx.term()
-                log.info("Fleet stopped")
+        log.info("Fleet stopped")
 
     def get_fleet_status(self) -> Dict[str, Any]:
         """Get fleet-wide status."""
