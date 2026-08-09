@@ -49,6 +49,7 @@ dependencies = [
     "jinja2>=3.1",
     "python-telegram-bot>=20.0",
     "aiofiles>=23.0",
+    "aiosqlite>=0.20",
 ]
 
 [project.optional-dependencies]
