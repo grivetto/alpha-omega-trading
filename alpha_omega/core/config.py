@@ -56,6 +56,12 @@ def load_config_from_env() -> Config:
     cfg.capital = _get_float("CAPITAL", 100.0)
     cfg.live_mode = _get_bool("LIVE_MODE", False)
     
+    # Sandbox/Testnet Configuration (for paper trading with real infrastructure)
+    cfg.use_sandbox = _get_bool("USE_SANDBOX", True)
+    cfg.sandbox_api_key = _get_str("SANDBOX_API_KEY", "")
+    cfg.sandbox_api_secret = _get_str("SANDBOX_API_SECRET", "")
+    cfg.sandbox_passphrase = _get_str("SANDBOX_PASSPHRASE", "")
+    
     # Grid parameters
     cfg.grid_levels = _get_int("LEVELS", 5)
     cfg.grid_spread = _get_float("BASE_SPREAD_PCT", 0.5) / 100.0

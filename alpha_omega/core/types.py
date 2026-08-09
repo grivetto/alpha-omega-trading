@@ -368,6 +368,12 @@ class Config:
     zmq_pub_port: int = 5555
     zmq_sub_port: int = 5555
     
+    # Sandbox/Testnet Configuration (for paper trading with real infrastructure)
+    use_sandbox: bool = True          # Use sandbox/testnet endpoints in paper mode
+    sandbox_api_key: str = ""         # Sandbox API key (separate from live)
+    sandbox_api_secret: str = ""      # Sandbox API secret
+    sandbox_passphrase: str = ""      # Sandbox passphrase (OKX)
+    
     # Risk (can be overridden by fleet config)
     use_momentum_filter: bool = True
     max_drawdown_pct: float = 0.15

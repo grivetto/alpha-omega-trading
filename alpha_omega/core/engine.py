@@ -152,12 +152,19 @@ class UnifiedTradingEngine:
         if not validate_exchange_config(ex_cfg) and not self.config.live_mode:
             log.warning(f"No valid API keys for {self.config.exchange}, running in paper mode")
         
+        # Use sandbox mode for paper trading (real infrastructure validation)
+        sandbox_mode = not self.config.live_mode and self.config.use_sandbox
+        
         self.exchange = create_exchange(
             self.config.exchange,
             api_key=ex_cfg["api_key"],
             api_secret=ex_cfg["api_secret"],
             passphrase=ex_cfg["passphrase"],
             paper_mode=not self.config.live_mode,
+            sandbox_mode=sandbox_mode,
+            sandbox_api_key=self.config.sandbox_api_key,
+            sandbox_api_secret=self.config.sandbox_api_secret,
+            sandbox_passphrase=self.config.sandbox_passphrase,
             rate_limit_rps=5.0,
             rate_limit_burst=10,
         )

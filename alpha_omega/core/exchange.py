@@ -203,11 +203,13 @@ class ExchangeAdapter(ABC):
     """
     Abstract exchange adapter.
     Implementazioni concrete: KrakenAdapter, OKXAdapter.
+    Supports both live and sandbox/testnet modes for paper trading.
     """
 
     __slots__ = (
         "exchange_id", "api_key", "api_secret", "passphrase",
-        "paper_mode", "rate_limiter", "pool", "ws",
+        "paper_mode", "sandbox_mode",
+        "rate_limiter", "pool", "ws",
         "_ws_task", "_ws_callbacks", "_reconnect_attempts", "_closed"
     )
 
@@ -218,6 +220,10 @@ class ExchangeAdapter(ABC):
         api_secret: str = "",
         passphrase: str = "",
         paper_mode: bool = True,
+        sandbox_mode: bool = True,
+        sandbox_api_key: str = "",
+        sandbox_api_secret: str = "",
+        sandbox_passphrase: str = "",
         rate_limit_rps: float = 5.0,
         rate_limit_burst: int = 10,
     ):
@@ -226,6 +232,14 @@ class ExchangeAdapter(ABC):
         self.api_secret = api_secret
         self.passphrase = passphrase
         self.paper_mode = paper_mode
+        self.sandbox_mode = sandbox_mode and not paper_mode == False  # sandbox only for paper
+        
+        # Use sandbox credentials if in sandbox mode and provided
+        if self.sandbox_mode and sandbox_api_key:
+            self.api_key = sandbox_api_key
+            self.api_secret = sandbox_api_secret
+            self.passphrase = sandbox_passphrase
+        
         self.rate_limiter = TokenBucket(rate_limit_rps, rate_limit_burst)
         self.pool = ConnectionPool(max_connections=10, max_per_host=5)
         self.ws: Optional[aiohttp.ClientWebSocketResponse] = None
@@ -233,6 +247,39 @@ class ExchangeAdapter(ABC):
         self._ws_callbacks: Dict[str, List[Callable]] = defaultdict(list)
         self._reconnect_attempts = 0
         self._closed = False
+
+    @property
+    def _is_sandbox(self) -> bool:
+        """Check if using sandbox/testnet endpoints."""
+        return self.sandbox_mode and not self.paper_mode == False
+
+    def _get_rest_base(self) -> str:
+        """Get REST base URL (live or sandbox). Override in subclass."""
+        return self._rest_base()
+
+    def _get_ws_url(self) -> str:
+        """Get WebSocket URL (live or sandbox). Override in subclass."""
+        return self._ws_url()
+
+    @abstractmethod
+    def _rest_base(self) -> str:
+        """Live REST API base URL."""
+        pass
+
+    @abstractmethod
+    def _sandbox_rest_base(self) -> str:
+        """Sandbox/Testnet REST API base URL."""
+        pass
+
+    @abstractmethod
+    def _ws_url(self) -> str:
+        """Live WebSocket URL."""
+        pass
+
+    @abstractmethod
+    def _sandbox_ws_url(self) -> str:
+        """Sandbox/Testnet WebSocket URL."""
+        pass
 
     @abstractmethod
     def _sign_request(self, method: str, path: str, params: Dict, timestamp: str) -> Dict[str, str]:
@@ -280,7 +327,9 @@ class ExchangeAdapter(ABC):
         if not session:
             raise RuntimeError("Connection pool not started")
         
-        url = f"{self._rest_base()}{path}"
+        # Use sandbox or live REST base URL
+        rest_base = self._get_rest_base()
+        url = f"{rest_base}{path}"
         headers = {"Accept": "application/json"}
         
         if signed:
@@ -414,8 +463,10 @@ class ExchangeAdapter(ABC):
         if not session:
             raise RuntimeError("Pool not started")
         
+        # Use sandbox or live WebSocket URL
+        ws_url = self._get_ws_url()
         ws = await session.ws_connect(
-            self._ws_url(),
+            ws_url,
             heartbeat=30,
             autoping=True,
         )
@@ -496,17 +547,27 @@ class ExchangeAdapter(ABC):
 # ─── Kraken Adapter ──────────────────────────────────────────────────────
 
 class KrakenAdapter(ExchangeAdapter):
-    """Kraken REST + WS adapter."""
+    """Kraken REST + WS adapter with sandbox support."""
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._ws_channels = {}
 
     def _rest_base(self) -> str:
+        """Live REST API base URL."""
         return "https://api.kraken.com"
 
+    def _sandbox_rest_base(self) -> str:
+        """Sandbox/Testnet REST API base URL (Kraken Spot Pilot)."""
+        return "https://api.pilot.kraken.com"
+
     def _ws_url(self) -> str:
+        """Live WebSocket URL."""
         return "wss://ws.kraken.com"
+
+    def _sandbox_ws_url(self) -> str:
+        """Sandbox WebSocket URL (Kraken Pilot)."""
+        return "wss://ws.pilot.kraken.com"
 
     def _sign_request(self, method: str, path: str, params: Dict, timestamp: str) -> Dict[str, str]:
         post_data = urllib.parse.urlencode(params) if params else ""
@@ -677,16 +738,26 @@ class KrakenAdapter(ExchangeAdapter):
 # ─── OKX Adapter ────────────────────────────────────────────────────────
 
 class OKXAdapter(ExchangeAdapter):
-    """OKX REST + WS adapter with EEA passphrase support."""
+    """OKX REST + WS adapter with EEA passphrase and demo trading support."""
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._ws_channels = {}
 
     def _rest_base(self) -> str:
+        """Live REST API base URL."""
+        return "https://www.okx.com"
+
+    def _sandbox_rest_base(self) -> str:
+        """Sandbox/Demo REST API base URL (same as live, uses header for demo mode)."""
         return "https://www.okx.com"
 
     def _ws_url(self) -> str:
+        """Live WebSocket URL."""
+        return "wss://ws.okx.com:8443/api/v5/market"
+
+    def _sandbox_ws_url(self) -> str:
+        """Sandbox WebSocket URL (same as live for public market data)."""
         return "wss://ws.okx.com:8443/api/v5/market"
 
     def _sign_request(self, method: str, path: str, params: Dict, timestamp: str) -> Dict[str, str]:
@@ -697,13 +768,17 @@ class OKXAdapter(ExchangeAdapter):
             message.encode(),
             hashlib.sha256
         ).hexdigest()
-        return {
+        headers = {
             "OK-ACCESS-KEY": self.api_key,
             "OK-ACCESS-SIGN": signature,
             "OK-ACCESS-TIMESTAMP": timestamp,
             "OK-ACCESS-PASSPHRASE": self.passphrase,
             "Content-Type": "application/json",
         }
+        # Add demo trading header for sandbox mode
+        if self._is_sandbox:
+            headers["x-simulated-trading"] = "1"
+        return headers
 
     def _ws_subscribe_msg(self, channels: List[str], symbols: List[str]) -> Dict:
         okx_channels = []
@@ -875,21 +950,29 @@ def create_exchange(
     api_secret: str = "",
     passphrase: str = "",
     paper_mode: bool = True,
+    sandbox_mode: bool = True,
+    sandbox_api_key: str = "",
+    sandbox_api_secret: str = "",
+    sandbox_passphrase: str = "",
     rate_limit_rps: float = 5.0,
     rate_limit_burst: int = 10,
 ) -> ExchangeAdapter:
-    """Factory function to create exchange adapter."""
+    """Factory function to create exchange adapter with sandbox support."""
     exchange_id = exchange_id.lower()
     
     if exchange_id == "kraken":
         return KrakenAdapter(
             exchange_id, api_key, api_secret, passphrase,
-            paper_mode, rate_limit_rps, rate_limit_burst
+            paper_mode, sandbox_mode,
+            sandbox_api_key, sandbox_api_secret, sandbox_passphrase,
+            rate_limit_rps, rate_limit_burst
         )
     elif exchange_id == "okx":
         return OKXAdapter(
             exchange_id, api_key, api_secret, passphrase,
-            paper_mode, rate_limit_rps, rate_limit_burst
+            paper_mode, sandbox_mode,
+            sandbox_api_key, sandbox_api_secret, sandbox_passphrase,
+            rate_limit_rps, rate_limit_burst
         )
     else:
         raise ValueError(f"Unsupported exchange: {exchange_id}")
