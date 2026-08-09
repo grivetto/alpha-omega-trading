@@ -252,6 +252,18 @@ class StateStore:
         )
         return rows
 
+    async def save_equity(self, data: Dict[str, Any]) -> None:
+        """Save equity snapshot to state table."""
+        import json
+        key = f"equity_{data.get('node', 'unknown')}"
+        await self.set_json(key, data)
+
+    async def save_position(self, data: Dict[str, Any]) -> None:
+        """Save position to state table."""
+        import json
+        key = f"position_{data.get('symbol', 'unknown')}"
+        await self.set_json(key, data)
+
     async def close(self) -> None:
         """Close the state store."""
         self._closed = True

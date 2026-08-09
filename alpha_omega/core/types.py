@@ -344,6 +344,7 @@ class Config:
     # Grid parameters
     grid_levels: int = 5
     grid_spread: float = 0.025
+    per_level: float = 0.2
     
     # DCA parameters
     dca_max_entries: int = 5
