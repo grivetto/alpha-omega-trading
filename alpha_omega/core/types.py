@@ -278,7 +278,6 @@ class FleetConfig:
         return self.pairs + self.okx_pairs
 
 
-@dataclass(slots=True)
 class RiskLevel(int, Enum):
     LOW = 0
     MEDIUM = 1
