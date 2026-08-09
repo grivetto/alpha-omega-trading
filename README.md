@@ -109,11 +109,34 @@ This is not a get-rich-quick bot. It is an **engineering discipline applied to m
 | **Strategy Classes** | `alpha_omega.strategies.*` | Grid (ATR-adaptive), DCA, Scalp, MeanReversion, Momentum, Arbitrage — all with `Signal` output, regime-aware |
 | **StrategySelector** | `alpha_omega.strategies.selector` | Regime-based switching: ATR + momentum + trend strength → Grid/DCA/Scalp/Cooldown, min 5min between switches |
 | **ResourceMonitor** | `alpha_omega.monitoring.resource` | Async resource monitor: RAM/CPU/FD, SafeMode levels (NORMAL/CAUTION/SAFE/EMERGENCY), heartbeat to `/tmp/denaro-neo.health` |
+| **HealthServer** | `alpha_omega.monitoring.health` | HTTP health endpoint (127.0.0.1), unified schema across all bots, Prometheus/Zabbix metrics export |
+| **MetricsCollector** | `alpha_omega.monitoring.metrics` | Prometheus-format metrics: trading, risk, system, exchange, fleet categories |
+| **AlertSystem** | `alpha_omega.alerts.system` | Multi-channel: Log, Telegram (HTML), Email (SMTP), Zabbix trapper. Deduplication, rate-limiting, templates |
+| **AlertChannels** | `alpha_omega.alerts.channels` | Telegram bot, SMTP email, Zabbix sender, structured logging with correlation IDs |
+| **AlertTemplates** | `alpha_omega.alerts.templates` | Jinja2 templates for critical/warning/info alerts with rich formatting |
 | **DCA Strategy** | `alpha_omega.strategies.dca` | Dollar-Cost Averaging with configurable entries, spacing, take-profit, trailing stop, max drawdown per position |
 | **Scalp Strategy** | `alpha_omega.strategies.scalp` | Fast scalping for trending markets with EMA crossover, volume confirmation, tight stops, max hold time |
 | **Mean Reversion** | `alpha_omega.strategies.mean_reversion` | Bollinger Bands + RSI oversold/overbought, middle band exit, configurable thresholds |
 | **Momentum Strategy** | `alpha_omega.strategies.momentum` | Donchian channel breakouts with ADX filter, trailing stops, volume confirmation |
 | **Grid Strategy** | `alpha_omega.strategies.grid` | ATR-adaptive grid with dynamic re-anchoring, momentum filter, hybrid mode for trending markets |
+| **StrategySelector** | `alpha_omega.strategies.selector` | Regime-based switching: ATR + momentum + trend strength → Grid/DCA/Scalp/Cooldown, min 5min between switches |
+| **PairScanner** | `alpha_omega.scanner.pair_scanner` | Multi-exchange scan (Kraken EUR + OKX USDT), regime detection, performance decay scoring, correlation filtering, auto fleet config generation |
+| **RegimeDetector** | `alpha_omega.scanner.regime` | ADX/RSI/ATR-based regime classification: Range/Trend/Transitional/ExtremeVol |
+| **PerformanceScorer** | `alpha_omega.scanner.performance` | Decay-weighted scoring: recent PnL (70%) + historical (30%) × win-rate boost |
+| **PairCorrelationFilter** | `alpha_omega.scanner.correlation` | Greedy selection by grid_score, max 0.7 correlation, base-currency diversification |
+| **FleetCoordinator** | `alpha_omega.fleet.coordinator` | Raft leader election, pair lifecycle, SIGHUP hot reload, ZeroMQ config broadcast, auto-restart, kill switch monitor |
+| **BotInstance** | `alpha_omega.fleet.bot_instance` | Per-bot lifecycle management: STARTING→RUNNING→DRAINING→STOPPED, health checks, restart tracking |
+| **RaftConsensus** | `alpha_omega.fleet.raft` | Leader election for coordinator HA, term-based voting, log replication |
+| **HotReloadManager** | `alpha_omega.fleet.hot_reload` | SIGHUP handler + ZeroMQ config sync across fleet, graceful pair rotation |
+| **PortfolioRiskManager** | `alpha_omega.risk.manager` | Portfolio DD, daily loss, exposure/base, correlation, positions/base, volatility targeting, risk parity, kill switch |
+| **CorrelationMatrix** | `alpha_omega.risk.correlation` | Real-time Pearson correlation matrix with 100-bar rolling window |
+| **VolatilityRegime** | `alpha_omega.risk.volatility` | ATR ratio vs 30-day median: pause/reduce/expand/normal grid sizing |
+| **KillSwitch** | `alpha_omega.risk.kill_switch` | Multi-layer: file-based, portfolio DD, daily loss, manual trigger, auto-arm/disarm |
+| **ExchangeAdapter** | `alpha_omega.core.exchange` | Async aiohttp + WebSocket multiplexing, token bucket rate limiter, connection pooling, auto-reconnect |
+| **Circular Buffers** | `alpha_omega.core.buffers` | OhlcvBuffer, TickBuffer with typed arrays (float32), zero-copy stats, explicit GC |
+| **StateStore** | `alpha_omega.core.state` | SQLite WAL + write queue + Redis Streams consumer groups, exactly-once processing |
+| **ConfigManager** | `alpha_omega.core.config` | Environment-based config (immutable at runtime), fleet config JSON with versioning |
+| **TypeSystem** | `alpha_omega.core.types` | Shared typed dataclasses with __slots__, enums for regime, risk level, order side |
 
 ---
 
@@ -692,19 +715,29 @@ Configure `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` for real-time:
   - [ ] Scale to €1000 capital
   - [ ] Continuous optimization based on live metrics
 
-- [ ] **Phase 6 — Advanced Strategies** (Month 2)
-  - [ ] Mean Reversion strategy (Bollinger + RSI)
-  - [ ] Momentum strategy (breakout + volume confirmation)
+- [x] **Phase 6 — Advanced Strategies** (Month 2) — **COMPLETED**
+  - [x] Mean Reversion strategy (Bollinger + RSI) — `alpha_omega.strategies.mean_reversion`
+  - [x] Momentum strategy (Donchian breakout + volume) — `alpha_omega.strategies.momentum`
+  - [x] Scalp strategy (EMA crossover + volume) — `alpha_omega.strategies.scalp`
+  - [x] DCA strategy (configurable entries, trailing) — `alpha_omega.strategies.dca`
+  - [x] Grid strategy (ATR-adaptive + hybrid mode) — `alpha_omega.strategies.grid`
+  - [x] Strategy Selector (regime-based switching) — `alpha_omega.strategies.selector`
   - [ ] Statistical Arbitrage (pair correlation + cointegration)
   - [ ] Funding Rate Arbitrage (perp vs spot)
 
-- [ ] **Phase 7 — ML Enhancement** (Month 3)
+- [x] **Phase 7 — Monitoring & Alerts** (Month 2) — **COMPLETED**
+  - [x] Multi-channel Alert System (Telegram/Email/Zabbix/Log) — `alpha_omega.alerts.system`
+  - [x] Alert Channels with deduplication — `alpha_omega.alerts.channels`
+  - [x] Jinja2 Alert Templates — `alpha_omega.alerts.templates`
+  - [x] Health Server with unified schema — `alpha_omega.monitoring.health`
+  - [x] Prometheus/Zabbix Metrics Collector — `alpha_omega.monitoring.metrics`
+  - [x] Resource Monitor with SafeMode — `alpha_omega.monitoring.resource`
   - [ ] ML-enhanced pair selection (XGBoost/LightGBM on regime features)
   - [ ] Regime detection with HMM/transformer
   - [ ] Dynamic spread optimization with RL
   - [ ] Anomaly detection for exchange issues
 
-- [ ] **Phase 8 — Production Hardening** (Month 4)
+- [ ] **Phase 8 — Production Hardening** (Month 3-4)
   - [ ] HashiCorp Vault integration for secrets
   - [ ] WireGuard mesh for inter-node comms
   - [ ] Chaos engineering automation (Litmus/Gremlin)
