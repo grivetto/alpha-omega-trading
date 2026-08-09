@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """
-Denaro v4 — Dashboard Stats Updater
+Alpha-Omega Trading — Dashboard Stats Updater
 Formatta stats.json per la web dashboard (formato dashboard HTML).
 Legge da nuvola (locale) + MARCODG1 (via SSH health endpoint).
+Usa il nuovo fleet health endpoint su porta 8900.
 Cron: ogni 5 minuti.
 """
 import json, os, time, sys, subprocess
@@ -10,135 +11,131 @@ from pathlib import Path
 
 DENARO_DIR = Path("/home/sergio/denaro")
 DASHBOARD_DIR = DENARO_DIR / "dashboard" / "public"
-STATE_FILE = DENARO_DIR / "denaro_core_state.json"
-HEALTH_URL = "http://127.0.0.1:8909/health"
-
-def load_state():
-    try:
-        return json.loads(STATE_FILE.read_text())
-    except (FileNotFoundError, json.JSONDecodeError):
-        return {}
+HEALTH_URL = "http://127.0.0.1:8900/health"  # Fleet coordinator health
 
 def fetch_health():
+    """Fetch health from local fleet coordinator."""
     try:
         import urllib.request
         r = urllib.request.urlopen(HEALTH_URL, timeout=5)
         return json.loads(r.read())
-    except Exception:
+    except Exception as e:
+        print(f"Error fetching local health: {e}", file=sys.stderr)
         return {}
 
 def fetch_remote_health(host="MARCODG1"):
     """Fetch health from remote machine via SSH."""
     try:
         r = subprocess.run(
-            ["ssh", host, "curl", "-sf", "http://127.0.0.1:8909/health"],
+            ["ssh", host, "curl", "-sf", "http://127.0.0.1:8900/health"],
             capture_output=True, text=True, timeout=10
         )
         if r.returncode == 0:
             return json.loads(r.stdout)
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"Error fetching remote health from {host}: {e}", file=sys.stderr)
     return {}
 
-def fetch_remote_state(host="MARCODG1"):
-    """Fetch state from remote machine via SSH."""
-    try:
-        r = subprocess.run(
-            ["ssh", host, "cat", "/home/marco/denaro/denaro_core_state.json"],
-            capture_output=True, text=True, timeout=10
-        )
-        if r.returncode == 0:
-            return json.loads(r.stdout)
-    except Exception:
-        pass
-    return {}
-
-def make_machine_data(state, health, pair="DOGE/EUR"):
-    """Build machine data in the format the dashboard expects."""
-    capital = state.get("current_capital", 0)
-    initial = state.get("initial_capital", 100)
-    pnl = ((capital - initial) / max(1, initial) * 100) if initial > 0 else 0
-    trades = state.get("perf", {}).get("total_trades", 0)
-    wins = state.get("perf", {}).get("win_trades", 0)
-    win_rate = state.get("perf", {}).get("win_rate", 0)
-    grid_levels = len(state.get("grid_levels", []))
+def parse_fleet_health(health, machine_name):
+    """Parse fleet health response into machine data for dashboard."""
+    if not health or health.get("status") != "healthy":
+        return {
+            "pair": "fleet",
+            "dry_run": False,
+            "error": f"{machine_name} fleet unhealthy or unreachable",
+            "equity": 0,
+            "status": health.get("status", "unknown") if health else "unreachable"
+        }
     
-    price = health.get("equity", 0)  # not the price - need to get it differently
+    bots = health.get("bots", [])
+    total_equity = 0
+    total_trades = 0
+    total_wins = 0
+    active_bots = 0
+    pairs = []
     
-    # If health has equity, calculate an estimate for price
-    # Actually we need the price. Check if health has it.
+    for bot in bots:
+        if bot.get("status") == "running":
+            active_bots += 1
+            equity = bot.get("equity", 0)
+            trades = bot.get("trades", 0)
+            wins = bot.get("wins", 0)
+            total_equity += equity
+            total_trades += trades
+            total_wins += wins
+            pairs.append({
+                "symbol": bot.get("symbol", ""),
+                "equity": round(equity, 2),
+                "trades": trades,
+                "win_rate": round((wins / trades * 100) if trades > 0 else 0, 1),
+                "strategy": bot.get("strategy", "GRID"),
+                "regime": bot.get("regime", "range"),
+                "spread_pct": round(bot.get("spread_pct", 0) * 100, 2),
+                "grid_levels": bot.get("grid_levels", 5),
+                "active_levels": bot.get("active_levels", 0),
+            })
+    
+    win_rate = round((total_wins / total_trades * 100) if total_trades > 0 else 0, 1)
+    
+    # Get a representative price from the first bot
+    price = 0
+    if pairs:
+        # We'll try to get price from logs or use a default
+        price = get_price_from_log()
     
     return {
-        "pair": pair,
+        "pair": "fleet",
         "dry_run": False,
-        "equity": round(capital, 2),
-        "price": 0,  # Will be filled below
-        "pnl_pct": round(pnl, 2),
-        "trades": trades,
-        "wins": wins,
-        "win_rate": round(win_rate * 100, 1),
-        "grid": {
-            "levels": state.get("exec", {}).get("grid_target_levels", 5),
-            "active": grid_levels,
-            "spread_pct": round(state.get("regime", {}).get("atr_pct", 0) * 100, 2)
-        },
-        "kelly": round(state.get("kelly_fraction", 0.25) * 100, 1),
-        "atr": round(state.get("regime", {}).get("atr_pct", 0) * 100, 2),
-        "trend": state.get("regime", {}).get("trend", "RANGING"),
-        "cb": state.get("cb", {}).get("state", "CLOSED"),
-        "volatility": state.get("regime", {}).get("volatility_regime", "normal"),
-        "strategy": state.get("exec", {}).get("active_strategy", "GRID"),
-        "status": health.get("status", "unknown") if health else "unknown",
-        "ws": health.get("ws_connected", False) if health else False
+        "equity": round(total_equity, 2),
+        "price": price,
+        "pnl_pct": round(((total_equity - 100) / 100 * 100) if total_equity > 0 else 0, 2),  # 100€ initial per machine
+        "trades": total_trades,
+        "wins": total_wins,
+        "win_rate": win_rate,
+        "active_bots": active_bots,
+        "total_bots": len(bots),
+        "pairs": pairs,
+        "status": health.get("status", "unknown"),
+        "ws_connected": health.get("ws_connected", False),
+        "uptime_sec": health.get("uptime_sec", 0),
     }
 
 def get_price_from_log():
     """Extract last price from bot log using tail (fast, no full file read)."""
-    import subprocess
     try:
         r = subprocess.run(
             ["tail", "-100", str(DENARO_DIR / "kraken_bot.log")],
             capture_output=True, text=True, timeout=5
         )
         for line in reversed(r.stdout.splitlines()):
-            if "DENARO STATUS" in line and "price=" in line:
+            if "price=" in line:
                 parts = line.split("price=")
                 if len(parts) > 1:
-                    return float(parts[1].split()[0].split()[0])
+                    return float(parts[1].split()[0])
     except Exception:
         pass
     return 0
 
 def main():
-    # Load local (nuvola) state
-    state_n = load_state()
+    # Load local (nuvola) fleet health
     health_n = fetch_health()
-    data_n = make_machine_data(state_n, health_n, "DOGE/EUR")
+    data_n = parse_fleet_health(health_n, "nuvola")
     
-    # Try to get price from log
-    price = get_price_from_log()
-    if price > 0:
-        data_n["price"] = price
-    
-    # Load remote (MARCODG1) state
-    state_m = fetch_remote_state("MARCODG1")
+    # Load remote (MARCODG1) fleet health
     health_m = fetch_remote_health("MARCODG1")
-    data_m = make_machine_data(state_m, health_m, "DOGE/EUR") if state_m else {"pair": "DOGE/EUR", "dry_run": False, "error": "Not reachable", "equity": 0}
-    if price > 0:
-        data_m["price"] = price
+    data_m = parse_fleet_health(health_m, "MARCODG1")
     
-    # Calculate totals (SAME account — non sommare! entrambi vedono stesso saldo)
-    real_equity = data_n.get("equity", 0)  # singola fonte di verità
+    # Calculate totals
+    # Each machine has its own 100€ capital
+    real_equity_n = data_n.get("equity", 0)
+    real_equity_m = data_m.get("equity", 0)
     total_trades = data_n.get("trades", 0) + data_m.get("trades", 0)
-    
-    # MARCODG1 condivide lo stesso conto — equity=0 per non doppiare
-    data_m["equity"] = 0
-    data_m["note"] = "shared account"
     
     stats = {
         "updated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-        "total_profit": round(real_equity - 100, 2),  # 100€ initial
+        "total_profit": round((real_equity_n - 100) + (real_equity_m - 100), 2),  # 100€ each
         "total_trades": total_trades,
+        "total_equity": round(real_equity_n + real_equity_m, 2),
         "nuvola": data_n,
         "marcodg1": data_m,
     }
@@ -147,17 +144,20 @@ def main():
     DASHBOARD_DIR.mkdir(parents=True, exist_ok=True)
     (DASHBOARD_DIR / "stats.json").write_text(json.dumps(stats, indent=2))
     
-    # Also update web root stats.json
+    # Also update web root stats.json (for sgrivett.ddns.net / mgrivett.ddns.net)
     try:
         (Path("/var/www/html/stats.json")).write_text(json.dumps({
             "total_profit": stats["total_profit"],
             "total_trades": total_trades,
+            "total_equity": stats["total_equity"],
             "last_update": stats["updated_at"],
+            "nuvola_equity": real_equity_n,
+            "marcodg1_equity": real_equity_m,
         }, indent=2))
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"Warning: could not write /var/www/html/stats.json: {e}", file=sys.stderr)
     
-    print(f"Dash updated: nuvola={data_n.get('equity',0)} marcodg1={data_m.get('equity',0)} tot_trades={total_trades}")
+    print(f"Dash updated: nuvola_eq={real_equity_n:.2f} marcodg1_eq={real_equity_m:.2f} tot_trades={total_trades} active_bots={data_n.get('active_bots',0)}/{data_n.get('total_bots',0)} + {data_m.get('active_bots',0)}/{data_m.get('total_bots',0)}")
     return 0
 
 if __name__ == "__main__":

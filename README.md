@@ -68,23 +68,89 @@ This is not a get-rich-quick bot. It is an **engineering discipline applied to m
 │                      ALPHA-OMEGA TRADING SYSTEM                              │
 └─────────────────────────────────────────────────────────────────────────────┘
 
-          ┌──────────────┐         ┌──────────────┐         ┌──────────────┐
-          │     mc2      │◄───────►│    nuvola    │◄───────►│  MARCODG1    │
-          │  (Home/DB)   │  ZeroMQ │  (Primary)   │  ZeroMQ │ (Secondary)  │
-          └──────┬───────┘         └──────┬───────┘         └──────┬───────┘
-                 │                        │                        │
-                 │         ┌──────────────┴──────────────┐        │
-                 │         │        Redis Cluster        │        │
-                 │         │   (Shared State + Streams)  │        │
-                 │         └──────────────┬──────────────┘        │
-                 │                        │                        │
-                 ▼                        ▼                        ▼
-        ┌───────────────┐         ┌───────────────┐         ┌───────────────┐
-        │ TimescaleDB   │         │  Kraken EUR   │         │  Kraken EUR   │
-        │ Historical    │         │  OKX USDT     │         │  OKX USDT     │
-        │ Zabbix/Alert  │         │  12 Bots      │         │  12 Bots      │
-        └───────────────┘         └───────────────┘         └───────────────┘
+           ┌──────────────┐         ┌──────────────┐         ┌──────────────┐
+           │     mc2      │◄───────►│    nuvola    │◄───────►│  MARCODG1    │
+           │  (Home/DB)   │  ZeroMQ │  (Primary)   │  ZeroMQ │ (Secondary)  │
+           └──────┬───────┘         └──────┬───────┘         └──────┬───────┘
+                  │                        │                        │
+                  │         ┌──────────────┴──────────────┐        │
+                  │         │        Redis Cluster        │        │
+                  │         │   (Shared State + Streams)  │        │
+                  │         └──────────────┬──────────────┘        │
+                  │                        │                        │
+                  ▼                        ▼                        ▼
+         ┌───────────────┐         ┌───────────────┐         ┌───────────────┐
+         │ TimescaleDB   │         │  Kraken EUR   │         │  Kraken EUR   │
+         │ Historical    │         │  OKX USDT     │         │  OKX USDT     │
+         │ Zabbix/Alert  │         │  12 Bots      │         │  12 Bots      │
+         └───────────────┘         └───────────────┘         └───────────────┘
+ ```
+
+## 🔬 Paper=Live Infrastructure Parity — Sandbox/Testnet Support
+
+> **The paper trading environment now uses real exchange sandbox/testnet endpoints, making the infrastructure 100% identical to live mode.**
+
+### Why This Matters
+
+Traditional paper trading simulates order execution locally — **no auth, no rate limits, no network latency, no exchange errors**. This validates **strategy logic** but not **execution infrastructure**.
+
+With sandbox/testnet support:
+
+| Infrastructure Component | Traditional Paper | **Sandbox-Enabled Paper** |
+|--------------------------|-------------------|---------------------------|
+| **Auth (HMAC/Ed25519)** | ❌ Skipped | ✅ Real signing |
+| **Rate Limiting (429)** | ❌ Local only | ✅ Real exchange limits |
+| **Network Latency** | ❌ 0ms | ✅ Real RTT |
+| **Slippage** | ❌ None | ✅ Real order book |
+| **Partial Fills** | ❌ No | ✅ Yes |
+| **Exchange Errors** | ❌ No | ✅ InsufficientFunds, InvalidOrder |
+| **OKX EEA Passphrase** | ❌ No | ✅ `x-simulated-trading: 1` |
+| **WebSocket Reconnection** | ✅ Local | ✅ Real |
+| **Nonce Management** | ❌ No | ✅ Real |
+
+### Supported Exchanges
+
+| Exchange | Sandbox/Testnet | REST Endpoint | WS Endpoint | Auth |
+|----------|-----------------|---------------|-------------|------|
+| **Kraken** | Spot Pilot | `https://api.pilot.kraken.com` | `wss://ws.pilot.kraken.com` | HMAC-SHA512 |
+| **OKX** | Demo Trading | `https://www.okx.com` (same) | `wss://ws.okx.com:8443/api/v5/market` | HMAC-SHA256 + `x-simulated-trading: 1` |
+
+### Configuration
+
+```bash
+# .env per PAPER TRADING CON INFRASTRUTTURA REALE
+LIVE_MODE=false                    # Modalità paper
+USE_SANDBOX=true                   # USA SANDBOX/DEMO REALE
+
+# Chiavi SANDBOX/DEMO (separate dalle live)
+SANDBOX_API_KEY=your_sandbox_key
+SANDBOX_API_SECRET=your_sandbox_secret
+SANDBOX_PASSPHRASE=your_demo_passphrase  # Per OKX
+
+# Chiavi LIVE (per fallback o future use)
+KRAKEN_API_KEY=your_live_key
+KRAKEN_API_SECRET=your_live_secret
+OKX_API_KEY=your_live_key
+OKX_API_SECRET=your_live_secret
+OKX_PASSPHRASE=your_live_passphrase
 ```
+
+### Implementation Details
+
+The `ExchangeAdapter` base class now supports sandbox mode:
+
+```python
+# In paper mode with USE_SANDBOX=true:
+engine = UnifiedTradingEngine(config)
+# Internally:
+# - KrakenAdapter uses api.pilot.kraken.com + ws.pilot.kraken.com
+# - OKXAdapter uses same endpoints + x-simulated-trading: 1 header
+# - Same auth, rate limiting, WebSocket, error handling as live
+```
+
+This means **paper trading now validates the entire execution stack** — not just strategy logic.
+
+---
 
 ### Machine Roles
 
@@ -154,25 +220,25 @@ This is not a get-rich-quick bot. It is an **engineering discipline applied to m
 │  │ (this session)  │  │ (Leader election, config)   │                  │
 │  └─────────────────┘  └─────────────────────────────┘                  │
 └─────────────────────────────────────────────────────────────────────────┘
-                                     │
-                     ┌───────────────┴───────────────────┐
-                     ▼                                   ▼
-          ┌─────────────────────┐           ┌─────────────────────┐
-          │      nuvola         │           │     MARCODG1        │
-          │  (87.106.3.15)      │           │  (87.106.222.123)   │
-          │ sgrivett.ddns.net   │           │ mgrivett.ddns.net   │
-          ├─────────────────────┤           ├─────────────────────┤
-          │ shadowgrid-fleet    │           │ shadowgrid-fleet    │
-          │ (12 bots, :8900)    │           │ (12 bots, :8900)    │
-          │ airdrop-farm-nuvola │           │ MEXC SHADOW (SOL)   │
-          │ (live, 20 wallets)  │           │ DDNS timer 10m      │
-          │ DDNS timer 10m      │           │ Kraken: nVN31AX...  │
-          │ Kraken: 1t3Jpcv...  │           │ MEXC: mx0vglZz...   │
-          │ MEXC: mx0vgl1Tr...  │           │ Swap: 4GB           │
-          │ OKX: f28aa65d...    │           │ OKX: f28aa65d...    │
-          │ Swap: 4GB           │           │                     │
-          └─────────────────────┘           └─────────────────────┘
-```
+                                      │
+                      ┌───────────────┴───────────────────┐
+                      ▼                                   ▼
+           ┌─────────────────────┐           ┌─────────────────────┐
+           │      nuvola         │           │     MARCODG1        │
+           │  (87.106.3.15)      │           │  (87.106.222.123)   │
+           │ sgrivett.ddns.net   │           │ mgrivett.ddns.net   │
+           ├─────────────────────┤           ├─────────────────────┤
+           │ shadowgrid-fleet    │           │ shadowgrid-fleet    │
+           │ (12 bots, :8900)    │           │ (12 bots, :8900)    │
+           │ airdrop-farm-nuvola │           │ MEXC SHADOW (SOL)   │
+           │ (live, 20 wallets)  │           │ DDNS timer 10m      │
+           │ DDNS timer 10m      │           │ Kraken: nVN31AX...  │
+           │ Kraken: 1t3Jpcv...  │           │ MEXC: mx0vglZz...   │
+           │ MEXC: mx0vgl1Tr...  │           │ Swap: 4GB           │
+           │ OKX: f28aa65d...    │           │ OKX: f28aa65d...    │
+           │ Swap: 4GB           │           │                     │
+           └─────────────────────┘           └─────────────────────┘
+ ```
 
 ### Communication Layer
 
@@ -333,7 +399,7 @@ Buffers: OHLCV=100 | Tick=1000 | Cooldown=30s
 ZeroMQ: Pub=5555 | Sub=MARCODG1:5555
 Redis: redis://localhost:6379
 Health: 127.0.0.1:8912
-=====================================
+===================================
 [2026-08-09 02:05:12] price=0.888880 eq=52.07 spread=0.20% RSI=36.3 ADX=6.2 regime=range strategy=grid orders=12 trades=30
 [2026-08-09 02:05:42] price=0.890120 eq=52.15 spread=0.19% RSI=38.1 ADX=5.8 regime=range strategy=grid orders=12 trades=31  fill BUY @ 0.8895
 ```
@@ -389,6 +455,15 @@ Health: 127.0.0.1:8912
 | `MAX_CORRELATION` | `0.7` | Max correlation between positions |
 | `MAX_POSITIONS_PER_BASE` | `2` | Max positions per base currency |
 | `VOLATILITY_TARGETING` | `1` | Enable ATR-based volatility regime detection |
+
+### Sandbox/Testnet Parameters (NEW)
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `USE_SANDBOX` | `0` | Set to `1` to use exchange sandbox/testnet in paper mode |
+| `SANDBOX_API_KEY` | `` | Sandbox API key (separate from live) |
+| `SANDBOX_API_SECRET` | `` | Sandbox API secret |
+| `SANDBOX_PASSPHRASE` | `` | Sandbox passphrase (for OKX demo trading) |
 
 ### Alert Parameters
 
@@ -706,6 +781,7 @@ Configure `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` for real-time:
 - [x] **🛡️ ShadowGrid v2.1 — Risk & Alerts** — Portfolio risk manager, multi-channel alerts, dynamic pair selection
 - [x] **🏗️ ShadowGrid v2.2 — Unified Architecture** — alpha_omega package, ZeroMQ/Redis, Raft, 24 bots
 - [x] **🔍 Audit Fixes** — Legacy cleanup, health endpoint security, swap fix, config drift resolution
+- [x] **🔬 Sandbox/Testnet Support** — Paper=Live infrastructure parity with Kraken Pilot + OKX Demo
 
 ### 🎯 Next Phases
 
