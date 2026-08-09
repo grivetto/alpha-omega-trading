@@ -219,8 +219,15 @@ class StateStore:
 _state_store: Optional[StateStore] = None
 
 
-async def init_state_store(db_path: str = "denaro_neo.db") -> StateStore:
-    """Initialize global state store."""
+async def init_state_store(db_path: str = "denaro_neo.db", redis_url: Optional[str] = None, consumer_group: str = "alpha_omega", consumer_name: str = "engine") -> StateStore:
+    """Initialize global state store.
+    
+    Args:
+        db_path: SQLite database path
+        redis_url: Redis connection URL (optional, for future Redis Streams support)
+        consumer_group: Redis consumer group name (optional)
+        consumer_name: Redis consumer name (optional)
+    """
     global _state_store
     _state_store = await StateStore.create(db_path)
     return _state_store
