@@ -22,6 +22,14 @@ from typing import Dict, List, Optional, Any
 log = logging.getLogger("alpha_omega.fleet.coordinator")
 
 try:
+    from aiohttp import web
+    AIOHTTP_AVAILABLE = True
+except ImportError:
+    log.warning("aiohttp not installed — health server disabled")
+    AIOHTTP_AVAILABLE = False
+    web = None
+
+try:
     import zmq.asyncio
 except ImportError:
     log.warning("pyzmq not installed — fleet coordination limited")
@@ -80,8 +88,13 @@ class FleetCoordinator:
         self._zmq_task = None
         self._health_task = None
         self._rebalance_task = None
+        self._health_server_task = None
+        self._health_runner = None
         self._shutdown_event = asyncio.Event()
         self._signal_handlers_installed = False
+        
+        # Health server port (default 8900 for fleet coordinator)
+        self._health_port = self.fleet_config.risk_params.get("health_port", 8900)
         
         log.info(f"FleetCoordinator initialized: {len(self.fleet_config.pairs)} Kraken pairs, {len(self.fleet_config.okx_pairs)} OKX pairs")
 
@@ -103,6 +116,9 @@ class FleetCoordinator:
         
         # Start capital rebalancing
         self._rebalance_task = asyncio.create_task(self._rebalance_loop())
+        
+        # Start health HTTP server
+        await self._start_health_server()
         
         # Install signal handlers
         self._install_signal_handlers()
@@ -254,6 +270,71 @@ class FleetCoordinator:
                 log.error(f"Rebalance loop error: {e}")
                 await asyncio.sleep(60)
 
+    async def _start_health_server(self) -> None:
+        """Start HTTP health server for fleet coordinator."""
+        if not AIOHTTP_AVAILABLE:
+            log.warning("aiohttp not available, health server disabled")
+            return
+        
+        try:
+            app = web.Application()
+            app.router.add_get('/health', self._health_handler)
+            app.router.add_get('/fleet', self._fleet_handler)
+            app.router.add_get('/bot/{bot_id}', self._bot_handler)
+            
+            self._health_runner = web.AppRunner(app)
+            await self._health_runner.setup()
+            site = web.TCPSite(self._health_runner, '127.0.0.1', self._health_port)
+            await site.start()
+            
+            log.info(f"Fleet health server started on 127.0.0.1:{self._health_port}")
+        except Exception as e:
+            log.error(f"Failed to start health server: {e}")
+    
+    async def _stop_health_server(self) -> None:
+        """Stop HTTP health server."""
+        if self._health_runner:
+            try:
+                await self._health_runner.cleanup()
+                log.info("Fleet health server stopped")
+            except Exception as e:
+                log.error(f"Error stopping health server: {e}")
+    
+    async def _health_handler(self, request) -> web.Response:
+        """Health endpoint - returns fleet-wide health status."""
+        try:
+            status = self.get_fleet_status()
+            return web.json_response({
+                "status": "healthy" if status["active_bots"] > 0 else "degraded",
+                "timestamp": int(time.time()),
+                "fleet": status
+            })
+        except Exception as e:
+            return web.json_response({
+                "status": "error",
+                "error": str(e),
+                "timestamp": int(time.time())
+            }, status=500)
+    
+    async def _fleet_handler(self, request) -> web.Response:
+        """Fleet status endpoint."""
+        try:
+            status = self.get_fleet_status()
+            return web.json_response(status)
+        except Exception as e:
+            return web.json_response({"error": str(e)}, status=500)
+    
+    async def _bot_handler(self, request) -> web.Response:
+        """Individual bot status endpoint."""
+        try:
+            bot_id = request.match_info['bot_id']
+            status = self.get_bot_status(bot_id)
+            if status is None:
+                return web.json_response({"error": "Bot not found"}, status=404)
+            return web.json_response(status)
+        except Exception as e:
+            return web.json_response({"error": str(e)}, status=500)
+
     async def _rebalance_capital(self) -> None:
         """Rebalance capital based on performance and risk."""
         # Collect equity from all bots
@@ -398,6 +479,10 @@ class FleetCoordinator:
             self._zmq_sub.close()
         if self._zmq_ctx:
             self._zmq_ctx.term()
+        
+        # Stop health HTTP server
+        await self._stop_health_server()
+        
         log.info("Fleet stopped")
 
     def get_fleet_status(self) -> Dict[str, Any]:
