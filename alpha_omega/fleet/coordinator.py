@@ -69,7 +69,8 @@ class FleetCoordinator:
     __slots__ = (
         "fleet_config", "bots", "risk_manager", "_running",
         "_zmq_ctx", "_zmq_sub", "_zmq_task", "_health_task",
-        "_rebalance_task", "_shutdown_event", "_signal_handlers_installed"
+        "_rebalance_task", "_shutdown_event", "_signal_handlers_installed",
+        "_health_server_task", "_health_runner", "_health_port"
     )
 
     def __init__(self, fleet_config_path: str):
