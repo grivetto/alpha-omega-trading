@@ -305,8 +305,22 @@ class FleetCoordinator:
         """Health endpoint - returns fleet-wide health status."""
         try:
             status = self.get_fleet_status()
+            if not status:
+                status = {
+                    "fleet_equity": 0.0,
+                    "fleet_realized_pnl": 0.0,
+                    "fleet_unrealized_pnl": 0.0,
+                    "total_positions": 0,
+                    "total_open_orders": 0,
+                    "total_trades": 0,
+                    "active_bots": 0,
+                    "total_bots": len(self.bots),
+                    "risk_status": {},
+                    "bots": {}
+                }
+            active_bots = status.get("active_bots", 0)
             return web.json_response({
-                "status": "healthy" if status["active_bots"] > 0 else "degraded",
+                "status": "healthy" if active_bots > 0 else "degraded",
                 "timestamp": int(time.time()),
                 "fleet": status
             })
