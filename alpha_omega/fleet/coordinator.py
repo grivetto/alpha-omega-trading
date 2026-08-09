@@ -420,7 +420,7 @@ class FleetCoordinator:
                 total_positions += len(state.positions)
                 total_orders += len(state.open_orders)
                 total_trades += state.trades_count
-                                bots_status[bot_id] = {
+                bots_status[bot_id] = {
                     "status": bot.status,
                     "equity": round(state.equity, 2),
                     "realized_pnl": round(state.realized_pnl, 2),
