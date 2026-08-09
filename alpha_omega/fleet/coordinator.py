@@ -333,7 +333,7 @@ class FleetCoordinator:
             self.fleet_config.pairs.append(pair_config)
         else:
             self.fleet_config.okx_pairs.append(pair_config)
-                log.info(f"Scaled up: added {bot_id}")
+        log.info(f"Scaled up: added {bot_id}")
         return True
 
     async def scale_down(self, bot_id: str) -> bool:
