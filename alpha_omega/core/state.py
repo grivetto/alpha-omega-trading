@@ -208,11 +208,11 @@ class StateStore:
         rows = await self.fetch_all(
             """
             SELECT 
-                SUM(pnl_abs) as total_pnl,
-                SUM(CASE WHEN pnl_abs > 0 THEN pnl_abs ELSE 0 END) as realized_pnl,
+                COALESCE(SUM(pnl_abs), 0) as total_pnl,
+                COALESCE(SUM(CASE WHEN pnl_abs > 0 THEN pnl_abs ELSE 0 END), 0) as realized_pnl,
                 0 as unrealized_pnl,
                 0 as drawdown,
-                SUM(amount * exit_price) as total_equity,
+                COALESCE(SUM(amount * exit_price), 0) as total_equity,
                 MAX(exit_ts) as timestamp
             FROM trades 
             WHERE status = 'closed' AND exit_ts IS NOT NULL
