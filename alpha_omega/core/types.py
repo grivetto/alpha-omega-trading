@@ -279,6 +279,59 @@ class FleetConfig:
 
 
 @dataclass(slots=True)
+class RiskLevel(int, Enum):
+    LOW = 0
+    MEDIUM = 1
+    HIGH = 2
+    CRITICAL = 3
+
+
+class BotStatus(str, Enum):
+    STARTING = "starting"
+    RUNNING = "running"
+    STOPPED = "stopped"
+    ERROR = "error"
+    DRAINING = "draining"
+
+
+# Signal type for strategy decisions
+class Signal(str, Enum):
+    BUY = "buy"
+    SELL = "sell"
+    HOLD = "hold"
+    CLOSE_LONG = "close_long"
+    CLOSE_SHORT = "close_short"
+
+
+# Aliases for compatibility
+OHLCV = Ohlcv
+StrategyType = StrategyMode
+
+
+class Ticker:
+    """Simple ticker data class."""
+    def __init__(self, symbol: str, price: float, timestamp: int = 0, volume: float = 0.0, bid: float = 0.0, ask: float = 0.0):
+        self.symbol = symbol
+        self.price = price
+        self.timestamp = timestamp
+        self.volume = volume
+        self.bid = bid
+        self.ask = ask
+
+
+class Trade:
+    """Simple trade data class."""
+    def __init__(self, trade_id: str, symbol: str, side: str, price: float, amount: float, timestamp: int = 0, fee: float = 0.0, fee_currency: str = ""):
+        self.trade_id = trade_id
+        self.symbol = symbol
+        self.side = side
+        self.price = price
+        self.amount = amount
+        self.timestamp = timestamp
+        self.fee = fee
+        self.fee_currency = fee_currency
+
+
 class Config:
     """Flat config - read from env once, never mutated."""
     # Exchange
