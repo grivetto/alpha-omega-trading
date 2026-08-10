@@ -255,14 +255,18 @@ class ExchangeAdapter(ABC):
 
     def _get_rest_base(self) -> str:
         """Get REST base URL (live or sandbox). Override in subclass."""
-        return self._rest_base()
+        if self._is_sandbox:
+            return self._sandbox_rest_base()
+        return self._rest_base_live()
 
     def _get_ws_url(self) -> str:
         """Get WebSocket URL (live or sandbox). Override in subclass."""
-        return self._ws_url()
+        if self._is_sandbox:
+            return self._sandbox_ws_url()
+        return self._ws_url_live()
 
     @abstractmethod
-    def _rest_base(self) -> str:
+    def _rest_base_live(self) -> str:
         """Live REST API base URL."""
         pass
 
@@ -272,7 +276,7 @@ class ExchangeAdapter(ABC):
         pass
 
     @abstractmethod
-    def _ws_url(self) -> str:
+    def _ws_url_live(self) -> str:
         """Live WebSocket URL."""
         pass
 
@@ -284,11 +288,6 @@ class ExchangeAdapter(ABC):
     @abstractmethod
     def _sign_request(self, method: str, path: str, params: Dict, timestamp: str) -> Dict[str, str]:
         """Generate signed headers for authenticated request."""
-        pass
-
-    @abstractmethod
-    def _ws_url(self) -> str:
-        """WebSocket URL."""
         pass
 
     @abstractmethod
@@ -356,11 +355,6 @@ class ExchangeAdapter(ABC):
             return json.loads(text)
         except json.JSONDecodeError:
             return {"raw": text}
-
-    @abstractmethod
-    def _rest_base(self) -> str:
-        """REST API base URL."""
-        pass
 
     async def get_ticker(self, symbol: str) -> Ticker:
         data = await self._request("GET", self._ticker_endpoint(symbol))
@@ -553,7 +547,7 @@ class KrakenAdapter(ExchangeAdapter):
         super().__init__(*args, **kwargs)
         self._ws_channels = {}
 
-    def _rest_base(self) -> str:
+    def _rest_base_live(self) -> str:
         """Live REST API base URL."""
         return "https://api.kraken.com"
 
@@ -561,7 +555,7 @@ class KrakenAdapter(ExchangeAdapter):
         """Sandbox/Testnet REST API base URL (Kraken Spot Pilot)."""
         return "https://api.pilot.kraken.com"
 
-    def _ws_url(self) -> str:
+    def _ws_url_live(self) -> str:
         """Live WebSocket URL."""
         return "wss://ws.kraken.com"
 
@@ -744,15 +738,15 @@ class OKXAdapter(ExchangeAdapter):
         super().__init__(*args, **kwargs)
         self._ws_channels = {}
 
-    def _rest_base(self) -> str:
-        """Live REST API base URL."""
-        return "https://www.okx.com"
+    def _rest_base_live(self) -> str:
+        """Live REST API base URL (EEA for European users)."""
+        return "https://eea.okx.com"
 
     def _sandbox_rest_base(self) -> str:
         """Sandbox/Demo REST API base URL (same as live, uses header for demo mode)."""
         return "https://www.okx.com"
 
-    def _ws_url(self) -> str:
+    def _ws_url_live(self) -> str:
         """Live WebSocket URL."""
         return "wss://ws.okx.com:8443/api/v5/market"
 
