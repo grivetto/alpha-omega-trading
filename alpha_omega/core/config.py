@@ -234,12 +234,30 @@ def apply_fleet_config_to_bot(config: Config, pair_config: PairConfig) -> Config
 
 
 def get_exchange_config(exchange: str) -> Dict[str, str]:
-    """Get exchange API credentials from environment."""
+    """Get exchange API credentials from environment.
+    Supports both naming conventions:
+    - Standard: OKX_API_KEY, OKX_API_SECRET, OKX_PASSPHRASE
+    - Alternative: OKX_API, OKX_SECRET, OKX_PASSWORD / OKX_SECRET_KEY
+    """
     prefix = exchange.upper()
+    
+    # Try standard naming first
+    api_key = os.getenv(f"{prefix}_API_KEY", "")
+    api_secret = os.getenv(f"{prefix}_API_SECRET", "")
+    passphrase = os.getenv(f"{prefix}_PASSPHRASE", "")
+    
+    # Fallback to alternative naming (Nuvola: OKX_API, OKX_SECRET, OKX_PASSWORD)
+    if not api_key:
+        api_key = os.getenv(f"{prefix}_API", "")
+    if not api_secret:
+        api_secret = os.getenv(f"{prefix}_SECRET", "") or os.getenv(f"{prefix}_SECRET_KEY", "")
+    if not passphrase:
+        passphrase = os.getenv(f"{prefix}_PASSWORD", "")
+    
     return {
-        "api_key": os.getenv(f"{prefix}_API_KEY", ""),
-        "api_secret": os.getenv(f"{prefix}_API_SECRET", ""),
-        "passphrase": os.getenv(f"{prefix}_PASSPHRASE", ""),  # For OKX EEA
+        "api_key": api_key,
+        "api_secret": api_secret,
+        "passphrase": passphrase,
     }
 
 

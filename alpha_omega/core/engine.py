@@ -225,7 +225,10 @@ class UnifiedTradingEngine:
             hybrid_mode=self.config.hybrid_mode,
         )
         
-        self._strategy_selector = StrategySelector()
+        self._strategy_selector = StrategySelector(
+            symbol=self.config.symbol,
+            exchange=self.config.exchange,
+        )
         log.info(f"Strategy initialized: {type(self._strategy).__name__}")
 
     async def _init_zmq(self) -> None:
