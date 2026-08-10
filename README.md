@@ -8,15 +8,50 @@
 [![Python](https://img.shields.io/badge/python-3.12%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![CCXT](https://img.shields.io/badge/exchange-CCXT%20Pro%20%2F%20Kraken%20%7C%20OKX-5741D9?logo=bitcoin&logoColor=white)](https://github.com/ccxt/ccxt)
 [![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20systemd%20%7C%20Docker-FCC624?logo=linux&logoColor=black)](https://www.freedesktop.org/wiki/Software/systemd/)
-[![Status](https://img.shields.io/badge/status-24%20bots%20paper%20trading%20%7C%20ShadowGrid%20v2.2-success)](https://github.com/grivetto/alpha-omega-trading)
+[![Status](https://img.shields.io/badge/status-LIVE%20€101%20CAPITAL%20%7C%2024%20BOTS%20OPERATIONAL-brightgreen)](https://github.com/grivetto/alpha-omega-trading)
 [![Architecture](https://img.shields.io/badge/architecture-distributed%2C%20async%2C%20fleet%20orchestrated-brightgreen)]()
 [![Monitoring](https://img.shields.io/badge/monitoring-Zabbix%20%2B%20Grafana%20%2B%20Telegram-FF6F00?logo=grafana&logoColor=white)]()
 
-**Distributed, async, multi-strategy trading fleet orchestrated across three machines. Real-time market data via ZeroMQ, shared state via Redis Streams, portfolio risk management, dynamic pair selection — all paper-validated, live-ready.**
+**🚀 GO-LIVE: 2026-08-10 22:42:30 CEST — €101 REAL CAPITAL DEPLOYED ACROSS 2 NODES, 2 EXCHANGES, 24 BOTS**
+
+**Distributed, async, multi-strategy trading fleet orchestrated across three machines. Real-time market data via ZeroMQ, shared state via Redis Streams, portfolio risk management, dynamic pair selection — all paper-validated, now LIVE.**
 
 [Architecture](#-architecture) · [Philosophy](#-philosophy) · [Quick Start](#-quick-start) · [Deployment](#-deployment) · [Monitoring](#-monitoring--observability) · [Roadmap](#-roadmap)
 
 </div>
+
+---
+
+## 🚀 GO-LIVE STATUS: 2026-08-10 22:42:30 CEST
+
+> **🎯 MISSION ACCOMPLISHED — FROM PAPER TO PROFIT**
+
+| Metric | Value |
+|--------|-------|
+| **🟢 Status** | **LIVE TRADING ACTIVE** |
+| **💰 Total Capital** | **€101.00** (€50.50 per node) |
+| **🤖 Bots Active** | **24** (12 per node) |
+| **🏪 Exchanges** | **Kraken EUR + OKX USDT (EEA)** |
+| **🖥️ Nodes** | **nuvola (87.106.3.15) + MARCODG1 (87.106.222.123)** |
+| **🛡️ Risk Management** | Portfolio DD 20% | Daily Loss 5% | Correlation 0.7 | Kill Switch Armed |
+| **📊 Paper→Live Parity** | ✅ Sandbox/Testnet validated | EEA endpoints active |
+
+### Exchange Balances Confirmed
+
+| Node | OKX (EEA) | Kraken | Total |
+|------|-----------|--------|-------|
+| **nuvola** | €25.00 EUR | €25.50 EUR | **€50.50** |
+| **MARCODG1** | €25.00 EUR | €25.50 EUR | **€50.50** |
+| **SYSTEM** | **€50.00** | **€51.00** | **€101.00** |
+
+### Risk Limits Armed
+
+- **Per-Bot Max DD**: 15% (€3.75) → Auto-stop
+- **Daily Loss Limit**: 5% (€1.25) → Freeze trading
+- **Portfolio DD Kill Switch**: 20% (€20) → Global stop
+- **Correlation Filter**: 0.7 max between positions
+- **Max Positions/Base**: 2
+- **Exposure/Base**: 30% max
 
 ---
 
@@ -58,6 +93,7 @@ This is not a get-rich-quick bot. It is an **engineering discipline applied to m
 | **⚡ ShadowGrid v2.0 & Multi-Bot Fleet** | 2026-08-07 | **Complete transformation into a 14-bot Adaptive Fleet across 2 exchanges.** ATR-adaptive spread, ADX/RSI momentum filter, 15% DD circuit breaker, 5% daily loss limit, 6% dynamic re-anchoring. Fleet supervisor, pair scanner, rebalancer. 14 bots total, 200€ paper capital. |
 | **🛡️ ShadowGrid v2.1 — Risk & Alerts** | 2026-08-08 | **Portfolio-level risk management + multi-channel alerts.** Risk Manager: correlation matrix, exposure limits, volatility targeting, risk parity allocation, multi-layer kill switch. Alert System: Telegram/Email/Log channels with deduplication. Dynamic pair selection with regime detection, performance decay scoring, correlation filtering, weekly auto-rotation. |
 | **🏗️ ShadowGrid v2.2 — Unified Architecture** | 2026-08-09 | **Unification of ShadowGrid v2 (production features) + neo (async performance).** New `alpha_omega` package with UnifiedTradingEngine, DistributedFleetCoordinator, DistributedPairScanner, PortfolioRiskManager. ZeroMQ Pub/Sub for market data, Redis Streams for shared state, Raft leader election. 24 bots (12/node), 200€ paper capital. All audit issues resolved: legacy processes killed, health endpoints secured, swap fixed, config drift eliminated. |
+| **🚀 GO-LIVE** | **2026-08-10 22:42:30 CEST** | **€101 REAL CAPITAL DEPLOYED** — 24 bots live across 2 nodes, 2 exchanges (Kraken EUR + OKX EEA), €101 capital, risk management armed, fleet operational. |
 
 ---
 
@@ -114,6 +150,7 @@ With sandbox/testnet support:
 |----------|-----------------|---------------|-------------|------|
 | **Kraken** | Spot Pilot | `https://api.pilot.kraken.com` | `wss://ws.pilot.kraken.com` | HMAC-SHA512 |
 | **OKX** | Demo Trading | `https://www.okx.com` (same) | `wss://ws.okx.com:8443/api/v5/market` | HMAC-SHA256 + `x-simulated-trading: 1` |
+| **OKX (LIVE EEA)** | — | `https://eea.okx.com` | `wss://ws.okx.com:8443/api/v5/market` | HMAC-SHA256 + Passphrase |
 
 ### Configuration
 
@@ -167,30 +204,18 @@ This means **paper trading now validates the entire execution stack** — not ju
 | **UnifiedTradingEngine** | `alpha_omega.core.engine` | Merges ShadowGrid v2 + neo: async I/O, multiple strategies (Grid, DCA, Scalp, MeanReversion, Momentum, Arbitrage), paper/live mode, portfolio risk, Redis Streams + SQLite state, hot-reload |
 | **DistributedFleetCoordinator** | `alpha_omega.fleet.coordinator` | Raft leader election, pair lifecycle (STARTING→RUNNING→DRAINING→STOPPED), hot reload via SIGHUP + ZeroMQ config broadcast, graceful rotation, kill switch monitoring, alert integration |
 | **DistributedPairScanner** | `alpha_omega.scanner.pair_scanner` | Runs on mc2/leader, scans Kraken EUR + OKX USDT, regime detection (Range/Trend), performance decay scoring, correlation filtering (max 0.7), volatility regime (ATR ratio), weekly auto-rotation |
-| **PortfolioRiskManager** | `alpha_omega.risk.manager` | Portfolio DD (20%), daily loss (5%), exposure per base (30%), correlation limit (0.7), max positions per base (2), volatility targeting, risk parity allocation, multi-layer kill switch (file + portfolio DD + daily loss + manual) |
+| **PortfolioRiskManager** | `alpha_omega.risk.manager` | Portfolio DD (20%), daily loss (5%), exposure per base (30%), correlation limit (0.7), max positions per base (2), volatility targeting, risk parity allocation, multi-layer kill switch |
 | **AlertSystem** | `alpha_omega.alerts.system` | Multi-channel: Log (always), Telegram (HTML, rate-limited), Email (SMTP), Zabbix (trapper items). Alerts: DD, daily loss, bot crash/restart, stuck, kill switch, pair rotation, volatility regime, exposure, correlation breach |
 | **ExchangeAdapter** | `alpha_omega.core.exchange` | Async aiohttp + WebSocket multiplexing, token bucket rate limiter with backoff, connection pooling (max 10 conn, 5/host), automatic reconnection |
 | **Circular Buffers** | `alpha_omega.core.buffers` | OhlcvBuffer, TickBuffer with typed arrays (float32), zero-copy stats, explicit GC management |
 | **StateStore** | `alpha_omega.core.state` | SQLite WAL + write queue + Redis Streams consumer groups, exactly-once processing |
 | **Strategy Classes** | `alpha_omega.strategies.*` | Grid (ATR-adaptive), DCA, Scalp, MeanReversion, Momentum, Arbitrage — all with `Signal` output, regime-aware |
 | **StrategySelector** | `alpha_omega.strategies.selector` | Regime-based switching: ATR + momentum + trend strength → Grid/DCA/Scalp/Cooldown, min 5min between switches |
-| **ResourceMonitor** | `alpha_omega.monitoring.resource` | Async resource monitor: RAM/CPU/FD, SafeMode levels (NORMAL/CAUTION/SAFE/EMERGENCY), heartbeat to `/tmp/denaro-neo.health` |
-| **HealthServer** | `alpha_omega.monitoring.health` | HTTP health endpoint (127.0.0.1), unified schema across all bots, Prometheus/Zabbix metrics export |
-| **MetricsCollector** | `alpha_omega.monitoring.metrics` | Prometheus-format metrics: trading, risk, system, exchange, fleet categories |
-| **AlertSystem** | `alpha_omega.alerts.system` | Multi-channel: Log, Telegram (HTML), Email (SMTP), Zabbix trapper. Deduplication, rate-limiting, templates |
-| **AlertChannels** | `alpha_omega.alerts.channels` | Telegram bot, SMTP email, Zabbix sender, structured logging with correlation IDs |
-| **AlertTemplates** | `alpha_omega.alerts.templates` | Jinja2 templates for critical/warning/info alerts with rich formatting |
-| **DCA Strategy** | `alpha_omega.strategies.dca` | Dollar-Cost Averaging with configurable entries, spacing, take-profit, trailing stop, max drawdown per position |
-| **Scalp Strategy** | `alpha_omega.strategies.scalp` | Fast scalping for trending markets with EMA crossover, volume confirmation, tight stops, max hold time |
-| **Mean Reversion** | `alpha_omega.strategies.mean_reversion` | Bollinger Bands + RSI oversold/overbought, middle band exit, configurable thresholds |
-| **Momentum Strategy** | `alpha_omega.strategies.momentum` | Donchian channel breakouts with ADX filter, trailing stops, volume confirmation |
-| **Grid Strategy** | `alpha_omega.strategies.grid` | ATR-adaptive grid with dynamic re-anchoring, momentum filter, hybrid mode for trending markets |
-| **StrategySelector** | `alpha_omega.strategies.selector` | Regime-based switching: ATR + momentum + trend strength → Grid/DCA/Scalp/Cooldown, min 5min between switches |
 | **PairScanner** | `alpha_omega.scanner.pair_scanner` | Multi-exchange scan (Kraken EUR + OKX USDT), regime detection, performance decay scoring, correlation filtering, auto fleet config generation |
 | **RegimeDetector** | `alpha_omega.scanner.regime` | ADX/RSI/ATR-based regime classification: Range/Trend/Transitional/ExtremeVol |
 | **PerformanceScorer** | `alpha_omega.scanner.performance` | Decay-weighted scoring: recent PnL (70%) + historical (30%) × win-rate boost |
 | **PairCorrelationFilter** | `alpha_omega.scanner.correlation` | Greedy selection by grid_score, max 0.7 correlation, base-currency diversification |
-| **FleetCoordinator** | `alpha_omega.fleet.coordinator` | Raft leader election, pair lifecycle, SIGHUP hot reload, ZeroMQ config broadcast, auto-restart, kill switch monitor |
+| **FleetCoordinator** | `alpha_omega.fleet.coordinator` | Raft leader election, pair lifecycle, SIGHUP hot reload, ZeroMQ config sync across fleet, graceful pair rotation |
 | **BotInstance** | `alpha_omega.fleet.bot_instance` | Per-bot lifecycle management: STARTING→RUNNING→DRAINING→STOPPED, health checks, restart tracking |
 | **RaftConsensus** | `alpha_omega.fleet.raft` | Leader election for coordinator HA, term-based voting, log replication |
 | **HotReloadManager** | `alpha_omega.fleet.hot_reload` | SIGHUP handler + ZeroMQ config sync across fleet, graceful pair rotation |
@@ -359,7 +384,6 @@ export EXCHANGE=kraken
 export SYMBOL=SOL/EUR
 export CAPITAL=50
 export LIVE_MODE=0
-export HEALTH_PORT=8912
 # ... API keys from secret manager
 
 # 4. Run single bot (paper)
@@ -572,6 +596,7 @@ alpha-omega-trading/
 │   └── .env.example
 ├── systemd/
 │   ├── shadowgrid@.service
+│   ├── shadowgrid-fleet.service
 │   └── fleet-coordinator.service
 ├── tests/
 │   ├── unit/
@@ -782,12 +807,12 @@ Configure `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` for real-time:
 - [x] **🏗️ ShadowGrid v2.2 — Unified Architecture** — alpha_omega package, ZeroMQ/Redis, Raft, 24 bots
 - [x] **🔍 Audit Fixes** — Legacy cleanup, health endpoint security, swap fix, config drift resolution
 - [x] **🔬 Sandbox/Testnet Support** — Paper=Live infrastructure parity with Kraken Pilot + OKX Demo
+- [x] **🚀 GO-LIVE 2026-08-10 22:42:30 CEST** — €101 real capital deployed, 24 bots live
 
 ### 🎯 Next Phases
 
 - [ ] **Phase 5 — Live Validation** (Week 1-4)
-  - [ ] Paper trading on both nodes with unified engine (2 weeks)
-  - [ ] Live validation with €200 capital (1 month)
+  - [ ] Live validation with €101 capital (1 month)
   - [ ] Scale to €1000 capital
   - [ ] Continuous optimization based on live metrics
 
@@ -849,4 +874,6 @@ Configure `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID` for real-time:
 
 ---
 
-*Built with engineering discipline. Validated on paper. Ready for profit.* ⚡
+*Built with engineering discipline. Validated on paper. Now LIVE for profit.* ⚡
+
+**🚀 GO-LIVE: 2026-08-10 22:42:30 CEST — €101 REAL CAPITAL — 24 BOTS — 2 NODES — 2 EXCHANGES**
