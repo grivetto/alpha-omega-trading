@@ -8,7 +8,7 @@
 [![Python](https://img.shields.io/badge/python-3.12%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![CCXT](https://img.shields.io/badge/exchange-CCXT%20Pro%20%2F%20Kraken%20%7C%20OKX-5741D9?logo=bitcoin&logoColor=white)](https://github.com/ccxt/ccxt)
 [![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20systemd%20%7C%20Docker-FCC624?logo=linux&logoColor=black)](https://www.freedesktop.org/wiki/Software/systemd/)
-[![Status](https://img.shields.io/badge/status-LIVE%20%E2%82%AC101%20CAPITAL%20%7C%2024%20BOTS%20OPERATIONAL-brightgreen)](https://github.com/grivetto/alpha-omega-trading)
+[![Status](https://img.shields.io/badge/status-LIVE%20%E2%82%AC50%20CAPITAL%20%7C%2012%20BOTS%20OPERATIONAL-brightgreen)](https://github.com/grivetto/alpha-omega-trading)
 [![Architecture](https://img.shields.io/badge/architecture-distributed%2C%20async%2C%20fleet%20orchestrated-brightgreen)]()
 [![Monitoring](https://img.shields.io/badge/monitoring-Zabbix%20%2B%20Grafana%20%2B%20Telegram-FF6F00?logo=grafana&logoColor=white)]()
 
@@ -20,22 +20,26 @@
 
 ---
 
-## 🚀 GO-LIVE: 2026-08-10 22:42:30 CEST — €101 REAL CAPITAL DEPLOYED
+## 🚀 GO-LIVE: 2026-08-10 22:42:30 CEST — €50 REAL CAPITAL DEPLOYED (Architettura v2.3 Split-by-Exchange)
 
-> **GO-LIVE CONFERMATO** — Il sistema è operativo con capitale reale su entrambi i nodi e entrambi gli exchange.
+> **GO-LIVE CONFERMATO** — Il sistema è operativo con capitale reale. Architettura split-by-exchange: nessun conflitto di account.
 
-| Nodo | OKX (EEA) | Kraken | Totale Nodo |
-|------|-----------|--------|-------------|
-| **Nuvola** | ✅ **€25.00** | ✅ **€25.50** | **€50.50** |
-| **MARCODG1** | ✅ **€25.00** | ✅ **€25.50** | **€50.50** |
-| **TOTALE SISTEMA** | **€50** | **€51** | **€101** |
+| Exchange | Account | Capitale | Nodo | Bot | Pair |
+|----------|---------|----------|------|-----|------|
+| **Kraken** | Condiviso | €25.50 EUR | Nuvola | 6 | ADA, DOGE, ETH, LINK, SOL, XRP |
+| **OKX (EEA)** | Condiviso | €25.00 EUR | MARCODG1 | 6 | ADA, BICO, DOGE, GRVT, LINK, XRP |
+| **TOTALE** | — | **€50** | 2 | **12** | 12 pair unici |
 
-**Risk Limits Armed:**
-- Max DD per bot: 15% (€3.75)
+**Risk Limits Armed (per exchange):**
+- Max DD per bot: 15% (€1.04)
 - Daily loss limit: 5% (€1.25)
-- Portfolio kill switch: 20% (€20)
+- Portfolio kill switch: 20% (€5)
 - Correlation filter: 0.7
 - Max 2 positions per base currency
+
+**Monitoring:**
+- ✅ Zabbix su mc2 (monitoraggio ogni minuto)
+- ✅ Health API :8900 per nodo
 
 ---
 
@@ -77,7 +81,8 @@ This is not a get-rich-quick bot. It is an **engineering discipline applied to m
 | **⚡ ShadowGrid v2.0 & Multi-Bot Fleet** | 2026-08-07 | **Complete transformation into a 14-bot Adaptive Fleet across 2 exchanges.** ATR-adaptive spread, ADX/RSI momentum filter, 15% DD circuit breaker, 5% daily loss limit, 6% dynamic re-anchoring. Fleet supervisor, pair scanner, rebalancer. 14 bots total, 200€ paper capital. |
 | **🛡️ ShadowGrid v2.1 — Risk & Alerts** | 2026-08-08 | **Portfolio-level risk management + multi-channel alerts.** Risk Manager: correlation matrix, exposure limits, volatility targeting, risk parity allocation, multi-layer kill switch. Alert System: Telegram/Email/Log channels with deduplication. Dynamic pair selection with regime detection, performance decay scoring, correlation filtering, weekly auto-rotation. |
 | **🏗️ ShadowGrid v2.2 — Unified Architecture** | 2026-08-09 | **Unification of ShadowGrid v2 (production features) + neo (async performance).** New `alpha_omega` package with UnifiedTradingEngine, DistributedFleetCoordinator, DistributedPairScanner, PortfolioRiskManager. ZeroMQ Pub/Sub for market data, Redis Streams for shared state, Raft leader election. 24 bots (12/node), 200€ paper capital. All audit issues resolved. |
-| **🚀 GO-LIVE — Live Trading with Real Capital** | **2026-08-10 22:42:30 CEST** | **€101 real capital deployed across 2 nodes × 2 exchanges.** OKX EEA endpoint (`eea.okx.com`) validated on both nodes with IP whitelist. Kraken live keys validated with full trading permissions. 24 bots operational (12/node). Risk management armed: 15% DD circuit breaker, 5% daily loss limit, 20% portfolio kill switch. Paper=Live infrastructure parity achieved via sandbox/testnet support. |
+| **🚀 GO-LIVE — Live Trading with Real Capital** | **2026-08-10 22:42:30 CEST** | **€50 real capital deployed across 2 nodes.** OKX EEA endpoint (`eea.okx.com`) validated. Kraken live keys validated. 12 bots operational (6/node). Risk management armed. Split-by-exchange architecture: Nuvola=Kraken, MARCODG1=OKX. |
+| **🏗️ v2.3 — Architettura Split-by-Exchange** | **2026-08-11** | **Fix critico: eliminati conflitti di account.** Nuvola trada solo Kraken (6 bot), MARCODG1 solo OKX (6 bot). Account condivisi per exchange, nessuna collisione ordini. Zabbix monitoring deployato su mc2. Capitale totale corretto: €50 (non €101). OKX WebSocket endpoint fixato (eea.okx.com). |
 
 ---
 
