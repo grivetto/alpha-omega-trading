@@ -130,6 +130,9 @@ class UnifiedTradingEngine:
         self._zmq_pub = None
         self._shutdown_event = asyncio.Event()
         self._signal_handlers_installed = False
+        
+        # Initialize ATR history buffer (used by volatility regime detection)
+        self._atr_history: List[float] = []
 
     async def initialize(self) -> None:
         """Initialize engine components."""
