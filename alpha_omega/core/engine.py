@@ -447,10 +447,14 @@ class UnifiedTradingEngine:
             # 7. Manage open orders (check fills, timeouts)
             await self._manage_orders(ticker)
             
-            # 8. Update equity
+            # 8. Update capital from exchange balance (every 60 ticks ~ 1 min)
+            if self.state.loop_count % 60 == 0:
+                self.state.capital = await self._fetch_exchange_balance()
+            
+            # 9. Update equity
             self._update_equity(ticker)
             
-            # 9. Publish to ZeroMQ
+            # 10. Publish to ZeroMQ
             await self._publish_market_data(ticker)
             
             # 10. Periodic state save (every 10 ticks)
@@ -682,6 +686,22 @@ class UnifiedTradingEngine:
         
         pos.current_price = ticker.last
         pos.unrealized_pnl = (ticker.last - pos.entry_price) * pos.size
+
+    async def _fetch_exchange_balance(self) -> float:
+        """Fetch real balance from exchange."""
+        if not self.exchange or self.config.paper_mode:
+            return self.config.capital
+        
+        try:
+            balance = await self.exchange.fetch_balance()
+            if balance and 'free' in balance:
+                # Sum all non-zero balances
+                total = sum(float(v) for v in balance['free'].values() if v and float(v) > 0)
+                return total if total > 0 else self.config.capital
+        except Exception as e:
+            log.warning(f"Failed to fetch balance: {e}")
+        
+        return self.config.capital
 
     def _update_equity(self, ticker: ExchangeTicker) -> None:
         """Recalculate total equity."""
