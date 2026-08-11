@@ -8,11 +8,11 @@
 [![Python](https://img.shields.io/badge/python-3.12%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![CCXT](https://img.shields.io/badge/exchange-CCXT%20Pro%20%2F%20Kraken%20%7C%20OKX-5741D9?logo=bitcoin&logoColor=white)](https://github.com/ccxt/ccxt)
 [![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20systemd%20%7C%20Docker-FCC624?logo=linux&logoColor=black)](https://www.freedesktop.org/wiki/Software/systemd/)
-[![Status](https://img.shields.io/badge/status-LIVE%20€101%20CAPITAL%20%7C%2024%20BOTS%20OPERATIONAL-brightgreen)](https://github.com/grivetto/alpha-omega-trading)
+[![Status](https://img.shields.io/badge/status-LIVE%20€50%20CAPITAL%20%7C%2012%20BOTS%20OPERATIONAL-brightgreen)](https://github.com/grivetto/alpha-omega-trading)
 [![Architecture](https://img.shields.io/badge/architecture-distributed%2C%20async%2C%20fleet%20orchestrated-brightgreen)]()
 [![Monitoring](https://img.shields.io/badge/monitoring-Zabbix%20%2B%20Grafana%20%2B%20Telegram-FF6F00?logo=grafana&logoColor=white)]()
 
-**🚀 GO-LIVE: 2026-08-10 22:42:30 CEST — €101 REAL CAPITAL DEPLOYED ACROSS 2 NODES, 2 EXCHANGES, 24 BOTS**
+**🚀 GO-LIVE: 2026-08-10 22:42:30 CEST — €50 REAL CAPITAL DEPLOYED ACROSS 2 NODES, 2 EXCHANGES, 12 BOTS (Split-by-Exchange Architecture)**
 
 **Distributed, async, multi-strategy trading fleet orchestrated across three machines. Real-time market data via ZeroMQ, shared state via Redis Streams, portfolio risk management, dynamic pair selection — all paper-validated, now LIVE.**
 
@@ -22,33 +22,34 @@
 
 ---
 
-## 🚀 GO-LIVE STATUS: 2026-08-10 22:42:30 CEST
+## 🚀 GO-LIVE STATUS: 2026-08-10 22:42:30 CEST | ARCHITECTURE v2.3: Split-by-Exchange
 
 > **🎯 MISSION ACCOMPLISHED — FROM PAPER TO PROFIT**
 
 | Metric | Value |
 |--------|-------|
 | **🟢 Status** | **LIVE TRADING ACTIVE** |
-| **💰 Total Capital** | **€101.00** (€50.50 per node) |
-| **🤖 Bots Active** | **24** (12 per node) |
-| **🏪 Exchanges** | **Kraken EUR + OKX USDT (EEA)** |
+| **💰 Total Capital** | **€50.00** (€25 per exchange, shared accounts) |
+| **🤖 Bots Active** | **12** (6 per node) |
+| **🏪 Exchanges** | **Nuvola=Kraken EUR | MARCODG1=OKX USDT (EEA)** |
 | **🖥️ Nodes** | **nuvola (87.106.3.15) + MARCODG1 (87.106.222.123)** |
-| **🛡️ Risk Management** | Portfolio DD 20% | Daily Loss 5% | Correlation 0.7 | Kill Switch Armed |
-| **📊 Paper→Live Parity** | ✅ Sandbox/Testnet validated | EEA endpoints active |
+| **🛡️ Risk Management** | Per-Exchange DD 20% | Daily Loss 5% | Kill Switch Armed |
+| **📊 Monitoring** | ✅ Zabbix on mc2 | Health API :8900 per node |
+| **📊 Paper→Live Parity** | ✅ EEA endpoints active | No account conflicts |
 
-### Exchange Balances Confirmed
+### Exchange Balances (Shared Accounts — Split-by-Exchange)
 
-| Node | OKX (EEA) | Kraken | Total |
-|------|-----------|--------|-------|
-| **nuvola** | €25.00 EUR | €25.50 EUR | **€50.50** |
-| **MARCODG1** | €25.00 EUR | €25.50 EUR | **€50.50** |
-| **SYSTEM** | **€50.00** | **€51.00** | **€101.00** |
+| Exchange | Account | Balance | Node | Bots | Pairs |
+|----------|---------|---------|------|------|-------|
+| **Kraken** | Shared | €25.50 EUR | Nuvola | 6 | ADA/EUR, DOGE/EUR, ETH/EUR, LINK/EUR, SOL/EUR, XRP/EUR |
+| **OKX (EEA)** | Shared | €25.00 EUR | MARCODG1 | 6 | ADA/USDT, BICO/USDT, DOGE/USDT, GRVT/USDT, LINK/USDT, XRP/USDT |
+| **TOTAL** | — | **€50.00** | 2 | **12** | 12 unique pairs |
 
-### Risk Limits Armed
+### Risk Limits (Per Exchange)
 
-- **Per-Bot Max DD**: 15% (€3.75) → Auto-stop
-- **Daily Loss Limit**: 5% (€1.25) → Freeze trading
-- **Portfolio DD Kill Switch**: 20% (€20) → Global stop
+- **Per-Bot Max DD**: 15% (€1.04 per bot) → Auto-stop
+- **Daily Loss Limit**: 5% (€1.25 per exchange) → Freeze trading
+- **Portfolio DD Kill Switch**: 20% (€5 per exchange) → Global stop
 - **Correlation Filter**: 0.7 max between positions
 - **Max Positions/Base**: 2
 - **Exposure/Base**: 30% max
@@ -93,7 +94,8 @@ This is not a get-rich-quick bot. It is an **engineering discipline applied to m
 | **⚡ ShadowGrid v2.0 & Multi-Bot Fleet** | 2026-08-07 | **Complete transformation into a 14-bot Adaptive Fleet across 2 exchanges.** ATR-adaptive spread, ADX/RSI momentum filter, 15% DD circuit breaker, 5% daily loss limit, 6% dynamic re-anchoring. Fleet supervisor, pair scanner, rebalancer. 14 bots total, 200€ paper capital. |
 | **🛡️ ShadowGrid v2.1 — Risk & Alerts** | 2026-08-08 | **Portfolio-level risk management + multi-channel alerts.** Risk Manager: correlation matrix, exposure limits, volatility targeting, risk parity allocation, multi-layer kill switch. Alert System: Telegram/Email/Log channels with deduplication. Dynamic pair selection with regime detection, performance decay scoring, correlation filtering, weekly auto-rotation. |
 | **🏗️ ShadowGrid v2.2 — Unified Architecture** | 2026-08-09 | **Unification of ShadowGrid v2 (production features) + neo (async performance).** New `alpha_omega` package with UnifiedTradingEngine, DistributedFleetCoordinator, DistributedPairScanner, PortfolioRiskManager. ZeroMQ Pub/Sub for market data, Redis Streams for shared state, Raft leader election. 24 bots (12/node), 200€ paper capital. All audit issues resolved: legacy processes killed, health endpoints secured, swap fixed, config drift eliminated. |
-| **🚀 GO-LIVE** | **2026-08-10 22:42:30 CEST** | **€101 REAL CAPITAL DEPLOYED** — 24 bots live across 2 nodes, 2 exchanges (Kraken EUR + OKX EEA), €101 capital, risk management armed, fleet operational. |
+| **🚀 GO-LIVE** | **2026-08-10 22:42:30 CEST** | **€50 REAL CAPITAL DEPLOYED** — 12 bots live across 2 nodes, split-by-exchange architecture (Nuvola=Kraken, MARCODG1=OKX), risk management armed, fleet operational. |
+| **🏗️ v2.3 — Split-by-Exchange Architecture** | **2026-08-11** | **Critical fix: eliminated account conflicts.** Nuvola trades only Kraken (6 bots), MARCODG1 trades only OKX (6 bots). Shared accounts per exchange, no order collisions. Zabbix monitoring deployed on mc2. €50 total capital (not €101). OKX WebSocket endpoint fixed (eea.okx.com). |
 
 ---
 
@@ -194,8 +196,8 @@ This means **paper trading now validates the entire execution stack** — not ju
 | Machine | Role | Services |
 |---------|------|----------|
 | **mc2** | Central Coordinator | PostgreSQL/TimescaleDB, Redis Cluster, Zabbix Server, Hermes Message Bus, Fleet Coordinator API, Historical Data Archive |
-| **nuvola** | Primary Trading Node | 12 ShadowGrid bots (6 Kraken EUR + 6 OKX USDT), Local Redis, ZeroMQ Pub/Sub, Health API |
-| **MARCODG1** | Secondary Trading Node | 12 ShadowGrid bots (6 Kraken EUR + 6 OKX USDT), Local Redis, ZeroMQ Pub/Sub, Health API |
+| **nuvola** | Kraken Trading Node | 6 ShadowGrid bots (Kraken EUR pairs), Health API :8900, systemd fleet service |
+| **MARCODG1** | OKX Trading Node | 6 ShadowGrid bots (OKX USDT pairs), Health API :8900, systemd fleet service |
 
 ### Core Components (alpha_omega package)
 
