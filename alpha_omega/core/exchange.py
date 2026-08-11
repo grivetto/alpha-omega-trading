@@ -626,17 +626,21 @@ class KrakenAdapter(ExchangeAdapter):
     def _parse_ticker(self, data: Dict) -> Ticker:
         result = data.get("result", {})
         for pair, t in result.items():
+            # Handle both list and scalar values from WebSocket
+            open_val = t.get("o", 0)
+            if isinstance(open_val, list):
+                open_val = open_val[0] if open_val else 0
             return Ticker(
                 symbol=self._from_kraken_symbol(pair),
                 exchange="kraken",
-                bid=float(t["b"][0]),
-                ask=float(t["a"][0]),
-                last=float(t["c"][0]),
-                high=float(t["h"][1]),  # 24h high
-                low=float(t["l"][1]),   # 24h low
-                open=float(t["o"]),
-                close=float(t["c"][0]),
-                volume=float(t["v"][1]),
+                bid=float(t["b"][0]) if isinstance(t.get("b"), list) and t["b"] else float(t.get("b", 0)),
+                ask=float(t["a"][0]) if isinstance(t.get("a"), list) and t["a"] else float(t.get("a", 0)),
+                last=float(t["c"][0]) if isinstance(t.get("c"), list) and t["c"] else float(t.get("c", 0)),
+                high=float(t["h"][1]) if isinstance(t.get("h"), list) and len(t.get("h", [])) > 1 else float(t.get("h", 0)),
+                low=float(t["l"][1]) if isinstance(t.get("l"), list) and len(t.get("l", [])) > 1 else float(t.get("l", 0)),
+                open=float(open_val),
+                close=float(t["c"][0]) if isinstance(t.get("c"), list) and t["c"] else float(t.get("c", 0)),
+                volume=float(t["v"][1]) if isinstance(t.get("v"), list) and len(t.get("v", [])) > 1 else float(t.get("v", 0)),
             )
         return Ticker(symbol="", exchange="kraken", bid=0, ask=0, last=0, high=0, low=0, open=0, close=0, volume=0)
 
@@ -705,17 +709,23 @@ class KrakenAdapter(ExchangeAdapter):
             
             if channel == "ticker":
                 ticker_data = data[1]
+                # Handle both list and scalar values
+                def _val(data, key, idx=0, default=0):
+                    v = data.get(key, default)
+                    if isinstance(v, list) and v:
+                        return v[idx] if len(v) > idx else v[0]
+                    return v if v is not None else default
                 ticker = Ticker(
                     symbol=pair,
                     exchange="kraken",
-                    bid=float(ticker_data.get("b", [0])[0]),
-                    ask=float(ticker_data.get("a", [0])[0]),
-                    last=float(ticker_data.get("c", [0])[0]),
-                    high=float(ticker_data.get("h", [0, 0])[1]),
-                    low=float(ticker_data.get("l", [0, 0])[1]),
-                    open=float(ticker_data.get("o", 0)),
-                    close=float(ticker_data.get("c", [0])[0]),
-                    volume=float(ticker_data.get("v", [0, 0])[1]),
+                    bid=float(_val(ticker_data, "b", 0)),
+                    ask=float(_val(ticker_data, "a", 0)),
+                    last=float(_val(ticker_data, "c", 0)),
+                    high=float(_val(ticker_data, "h", 1)),
+                    low=float(_val(ticker_data, "l", 1)),
+                    open=float(_val(ticker_data, "o", 0)),
+                    close=float(_val(ticker_data, "c", 0)),
+                    volume=float(_val(ticker_data, "v", 1)),
                 )
                 self._emit("ticker", ticker)
             elif channel == "trade":
