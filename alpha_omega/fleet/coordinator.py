@@ -537,7 +537,8 @@ class FleetCoordinator:
                     "status": bot.status,
                     "error": bot.error_message,
                 }
-                return {
+        
+        return {
             "fleet_equity": round(total_equity, 2),
             "fleet_realized_pnl": round(total_realized, 2),
             "fleet_unrealized_pnl": round(total_unrealized, 2),
