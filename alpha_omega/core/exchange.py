@@ -647,16 +647,21 @@ class KrakenAdapter(ExchangeAdapter):
     def _parse_ohlcv(self, data: Dict) -> OHLCV:
         # Kraken returns: [timestamp, open, high, low, close, vwap, volume, count]
         if isinstance(data, list) and len(data) >= 7:
+            # Handle both list and scalar values from WebSocket
+            def _to_float(val):
+                if isinstance(val, list) and val:
+                    return float(val[0])
+                return float(val) if val is not None else 0.0
             return OHLCV(
                 symbol="",  # Will be set by caller
                 exchange="kraken",
                 timeframe="1m",
-                timestamp=int(data[0]),
-                open=float(data[1]),
-                high=float(data[2]),
-                low=float(data[3]),
-                close=float(data[4]),
-                volume=float(data[6]),
+                timestamp=int(data[0]) if isinstance(data[0], (int, float, str)) else int(data[0][0]) if isinstance(data[0], list) and data[0] else 0,
+                open=_to_float(data[1]),
+                high=_to_float(data[2]),
+                low=_to_float(data[3]),
+                close=_to_float(data[4]),
+                volume=_to_float(data[6]),
             )
         return OHLCV(symbol="", exchange="kraken", timeframe="1m", timestamp=0, open=0, high=0, low=0, close=0, volume=0)
 
@@ -730,12 +735,17 @@ class KrakenAdapter(ExchangeAdapter):
                 self._emit("ticker", ticker)
             elif channel == "trade":
                 for trade in data[1]:
+                    # Handle both list and scalar values in trade data
+                    def _trade_val(val):
+                        if isinstance(val, list) and val:
+                            return val[0]
+                        return val
                     self._emit("trade", {
                         "symbol": pair,
-                        "price": float(trade[0]),
-                        "volume": float(trade[1]),
-                        "timestamp": int(float(trade[2]) * 1000),
-                        "side": 0 if trade[3] == "b" else 1,
+                        "price": float(_trade_val(trade[0])),
+                        "volume": float(_trade_val(trade[1])),
+                        "timestamp": int(float(_trade_val(trade[2])) * 1000),
+                        "side": 0 if _trade_val(trade[3]) == "b" else 1,
                     })
 
 
@@ -758,11 +768,11 @@ class OKXAdapter(ExchangeAdapter):
 
     def _ws_url_live(self) -> str:
         """Live WebSocket URL - EEA endpoint for EU users."""
-        return "wss://ws.eea.okx.com:8443/api/v5/market"
+        return "wss://eea.okx.com:8443/ws/v5/public"
 
     def _sandbox_ws_url(self) -> str:
         """Sandbox WebSocket URL - EEA endpoint for EU users."""
-        return "wss://ws.eea.okx.com:8443/api/v5/market"
+        return "wss://eea.okx.com:8443/ws/v5/public"
 
     def _sign_request(self, method: str, path: str, params: Dict, timestamp: str) -> Dict[str, str]:
         body = json.dumps(params) if params else ""
