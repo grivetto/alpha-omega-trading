@@ -96,8 +96,8 @@ class PortfolioRiskManager:
             await self._trigger_kill_switch("portfolio_drawdown")
             return False
         
-        # 2. Daily loss check
-        if self.daily_start_equity > 0:
+        # 2. Daily loss check - skip if equity not yet initialized
+        if self.daily_start_equity > 0 and equity > 0:
             daily_loss_pct = (self.daily_start_equity - equity) / self.daily_start_equity
             self.metrics.daily_pnl = daily_pnl
             
