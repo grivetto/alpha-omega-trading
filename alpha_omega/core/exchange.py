@@ -748,11 +748,11 @@ class OKXAdapter(ExchangeAdapter):
 
     def _ws_url_live(self) -> str:
         """Live WebSocket URL - EEA endpoint for EU users."""
-        return "wss://ws.eea.okx.com:8443/api/v5/market"
+        return "wss://eea.okx.com:8443/ws/v5/public"
 
     def _sandbox_ws_url(self) -> str:
         """Sandbox WebSocket URL - EEA endpoint for EU users."""
-        return "wss://ws.eea.okx.com:8443/api/v5/market"
+        return "wss://eea.okx.com:8443/ws/v5/public"
 
     def _sign_request(self, method: str, path: str, params: Dict, timestamp: str) -> Dict[str, str]:
         body = json.dumps(params) if params else ""
