@@ -8,7 +8,7 @@
 [![Python](https://img.shields.io/badge/python-3.12%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![CCXT](https://img.shields.io/badge/exchange-CCXT%20Pro%20%2F%20Kraken%20%7C%20OKX-5741D9?logo=bitcoin&logoColor=white)](https://github.com/ccxt/ccxt)
 [![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20systemd%20%7C%20Docker-FCC624?logo=linux&logoColor=black)](https://www.freedesktop.org/wiki/Software/systemd/)
-[![Status](https://img.shields.io/badge/status-LIVE%20%E2%82%AC101%20CAPITAL%20%7C%2024%20BOTS%20OPERATIONAL-brightgreen)](https://github.com/grivetto/alpha-omega-trading)
+[![Status](https://img.shields.io/badge/status-LIVE%20%E2%82%AC50%20CAPITAL%20%7C%2012%20BOTS%20OPERATIONAL-brightgreen)](https://github.com/grivetto/alpha-omega-trading)
 [![Architecture](https://img.shields.io/badge/architecture-distributed%2C%20async%2C%20fleet%20orchestrated-brightgreen)]()
 [![Monitoring](https://img.shields.io/badge/monitoring-Zabbix%20%2B%20Grafana%20%2B%20Telegram-FF6F00?logo=grafana&logoColor=white)]()
 
@@ -20,22 +20,26 @@
 
 ---
 
-## 🚀 GO-LIVE: 2026-08-10 22:42:30 CEST — €101 REAL CAPITAL DEPLOYED
+## 🚀 GO-LIVE: 2026-08-10 22:42:30 CEST — €50 REAL CAPITAL DEPLOYED (สถาปัตยกรรม v2.3 Split-by-Exchange)
 
-> **GO-LIVE ยืนยันแล้ว** — ระบบทำงานจริงด้วยทุนจริงบนทั้งสองโหนดและทั้งสอง exchange
+> **GO-LIVE ยืนยันแล้ว** — ระบบทำงานจริงด้วยทุนจริง สถาปัตยกรรม split-by-exchange: ไม่มีการชนกันของบัญชี
 
-| โหนด | OKX (EEA) | Kraken | รวมโหนด |
-|------|-----------|--------|----------|
-| **Nuvola** | ✅ **€25.00** | ✅ **€25.50** | **€50.50** |
-| **MARCODG1** | ✅ **€25.00** | ✅ **€25.50** | **€50.50** |
-| **รวมระบบ** | **€50** | **€51** | **€101** |
+| Exchange | บัญชี | ทุน | โหนด | บอท | คู่เงิน |
+|----------|--------|------|------|-----|---------|
+| **Kraken** | ร่วม | €25.50 EUR | Nuvola | 6 | ADA, DOGE, ETH, LINK, SOL, XRP |
+| **OKX (EEA)** | ร่วม | €25.00 EUR | MARCODG1 | 6 | ADA, BICO, DOGE, GRVT, LINK, XRP |
+| **รวม** | — | **€50** | 2 | **12** | 12 คู่เงินที่ไม่ซ้ำ |
 
-**Risk Limits Armed:**
-- Max DD ต่อบอท: 15% (€3.75)
+**Risk Limits Armed (ต่อ exchange):**
+- Max DD ต่อบอท: 15% (€1.04)
 - ขีดจำกัดขาดทุนรายวัน: 5% (€1.25)
-- Kill switch พอร์ตโฟลิโอ: 20% (€20)
+- Kill switch พอร์ตโฟลิโอ: 20% (€5)
 - Correlation filter: 0.7
 - Max 2 positions ต่อ base currency
+
+**Monitoring:**
+- ✅ Zabbix บน mc2 (ตรวจสอบทุกนาที)
+- ✅ Health API :8900 ต่อโหนด
 
 ---
 
@@ -77,7 +81,8 @@ Alpha-Omega Trading เกิดจากข้อจำกัดง่ายๆ
 | **⚡ ShadowGrid v2.0 & Multi-Bot Fleet** | 2026-08-07 | **Transform เป็น 14-bot Adaptive Fleet ข้าม 2 exchange** ATR-adaptive spread, ADX/RSI momentum filter, 15% DD CB, 5% daily loss, 6% re-anchoring Fleet supervisor, pair scanner, rebalancer 14 bots, 200€ paper capital |
 | **🛡️ ShadowGrid v2.1 — Risk & Alerts** | 2026-08-08 | **Portfolio risk management + multi-channel alerts** Risk Manager: correlation matrix, exposure limits, volatility targeting, risk parity, multi-layer kill switch Alert System: Telegram/Email/Log deduplication Dynamic pair selection: regime detection, performance decay, correlation filtering, weekly auto-rotation |
 | **🏗️ ShadowGrid v2.2 — Unified Architecture** | 2026-08-09 | **Unification ShadowGrid v2 + neo** New `alpha_omega` package: UnifiedTradingEngine, DistributedFleetCoordinator, DistributedPairScanner, PortfolioRiskManager ZeroMQ Pub/Sub, Redis Streams, Raft leader election 24 bots (12/node), 200€ paper capital All audit issues resolved |
-| **🚀 GO-LIVE — Live Trading with Real Capital** | **2026-08-10 22:42:30 CEST** | **€101 real capital deployed 2 nodes × 2 exchanges** OKX EEA endpoint (`eea.okx.com`) validated both nodes IP whitelist Kraken live keys validated full trading permissions 24 bots operational (12/node) Risk management armed: 15% DD CB, 5% daily loss, 20% portfolio kill switch Paper=Live parity via sandbox/testnet support |
+| **🚀 GO-LIVE — Live Trading with Real Capital** | **2026-08-10 22:42:30 CEST** | **€50 real capital deployed 2 nodes** OKX EEA endpoint (`eea.okx.com`) validated Kraken live keys validated 12 bots operational (6/node) Risk management armed Split-by-exchange architecture: Nuvola=Kraken, MARCODG1=OKX |
+| **🏗️ v2.3 — สถาปัตยกรรม Split-by-Exchange** | **2026-08-11** | **แก้ไขคริติคอล: กำจัดการชนกันของบัญชี** Nuvola เทรด Kraken เท่านั้น (6 บอท) MARCODG1 เทรด OKX เท่านั้น (6 บอท) บัญชีร่วมต่อ exchange ไม่มีการชนกันของคำสั่ง Zabbix monitoring บน mc2 ทุนรวมที่ถูกต้อง: €50 (ไม่ใช่ €101) OKX WebSocket endpoint แก้ไขแล้ว (eea.okx.com) |
 
 ---
 
