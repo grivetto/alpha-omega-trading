@@ -112,7 +112,8 @@ class UnifiedTradingEngine:
         "config", "state", "exchange", "state_store",
         "_strategy", "_strategy_selector", "_risk_manager",
         "_running", "_loop_task", "_ws_task", "_health_task",
-        "_zmq_pub", "_shutdown_event", "_signal_handlers_installed"
+        "_zmq_pub", "_shutdown_event", "_signal_handlers_installed",
+        "_atr_history"
     )
 
     def __init__(self, config: Config):
