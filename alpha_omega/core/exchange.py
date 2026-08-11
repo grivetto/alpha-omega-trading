@@ -310,6 +310,12 @@ class ExchangeAdapter(ABC):
         """Parse raw order data."""
         pass
 
+    @abstractmethod
+    async def fetch_balance(self) -> Dict:
+        """Fetch account balance from exchange.
+        Returns dict with 'free', 'used', 'total' keys for each currency."""
+        pass
+
     # ── REST API ─────────────────────────────────────────────────────────
 
     async def _request(
@@ -673,6 +679,32 @@ class KrakenAdapter(ExchangeAdapter):
         result = data.get("result", {})
         return {k: float(v) for k, v in result.items() if float(v) > 0}
 
+    async def fetch_balance(self) -> Dict:
+        """Fetch account balance from Kraken."""
+        data = await self._request("POST", "/0/private/Balance", {}, signed=True)
+        result = data.get("result", {})
+        
+        # Convert to standard format with free/used/total
+        free = {}
+        used = {}
+        total = {}
+        for currency, amount in result.items():
+            try:
+                val = float(amount)
+                if val > 0:
+                    free[currency] = val
+                    used[currency] = 0.0
+                    total[currency] = val
+            except (ValueError, TypeError):
+                pass
+        
+        return {
+            "free": free,
+            "used": used,
+            "total": total,
+            "info": result
+        }
+
     async def _create_live_order(self, symbol, side, type, amount, price, client_order_id, strategy) -> Order:
         params = {
             "pair": self._to_kraken_symbol(symbol),
@@ -888,6 +920,32 @@ class OKXAdapter(ExchangeAdapter):
             if avail > 0:
                 balances[ccy] = avail
         return balances
+
+    async def fetch_balance(self) -> Dict:
+        """Fetch account balance from OKX."""
+        data = await self._request("GET", self._balance_endpoint(), signed=True)
+        result = data.get("data", [{}])[0]
+        
+        free = {}
+        used = {}
+        total = {}
+        for detail in result.get("details", []):
+            ccy = detail.get("ccy", "")
+            try:
+                avail = float(detail.get("availBal", 0))
+                if avail > 0:
+                    free[ccy] = avail
+                    used[ccy] = 0.0
+                    total[ccy] = avail
+            except (ValueError, TypeError):
+                pass
+        
+        return {
+            "free": free,
+            "used": used,
+            "total": total,
+            "info": result
+        }
 
     async def _create_live_order(self, symbol, side, type, amount, price, client_order_id, strategy) -> Order:
         params = {
