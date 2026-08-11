@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<zabbix_export>
+    <version>7.0</version>
+    <template_groups>
+        <template_group>
+            <name>Templates/Applications</name>
+        </template_group>
+    </template_groups>
+    <templates>
+        <template>
+            <template>Template Alpha-Omega Trading</template>
+            <name>Template Alpha-Omega Trading</name>
+            <groups>
+                <group>
+                    <name>Templates/Applications</name>
+                </group>
+            </groups>
+            <items>
+                <item>
+                    <name>Fleet Status</name>
+                    <key>fleet.status</key>
+                    <delay>60s</delay>
+                    <value_type>3</value_type>
+                    <triggers>
+                        <trigger>
+                            <expression>last(/Template Alpha-Omega Trading/fleet.status)=0</expression>
+                            <name>Fleet is DOWN</name>
+                            <priority>HIGH</priority>
+                        </trigger>
+                    </triggers>
+                </item>
+                <item>
+                    <name>Active Bots</name>
+                    <key>fleet.active_bots</key>
+                    <delay>60s</delay>
+                    <value_type>3</value_type>
+                    <triggers>
+                        <trigger>
+                            <expression>last(/Template Alpha-Omega Trading/fleet.active_bots)&lt;last(/Template Alpha-Omega Trading/fleet.total_bots)</expression>
+                            <name>Some bots are inactive</name>
+                            <priority>WARNING</priority>
+                        </trigger>
+                    </triggers>
+                </item>
+                <item>
+                    <name>Total Bots</name>
+                    <key>fleet.total_bots</key>
+                    <delay>60s</delay>
+                    <value_type>3</value_type>
+                </item>
+                <item>
+                    <name>Fleet Equity</name>
+                    <key>fleet.equity</key>
+                    <delay>60s</delay>
+                    <value_type>0</value_type>
+                    <units>EUR</units>
+                    <triggers>
+                        <trigger>
+                            <expression>last(/Template Alpha-Omega Trading/fleet.equity)&lt;20</expression>
+                            <name>Fleet equity below €20</name>
+                            <priority>HIGH</priority>
+                        </trigger>
+                    </triggers>
+                </item>
+                <item>
+                    <name>Total Positions</name>
+                    <key>fleet.positions</key>
+                    <delay>60s</delay>
+                    <value_type>3</value_type>
+                </item>
+            </items>
+        </template>
+    </templates>
+    <hosts>
+        <host>
+            <host>alpha-omega-nuvola</host>
+            <name>Alpha-Omega Nuvola (Kraken)</name>
+            <templates>
+                <template>
+                    <name>Template Alpha-Omega Trading</name>
+                </template>
+            </templates>
+            <groups>
+                <group>
+                    <name>Trading</name>
+                </group>
+            </groups>
+            <interfaces>
+                <interface>
+                    <type>1</type>
+                    <ip>127.0.0.1</ip>
+                    <dns></dns>
+                    <port>10050</port>
+                </interface>
+            </interfaces>
+        </host>
+        <host>
+            <host>alpha-omega-marcodg1</host>
+            <name>Alpha-Omega MARCODG1 (OKX)</name>
+            <templates>
+                <template>
+                    <name>Template Alpha-Omega Trading</name>
+                </template>
+            </templates>
+            <groups>
+                <group>
+                    <name>Trading</name>
+                </group>
+            </groups>
+            <interfaces>
+                <interface>
+                    <type>1</type>
+                    <ip>127.0.0.1</ip>
+                    <dns></dns>
+                    <port>10050</port>
+                </interface>
+            </interfaces>
+        </host>
+    </hosts>
+</zabbix_export>
