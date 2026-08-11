@@ -528,16 +528,19 @@ class UnifiedTradingEngine:
             elif current_dd >= self.config.max_drawdown_pct * 0.7:
                 self.state.risk_level = RiskLevel.WARNING
         
-        # Bot-level daily loss
-        daily_loss_pct = (self.state.daily_start_equity - self.state.equity) / self.state.daily_start_equity
-        self.state.daily_loss = daily_loss_pct
-        
-        if daily_loss_pct >= self.config.max_daily_loss_pct:
-            self.state.risk_level = RiskLevel.CRITICAL
-            log.critical(f"DAILY LOSS LIMIT HIT: {daily_loss_pct:.2%} >= {self.config.max_daily_loss_pct:.2%}")
-            return False
-        elif daily_loss_pct >= self.config.max_daily_loss_pct * 0.7:
-            self.state.risk_level = RiskLevel.WARNING
+        # Bot-level daily loss - skip if equity not initialized
+        if self.state.daily_start_equity > 0 and self.state.equity > 0:
+            daily_loss_pct = (self.state.daily_start_equity - self.state.equity) / self.state.daily_start_equity
+            self.state.daily_loss = daily_loss_pct
+            
+            if daily_loss_pct >= self.config.max_daily_loss_pct:
+                self.state.risk_level = RiskLevel.CRITICAL
+                log.critical(f"DAILY LOSS LIMIT HIT: {daily_loss_pct:.2%} >= {self.config.max_daily_loss_pct:.2%}")
+                return False
+            elif daily_loss_pct >= self.config.max_daily_loss_pct * 0.7:
+                self.state.risk_level = RiskLevel.WARNING
+        else:
+            self.state.daily_loss = 0.0
         
         # Portfolio-level risk (if risk manager enabled)
         if self._risk_manager:
@@ -797,7 +800,7 @@ class UnifiedTradingEngine:
         async def risk(request):
             if not self._risk_manager:
                 return web.json_response({"error": "Risk manager not enabled"}, status=404)
-            return web.json_response(await self._risk_manager.get_status())
+            return web.json_response(self._risk_manager.get_status())
         
         app = web.Application()
         app.router.add_get("/health", health)
