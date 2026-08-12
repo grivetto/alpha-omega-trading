@@ -175,17 +175,25 @@ class UnifiedTradingEngine:
         
         # Fetch real balance from exchange
         try:
+            log.info(f"Starting exchange pool for balance fetch...")
             await self.exchange.pool.start()
+            log.info(f"Exchange pool started, fetching balance...")
             balance = await self.exchange.fetch_balance()
+            log.info(f"Balance response: {balance}")
             if balance and "total" in balance:
                 # Calculate total equity from all non-zero balances
                 total_equity = sum(v for v in balance["total"].values() if isinstance(v, (int, float)) and v > 0)
+                log.info(f"Calculated equity: {total_equity} from {balance.get('total', {})}")
                 if total_equity > 0:
                     self.state.equity = total_equity
                     self.state.peak_equity = max(self.state.peak_equity, total_equity)
-                    log.info(f"Balance fetched: equity={total_equity:.2f} {self.config.exchange}")
+                    log.info(f"✅ Balance fetched: equity={total_equity:.2f} {self.config.exchange}")
+                else:
+                    log.warning(f"⚠️ Balance returned zero or empty: {balance}")
+            else:
+                log.warning(f"⚠️ Invalid balance format: {balance}")
         except Exception as e:
-            log.warning(f"Failed to fetch balance: {e}")
+            log.error(f"❌ Failed to fetch balance: {type(e).__name__}: {e}")
         
         # Initialize state store
         self.state_store = await init_state_store(
