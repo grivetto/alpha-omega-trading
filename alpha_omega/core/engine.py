@@ -173,6 +173,20 @@ class UnifiedTradingEngine:
             rate_limit_burst=10,
         )
         
+        # Fetch real balance from exchange
+        try:
+            await self.exchange.pool.start()
+            balance = await self.exchange.fetch_balance()
+            if balance and "total" in balance:
+                # Calculate total equity from all non-zero balances
+                total_equity = sum(v for v in balance["total"].values() if isinstance(v, (int, float)) and v > 0)
+                if total_equity > 0:
+                    self.state.equity = total_equity
+                    self.state.peak_equity = max(self.state.peak_equity, total_equity)
+                    log.info(f"Balance fetched: equity={total_equity:.2f} {self.config.exchange}")
+        except Exception as e:
+            log.warning(f"Failed to fetch balance: {e}")
+        
         # Initialize state store
         self.state_store = await init_state_store(
             db_path=self.config.db_path,
