@@ -41,3 +41,6 @@ htmlcov/
 # Backup
 *.bak
 *.backup
+  
+# Tooling state  
+.deepseek/  
