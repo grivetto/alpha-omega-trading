@@ -221,9 +221,6 @@ class UnifiedTradingEngine:
                 volatility_targeting=self.config.volatility_targeting,
             )
         
-        # Initialize ZeroMQ publisher
-        await self._init_zmq()
-        
         # Install signal handlers
         self._install_signal_handlers()
         
@@ -256,19 +253,6 @@ class UnifiedTradingEngine:
             exchange=self.config.exchange,
         )
         log.info(f"Strategy initialized: {type(self._strategy).__name__}")
-
-    async def _init_zmq(self) -> None:
-        """Initialize ZeroMQ publisher for market data."""
-        try:
-            import zmq.asyncio
-            ctx = zmq.asyncio.Context()
-            self._zmq_pub = ctx.socket(zmq.PUB)
-            self._zmq_pub.bind(f"tcp://*:{self.config.zmq_pub_port}")
-            log.info(f"ZeroMQ publisher bound to port {self.config.zmq_pub_port}")
-        except ImportError:
-            log.warning("pyzmq not installed — ZeroMQ publishing disabled")
-        except Exception as e:
-            log.error(f"Failed to init ZeroMQ: {e}")
 
     def _install_signal_handlers(self) -> None:
         """Install SIGHUP/SIGTERM handlers for hot reload and graceful shutdown."""
