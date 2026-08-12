@@ -87,6 +87,8 @@ class PortfolioRiskManager:
         if equity > self.peak_equity:
             self.peak_equity = equity
         
+        # Update total equity
+        self.metrics.total_equity = equity
         # 1. Portfolio drawdown check
         portfolio_dd = (self.peak_equity - equity) / self.peak_equity if self.peak_equity > 0 else 0
         self.metrics.portfolio_dd = portfolio_dd
