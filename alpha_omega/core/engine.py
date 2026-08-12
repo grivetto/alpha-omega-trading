@@ -530,8 +530,11 @@ class UnifiedTradingEngine:
             elif current_dd >= self.config.max_drawdown_pct * 0.7:
                 self.state.risk_level = RiskLevel.WARNING
         
-        # Bot-level daily loss
-        daily_loss_pct = (self.state.daily_start_equity - self.state.equity) / self.state.daily_start_equity
+        # Bot-level daily loss (guard against division by zero)
+        if self.state.daily_start_equity > 0:
+            daily_loss_pct = (self.state.daily_start_equity - self.state.equity) / self.state.daily_start_equity
+        else:
+            daily_loss_pct = 0.0
         self.state.daily_loss = daily_loss_pct
         
         if daily_loss_pct >= self.config.max_daily_loss_pct:
