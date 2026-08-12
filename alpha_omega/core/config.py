@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Any
 from dataclasses import dataclass, field, asdict
 
-from .types import Config, PairConfig, FleetConfig, ExchangeId, MarketRegime
+from .custom_types import Config, PairConfig, FleetConfig, ExchangeId, MarketRegime
 
 log = logging.getLogger("alpha_omega.config")
 

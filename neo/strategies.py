@@ -12,7 +12,7 @@ import logging, math, time
 from typing import Optional
 from dataclasses import dataclass, field
 
-from neo.types import Order, Side, OrderStatus, StrategyMode, SafeModeLevel
+from neo.custom_types import Order, Side, OrderStatus, StrategyMode, SafeModeLevel
 from neo.memory import OhlcvBuffer, CircularBuffer
 
 log = logging.getLogger("denaro-neo")

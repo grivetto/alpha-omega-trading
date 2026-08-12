@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 from typing import Optional, Dict, Any, List
 import time
 
-from ..core.types import Signal as CoreSignal, Position, Order
+from ..core.custom_types import Signal as CoreSignal, Position, Order
 from ..core.buffers import OhlcvBuffer
 
 # Re-export for convenience

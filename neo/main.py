@@ -24,7 +24,7 @@ for p in [Path(__file__).parent / ".env", Path.home() / "denaro" / ".env"]:
                         os.environ[k] = v
         break
 
-from neo.types import Config
+from neo.custom_types import Config
 from neo.core import TradingCore
 
 

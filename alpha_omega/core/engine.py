@@ -31,7 +31,7 @@ except ImportError:
     raise
 
 from .config import Config, load_config_from_env, get_exchange_config, validate_exchange_config
-from .types import (
+from .custom_types import (
     Signal, Position, Order, Ticker, OHLCV, Trade,
     StrategyType, MarketRegime, RiskLevel, BotStatus
 )

@@ -17,7 +17,7 @@ from __future__ import annotations
 import asyncio, logging, os, signal, time, gc
 from typing import Optional
 
-from neo.types import Config, SafeModeLevel
+from neo.custom_types import Config, SafeModeLevel
 from neo.exchange import ExchangeAdapter
 from neo.memory import OhlcvBuffer, TickBuffer, memory_heavy, gc_if_heavy
 from neo.monitor import ResourceMonitor

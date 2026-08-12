@@ -21,7 +21,7 @@ from __future__ import annotations
 import asyncio, logging, os, time
 from typing import Optional, Callable
 
-from neo.types import SafeModeLevel, ResourceState
+from neo.custom_types import SafeModeLevel, ResourceState
 
 log = logging.getLogger("denaro-neo")
 _PSUTIL_AVAILABLE = False

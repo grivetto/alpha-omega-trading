@@ -15,7 +15,7 @@ from typing import Optional, Dict, Any, List, Type
 from .base import BaseStrategy, Signal
 from .grid import GridStrategy
 from ..core.buffers import OhlcvBuffer
-from ..core.types import Position, Order, MarketRegime
+from ..core.custom_types import Position, Order, MarketRegime
 
 log = logging.getLogger("alpha_omega.strategies.selector")
 

@@ -33,7 +33,7 @@ except ImportError:
     log.warning("numpy not available, using pure python")
     np = None
 
-from ..core.types import MarketRegime
+from ..core.custom_types import MarketRegime
 
 
 @dataclass

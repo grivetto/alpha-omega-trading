@@ -11,7 +11,7 @@ from typing import Optional, Dict, List
 
 from .base import BaseStrategy, Signal, create_signal, StrategyMixin
 from ..core.buffers import OhlcvBuffer
-from ..core.types import Position, Order
+from ..core.custom_types import Position, Order
 
 log = logging.getLogger("alpha_omega.strategies.dca")
 
