@@ -683,8 +683,11 @@ class KrakenAdapter(ExchangeAdapter):
 
     async def fetch_balance(self) -> Dict:
         """Fetch account balance from Kraken."""
-        data = await self._request("POST", "/0/private/Balance", {}, signed=True)
-        result = data.get("result", {})
+        log.info(f"Fetching Kraken balance - api_key present: {bool(self.api_key)}, sandbox: {self.sandbox_mode}")
+        try:
+            data = await self._request("POST", "/0/private/Balance", {}, signed=True)
+            log.info(f"Kraken balance response: {data}")
+            result = data.get("result", {})
         
         # Convert to standard format with free/used/total
         free = {}
