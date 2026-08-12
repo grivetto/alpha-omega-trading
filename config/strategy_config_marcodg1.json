@@ -1,0 +1,30 @@
+{
+  "timestamp": "2026-08-12T23:35:00",
+  "active_strategies_weights": {
+    "grid": 0.25,
+    "dca": 0.25,
+    "mean_reversion": 0.15,
+    "scalp": 0.2,
+    "momentum": 0.15
+  },
+  "global_parameters": {
+    "max_exposure_per_pair_usd": 4.17,
+    "stop_loss_pct": 2.0,
+    "take_profit_pct": 4.0,
+    "grid_levels": 8,
+    "grid_spread_pct": 1.2,
+    "dca_orders": 4,
+    "dca_interval_hours": 6,
+    "scalp_timeframe_minutes": 3,
+    "momentum_lookback_hours": 12
+  },
+  "pair_specific": {
+    "BICO/USDT": {"primary_strategy": "momentum", "volatility_profile": "high"},
+    "GRVT/USDT": {"primary_strategy": "grid", "volatility_profile": "very_high"},
+    "ADA/USDT": {"primary_strategy": "mean_reversion", "volatility_profile": "medium"},
+    "XRP/USDT": {"primary_strategy": "scalp", "volatility_profile": "high"},
+    "LINK/USDT": {"primary_strategy": "dca", "volatility_profile": "low"},
+    "DOGE/USDT": {"primary_strategy": "scalp", "volatility_profile": "very_high"}
+  },
+  "reasoning_log": "Configurazione OKX con bias verso Grid e DCA per stabilità. Scalp su DOGE/XRP per volatilità intraday. Momentum su BICO per breakout. ATTENZIONE: Equity = 0 - Trading disabilitato fino a risoluzione balance fetch."
+}

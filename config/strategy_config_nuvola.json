@@ -1,0 +1,30 @@
+{
+  "timestamp": "2026-08-12T23:35:00",
+  "active_strategies_weights": {
+    "grid": 0.3,
+    "dca": 0.2,
+    "mean_reversion": 0.2,
+    "scalp": 0.2,
+    "momentum": 0.1
+  },
+  "global_parameters": {
+    "max_exposure_per_pair_usd": 4.17,
+    "stop_loss_pct": 2.5,
+    "take_profit_pct": 5.0,
+    "grid_levels": 10,
+    "grid_spread_pct": 1.5,
+    "dca_orders": 5,
+    "dca_interval_hours": 4,
+    "scalp_timeframe_minutes": 5,
+    "momentum_lookback_hours": 24
+  },
+  "pair_specific": {
+    "SOL/EUR": {"primary_strategy": "momentum", "volatility_profile": "high"},
+    "DOGE/EUR": {"primary_strategy": "scalp", "volatility_profile": "very_high"},
+    "XRP/EUR": {"primary_strategy": "mean_reversion", "volatility_profile": "medium"},
+    "ADA/EUR": {"primary_strategy": "grid", "volatility_profile": "medium"},
+    "LINK/EUR": {"primary_strategy": "dca", "volatility_profile": "low"},
+    "ETH/EUR": {"primary_strategy": "momentum", "volatility_profile": "high"}
+  },
+  "reasoning_log": "Configurazione bilanciata per mercato laterale-trend. Grid e Mean Reversion per range, Momentum per breakout, Scalp per volatilità DOGE, DCA per accumulo LINK. ATTENZIONE: Equity = 0 - Trading disabilitato fino a risoluzione balance fetch."
+}
