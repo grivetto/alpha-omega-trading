@@ -11,6 +11,7 @@ Features:
 - Redis Streams + SQLite state persistence
 - Hot-reload via SIGHUP
 - Circular buffers for memory efficiency
+- ZeroMQ Pub/Sub for market data distribution
 """
 from __future__ import annotations
 import asyncio
@@ -104,12 +105,14 @@ class UnifiedTradingEngine:
     - Portfolio risk management (da ShadowGrid v2.1)
     - Redis Streams state sync (da neo)
     - Hot reload via SIGHUP
+    - ZeroMQ Pub/Sub per distribuzione dati
     """
 
     __slots__ = (
         "config", "state", "exchange", "state_store",
         "_strategy", "_strategy_selector", "_risk_manager",
         "_running", "_loop_task", "_ws_task", "_health_task",
+        "_zmq_pub", "_shutdown_event", "_signal_handlers_installed",
         "_atr_history"
     )
 
@@ -125,6 +128,7 @@ class UnifiedTradingEngine:
         self._loop_task: Optional[asyncio.Task] = None
         self._ws_task: Optional[asyncio.Task] = None
         self._health_task: Optional[asyncio.Task] = None
+        self._zmq_pub = None
         self._shutdown_event = asyncio.Event()
         self._signal_handlers_installed = False
         
@@ -168,8 +172,6 @@ class UnifiedTradingEngine:
             rate_limit_rps=5.0,
             rate_limit_burst=10,
         )
-        # Start connection pool for REST requests
-        await self.exchange.pool.start()
         
         # Initialize state store
         self.state_store = await init_state_store(
@@ -197,6 +199,8 @@ class UnifiedTradingEngine:
                 volatility_targeting=self.config.volatility_targeting,
             )
         
+        # Initialize ZeroMQ publisher
+        await self._init_zmq()
         
         # Install signal handlers
         self._install_signal_handlers()
@@ -231,9 +235,18 @@ class UnifiedTradingEngine:
         )
         log.info(f"Strategy initialized: {type(self._strategy).__name__}")
 
+    async def _init_zmq(self) -> None:
+        """Initialize ZeroMQ publisher for market data."""
         try:
+            import zmq.asyncio
+            ctx = zmq.asyncio.Context()
+            self._zmq_pub = ctx.socket(zmq.PUB)
+            self._zmq_pub.bind(f"tcp://*:{self.config.zmq_pub_port}")
+            log.info(f"ZeroMQ publisher bound to port {self.config.zmq_pub_port}")
         except ImportError:
+            log.warning("pyzmq not installed — ZeroMQ publishing disabled")
         except Exception as e:
+            log.error(f"Failed to init ZeroMQ: {e}")
 
     def _install_signal_handlers(self) -> None:
         """Install SIGHUP/SIGTERM handlers for hot reload and graceful shutdown."""
@@ -434,13 +447,10 @@ class UnifiedTradingEngine:
             # 7. Manage open orders (check fills, timeouts)
             await self._manage_orders(ticker)
             
-            # 8. Update capital from exchange balance (every 60 ticks ~ 1 min)
-            if self.state.loop_count % 60 == 0:
-                self.state.capital = await self._fetch_exchange_balance()
-            
-            # 9. Update equity
+            # 8. Update equity
             self._update_equity(ticker)
             
+            # 9. Publish to ZeroMQ
             await self._publish_market_data(ticker)
             
             # 10. Periodic state save (every 10 ticks)
@@ -514,19 +524,16 @@ class UnifiedTradingEngine:
             elif current_dd >= self.config.max_drawdown_pct * 0.7:
                 self.state.risk_level = RiskLevel.WARNING
         
-        # Bot-level daily loss - skip if equity not initialized
-        if self.state.daily_start_equity > 0 and self.state.equity > 0:
-            daily_loss_pct = (self.state.daily_start_equity - self.state.equity) / self.state.daily_start_equity
-            self.state.daily_loss = daily_loss_pct
-            
-            if daily_loss_pct >= self.config.max_daily_loss_pct:
-                self.state.risk_level = RiskLevel.CRITICAL
-                log.critical(f"DAILY LOSS LIMIT HIT: {daily_loss_pct:.2%} >= {self.config.max_daily_loss_pct:.2%}")
-                return False
-            elif daily_loss_pct >= self.config.max_daily_loss_pct * 0.7:
-                self.state.risk_level = RiskLevel.WARNING
-        else:
-            self.state.daily_loss = 0.0
+        # Bot-level daily loss
+        daily_loss_pct = (self.state.daily_start_equity - self.state.equity) / self.state.daily_start_equity
+        self.state.daily_loss = daily_loss_pct
+        
+        if daily_loss_pct >= self.config.max_daily_loss_pct:
+            self.state.risk_level = RiskLevel.CRITICAL
+            log.critical(f"DAILY LOSS LIMIT HIT: {daily_loss_pct:.2%} >= {self.config.max_daily_loss_pct:.2%}")
+            return False
+        elif daily_loss_pct >= self.config.max_daily_loss_pct * 0.7:
+            self.state.risk_level = RiskLevel.WARNING
         
         # Portfolio-level risk (if risk manager enabled)
         if self._risk_manager:
@@ -676,22 +683,6 @@ class UnifiedTradingEngine:
         pos.current_price = ticker.last
         pos.unrealized_pnl = (ticker.last - pos.entry_price) * pos.size
 
-    async def _fetch_exchange_balance(self) -> float:
-        """Fetch real balance from exchange."""
-        if not self.exchange or not self.config.live_mode:
-            return self.config.capital
-        
-        try:
-            balance = await self.exchange.fetch_balance()
-            if balance and 'free' in balance:
-                # Sum all non-zero balances
-                total = sum(float(v) for v in balance['free'].values() if v and float(v) > 0)
-                return total if total > 0 else self.config.capital
-        except Exception as e:
-            log.warning(f"Failed to fetch balance: {e}")
-        
-        return self.config.capital
-
     def _update_equity(self, ticker: ExchangeTicker) -> None:
         """Recalculate total equity."""
         unrealized = sum(pos.unrealized_pnl for pos in self.state.positions.values())
@@ -711,9 +702,12 @@ class UnifiedTradingEngine:
             log.info("Daily reset: new day started")
 
     async def _publish_market_data(self, ticker: ExchangeTicker) -> None:
+        """Publish market data to ZeroMQ."""
+        if not self._zmq_pub:
             return
         
         try:
+            import zmq
             msg = {
                 "symbol": self.config.symbol,
                 "exchange": self.config.exchange,
@@ -731,7 +725,9 @@ class UnifiedTradingEngine:
                 "adx": self.state.adx,
                 "rsi": self.state.rsi,
             }
+            await self._zmq_pub.send_json(msg)
         except Exception as e:
+            log.debug(f"ZMQ publish error: {e}")
 
     async def _on_ticker(self, ticker: ExchangeTicker) -> None:
         """WebSocket ticker callback."""
@@ -781,7 +777,7 @@ class UnifiedTradingEngine:
         async def risk(request):
             if not self._risk_manager:
                 return web.json_response({"error": "Risk manager not enabled"}, status=404)
-            return web.json_response(self._risk_manager.get_status())
+            return web.json_response(await self._risk_manager.get_status())
         
         app = web.Application()
         app.router.add_get("/health", health)
@@ -885,6 +881,8 @@ class UnifiedTradingEngine:
         if self.exchange:
             await self.exchange.stop_ws()
         
+        if self._zmq_pub:
+            self._zmq_pub.close()
         
         if self.state_store:
             await self._save_state()
