@@ -688,27 +688,30 @@ class KrakenAdapter(ExchangeAdapter):
             data = await self._request("POST", "/0/private/Balance", {}, signed=True)
             log.info(f"Kraken balance response: {data}")
             result = data.get("result", {})
-        
-        # Convert to standard format with free/used/total
-        free = {}
-        used = {}
-        total = {}
-        for currency, amount in result.items():
-            try:
-                val = float(amount)
-                if val > 0:
-                    free[currency] = val
-                    used[currency] = 0.0
-                    total[currency] = val
-            except (ValueError, TypeError):
-                pass
-        
-        return {
-            "free": free,
-            "used": used,
-            "total": total,
-            "info": result
-        }
+            
+            # Convert to standard format with free/used/total
+            free = {}
+            used = {}
+            total = {}
+            for currency, amount in result.items():
+                try:
+                    val = float(amount)
+                    if val > 0:
+                        free[currency] = val
+                        used[currency] = 0.0
+                        total[currency] = val
+                except (ValueError, TypeError):
+                    pass
+            
+            return {
+                "free": free,
+                "used": used,
+                "total": total,
+                "info": result
+            }
+        except Exception as e:
+            log.error(f"Failed to fetch Kraken balance: {type(e).__name__}: {e}")
+            return {"free": {}, "used": {}, "total": {}, "info": {}}
 
     async def _create_live_order(self, symbol, side, type, amount, price, client_order_id, strategy) -> Order:
         params = {
