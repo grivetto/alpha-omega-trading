@@ -338,7 +338,9 @@ class ExchangeAdapter(ABC):
         headers = {"Accept": "application/json"}
         
         if signed:
-            timestamp = str(int(time.time() * 1000))
+            # Use UTC timestamp for OKX (required for auth)
+            import datetime
+            timestamp = str(int(datetime.datetime.now(datetime.timezone.utc).timestamp() * 1000))
             headers.update(self._sign_request(method, path, params or {}, timestamp))
         
         try:
