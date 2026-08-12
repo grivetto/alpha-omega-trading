@@ -29,9 +29,6 @@ except ImportError:
     AIOHTTP_AVAILABLE = False
     web = None
 
-try:
-except ImportError:
-
 from ..core.config import Config, FleetConfig, PairConfig, load_config_from_env, load_fleet_config, save_fleet_config
 from ..core.engine import UnifiedTradingEngine
 from ..risk.manager import PortfolioRiskManager
