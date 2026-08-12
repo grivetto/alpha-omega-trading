@@ -11,7 +11,6 @@ Features:
 - Redis Streams + SQLite state persistence
 - Hot-reload via SIGHUP
 - Circular buffers for memory efficiency
-- ZeroMQ Pub/Sub for market data distribution
 """
 from __future__ import annotations
 import asyncio
@@ -105,14 +104,12 @@ class UnifiedTradingEngine:
     - Portfolio risk management (da ShadowGrid v2.1)
     - Redis Streams state sync (da neo)
     - Hot reload via SIGHUP
-    - ZeroMQ Pub/Sub per distribuzione dati
     """
 
     __slots__ = (
         "config", "state", "exchange", "state_store",
         "_strategy", "_strategy_selector", "_risk_manager",
         "_running", "_loop_task", "_ws_task", "_health_task",
-        "_zmq_pub", "_shutdown_event", "_signal_handlers_installed",
         "_atr_history"
     )
 
@@ -128,7 +125,6 @@ class UnifiedTradingEngine:
         self._loop_task: Optional[asyncio.Task] = None
         self._ws_task: Optional[asyncio.Task] = None
         self._health_task: Optional[asyncio.Task] = None
-        self._zmq_pub = None
         self._shutdown_event = asyncio.Event()
         self._signal_handlers_installed = False
         
@@ -201,8 +197,6 @@ class UnifiedTradingEngine:
                 volatility_targeting=self.config.volatility_targeting,
             )
         
-        # Initialize ZeroMQ publisher
-        await self._init_zmq()
         
         # Install signal handlers
         self._install_signal_handlers()
@@ -237,18 +231,9 @@ class UnifiedTradingEngine:
         )
         log.info(f"Strategy initialized: {type(self._strategy).__name__}")
 
-    async def _init_zmq(self) -> None:
-        """Initialize ZeroMQ publisher for market data."""
         try:
-            import zmq.asyncio
-            ctx = zmq.asyncio.Context()
-            self._zmq_pub = ctx.socket(zmq.PUB)
-            self._zmq_pub.bind(f"tcp://*:{self.config.zmq_pub_port}")
-            log.info(f"ZeroMQ publisher bound to port {self.config.zmq_pub_port}")
         except ImportError:
-            log.warning("pyzmq not installed — ZeroMQ publishing disabled")
         except Exception as e:
-            log.error(f"Failed to init ZeroMQ: {e}")
 
     def _install_signal_handlers(self) -> None:
         """Install SIGHUP/SIGTERM handlers for hot reload and graceful shutdown."""
@@ -456,7 +441,6 @@ class UnifiedTradingEngine:
             # 9. Update equity
             self._update_equity(ticker)
             
-            # 10. Publish to ZeroMQ
             await self._publish_market_data(ticker)
             
             # 10. Periodic state save (every 10 ticks)
@@ -727,12 +711,9 @@ class UnifiedTradingEngine:
             log.info("Daily reset: new day started")
 
     async def _publish_market_data(self, ticker: ExchangeTicker) -> None:
-        """Publish market data to ZeroMQ."""
-        if not self._zmq_pub:
             return
         
         try:
-            import zmq
             msg = {
                 "symbol": self.config.symbol,
                 "exchange": self.config.exchange,
@@ -750,9 +731,7 @@ class UnifiedTradingEngine:
                 "adx": self.state.adx,
                 "rsi": self.state.rsi,
             }
-            await self._zmq_pub.send_json(msg)
         except Exception as e:
-            log.debug(f"ZMQ publish error: {e}")
 
     async def _on_ticker(self, ticker: ExchangeTicker) -> None:
         """WebSocket ticker callback."""
@@ -906,8 +885,6 @@ class UnifiedTradingEngine:
         if self.exchange:
             await self.exchange.stop_ws()
         
-        if self._zmq_pub:
-            self._zmq_pub.close()
         
         if self.state_store:
             await self._save_state()

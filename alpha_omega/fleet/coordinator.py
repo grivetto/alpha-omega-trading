@@ -30,10 +30,7 @@ except ImportError:
     web = None
 
 try:
-    import zmq.asyncio
 except ImportError:
-    log.warning("pyzmq not installed — fleet coordination limited")
-    zmq = None
 
 from ..core.config import Config, FleetConfig, PairConfig, load_config_from_env, load_fleet_config, save_fleet_config
 from ..core.engine import UnifiedTradingEngine
@@ -68,7 +65,6 @@ class FleetCoordinator:
 
     __slots__ = (
         "fleet_config", "bots", "risk_manager", "_running",
-        "_zmq_ctx", "_zmq_sub", "_zmq_task", "_health_task",
         "_rebalance_task", "_shutdown_event", "_signal_handlers_installed",
         "_health_server_task", "_health_runner", "_health_port"
     )
@@ -84,9 +80,6 @@ class FleetCoordinator:
             max_positions_per_base=self.fleet_config.risk_params.get("max_positions_per_base", 2),
         )
         self._running = False
-        self._zmq_ctx = None
-        self._zmq_sub = None
-        self._zmq_task = None
         self._health_task = None
         self._rebalance_task = None
         self._health_server_task = None
@@ -110,7 +103,6 @@ class FleetCoordinator:
             await self._spawn_bot(pair_config)
         
         # Start ZeroMQ subscriber for market data aggregation
-        await self._start_zmq_subscriber()
         
         # Start health monitoring
         self._health_task = asyncio.create_task(self._health_monitor())
@@ -169,37 +161,26 @@ class FleetCoordinator:
         
         log.info(f"Spawned bot: {bot_id} ({pair_config.exchange} {pair_config.symbol} port={pair_config.port} capital={pair_config.capital})")
 
-    async def _start_zmq_subscriber(self) -> None:
         """Start ZeroMQ subscriber to aggregate market data from all bots."""
-        if not zmq:
             return
         
         try:
-            self._zmq_ctx = zmq.asyncio.Context()
-            self._zmq_sub = self._zmq_ctx.socket(zmq.SUB)
             
             # Subscribe to all bot publishers
             # In practice, bots publish to different ports, we'd connect to each
             # For now, subscribe to a common fleet port
-            self._zmq_sub.connect(f"tcp://localhost:{self.fleet_config.risk_params.get('zmq_fleet_port', 5556)}")
-            self._zmq_sub.setsockopt(zmq.SUBSCRIBE, b"")
             
-            self._zmq_task = asyncio.create_task(self._zmq_listener())
             log.info("ZeroMQ fleet subscriber started")
         except Exception as e:
-            log.error(f"Failed to start ZMQ subscriber: {e}")
 
-    async def _zmq_listener(self) -> None:
         """Listen for market data from bots."""
         while self._running:
             try:
-                msg = await self._zmq_sub.recv_json()
                 # Aggregate market data, update risk manager
                 # Could forward to monitoring dashboard
             except asyncio.CancelledError:
                 break
             except Exception as e:
-                log.debug(f"ZMQ listener error: {e}")
                 await asyncio.sleep(1)
 
     async def _health_monitor(self) -> None:
@@ -481,7 +462,6 @@ class FleetCoordinator:
                 except asyncio.CancelledError:
                     pass
                 # Stop monitoring
-        for task in [self._health_task, self._rebalance_task, self._zmq_task]:
             if task:
                 task.cancel()
                 try:
@@ -489,11 +469,6 @@ class FleetCoordinator:
                 except asyncio.CancelledError:
                     pass
         
-        # Close ZMQ
-        if self._zmq_sub:
-            self._zmq_sub.close()
-        if self._zmq_ctx:
-            self._zmq_ctx.term()
         
         # Stop health HTTP server
         await self._stop_health_server()

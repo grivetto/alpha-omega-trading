@@ -365,8 +365,6 @@ class Config:
     
     # Network
     health_port: int = 8911
-    zmq_pub_port: int = 5566
-    zmq_sub_port: int = 5566
     
     # Sandbox/Testnet Configuration (for paper trading with real infrastructure)
     use_sandbox: bool = True          # Use sandbox/testnet endpoints in paper mode

@@ -656,7 +656,6 @@ class PairScanner:
                 "max_correlation": 0.7,
                 "max_positions_per_base": 2,
                 "volatility_targeting": True,
-                "zmq_fleet_port": 5556,
             },
             "generated_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
             "scan_version": "2.2",

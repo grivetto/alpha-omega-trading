@@ -85,8 +85,6 @@ def load_config_from_env() -> Config:
     
     # Network
     cfg.health_port = _get_int("HEALTH_PORT", 8911)
-    cfg.zmq_pub_port = _get_int("ZMQ_PUB_PORT", 5566)
-    cfg.zmq_sub_port = _get_int("ZMQ_SUB_PORT", 5566)
     
     # Risk (can be overridden by fleet config)
     cfg.use_momentum_filter = _get_bool("USE_MOMENTUM_FILTER", True)
