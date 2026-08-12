@@ -694,7 +694,7 @@ class UnifiedTradingEngine:
 
     async def _fetch_exchange_balance(self) -> float:
         """Fetch real balance from exchange."""
-        if not self.exchange or self.config.paper_mode:
+        if not self.exchange or not self.config.live_mode:
             return self.config.capital
         
         try:
