@@ -172,6 +172,8 @@ class UnifiedTradingEngine:
             rate_limit_rps=5.0,
             rate_limit_burst=10,
         )
+        # Start connection pool for REST requests
+        await self.exchange.pool.start()
         
         # Initialize state store
         self.state_store = await init_state_store(
