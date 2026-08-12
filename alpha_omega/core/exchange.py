@@ -14,6 +14,7 @@ Features:
 """
 from __future__ import annotations
 import asyncio
+import base64
 import hashlib
 import hmac
 import json
@@ -290,6 +291,10 @@ class ExchangeAdapter(ABC):
         """Generate signed headers for authenticated request."""
         pass
 
+    def _signed_body(self, params: Dict, timestamp: str) -> Optional[str]:
+        """Body encoding for signed requests. None => JSON body (default)."""
+        return None
+
     @abstractmethod
     def _ws_subscribe_msg(self, channels: List[str], symbols: List[str]) -> Dict:
         """WebSocket subscription message."""
@@ -337,18 +342,21 @@ class ExchangeAdapter(ABC):
         url = f"{rest_base}{path}"
         headers = {"Accept": "application/json"}
         
+        signed_body = None
         if signed:
-            # Use UTC timestamp for OKX (required for auth)
+            # Use UTC timestamp (OKX requires UTC ms; Kraken uses it as nonce)
             import datetime
             timestamp = str(int(datetime.datetime.now(datetime.timezone.utc).timestamp() * 1000))
             headers.update(self._sign_request(method, path, params or {}, timestamp))
+            signed_body = self._signed_body(params or {}, timestamp)
         
         try:
             if method == "GET":
                 async with session.get(url, params=params, headers=headers) as resp:
                     return await self._handle_response(resp)
             else:
-                async with session.post(url, json=params, headers=headers) as resp:
+                kwargs = {"data": signed_body} if signed_body is not None else {"json": params}
+                async with session.post(url, headers=headers, **kwargs) as resp:
                     return await self._handle_response(resp)
         except aiohttp.ClientError as e:
             log.error(f"REST request failed: {method} {path} - {e}")
@@ -572,17 +580,27 @@ class KrakenAdapter(ExchangeAdapter):
         return "wss://ws.pilot.kraken.com"
 
     def _sign_request(self, method: str, path: str, params: Dict, timestamp: str) -> Dict[str, str]:
-        post_data = urllib.parse.urlencode(params) if params else ""
-        message = timestamp + method.upper() + path + hashlib.sha256(post_data.encode()).hexdigest()
-        signature = hmac.new(
-            self.api_secret.encode(),
-            message.encode(),
-            hashlib.sha512
-        ).hexdigest()
+        """Kraken (ccxt-compatible, verified live):
+        b64(hmac_sha512(url + sha256(nonce + body), b64(secret)))."""
+        post_data = self._signed_body(params, timestamp)
+        try:
+            secret_bytes = base64.b64decode(self.api_secret, validate=True)
+        except Exception:
+            secret_bytes = self.api_secret.encode()
+        hash256 = hashlib.sha256((timestamp + post_data).encode()).digest()
+        binhash = path.encode() + hash256
+        signature = base64.b64encode(
+            hmac.new(secret_bytes, binhash, hashlib.sha512).digest()
+        ).decode()
         return {
             "API-Key": self.api_key,
             "API-Sign": signature,
+            "Content-Type": "application/x-www-form-urlencoded",
         }
+
+    def _signed_body(self, params: Dict, timestamp: str) -> str:
+        # Kraken private calls require a form-encoded body carrying the nonce
+        return urllib.parse.urlencode({"nonce": timestamp, **params})
 
     def _ws_subscribe_msg(self, channels: List[str], symbols: List[str]) -> Dict:
         # Map standard channels to Kraken WS channels
