@@ -55,6 +55,7 @@ class EngineState:
     exchange: str = ""
     capital: float = 0.0
     equity: float = 0.0
+    account_equity: float = 0.0
     realized_pnl: float = 0.0
     unrealized_pnl: float = 0.0
     drawdown: float = 0.0
@@ -179,21 +180,23 @@ class UnifiedTradingEngine:
             await self.exchange.pool.start()
             log.info(f"Exchange pool started, fetching balance...")
             balance = await self.exchange.fetch_balance()
-            log.info(f"Balance response: {balance}")
             if balance and "total" in balance:
                 # Calculate total equity from all non-zero balances
                 total_equity = sum(v for v in balance["total"].values() if isinstance(v, (int, float)) and v > 0)
-                log.info(f"Calculated equity: {total_equity} from {balance.get('total', {})}")
                 if total_equity > 0:
-                    self.state.equity = total_equity
-                    self.state.peak_equity = max(self.state.peak_equity, total_equity)
-                    log.info(f"✅ Balance fetched: equity={total_equity:.2f} {self.config.exchange}")
+                    self.state.account_equity = total_equity
+                    log.info(f"✅ Credential OK — account equity={total_equity:.2f} {self.config.exchange} (monitoring only)")
                 else:
-                    log.warning(f"⚠️ Balance returned zero or empty: {balance}")
+                    log.warning(f"Balance returned zero or empty: {balance}")
             else:
-                log.warning(f"⚠️ Invalid balance format: {balance}")
+                log.warning(f"Invalid balance format: {balance}")
         except Exception as e:
-            log.error(f"❌ Failed to fetch balance: {type(e).__name__}: {e}")
+            log.error(f"Failed to fetch balance: {type(e).__name__}: {e}")
+
+        # NOTE: account equity is monitoring-only. Bot equity stays at the
+        # allocated capital (capital + realized + unrealized, see _update_equity);
+        # loading the shared account total into bot equity poisons the risk math
+        # (peak=account, equity=allocation → false drawdown → kill switch).
         
         # Initialize state store
         self.state_store = await init_state_store(
@@ -290,11 +293,14 @@ class UnifiedTradingEngine:
             )
             if equity:
                 last = equity[0]
-                self.state.equity = last.get("total_equity", self.config.capital)
+                # Bot-level equity baseline. total_equity persisted in the equity
+                # curve is account-level or stale — never load it into bot equity
+                # (poisons drawdown/daily-loss math). _update_equity recomputes.
+                self.state.equity = self.config.capital
                 self.state.realized_pnl = last.get("realized_pnl", 0.0)
                 self.state.unrealized_pnl = last.get("unrealized_pnl", 0.0)
-                self.state.drawdown = last.get("drawdown", 0.0)
-                self.state.peak_equity = self.state.equity + self.state.drawdown
+                self.state.drawdown = 0.0
+                self.state.peak_equity = self.state.equity + max(0.0, self.state.realized_pnl)
             
             # Load open positions
             positions = await self.state_store.get_open_positions()
@@ -517,7 +523,7 @@ class UnifiedTradingEngine:
     async def _check_risk(self) -> bool:
         """Check risk limits. Returns True if trading allowed."""
         # Bot-level drawdown
-        if self.state.equity > 0:
+        if self.state.equity > 0 and self.state.peak_equity > 0:
             current_dd = (self.state.peak_equity - self.state.equity) / self.state.peak_equity
             self.state.drawdown = current_dd
             
@@ -531,7 +537,7 @@ class UnifiedTradingEngine:
                 self.state.risk_level = RiskLevel.WARNING
         
         # Bot-level daily loss (guard against division by zero)
-        if self.state.daily_start_equity > 0:
+        if self.state.daily_start_equity > 0 and self.state.equity > 0:
             daily_loss_pct = (self.state.daily_start_equity - self.state.equity) / self.state.daily_start_equity
         else:
             daily_loss_pct = 0.0

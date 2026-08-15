@@ -264,6 +264,12 @@ class StateStore:
         key = f"position_{data.get('symbol', 'unknown')}"
         await self.set_json(key, data)
 
+    async def save_risk_metrics(self, data: Dict[str, Any]) -> None:
+        """Persist a risk event (e.g. kill switch) to the state table."""
+        import time as _t
+        key = f"risk_{data.get('event', 'event')}_{int(_t.time() * 1000)}"
+        await self.set_json(key, data)
+
     async def close(self) -> None:
         """Close the state store."""
         self._closed = True
