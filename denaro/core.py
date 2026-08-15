@@ -20,9 +20,9 @@ from pathlib import Path
 from typing import Deque, List, Optional, Tuple
 
 from .dca import AdaptiveDCA
-from .grid import GridPolicy
+from .dynamic_grid import GridPolicy
 from .micro import MicrostructureModel
-from .regime import RegimeDetector
+from .regime_enhanced import RegimeDetector
 from .risk import RiskManager
 from .state import DEFAULT_CB_PATH, StateStore
 from .types import CoreState, StrategyMode, Trend
@@ -65,6 +65,7 @@ class DenaroCore:
         self.dca_engine = AdaptiveDCA()
         self.grid_policy = GridPolicy()
 
+        self._last_ohlcv: List[List[float]] = []
         self._return_buffer: Deque[float] = deque(maxlen=200)
         self._kelly_updated_at: float = 0.0
 
@@ -94,9 +95,14 @@ class DenaroCore:
         atr_pct = ind.atr_percent(ohlcv, period)
         self.state.regime.atr_pct = atr_pct if atr_pct > 0 else self.state.regime.atr_pct
         self.state.regime.volatility_regime = ind.volatility_regime(self.state.regime.atr_pct)
+
+        # v7: keep a copy of the last OHLCV for the enhanced indicators
+        self._last_ohlcv = ohlcv
         return atr_pct
 
     def update_regime(self, ohlcv: List[List[float]]) -> None:
+        if len(ohlcv) >= 20:
+            self._last_ohlcv = ohlcv
         self.regime_detector.update(self.state.regime, self.state.micro, ohlcv)
 
     def update_var(self, current_price: float) -> None:

@@ -34,7 +34,8 @@ class RiskManager:
                  compound_threshold: float = 1.0,
                  compound_ratio: float = 0.5,
                  kelly_cap: float = 0.50,
-                 kelly_floor: float = 0.05) -> None:
+                 kelly_floor: float = 0.05,
+                 v7_enabled: bool = True) -> None:
         self.daily_loss_limit = daily_loss_limit
         self.max_drawdown_limit = max_drawdown_limit
         self.max_consecutive_losses = max(1, max_consecutive_losses)
@@ -42,6 +43,7 @@ class RiskManager:
         self.compound_ratio = compound_ratio
         self.kelly_cap = kelly_cap
         self.kelly_floor = kelly_floor
+        self.v7_enabled = v7_enabled
 
     # --- circuit breaker -----------------------------------------------------
 
@@ -168,10 +170,47 @@ class RiskManager:
         return base * state.sizing_multiplier * vol_adj
 
     def position_size(self, state: CoreState, capital: float, allocation_pct: float = 1.0) -> float:
-        """Position size = min(Kelly size, VaR budget)."""
+        """Position size = min(Kelly size, VaR budget) with V7 enhancements."""
         kelly = self.kelly_fraction(state)
         max_var_risk = capital * 0.02 / (state.var.var_95_1h + 1e-10)
         kelly_size = capital * allocation_pct * kelly
+
+        # Backward compatibility
+        if not self.v7_enabled:
+            return min(kelly_size, max_var_risk)
+
+        # V7 enhancements
+        r = state.regime
+
+        # Regime-adjusted Kelly
+        if r.dump_mode:
+            kelly_size *= 0.0
+        elif r.trend == Trend.BEAR:
+            kelly_size *= 0.5
+        elif r.trend == Trend.BULL and r.trend_strength > 0.6:
+            kelly_size *= 1.3
+
+        # Volatility clustering adjustment
+        if r.volatility_regime == "extreme":
+            kelly_size *= 0.3
+        elif r.volatility_regime == "high":
+            kelly_size *= 0.7
+
+        # Volume confirmation
+        if r.volume_regime == "spike" and r.momentum_24h < -0.05:
+            kelly_size *= 0.8  # Reduce size on spike down volume
+
+        # Signal confidence
+        signal_weight = {
+            "bullish": 1.2,
+            "bearish": 0.8,
+            "neutral": 1.0,
+            "oversold": 1.3,
+            "overbought": 0.7
+        }.get(r.combined_signal, 1.0)
+
+        kelly_size *= min(1.5, max(0.5, signal_weight * r.signal_confidence))
+
         return min(kelly_size, max_var_risk)
 
     # --- compounding policy --------------------------------------------------

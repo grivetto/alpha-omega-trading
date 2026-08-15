@@ -54,7 +54,7 @@ class MicroState:
 
 @dataclass
 class RegimeState:
-    """Macro regime + v6 dump-defense state machine."""
+    """Macro regime + v6 dump-defense state machine + v7 enhanced signals."""
     trend: Trend = Trend.RANGING
     trend_strength: float = 0.0
     volatility_regime: str = "normal"          # low | normal | high | extreme
@@ -63,6 +63,7 @@ class RegimeState:
     volume_ratio: float = 1.0
     momentum_1h: float = 0.0
     momentum_24h: float = 0.0
+    momentum_confidence: float = 0.0
     regime_confidence: float = 0.7
     regime_duration_cycles: int = 0
     # v6 — dump defense
@@ -70,6 +71,14 @@ class RegimeState:
     dump_since: float = 0.0
     dump_reason: str = ""
     recovery_cycles: int = 0
+    # v7 — enhanced indicator signals
+    rsi_signal: str = "neutral"
+    macd_signal: str = "neutral"
+    bb_signal: str = "neutral"
+    volume_profile: str = "neutral"
+    combined_signal: str = "neutral"
+    signal_confidence: float = 0.0
+    last_regime_update: int = 0
 
 
 @dataclass
