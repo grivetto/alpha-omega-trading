@@ -1,0 +1,61 @@
+# ATLAS Trading Bot - Strategy Configurations
+strategies:
+  - strategy_id: grid_btc_eur
+    class_path: atlas.strategy.engine.GridStrategy
+    enabled: true
+    symbols: ["BTC/EUR"]
+    exchanges: ["kraken"]
+    params:
+      grid_levels: 5
+      base_spread_pct: 0.005
+      per_level_pct: 0.15
+      atr_multiplier: 0.7
+      min_spread_pct: 0.002
+      max_spread_pct: 0.025
+      drift_pct: 0.06
+      min_signal_interval: 30
+
+  - strategy_id: grid_eth_eur
+    class_path: atlas.strategy.engine.GridStrategy
+    enabled: true
+    symbols: ["ETH/EUR"]
+    exchanges: ["kraken"]
+    params:
+      grid_levels: 5
+      base_spread_pct: 0.005
+      per_level_pct: 0.15
+      atr_multiplier: 0.7
+      min_spread_pct: 0.002
+      max_spread_pct: 0.025
+      drift_pct: 0.06
+      min_signal_interval: 30
+
+  - strategy_id: grid_btc_usdt
+    class_path: atlas.strategy.engine.GridStrategy
+    enabled: true
+    symbols: ["BTC/USDT"]
+    exchanges: ["okx"]
+    params:
+      grid_levels: 5
+      base_spread_pct: 0.005
+      per_level_pct: 0.15
+      atr_multiplier: 0.7
+      min_spread_pct: 0.002
+      max_spread_pct: 0.025
+      drift_pct: 0.06
+      min_signal_interval: 30
+
+  - strategy_id: grid_eth_usdt
+    class_path: atlas.strategy.engine.GridStrategy
+    enabled: true
+    symbols: ["ETH/USDT"]
+    exchanges: ["okx"]
+    params:
+      grid_levels: 5
+      base_spread_pct: 0.005
+      per_level_pct: 0.15
+      atr_multiplier: 0.7
+      min_spread_pct: 0.002
+      max_spread_pct: 0.025
+      drift_pct: 0.06
+      min_signal_interval: 30

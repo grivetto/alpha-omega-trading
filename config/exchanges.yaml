@@ -1,0 +1,18 @@
+# ATLAS Trading Bot - Exchange Configurations
+exchanges:
+  - name: kraken
+    api_key: ${KRAKEN_API_KEY}
+    api_secret: ${KRAKEN_API_SECRET}
+    passphrase: ""
+    sandbox: true
+    testnet: false
+    rate_limit_rps: 5.0
+    rate_limit_burst: 10
+  - name: okx
+    api_key: ${OKX_API_KEY}
+    api_secret: ${OKX_API_SECRET}
+    passphrase: ${OKX_PASSPHRASE}
+    sandbox: false
+    testnet: false
+    rate_limit_rps: 10.0
+    rate_limit_burst: 20
