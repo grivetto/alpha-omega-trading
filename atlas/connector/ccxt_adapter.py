@@ -30,6 +30,7 @@ class CCXTAdapter(ExchangeConnector):
         testnet: bool = False,
         rate_limit_rps: float = 5.0,
         rate_limit_burst: int = 10,
+        hostname: str = "",
     ):
         self._exchange_id = exchange_id.lower()
         self._api_key = api_key
@@ -39,6 +40,7 @@ class CCXTAdapter(ExchangeConnector):
         self._testnet = testnet
         self._rate_limit_rps = rate_limit_rps
         self._rate_limit_burst = rate_limit_burst
+        self._hostname = hostname
 
         self._exchange: Optional[ccxt.Exchange] = None
         self._ws_exchange: Optional[ccxtpro.Exchange] = None
@@ -60,6 +62,9 @@ class CCXTAdapter(ExchangeConnector):
             config["password"] = self._passphrase
         if self._sandbox:
             config["test"] = True
+        if self._hostname:
+            config["hostname"] = self._hostname
+            config["urls"] = {"api": {"public": f"https://{self._hostname}", "private": f"https://{self._hostname}"}}
         return exchange_class(config)
 
     def _create_ws_exchange(self) -> ccxtpro.Exchange:
@@ -73,6 +78,8 @@ class CCXTAdapter(ExchangeConnector):
             config["password"] = self._passphrase
         if self._sandbox:
             config["test"] = True
+        if self._hostname:
+            config["hostname"] = self._hostname
         return exchange_class(config)
 
     @exchange_call(max_retries=3, cb_failures=5)
@@ -115,6 +122,8 @@ class CCXTAdapter(ExchangeConnector):
         return side.value.lower()
 
     def _map_status(self, status: str) -> OrderStatus:
+        if not status:
+            return OrderStatus.OPEN
         status = status.lower()
         if status in ("open", "pending"):
             return OrderStatus.OPEN
@@ -212,8 +221,8 @@ class CCXTAdapter(ExchangeConnector):
             status=self._map_status(result.get("status", "open")),
             timestamp=self._safe_timestamp(result),
             exchange=self._exchange_id,
-            fee=float(result.get("fee", {}).get("cost", 0) or 0),
-            fee_currency=result.get("fee", {}).get("currency", ""),
+            fee=float((result.get("fee") or {}).get("cost", 0) or 0),
+            fee_currency=(result.get("fee") or {}).get("currency", "") or "",
         )
 
     @exchange_call(max_retries=2, timeout_seconds=10.0)
@@ -245,9 +254,33 @@ class CCXTAdapter(ExchangeConnector):
             status=self._map_status(result.get("status", "open")),
             timestamp=self._safe_timestamp(result),
             exchange=self._exchange_id,
-            fee=float(result.get("fee", {}).get("cost", 0) or 0),
-            fee_currency=result.get("fee", {}).get("currency", ""),
+            fee=float((result.get("fee") or {}).get("cost", 0) or 0),
+            fee_currency=(result.get("fee") or {}).get("currency", "") or "",
         )
+
+    @exchange_call(max_retries=3, timeout_seconds=10.0)
+    async def fetch_open_orders(self, symbol: str = "") -> list[OrderResponse]:
+        """Fetch open orders, optionally filtered by symbol."""
+        ex_symbol = self._normalize_symbol(symbol) if symbol else None
+        results = await self._exchange.fetch_open_orders(ex_symbol)
+        orders = []
+        for result in results:
+            orders.append(OrderResponse(
+                exchange_order_id=str(result.get("id", "")),
+                client_order_id=result.get("clientOrderId") or "",
+                symbol=result.get("symbol") or symbol,
+                side=OrderSide.BUY if result.get("side") == "buy" else OrderSide.SELL,
+                type=OrderType.LIMIT if result.get("type") == "limit" else OrderType.MARKET,
+                amount=float(result.get("amount", 0) or 0),
+                price=float(result.get("price", 0) or 0),
+                filled=float(result.get("filled", 0) or 0),
+                status=self._map_status(result.get("status")),
+                timestamp=self._safe_timestamp(result),
+                exchange=self._exchange_id,
+                fee=float((result.get("fee") or {}).get("cost", 0) or 0),
+                fee_currency=(result.get("fee") or {}).get("currency", "") or "",
+            ))
+        return orders
 
     async def watch_ticker(self, symbol: str) -> AsyncIterator[Ticker]:
         if not self._ws_exchange:

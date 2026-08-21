@@ -1,7 +1,11 @@
 """ATLAS Core Configuration - Pydantic Settings."""
 from __future__ import annotations
 
-from typing import Literal
+import os
+import yaml
+from pathlib import Path
+from typing import Any, Literal, List
+
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -16,6 +20,9 @@ class ExchangeConfig(BaseSettings):
     testnet: bool = False
     rate_limit_rps: float = 5.0
     rate_limit_burst: int = 10
+    hostname: str | None = None  # For OKX EEA
+
+    model_config = SettingsConfigDict(extra="allow")
 
 
 class StrategyConfig(BaseSettings):
@@ -44,12 +51,15 @@ class AtlasSettings(BaseSettings):
         env_file=".env",
         env_file_encoding="utf-8",
         case_sensitive=False,
-        extra="ignore",
+        extra="allow",
     )
 
     env: Literal["development", "staging", "production"] = "development"
     log_level: str = "INFO"
     log_json: bool = True
+
+    # OKX EEA endpoint
+    OKX_EEA: bool = False
 
     # Exchange configs (loaded from exchanges.yaml)
     exchanges: list[ExchangeConfig] = []
@@ -69,6 +79,27 @@ class AtlasSettings(BaseSettings):
 
     # Timezone
     timezone: str = "UTC"
+
+    @classmethod
+    def load_from_yaml(cls, path: Path, settings: "AtlasSettings") -> List[ExchangeConfig]:
+        with open(path) as f:
+            data = yaml.safe_load(f)
+        exchanges = []
+        for ex_data in data.get("exchanges", []):
+            # Add hostname for OKX EEA
+            if ex_data.get("name") == "okx" and settings.OKX_EEA:
+                ex_data["hostname"] = "eea.okx.com"
+            exchanges.append(ExchangeConfig(**ex_data))
+        return exchanges
+
+    @classmethod
+    def load_strategies(cls, path: Path) -> List[StrategyConfig]:
+        with open(path) as f:
+            data = yaml.safe_load(f)
+        strategies = []
+        for strat_data in data.get("strategies", []):
+            strategies.append(StrategyConfig(**strat_data))
+        return strategies
 
 
 # Global settings instance

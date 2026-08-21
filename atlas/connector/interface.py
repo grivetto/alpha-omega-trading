@@ -58,6 +58,11 @@ class ExchangeConnector(ABC):
         """Fetch order status."""
         ...
 
+    @abstractmethod
+    async def fetch_open_orders(self, symbol: str = "") -> list[OrderResponse]:
+        """Fetch open orders, optionally filtered by symbol."""
+        ...
+
     # WebSocket Streams
     @abstractmethod
     async def watch_ticker(self, symbol: str) -> AsyncIterator[Ticker]:
