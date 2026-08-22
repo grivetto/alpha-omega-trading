@@ -198,7 +198,9 @@ class CCXTAdapter(ExchangeConnector):
             params["timeInForce"] = "IOC"
         elif order.time_in_force == TimeInForce.FOK:
             params["timeInForce"] = "FOK"
-        params["clientOrderId"] = order.idempotency_key
+        # OKX clOrdId max 32 chars; use last 32 of the idempotency key
+        client_order_id = order.idempotency_key.replace("-", "")[:32]
+        params["clientOrderId"] = client_order_id
 
         result = await self._exchange.create_order(
             symbol=ex_symbol,
@@ -215,8 +217,8 @@ class CCXTAdapter(ExchangeConnector):
             symbol=order.symbol,
             side=order.side,
             type=order.type,
-            amount=float(result.get("amount", order.amount)),
-            price=float(result.get("price", order.price or 0)),
+            amount=float(result.get("amount") or order.amount),
+            price=float(result.get("price") or order.price or 0),
             filled=float(result.get("filled", 0) or 0),
             status=self._map_status(result.get("status", "open")),
             timestamp=self._safe_timestamp(result),
