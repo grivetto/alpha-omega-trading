@@ -1,0 +1,10 @@
+[Unit]
+Description=ATLAS Watchdog timer - check ogni 1 minuto
+
+[Timer]
+OnBootSec=30s
+OnUnitActiveSec=1min
+Unit=atlas-watchdog.service
+
+[Install]
+WantedBy=timers.target

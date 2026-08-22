@@ -189,9 +189,11 @@ class AtlasApplication:
 
         self._health_runner = web.AppRunner(app)
         await self._health_runner.setup()
-        site = web.TCPSite(self._health_runner, "0.0.0.0", settings.health_port)
+        # Dual-stack: ascolta IPv6 (::) + IPv4, cosi' i nodi remoti possono
+        # fare health-check anche via IPv6 (mc2 e' dietro CGNAT, solo IPv6 pubblico)
+        site = web.TCPSite(self._health_runner, "::", settings.health_port)
         await site.start()
-        logger.info(f"Health server started on port {settings.health_port}")
+        logger.info(f"Health server started on [::]:{settings.health_port} (dual-stack)")
 
     async def start(self) -> None:
         """Start the main trading loop."""

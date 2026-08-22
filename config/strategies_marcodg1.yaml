@@ -1,0 +1,48 @@
+strategies:
+  - strategy_id: grid_eth_eur
+    class_path: atlas.strategy.engine.GridStrategy
+    enabled: true
+    symbols: ["ETH/EUR"]
+    exchanges: ["okx"]
+    params:
+      grid_levels: 2
+      spread_pct: 0.005
+      per_level_pct: 0.10
+      order_size: 0.001
+      min_notional: 2.0
+
+  - strategy_id: grid_sol_eur
+    class_path: atlas.strategy.engine.GridStrategy
+    enabled: true
+    symbols: ["SOL/EUR"]
+    exchanges: ["okx"]
+    params:
+      grid_levels: 2
+      spread_pct: 0.005
+      per_level_pct: 0.10
+      order_size: 0.01
+      min_notional: 0.8
+
+  - strategy_id: grid_xrp_eur
+    class_path: atlas.strategy.engine.GridStrategy
+    enabled: true
+    symbols: ["XRP/EUR"]
+    exchanges: ["okx"]
+    params:
+      grid_levels: 2
+      spread_pct: 0.005
+      per_level_pct: 0.10
+      order_size: 1
+      min_notional: 1.2
+
+  - strategy_id: grid_doge_eur
+    class_path: atlas.strategy.engine.GridStrategy
+    enabled: true
+    symbols: ["DOGE/EUR"]
+    exchanges: ["okx"]
+    params:
+      grid_levels: 2
+      spread_pct: 0.005
+      per_level_pct: 0.10
+      order_size: 10
+      min_notional: 0.8

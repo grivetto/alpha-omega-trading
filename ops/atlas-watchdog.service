@@ -1,0 +1,14 @@
+[Unit]
+Description=ATLAS Watchdog - auto-healing per atlas-engine
+After=atlas-engine.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /usr/local/bin/atlas_watchdog.py
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

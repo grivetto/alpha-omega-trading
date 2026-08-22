@@ -103,15 +103,26 @@ class StrategyEngine:
         return list(self._strategies.keys())
 
     async def add_strategy(self, config: dict) -> None:
-        strat = GridStrategy(
-            strategy_id=config["strategy_id"],
-            symbols=config["symbols"],
-            exchanges=config["exchanges"],
-            params=config.get("params", {}),
-            event_bus=self.event_bus,
-        )
+        class_path = config.get("class_path", "atlas.strategy.engine.GridStrategy")
+        if class_path.endswith("DCAStrategy"):
+            from atlas.strategy.dca import DCAStrategy
+            strat = DCAStrategy(
+                strategy_id=config["strategy_id"],
+                symbols=config["symbols"],
+                exchanges=config["exchanges"],
+                params=config.get("params", {}),
+                event_bus=self.event_bus,
+            )
+        else:
+            strat = GridStrategy(
+                strategy_id=config["strategy_id"],
+                symbols=config["symbols"],
+                exchanges=config["exchanges"],
+                params=config.get("params", {}),
+                event_bus=self.event_bus,
+            )
         self._strategies[strat.strategy_id] = strat
-        logger.info(f"Strategy added: {strat.strategy_id}")
+        logger.info(f"Strategy added: {strat.strategy_id} ({class_path})")
 
     async def _run_strategy_loop(self, strat: GridStrategy) -> None:
         """Run tick loop for a single strategy."""
