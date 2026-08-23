@@ -56,6 +56,9 @@ class MarketDataHub:
 
     async def start(self) -> None:
         self._running = True
+        # i canali vanno avviati anche per i simboli sottoscritti PRIMA di start()
+        for symbol in list(self._handlers):
+            self._ensure_channel(symbol)
 
     async def stop(self) -> None:
         self._running = False

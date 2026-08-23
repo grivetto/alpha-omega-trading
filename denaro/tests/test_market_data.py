@@ -101,6 +101,19 @@ class TestMarketDataHub(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(all(p == 42.0 for _, p in handler.received))
         self.assertGreater(rest.calls, 0)
 
+    async def test_sottoscrizione_prima_di_start_avvia_il_canale(self):
+        """Regressione: i canali sottoscritti PRIMA di start() devono partire."""
+        rest = FakeRest({"SOL/EUR": 42.0})
+        hub = MarketDataHub(ex_rest=rest, ex_pro=None, ws_enabled=False,
+                            poll_interval=0.05, price_ttl=30.0)
+        handler = FakeHandler()
+        hub.subscribe("SOL/EUR", handler)   # prima di start()
+        await hub.start()
+        await asyncio.sleep(0.15)
+        await hub.stop()
+        self.assertGreaterEqual(len(handler.received), 1)
+        self.assertGreater(rest.calls, 0)
+
     async def test_get_price_usa_cache_o_fetch(self):
         rest = FakeRest({"SOL/EUR": 99.0})
         hub = MarketDataHub(ex_rest=rest, ex_pro=None, ws_enabled=False)
