@@ -139,5 +139,46 @@ class TestNodeApp(unittest.IsolatedAsyncioTestCase):
                             for b in app.orchestrator.bots.values()))
 
 
+class TestLiveConfig(unittest.TestCase):
+    """Path live M7: struttura config + guardie sulle chiavi (mai hardcoded)."""
+
+    def setUp(self):
+        root = Path(__file__).resolve().parent.parent.parent
+        self.live_cfg = root / "config" / "node_live.json"
+
+    def test_config_live_struttura(self):
+        import json
+        cfg = json.loads(self.live_cfg.read_text(encoding="utf-8"))
+        self.assertTrue(cfg["hub"]["ws_enabled"])
+        symbols = [(b["symbol"], b["mode"]) for b in cfg["bots"]]
+        self.assertIn(("ADA/EUR", "okx"), symbols)
+        self.assertIn(("SOL/EUR", "okx"), symbols)
+        self.assertIn(("SOL/EUR", "kraken"), symbols)
+        # nessuna chiave nel config versionato
+        raw = self.live_cfg.read_text(encoding="utf-8")
+        self.assertNotIn("api_key", raw)
+        self.assertNotIn("secret", raw)
+        self.assertNotIn("passphrase", raw)
+
+    def test_build_exchange_chiavi_mancanti(self):
+        """Senza env, mode okx/kraken devono fallire con ValueError."""
+        from denaro.denaro_node import build_exchange
+        with self.assertRaises(ValueError):
+            build_exchange({"mode": "okx", "symbol": "ADA/EUR"}, Path("."))
+        with self.assertRaises(ValueError):
+            build_exchange({"mode": "kraken", "symbol": "SOL/EUR"}, Path("."))
+
+    def test_build_exchange_paper(self):
+        from denaro.denaro_node import build_exchange
+        ex = build_exchange({"mode": "paper", "symbol": "ADA/EUR",
+                             "capital": 300.0}, Path("."))
+        self.assertEqual(ex.cash, 300.0)
+
+    def test_build_exchange_modo_sconosciuto(self):
+        from denaro.denaro_node import build_exchange
+        with self.assertRaises(ValueError):
+            build_exchange({"mode": "bybit", "symbol": "X/EUR"}, Path("."))
+
+
 if __name__ == "__main__":
     unittest.main()

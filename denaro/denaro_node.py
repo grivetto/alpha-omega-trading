@@ -64,6 +64,9 @@ def build_rest_exchange(exchange_cfg: dict):
 
 
 def build_exchange(bot: dict, data_dir: Path):
+    """Costruisce l'exchange del bot. Le chiavi LIVE arrivano dall'ambiente
+    (EnvironmentFile systemd), MAI dal config versionato."""
+    import os
     mode = bot.get("mode", "paper")
     symbol = bot["symbol"]
     if mode == "paper":
@@ -71,9 +74,19 @@ def build_exchange(bot: dict, data_dir: Path):
                              quote=bot.get("quote", "EUR"))
     if mode == "okx":
         from denaro.infrastructure.exchanges.okx import OKXAdapter
-        return OKXAdapter(
-            api_key=bot["api_key"], secret=bot["secret"],
-            passphrase=bot["passphrase"])
+        key = os.getenv("OKX_API_KEY", bot.get("api_key", ""))
+        secret = os.getenv("OKX_API_SECRET", bot.get("api_secret", ""))
+        passphrase = os.getenv("OKX_PASSPHRASE", bot.get("passphrase", ""))
+        if not key or not secret or not passphrase:
+            raise ValueError(f"chiavi OKX mancanti per {symbol} (env OKX_API_*)")
+        return OKXAdapter(api_key=key, secret=secret, passphrase=passphrase)
+    if mode == "kraken":
+        from denaro.infrastructure.exchanges.kraken import KrakenAdapter
+        key = os.getenv("KRAKEN_API_KEY", bot.get("api_key", ""))
+        secret = os.getenv("KRAKEN_API_SECRET", bot.get("api_secret", ""))
+        if not key or not secret:
+            raise ValueError(f"chiavi Kraken mancanti per {symbol} (env KRAKEN_API_*)")
+        return KrakenAdapter(api_key=key, secret=secret)
     raise ValueError(f"modalita' bot sconosciuta: {mode}")
 
 
