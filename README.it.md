@@ -1,8 +1,8 @@
 <div align="center">
 
-# ⚡ ALPHA-OMEGA TRADING ⚡
+# 💰 DENARO
 
-### *The ultimate distributed algorithmic trading system — from paper to profit, across two nodes, with zero compromises.*
+### *La macchina che genera denaro — grid trading su OKX e Kraken, monitorata e verificata.*
 
 [![License: Unlicense](https://img.shields.io/badge/license-Unlicense-blue.svg)](http://unlicense.org/)
 [![Python](https://img.shields.io/badge/python-3.12%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
