@@ -700,33 +700,19 @@ class KrakenAdapter(ExchangeAdapter):
         return {k: float(v) for k, v in result.items() if float(v) > 0}
 
     async def fetch_balance(self) -> Dict:
-        """Fetch account balance from Kraken."""
-        log.info(f"Fetching Kraken balance - api_key present: {bool(self.api_key)}, sandbox: {self.sandbox_mode}")
+        """Fetch account balance from Kraken using ccxt."""
+        log.info(f"Fetching Kraken balance - api_key present: {bool(self.api_key)}")
         try:
-            data = await self._request("POST", "/0/private/Balance", {}, signed=True)
-            log.info(f"Kraken balance response: {data}")
-            result = data.get("result", {})
-            
-            # Convert to standard format with free/used/total
-            free = {}
-            used = {}
-            total = {}
-            for currency, amount in result.items():
-                try:
-                    val = float(amount)
-                    if val > 0:
-                        free[currency] = val
-                        used[currency] = 0.0
-                        total[currency] = val
-                except (ValueError, TypeError):
-                    pass
-            
-            return {
-                "free": free,
-                "used": used,
-                "total": total,
-                "info": result
-            }
+            # Use ccxt directly for reliable balance fetching
+            import ccxt
+            exchange = ccxt.kraken({
+                'apiKey': self.api_key,
+                'secret': self.api_secret,
+                'enableRateLimit': True
+            })
+            balance = exchange.fetch_balance()
+            log.info(f"Kraken balance fetched: {balance.get('total', {})}")
+            return balance
         except Exception as e:
             log.error(f"Failed to fetch Kraken balance: {type(e).__name__}: {e}")
             return {"free": {}, "used": {}, "total": {}, "info": {}}

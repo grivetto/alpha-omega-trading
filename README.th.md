@@ -83,6 +83,8 @@ Alpha-Omega Trading เกิดจากข้อจำกัดง่ายๆ
 | **🏗️ ShadowGrid v2.2 — Unified Architecture** | 2026-08-09 | **Unification ShadowGrid v2 + neo** New `alpha_omega` package: UnifiedTradingEngine, DistributedFleetCoordinator, DistributedPairScanner, PortfolioRiskManager ZeroMQ Pub/Sub, Redis Streams, Raft leader election 24 bots (12/node), 200€ paper capital All audit issues resolved |
 | **🚀 GO-LIVE — Live Trading with Real Capital** | **2026-08-10 22:42:30 CEST** | **€50 real capital deployed 2 nodes** OKX EEA endpoint (`eea.okx.com`) validated Kraken live keys validated 12 bots operational (6/node) Risk management armed Split-by-exchange architecture: Nuvola=Kraken, MARCODG1=OKX |
 | **🏗️ v2.3 — สถาปัตยกรรม Split-by-Exchange** | **2026-08-11** | **แก้ไขคริติคอล: กำจัดการชนกันของบัญชี** Nuvola เทรด Kraken เท่านั้น (6 บอท) MARCODG1 เทรด OKX เท่านั้น (6 บอท) บัญชีร่วมต่อ exchange ไม่มีการชนกันของคำสั่ง Zabbix monitoring บน mc2 ทุนรวมที่ถูกต้อง: €50 (ไม่ใช่ €101) OKX WebSocket endpoint แก้ไขแล้ว (eea.okx.com) |
+| **🔑 การตรวจสอบคีย์ API** | **2026-08-22** | **การทดสอบคีย์ API อย่างครอบคลุมบนทุกโหนด** คีย์ Kraken บน NUVOLA (2 คู่ทำงานได้, EUR=22.20), คีย์ OKX บน MARCODG1 (เสถียร 2+ วัน) แก้ไขปัญหา base64 padding และ IP whitelist ทุก exchange ทำงานได้ |
+| **🤝 ความเข้ากันได้ระหว่าง Denaro-Atlas** | **2026-08-22** | **ชั้นความเข้ากันได้อย่างเป็นทางการระหว่าง Denaro (legacy เสถียร) และ Atlas (next-gen จัดการโดย Hermes)** ทั้งสองระบบอยู่ร่วมกันบนโหนดเดียวกันด้วยคีย์ API แยก Denaro รัน solo-engine (Kraken/OKX grid), Atlas ผ่าน Hermes AI ไม่มีความขัดแย้งด้วยการแยกคีย์ สถานะการทำงานเต็มรูปแบบบน NUVOLA และ MARCODG1 |
 
 ---
 
