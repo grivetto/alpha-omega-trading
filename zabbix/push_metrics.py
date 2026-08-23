@@ -14,6 +14,7 @@ from pathlib import Path
 BASE = Path("/home/marco/denaro")
 HEALTH_DIR = BASE / "health"
 PAPER_DIR = BASE / "paper_state"
+NODE_DIR = Path("/home/marco/denaro_node_app/node_data")
 API = "http://127.0.0.1:1080/api_jsonrpc.php"
 USER = "Admin"
 PASS = "zabbix"
@@ -21,6 +22,13 @@ PASS = "zabbix"
 BOTS = {
     "sol": ("alpha-omega-bot-sol-eur", "bot.sol"),
     "ada": ("alpha-omega-bot-ada-eur", "bot.ada"),
+}
+
+# Node paper (M7): health scritti dal Node asincrono in node_data/
+NODE_BOTS = {
+    "ADA": ("ADA/EUR", "alpha-omega-node-paper", "node.ada"),
+    "SOL": ("SOL/EUR", "alpha-omega-node-paper", "node.sol"),
+    "XRP": ("XRP/EUR", "alpha-omega-node-paper", "node.xrp"),
 }
 
 
@@ -171,6 +179,22 @@ def main():
             {"host": host, "key": f"{prefix}.trades", "value": st.get("trades", 0)},
             {"host": host, "key": f"{prefix}.wins", "value": st.get("wins", 0)},
             {"host": host, "key": f"{prefix}.losses", "value": st.get("losses", 0)},
+        ]
+
+    # ── 5. Node paper (M7 — da node_data health; staleness via timestamp) ──
+    for name, (symbol, host, prefix) in NODE_BOTS.items():
+        h = read_json(NODE_DIR / f"{symbol.replace('/', '_')}_health.json")
+        if not h or is_stale(h.get("timestamp", 0)):
+            data.append({"host": host, "key": f"{prefix}.status", "value": 0})
+            continue
+        running = 1 if h.get("status") == "running" else 0
+        data += [
+            {"host": host, "key": f"{prefix}.status", "value": running},
+            {"host": host, "key": f"{prefix}.equity", "value": h.get("total_equity", 0)},
+            {"host": host, "key": f"{prefix}.buys", "value": h.get("buys", 0)},
+            {"host": host, "key": f"{prefix}.sells", "value": h.get("sells", 0)},
+            {"host": host, "key": f"{prefix}.pnl", "value": h.get("pnl", 0)},
+            {"host": host, "key": f"{prefix}.trades", "value": h.get("trades", 0)},
         ]
 
     # Push

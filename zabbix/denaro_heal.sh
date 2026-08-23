@@ -12,6 +12,7 @@ case "$HOST" in
   alpha-omega-paper-ada)   T="marco@87.106.222.123"; U="denaro-paper-ada" ;;
   alpha-omega-paper-sol)   T="marco@87.106.222.123"; U="denaro-paper-sol" ;;
   alpha-omega-paper-xrp)   T="marco@87.106.222.123"; U="denaro-paper-xrp" ;;
+  alpha-omega-node-paper)  T="marco@87.106.222.123"; U="denaro-node-paper" ;;
   nuvola)                  T="sergio@87.106.3.15";    U="atlas-engine" ;;
   *) echo "host sconosciuto: $HOST"; exit 2 ;;
 esac
