@@ -1,10 +1,11 @@
 [Unit]
-Description=Alpha-Omega PAPER Trade — SOL/EUR (100€)
+Description=Denaro — Paper Trade SOL/EUR (100€ virtuale)
 After=network-online.target
 Wants=network-online.target
 
 [Service]
 Type=simple
+User=marco
 ExecStart=/home/marco/denaro/venv/bin/python /home/marco/denaro/engine_paper.py --symbol SOL/EUR --capital 100 --levels 3 --buy-dist 1.0 --tp 1.5 --interval 60
 WorkingDirectory=/home/marco/denaro
 Restart=always
@@ -13,4 +14,4 @@ StandardOutput=journal
 StandardError=journal
 
 [Install]
-WantedBy=default.target
+WantedBy=multi-user.target

@@ -1,0 +1,18 @@
+[Unit]
+Description=Denaro — Kraken Grid SOL/EUR (nuvola)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=sergio
+ExecStart=/home/sergio/denaro/venv/bin/python /home/sergio/denaro/engine_solo_v33.py --exchange kraken --symbol SOL/EUR --capital 25.0 --profit-target 1.5 --buy-distance 1.0 --grid-levels 3 --loop --interval 60 --health-file /home/sergio/denaro/health/sol_kraken.json
+WorkingDirectory=/home/sergio/denaro
+Restart=always
+RestartSec=10
+EnvironmentFile=/home/sergio/denaro/.env
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

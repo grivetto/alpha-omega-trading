@@ -1,19 +1,20 @@
 [Unit]
-Description=Alpha-Omega Health Server (stato bot v3.3)
+Description=Denaro — Health Server (stato bot via HTTP :8911)
 After=network-online.target
 Wants=network-online.target
 
 [Service]
 Type=simple
+User=marco
 ExecStart=/home/marco/denaro/venv/bin/python /home/marco/denaro/health_server_v33.py
 WorkingDirectory=/home/marco/denaro
-Restart=always
-RestartSec=10
 Environment=HEALTH_DIR=/home/marco/denaro/health
 Environment=HEALTH_PORT=8911
 Environment=HEALTH_HOST=127.0.0.1
+Restart=always
+RestartSec=10
 StandardOutput=journal
 StandardError=journal
 
 [Install]
-WantedBy=default.target
+WantedBy=multi-user.target

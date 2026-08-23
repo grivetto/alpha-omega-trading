@@ -1,0 +1,20 @@
+[Unit]
+Description=Denaro — Infra Aggregator (JSON dashboard :8912)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=marco
+ExecStart=/home/marco/denaro/venv/bin/python /home/marco/denaro/infra_aggregator.py
+WorkingDirectory=/home/marco/denaro
+Environment=HEALTH_DIR=/home/marco/denaro/health
+Environment=AGG_PORT=8912
+Environment=AGG_HOST=127.0.0.1
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
