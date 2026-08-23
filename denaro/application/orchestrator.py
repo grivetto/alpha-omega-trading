@@ -78,6 +78,7 @@ class BotConfig:
     buy_distance: float = 0.01
     profit_target: float = 0.015
     tick_interval: float = 60.0
+    fee: float = 0.0                # fee per lato (frazione); 0 = accounting v3.3
     state_path: Optional[Path] = None
     journal_path: Optional[Path] = None
     health_path: Optional[Path] = None
@@ -91,13 +92,16 @@ class BotTask:
     def __init__(self, config: BotConfig, exchange: ExchangePort,
                  policy: GridPolicy, risk: RiskManager,
                  get_equity: Optional[callable] = None,
-                 now: Optional[callable] = None) -> None:
+                 now: Optional[callable] = None,
+                 price_source: Optional[callable] = None) -> None:
         self.cfg = config
         self.ex = exchange
         self.policy = policy
         self.risk = risk
         self._get_equity = get_equity or self._default_equity
         self._now = now or time.time
+        # fonte del prezzo: hub condiviso (M6+) oppure fetch_ticker dell'exchange
+        self._price_source = price_source
         self._running = False
         self._task: Optional[asyncio.Task] = None
         self._last_error: str = ""
@@ -203,8 +207,11 @@ class BotTask:
             self._write_health(equity, blocked=False)
             return
         try:
-            t = await asyncio.to_thread(self.ex.fetch_ticker, self.cfg.symbol)
-            price = float(t["last"])
+            if self._price_source is not None:
+                price = float(self._price_source())
+            else:
+                t = await asyncio.to_thread(self.ex.fetch_ticker, self.cfg.symbol)
+                price = float(t["last"])
         except Exception as e:  # noqa: BLE001
             self._last_error = f"ticker: {e}"
             self._write_health(equity, blocked=False)
@@ -280,14 +287,21 @@ class BotTask:
                 continue
             st = o.get("status", "open")
             if st in ("closed", "filled"):
-                profit = float(info["amount"]) * (float(info["target_price"]) - float(info["entry_price"]))
+                # PnL fee-aware: proceeds×(1-fee) - cost×(1+fee). Con fee=0
+                # il comportamento e' identico all'accounting del motore v3.3.
+                amount = float(info["amount"])
+                entry = float(info["entry_price"])
+                target = float(info["target_price"])
+                cost = amount * entry * (1 + self.cfg.fee)
+                proceeds = amount * target * (1 - self.cfg.fee)
+                profit = proceeds - cost
                 self.state.total_pnl += profit
                 self.state.total_trades += 1
                 if profit >= 0:
                     self.state.wins += 1
                 else:
                     self.state.losses += 1
-                self.state.volume += float(info["amount"]) * float(info["target_price"])
+                self.state.volume += amount * target
                 self._journal("sell_filled", order_id=oid,
                               amount=float(info["amount"]),
                               entry=float(info["entry_price"]),

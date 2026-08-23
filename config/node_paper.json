@@ -1,0 +1,44 @@
+{
+  "data_dir": "node_data",
+  "supervisor": {
+    "ram_critical_pct": 0.85,
+    "ram_throttle_pct": 0.70,
+    "cpu_critical_pct": 0.90,
+    "tick_max_factor": 5.0
+  },
+  "hub": {
+    "ws_enabled": false,
+    "poll_interval": 10,
+    "price_ttl": 30
+  },
+  "exchange_rest": {"name": "okx", "eea": true},
+  "bots": [
+    {
+      "symbol": "ADA/EUR",
+      "mode": "paper",
+      "capital": 300,
+      "levels": 3,
+      "buy_distance": 0.015,
+      "profit_target": 0.02,
+      "tick_interval": 30
+    },
+    {
+      "symbol": "SOL/EUR",
+      "mode": "paper",
+      "capital": 100,
+      "levels": 3,
+      "buy_distance": 0.01,
+      "profit_target": 0.015,
+      "tick_interval": 30
+    },
+    {
+      "symbol": "XRP/EUR",
+      "mode": "paper",
+      "capital": 100,
+      "levels": 3,
+      "buy_distance": 0.01,
+      "profit_target": 0.015,
+      "tick_interval": 30
+    }
+  ]
+}
