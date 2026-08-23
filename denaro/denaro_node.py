@@ -160,7 +160,11 @@ class NodeApp:
         stop = asyncio.Event()
         loop = asyncio.get_running_loop()
         for sig in (signal.SIGINT, signal.SIGTERM):
-            loop.add_signal_handler(sig, stop.set)
+            try:
+                loop.add_signal_handler(sig, stop.set)
+            except (NotImplementedError, RuntimeError):
+                # Windows / ambienti senza add_signal_handler
+                pass
 
         await self.hub.start()
         await self.orchestrator.start_all()
