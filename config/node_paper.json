@@ -2,16 +2,19 @@
   "data_dir": "node_data",
   "supervisor": {
     "ram_critical_pct": 0.85,
-    "ram_throttle_pct": 0.70,
-    "cpu_critical_pct": 0.90,
+    "ram_throttle_pct": 0.7,
+    "cpu_critical_pct": 0.9,
     "tick_max_factor": 5.0
   },
   "hub": {
-    "ws_enabled": false,
+    "ws_enabled": true,
     "poll_interval": 10,
     "price_ttl": 30
   },
-  "exchange_rest": {"name": "okx", "eea": true},
+  "exchange_rest": {
+    "name": "okx",
+    "eea": true
+  },
   "bots": [
     {
       "symbol": "ADA/EUR",

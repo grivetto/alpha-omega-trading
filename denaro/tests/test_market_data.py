@@ -17,17 +17,20 @@ class FakeRest:
 
 
 class FakePro:
-    """ccxt.pro fake: watch_ticker come async generator."""
+    """ccxt.pro fake: watch_ticker come coroutine che ritorna un ticker a ogni
+    chiamata (stesso contratto di ccxt.pro: si chiama in loop)."""
 
     def __init__(self, feed):
-        self.feed = feed  # list of (symbol, price)
+        # feed: list di (symbol, price) — consumata una alla volta
+        self.feed = list(feed)
         self.started = False
 
     async def watch_ticker(self, symbol):
         self.started = True
         for sym, price in self.feed:
             if sym == symbol:
-                yield {"last": price}
+                self.feed.remove((sym, price))
+                return {"last": price}
         # esaurito: simula disconnessione sollevando
         raise ConnectionError("ws down")
 
@@ -70,8 +73,6 @@ class TestMarketDataHub(unittest.IsolatedAsyncioTestCase):
 
         class FakeProDown:
             async def watch_ticker(self, symbol):
-                if False:
-                    yield  # pragma: no cover - rende async generator
                 raise ConnectionError("ws down")
 
         hub = MarketDataHub(

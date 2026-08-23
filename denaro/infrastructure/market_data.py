@@ -56,6 +56,17 @@ class MarketDataHub:
 
     async def start(self) -> None:
         self._running = True
+        # ccxt.pro richiede i markets caricati prima di watch_ticker
+        if self.ws_enabled and self._pro is not None:
+            load = getattr(self._pro, "load_markets", None)
+            if load:
+                try:
+                    if asyncio.iscoroutinefunction(load):
+                        await load()
+                    else:
+                        load()
+                except Exception as e:  # noqa: BLE001
+                    log.warning("load_markets ws fallito: %s", e)
         # i canali vanno avviati anche per i simboli sottoscritti PRIMA di start()
         for symbol in list(self._handlers):
             self._ensure_channel(symbol)
@@ -129,15 +140,17 @@ class MarketDataHub:
                 log.warning("handler %s per %s fallito: %s", handler, symbol, e)
 
     async def _ws_loop(self, symbol: str) -> None:
-        """Ciclo WebSocket con riconnessione backoff (ccxt.pro watch_ticker)."""
+        """Ciclo WebSocket con riconnessione backoff (ccxt.pro watch_ticker).
+
+        In ccxt.pro `watch_ticker` e' una coroutine che si risolve a ogni
+        update del ticker: va chiamata in loop (non e' un async generator).
+        """
         retries = 0
         while self._running:
             try:
-                watch = self._pro.watch_ticker(symbol)
-                async for ticker in watch:
-                    last = float(ticker["last"])
-                    await self._broadcast(symbol, last)
-                    retries = 0
+                ticker = await self._pro.watch_ticker(symbol)
+                await self._broadcast(symbol, float(ticker["last"]))
+                retries = 0
             except asyncio.CancelledError:
                 return
             except Exception as e:  # noqa: BLE001 - riconnessione

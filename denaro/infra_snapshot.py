@@ -13,7 +13,6 @@ import importlib.util
 spec = importlib.util.spec_from_file_location("agg", sys_path + "/infra_aggregator.py")
 agg = importlib.util.module_from_spec(spec)
 # Non avviamo il server: importiamo solo le funzioni (il main e' guardato)
-import types
 # Eseguiamo il modulo in modo sicuro: le funzioni sono a livello modulo
 spec.loader.exec_module(agg)
 

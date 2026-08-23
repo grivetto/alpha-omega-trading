@@ -108,11 +108,23 @@ class NodeApp:
             self.hub = hub
         else:
             hub_cfg = config.get("hub", {})
+            ws_enabled = bool(hub_cfg.get("ws_enabled", False))
+            ex_pro = None
+            if ws_enabled:
+                try:
+                    import ccxt.pro as ccxtpro  # type: ignore
+                    ex_pro = ccxtpro.okx({"hostname": "eea.okx.com",
+                                          "enableRateLimit": True})
+                except Exception as e:  # noqa: BLE001
+                    log.warning("ccxt.pro non disponibile (%s) — fallback REST", e)
             self.hub = MarketDataHub(
                 ex_rest=build_rest_exchange(config.get("exchange_rest", {"name": "okx"})),
-                ws_enabled=bool(hub_cfg.get("ws_enabled", False)),
+                ex_pro=ex_pro,
+                ws_enabled=ws_enabled,
                 poll_interval=float(hub_cfg.get("poll_interval", 10)),
                 price_ttl=float(hub_cfg.get("price_ttl", 30)),
+                ws_max_retries=int(hub_cfg.get("ws_max_retries", 5)),
+                ws_retry_base_s=float(hub_cfg.get("ws_retry_base_s", 2.0)),
             )
 
         self.orchestrator = TradeOrchestrator(supervisor=self.supervisor)
