@@ -32,6 +32,7 @@ class ExchangeConfig:
     sandbox: bool = False
     ws_enabled: bool = True
     priority: int = 0  # Lower = higher priority
+    eea: bool = False  # OKX EEA (EU) hostname
 
 
 @dataclass
@@ -82,6 +83,7 @@ class MultiExchangeAdapter:
                         symbol=cfg.symbol,
                         sandbox=cfg.sandbox,
                         ws_enabled=cfg.ws_enabled,
+                        eea=cfg.eea,
                     )
                 else:
                     log.error(f"Unknown exchange: {cfg.name}")

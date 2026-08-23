@@ -1,0 +1,16 @@
+[Unit]
+Description=Alpha-Omega PAPER Trade — XRP/EUR (100€)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/home/marco/denaro/venv/bin/python /home/marco/denaro/engine_paper.py --symbol XRP/EUR --capital 100 --levels 3 --buy-dist 1.0 --tp 1.5 --interval 60
+WorkingDirectory=/home/marco/denaro
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target

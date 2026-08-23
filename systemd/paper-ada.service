@@ -1,0 +1,16 @@
+[Unit]
+Description=Alpha-Omega PAPER Trade — ADA/EUR (300€)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/home/marco/denaro/venv/bin/python /home/marco/denaro/engine_paper.py --symbol ADA/EUR --capital 300 --levels 3 --buy-dist 1.5 --tp 2.0 --interval 60
+WorkingDirectory=/home/marco/denaro
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target

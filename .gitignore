@@ -43,4 +43,11 @@ htmlcov/
 *.backup
   
 # Tooling state  
-.deepseek/  
+.deepseek/
+
+# File temporanei di diagnostica/operativi (non fanno parte del codice)
+_*.py
+_*.sh
+_*.bat
+*.sql.gz
+

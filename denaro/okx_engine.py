@@ -55,7 +55,8 @@ class OKXEngine:
                  passphrase: str,
                  symbol: str = "BTC/USDT",
                  sandbox: bool = False,
-                 ws_enabled: bool = True) -> None:
+                 ws_enabled: bool = True,
+                 eea: bool = False) -> None:
 
         self.api_key = api_key
         self.secret = secret
@@ -63,6 +64,7 @@ class OKXEngine:
         self.symbol = symbol
         self.sandbox = sandbox
         self.ws_enabled = ws_enabled
+        self.eea = eea
 
         self._okx_symbol = self.SYMBOL_MAP.get(symbol, symbol)
         self._ex: Optional[ccxt.okx] = None
@@ -89,7 +91,7 @@ class OKXEngine:
         self._initialize_rest()
 
     def _initialize_rest(self) -> None:
-        """Initialize CCXT REST client."""
+        """Initialize CCXT REST client. Supports EEA hostname for EU accounts."""
         config = {
             'apiKey': self.api_key,
             'secret': self.secret,
@@ -99,7 +101,11 @@ class OKXEngine:
                 'defaultType': 'spot',
             },
         }
-        if self.sandbox:
+        if self.eea:
+            # OKX EEA: chiavi EU separate, hostname eea.okx.com obbligatorio
+            config['hostname'] = 'eea.okx.com'
+            log.info("OKX EEA endpoint enabled (eea.okx.com)")
+        elif self.sandbox:
             config['urls'] = {
                 'api': {
                     'rest': 'https://www.okx.com/api/v5',
