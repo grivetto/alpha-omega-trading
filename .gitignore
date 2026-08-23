@@ -49,5 +49,9 @@ htmlcov/
 _*.py
 _*.sh
 _*.bat
+_*.md
 *.sql.gz
+
+# Tooling locale / residui non-progetto
+.codewhale/
 
