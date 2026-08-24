@@ -85,6 +85,27 @@ class KrakenAdapter:
     def fetch_ohlcv(self, symbol: str, timeframe: str = "1h", limit: int = 100) -> list:
         return self._call(self.ex.fetch_ohlcv, symbol, timeframe, limit)
 
+    def fetch_ohlcv_raw(self, symbol: str, timeframe: str = "1h",
+                        limit: int = 200) -> list:
+        """OHLCV via RAW API (bypassa il bug di ccxt 4.5.x su fetch_ohlcv)."""
+        try:
+            m = self.ex.market(symbol)
+            inst = m["id"]
+        except Exception:
+            # markets non caricati → formato Kraken BASEQUOTE (SOL/EUR → SOLEUR)
+            inst = symbol.replace("/", "")
+        interval = {"1h": 60, "15m": 15, "1d": 1440}.get(timeframe, 60)
+        try:
+            r = self._call(self.ex.publicGetOHLC,
+                           {"pair": inst, "interval": interval})
+        except Exception:
+            return []
+        data = r.get("result") if isinstance(r, dict) else r or {}
+        rows = data.get(inst, []) if isinstance(data, dict) else []
+        return [[float(row[0]), float(row[1]), float(row[2]),
+                 float(row[3]), float(row[4]), float(row[6])]
+                for row in rows[-limit:]]
+
     # account
     def fetch_balance(self) -> dict:
         """Bilancio con cache TTL 15s (requisito 4: niente refresh ridondanti)."""

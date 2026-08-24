@@ -129,6 +129,27 @@ class OKXAdapter:
     def fetch_ohlcv(self, symbol: str, timeframe: str = "1h", limit: int = 100) -> list:
         return self._call(self.ex.fetch_ohlcv, symbol, timeframe, limit)
 
+    def fetch_ohlcv_raw(self, symbol: str, timeframe: str = "1h",
+                        limit: int = 200) -> list:
+        """OHLCV via RAW API (bypassa il bug di ccxt 4.5.x su fetch_ohlcv).
+        Ritorna [[ts, o, h, l, c, v], ...] con ts in secondi."""
+        try:
+            m = self.ex.market(symbol)
+            inst = m["id"]
+        except Exception:
+            # markets non caricati → formato OKX BASE-QUOTE
+            inst = symbol.replace("/", "-")
+        bar = {"1h": "1H", "15m": "15m", "1d": "1D"}.get(timeframe, "1H")
+        try:
+            r = self._call(self.ex.publicGetMarketHistoryCandles,
+                           {"instId": inst, "bar": bar, "limit": str(limit)})
+        except Exception:
+            return []
+        data = r.get("data") if isinstance(r, dict) else r
+        return [[int(row[0]) / 1000.0, float(row[1]), float(row[2]),
+                 float(row[3]), float(row[4]), float(row[5])]
+                for row in (data or [])]
+
     # --- account --------------------------------------------------------------
 
     def fetch_balance(self) -> dict:

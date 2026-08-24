@@ -1,17 +1,25 @@
 #!/usr/bin/env python3
-"""Crea gli item trapper mancanti per gli host node nuvola/mc2 (item.create)."""
+"""Crea gli item trapper ATLAS v6 (regime/adx/atr/rsi/ema200/strategy/
+stop_loss/cap_*) per host node (paper, nuvola, mc2) e bot live (sol/ada/kraken)."""
 import json
 import urllib.request
 
 API = "http://127.0.0.1:1080/api_jsonrpc.php"
 USER, PASS = "Admin", "zabbix"
 
-NODE_HOSTS = {
-    "alpha-omega-node-nuvola": "10698",
-    "alpha-omega-node-mc2": "10699",
+# host -> lista (base_key, simboli)
+HOSTS = {
+    "alpha-omega-node-paper": ("10697", "node.", ["ada", "sol", "xrp", "doge", "eth"]),
+    "alpha-omega-node-nuvola": ("10698", "node.", ["ada", "sol", "xrp", "doge", "eth"]),
+    "alpha-omega-node-mc2": ("10699", "node.", ["ada", "sol", "xrp", "doge", "eth"]),
+    "alpha-omega-bot-sol-eur": ("10690", "bot.sol.", [""]),
+    "alpha-omega-bot-ada-eur": ("10691", "bot.ada.", [""]),
+    "alpha-omega-bot-kraken": ("10693", "bot.kraken.", [""]),
+    "alpha-omega-bot-doge-eur": ("10700", "bot.doge.", [""]),
+    "alpha-omega-bot-eth-eur": ("10701", "bot.eth.", [""]),
 }
-KEYS = ["status", "equity", "buys", "sells", "pnl", "trades"]
-SYMS = ["ada", "sol", "xrp"]
+ATLAS_KEYS = ["regime", "adx", "atr_pct", "rsi", "ema200",
+              "strategy", "stop_loss", "cap_locked", "cap_available"]
 
 
 def rpc(method, params, auth=None):
@@ -37,17 +45,18 @@ def main():
     if not auth:
         print("LOGIN FALLITO")
         return
-    for host, hid in NODE_HOSTS.items():
-        # item esistenti
+    total = 0
+    for host, (hid, prefix, syms) in HOSTS.items():
         got = rpc("item.get", {"output": ["itemid", "key_"], "hostids": hid}, auth) or []
         have = {i["key_"] for i in got}
         missing = []
-        for sym in SYMS:
-            for key in KEYS:
-                k = f"node.{sym}.{key}"
+        for sym in syms:
+            base = f"{prefix}{sym}" if sym else prefix.rstrip(".")
+            for key in ATLAS_KEYS:
+                k = f"{base}.{key}"
                 if k not in have:
                     missing.append({
-                        "name": f"node.{sym}.{key} ({host})",
+                        "name": f"{base}.{key} ({host})",
                         "key_": k,
                         "type": 2,          # trapper
                         "value_type": 0,    # float
@@ -55,13 +64,15 @@ def main():
                         "trends": "30d",
                     })
         if missing:
-            # item.create vuole l'array direttamente, hostid dentro ogni item
             for it in missing:
                 it["hostid"] = hid
             r = rpc("item.create", missing, auth)
-            print(f"{host}: creati {len(missing)} item -> {r}")
+            n = len(missing)
+            total += n
+            print(f"{host}: creati {n} item -> {r}")
         else:
-            print(f"{host}: tutti gli item gia' presenti ({len(have)})")
+            print(f"{host}: tutti presenti ({len(have)})")
+    print(f"TOTALE creati: {total}")
 
 
 if __name__ == "__main__":

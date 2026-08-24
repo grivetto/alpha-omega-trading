@@ -110,20 +110,24 @@ class PortfolioManager:
     # --- pre-flight dedup -----------------------------------------------------
 
     def preflight(self, symbol: str, min_notional: float,
-                  per_level: float, price: float) -> tuple:
+                  per_level: float, price: float, free: Optional[float] = None) -> tuple:
         """Verifica di fattibilita' prima di piazzare un nuovo livello.
 
         Ritorna (ok: bool, reason: str, speculative: List[str]).
         Blocca SOLO per:
         - ordini speculari: buy con prezzo SOPRA il mercato (mai riempiti,
           capitale congelato) → da cancellare via API prima di ri-piazzare
-        - capitale insufficiente persino per il livello minimo:
-          min_notional > capitale virtuale disponibile (blocco totale)
+        - capitale insufficiente per il livello minimo (anti-deadlock):
+          min_notional > capitale virtuale disponibile (free + locked×0.85)
+        - free reale insufficiente per il nuovo livello: un ordine limit BUY
+          richiede free ORA (l'exchange blocca i fondi degli ordini aperti)
+          → `per_level > free` = skip, niente retry infinito InsufficientFunds
 
-        Il notional per livello NON blocca qui: i livelli sotto il minimo
-        vengono filtrati dal caller (semantica legacy: skip del livello).
+        I livelli sotto il minimo vengono filtrati dal caller (semantica
+        legacy: skip del livello, non stop globale).
         """
         available = self.total_available()
+        free_now = float(free) if free is not None else self._free
         speculative: List[str] = []
         for o in self.open_orders:
             if o.get("side") != "buy" or o.get("symbol") != symbol:
@@ -139,8 +143,8 @@ class PortfolioManager:
             return (False,
                     f"preflight: min_notional {min_notional:.4f} > available "
                     f"{available:.4f}", speculative)
-        if per_level > available:
+        if per_level > free_now:
             return (False,
-                    f"preflight: per_level {per_level:.4f} > available "
-                    f"{available:.4f}", speculative)
+                    f"preflight: per_level {per_level:.4f} > free reale "
+                    f"{free_now:.4f}", speculative)
         return (True, "ok", speculative)

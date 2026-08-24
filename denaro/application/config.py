@@ -71,6 +71,7 @@ class BotConfigSchema(BaseModel):
     profit_target: float = 0.015
     tick_interval: float = 60.0
     fee: float = 0.001
+    strategy: str = "grid"   # grid | momentum | meanrev | adaptive (ATLAS v6)
     daily_loss_limit: float = 0.05
     max_drawdown_limit: float = 0.15
     # stop-loss per bot: drawdown dal peak oltre il quale si CHIUDONO le

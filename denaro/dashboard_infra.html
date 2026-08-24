@@ -429,15 +429,26 @@ function renderNodeBots(d) {
     div.className = 'row';
     div.style.borderLeft = `3px solid ${color}`;
     div.style.paddingLeft = '8px';
+    // ATLAS v6: regime + ADX/ATR + strategia (se presenti nell'health)
+    const regimeMap = {range: 'RANGE', trend_bull: 'TREND ▲', trend_bear: 'TREND ▼'};
+    const regimeTxt = b.regime ? (regimeMap[b.regime] || esc(b.regime)) : null;
+    const regimePill = regimeTxt
+      ? `<span class="pill ${b.regime === 'trend_bear' ? 'bad' : (b.regime === 'trend_bull' ? 'ok' : 'warn')}">${regimeTxt}</span>`
+      : '';
+    const atlasInfo = (b.adx != null)
+      ? ` · ADX <b>${fmt(b.adx,1)}</b> · ATR <b>${fmt(b.atr_pct,2)}%</b>${b.rsi != null ? ` · RSI <b>${fmt(b.rsi,0)}</b>` : ''}${b.strategy ? ` · ${esc(b.strategy.toUpperCase())}` : ''}`
+      : '';
+    const slPill = b.stop_loss_triggered ? '<span class="pill bad">STOP LOSS</span>' : '';
     div.innerHTML = `
       <span class="k" style="display:flex;align-items:center;gap:10px">
-        <b style="color:${color}">${esc(sym)}</b> ${st}
+        <b style="color:${color}">${esc(sym)}</b> ${st} ${regimePill} ${slPill}
         <span style="color:var(--dim);font-size:10px">B:${b.buys??0} S:${b.sells??0} · UP ${Math.round(b.uptime||0)}s</span>
       </span>
       <span class="v" style="display:flex;gap:14px">
         <span>EQ <b>${fmt(b.total_equity)}€</b></span>
         <span>PNL <b style="color:${pnl>=0?'var(--neon-green)':'var(--neon-red)'}">${pnl>=0?'+':''}${fmt(pnl,3)}</b></span>
         <span>TR <b>${b.trades??0}</b></span>
+        <span style="color:var(--dim);font-size:11px">${atlasInfo}</span>
         ${b.error ? `<span class="pill warn">ERR</span>` : ''}
       </span>`;
     wrap.appendChild(div);

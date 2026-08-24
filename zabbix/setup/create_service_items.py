@@ -58,7 +58,7 @@ def main():
                     "key_": k,
                     "hostid": hid,
                     "type": 2,          # trapper
-                    "value_type": 3,    # float
+                    "value_type": 0,    # float
                     "history": "7d",
                     "trends": "30d",
                 })
@@ -71,3 +71,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

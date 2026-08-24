@@ -77,8 +77,12 @@ class AdaptiveEngine(Policy):
 
     # --- memoria --------------------------------------------------------------
 
-    def on_ohlcv(self, ohlcv: List[List[float]]) -> None:
-        """Alimenta il regime con candle reali (dal feeder ZeroMQ o REST)."""
+    def on_ohlcv(self, symbol_or_ohlcv, ohlcv: Optional[List[List[float]]] = None) -> None:
+        """Alimenta il regime con candle reali. Contratto canale OHLCV del
+        Node: `(symbol, ohlcv)`. Supporta anche la chiamata diretta
+        `on_ohlcv(ohlcv)` (primo argomento = lista candle)."""
+        if ohlcv is None:
+            ohlcv = symbol_or_ohlcv
         if ohlcv:
             self._ohlcv = list(ohlcv)[-200:]
             self._regime = self.regime_filter.classify(self._ohlcv)

@@ -24,6 +24,8 @@ PASS = "zabbix"
 BOTS = {
     "sol": ("alpha-omega-bot-sol-eur", "bot.sol"),
     "ada": ("alpha-omega-bot-ada-eur", "bot.ada"),
+    "doge": ("alpha-omega-bot-doge-eur", "bot.doge"),
+    "eth": ("alpha-omega-bot-eth-eur", "bot.eth"),
 }
 
 # Node paper (M7): health scritti dal Node asincrono in node_data/
@@ -31,6 +33,8 @@ NODE_BOTS = {
     "ADA": ("ADA/EUR", "alpha-omega-node-paper", "node.ada", "paper_default_ADA_EUR_health.json"),
     "SOL": ("SOL/EUR", "alpha-omega-node-paper", "node.sol", "paper_default_SOL_EUR_health.json"),
     "XRP": ("XRP/EUR", "alpha-omega-node-paper", "node.xrp", "paper_default_XRP_EUR_health.json"),
+    "DOGE": ("DOGE/EUR", "alpha-omega-node-paper", "node.doge", "paper_default_DOGE_EUR_health.json"),
+    "ETH": ("ETH/EUR", "alpha-omega-node-paper", "node.eth", "paper_default_ETH_EUR_health.json"),
 }
 
 # Nodi Denaro remoti (nuvola, mc2): health letti via SSH, push su host dedicati
@@ -202,12 +206,37 @@ def push_remote_nodes(data, auth):
                 {"host": host, "key": f"{keybase}.pnl", "value": h.get("pnl", 0)},
                 {"host": host, "key": f"{keybase}.trades", "value": h.get("trades", 0)},
             ]
+            _push_atlas_metrics(data, host, keybase, h)
         # Auto-heal remoto: nodo intero morto -> systemctl restart via SSH
         if all_stale:
             _heal_remote(node_name, cfg)
         # Stato aggregato del nodo (comodita' dashboard/Zabbix)
         data.append({"host": host, "key": f"{prefix}.status",
                      "value": 1 if (bots and not all_stale) else 0})
+
+
+def _push_atlas_metrics(data, host, keybase, h):
+    """Pusha le metriche ATLAS v6 da un health dict (regime, adx, atr, risk).
+    Usata per bot live, node paper locale e nodi remoti — keybase es.
+    'node.ada' o 'bot.sol'."""
+    if not h:
+        return
+    regime_map = {"range": 0, "trend_bull": 1, "trend_bear": 2}
+    strat = (h.get("strategy") or "").lower()
+    strat_val = {"grid": 0, "momentum": 1, "meanrev": 2, "meanreversion": 2,
+                 "adaptive": 3, "adaptiveengine": 3}.get(strat, -1)
+    data += [
+        {"host": host, "key": f"{keybase}.regime",
+         "value": regime_map.get(h.get("regime", ""), -1)},
+        {"host": host, "key": f"{keybase}.adx", "value": h.get("adx", 0)},
+        {"host": host, "key": f"{keybase}.atr_pct", "value": h.get("atr_pct", 0)},
+        {"host": host, "key": f"{keybase}.rsi", "value": h.get("rsi", 0)},
+        {"host": host, "key": f"{keybase}.ema200", "value": h.get("ema200", 0)},
+        {"host": host, "key": f"{keybase}.strategy", "value": strat_val},
+        {"host": host, "key": f"{keybase}.stop_loss", "value": int(bool(h.get("stop_loss_triggered")))},
+        {"host": host, "key": f"{keybase}.cap_locked", "value": h.get("cap_locked", 0)},
+        {"host": host, "key": f"{keybase}.cap_available", "value": h.get("cap_available", 0)},
+    ]
 
 
 _HEAL_STATE = {}
@@ -421,6 +450,17 @@ def main():
             {"host": host, "key": f"{prefix}.pnl", "value": h.get("pnl", 0)},
             {"host": host, "key": f"{prefix}.trades", "value": h.get("trades", 0)},
         ]
+        # ATLAS v6: regime/ADX/ATR/risk
+        _push_atlas_metrics(data, host, prefix, h)
+
+    # ── 5b. Bot LIVE (da health_path v3.3: health/ada.json ecc.) — ATLAS v6 ──
+    for name, (host, prefix) in BOTS.items():
+        h = read_json(HEALTH_DIR / f"{name}.json")
+        if h and not is_stale(h.get("timestamp", 0)):
+            _push_atlas_metrics(data, host, prefix, h)
+    kraken_h = read_json(HEALTH_DIR / "sol_kraken.json")
+    if kraken_h and not is_stale(kraken_h.get("timestamp", 0)):
+        _push_atlas_metrics(data, "alpha-omega-bot-kraken", "bot.kraken", kraken_h)
 
     # ── 6. Nodi Denaro remoti (nuvola, mc2) + auto-heal remoto ──
     push_remote_nodes(data, auth)

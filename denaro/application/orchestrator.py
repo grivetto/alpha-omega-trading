@@ -269,7 +269,7 @@ class BotTask:
         per_level = self.cfg.capital / max(1, self.cfg.levels)
         if decision.to_place or min_notional > 0:
             ok, reason, speculative = self.portfolio.preflight(
-                self.cfg.symbol, min_notional, per_level, price)
+                self.cfg.symbol, min_notional, per_level, price, free)
             if not ok:
                 self._last_error = f"PRE-FLIGHT BLOCK: {reason}"
                 # cancella gli ordini speculari (capitale congelato) via API
@@ -478,6 +478,25 @@ class BotTask:
             "error": self._last_error,
             "timestamp": self._now(),
         }
+        # ATLAS v6: strategia + regime (se la policy e' adattiva) + risk info
+        payload["strategy"] = self.policy.__class__.__name__.replace("Policy", "").lower()
+        regime = getattr(self.policy, "regime", None)
+        if regime is not None:
+            try:
+                payload["regime"] = regime.name
+                payload["adx"] = round(float(regime.adx), 2)
+                payload["atr_pct"] = round(float(regime.atr_pct) * 100, 3)
+                payload["ema200"] = round(float(regime.ema200), 4)
+                payload["rsi"] = round(float(regime.rsi), 1)
+                payload["regime_confidence"] = round(float(regime.signal_confidence), 3)
+            except Exception:  # noqa: BLE001
+                pass
+        payload["stop_loss_triggered"] = bool(self.state.stop_loss_triggered)
+        try:
+            payload["cap_locked"] = round(float(self.portfolio.locked), 4)
+            payload["cap_available"] = round(float(self.portfolio.total_available()), 4)
+        except Exception:  # noqa: BLE001
+            pass
         self.health.write_json(payload)
 
     # --- run loop ------------------------------------------------------------
@@ -532,14 +551,22 @@ class TradeOrchestrator:
 
     async def _ohlcv_loop(self, symbol: str) -> None:
         exchange, callback = self._ohlcv_sources[symbol]
-        fetch = getattr(exchange, "fetch_ohlcv", None)
+        # preferisce fetch_ohlcv_raw (bypassa il bug ccxt 4.5.x), fallback
+        fetch = getattr(exchange, "fetch_ohlcv_raw", None) or getattr(
+            exchange, "fetch_ohlcv", None)
+        if fetch is None:
+            log.warning("ohlcv %s: exchange senza fetch_ohlcv — canale disattivo",
+                        symbol)
+            return
         while True:
             try:
-                if fetch is not None:
-                    ohlcv = await asyncio.to_thread(
-                        fetch, symbol, self.OHLCV_TIMEFRAME, self.OHLCV_LIMIT)
-                    if ohlcv:
+                ohlcv = await asyncio.to_thread(
+                    fetch, symbol, self.OHLCV_TIMEFRAME, self.OHLCV_LIMIT)
+                if ohlcv:
+                    if asyncio.iscoroutinefunction(callback):
                         await callback(symbol, ohlcv)
+                    else:
+                        callback(symbol, ohlcv)
             except Exception as e:  # noqa: BLE001 - il regime resta sul fallback prezzi
                 log.warning("ohlcv %s fallito: %s", symbol, e)
             await asyncio.sleep(self.OHLCV_REFRESH_S)
