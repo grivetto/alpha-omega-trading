@@ -55,3 +55,4 @@ _*.md
 # Tooling locale / residui non-progetto
 .codewhale/
 
+node_data/
