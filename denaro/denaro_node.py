@@ -163,12 +163,23 @@ class NodeApp:
                 max_drawdown_limit=float(bot.get("max_drawdown_limit", 0.15)),
             )
             task = BotTask(cfg, exchange, policy, risk,
-                           price_source=self._make_price_source(bot["symbol"]))
-            # per i bot paper il prezzo dell'hub alimenta anche i fill simulati
+                           price_source=self._make_price_source(bot["symbol"]),
+                           get_equity=self._equity_for(exchange))
+            # per i bot paper: il prezzo dell'hub alimenta i fill simulati, e lo
+            # stato cash/asset viene ricostruito dal journal al boot (M5)
             if isinstance(exchange, PaperExchange):
                 self.hub.subscribe(bot["symbol"], self._paper_price_handler(exchange))
+                if task.journal is not None:
+                    exchange.rebuild(task.journal.read_all(), cfg.capital)
             self.orchestrator.add_bot(task)
             log.info("bot %s (%s) registrato", bot["symbol"], bot.get("mode", "paper"))
+
+    @staticmethod
+    def _equity_for(exchange):
+        """Equity reale: paper = cash+asset×prezzo; live = fetch totale (in to_thread)."""
+        if isinstance(exchange, PaperExchange):
+            return exchange.equity
+        return exchange.fetch_total_equity
 
     def _make_price_source(self, symbol: str):
         def source() -> float:

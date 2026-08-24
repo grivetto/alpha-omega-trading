@@ -35,6 +35,26 @@ class PaperExchange:
         self.orders: Dict[str, dict] = {}
         self.fill_events: List[dict] = []   # storia dei fill (per i test/parita')
 
+    # --- ricostruzione dal journal (ripristino dopo restart) -----------------
+
+    def rebuild(self, records: List[dict], capital: float) -> None:
+        """Ricostruisce cash/asset dal journal immutabile (M5/D5).
+
+        Semantica 1:1 del grid: ogni buy_filled genera un asset, ogni
+        sell_filled lo chiude; cash = capital + Σ profit (gia' fee-aware).
+        """
+        self.cash = float(capital)
+        self.asset = 0.0
+        for r in records:
+            if r.get("symbol") != self.symbol:
+                continue
+            ev = r.get("event")
+            if ev == "buy_filled":
+                self.asset += float(r.get("amount", 0.0))
+            elif ev == "sell_filled":
+                self.asset -= float(r.get("amount", 0.0))
+                self.cash += float(r.get("profit", 0.0))
+
     # --- market --------------------------------------------------------------
 
     def update_price(self, price: float) -> None:

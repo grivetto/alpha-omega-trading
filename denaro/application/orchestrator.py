@@ -183,7 +183,8 @@ class BotTask:
     async def tick(self) -> None:
         """Un ciclo completo: risk → prezzo → decisione → esecuzione → health."""
         now = self._now()
-        equity = self._get_equity()
+        # equity reale: get_equity puo' fare I/O (fetch live) → to_thread
+        equity = await asyncio.to_thread(self._get_equity)
         if equity > self.state.peak_equity:
             self.state.peak_equity = equity
         dd = (self.state.peak_equity - equity) / max(1e-10, self.state.peak_equity)
