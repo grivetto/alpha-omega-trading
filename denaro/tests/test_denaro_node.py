@@ -147,7 +147,8 @@ class TestLiveConfig(unittest.TestCase):
         self.live_cfg = root / "config" / "node.yaml"
 
     def test_config_live_struttura(self):
-        """Config unificata: paper attivi + live disabilitati (in attesa cutover)."""
+        """Config unificata: paper attivi + live OKX/Kraken ATTIVI (cutover),
+        ex-ATLAS disabilitato (attivazione dopo verifica)."""
         from denaro.application.config import load_node_config
         cfg = load_node_config(self.live_cfg)
         self.assertTrue(cfg.hub.ws_enabled)
@@ -155,10 +156,15 @@ class TestLiveConfig(unittest.TestCase):
         self.assertIn(("ADA/EUR", "paper"), modes)
         self.assertIn(("ADA/EUR", "okx"), modes)
         self.assertIn(("SOL/EUR", "kraken"), modes)
-        # i live sono disabilitati (mai due motori sullo stesso conto)
+        # i bot live Denaro sono attivi; l'ex-ATLAS resta disabilitato
         live = [b for b in cfg.bots if b.mode != "paper"]
-        self.assertTrue(all(b.enabled is False for b in live))
-        self.assertGreaterEqual(len(live), 4)  # okx x2 + kraken x2 (incluso ex-ATLAS)
+        denaro_live = [b for b in live if b.env_prefix != "ATLAS_"]
+        atlas = [b for b in live if b.env_prefix == "ATLAS_"]
+        self.assertTrue(all(b.enabled for b in denaro_live))
+        self.assertTrue(all(b.enabled is False for b in atlas))
+        # health_path verso i path v3.3 (dashboard/Zabbix invariati)
+        ada = next(b for b in live if b.symbol == "ADA/EUR" and b.mode == "okx")
+        self.assertTrue(ada.health_path.endswith("health/ada.json"))
         # nessuna chiave nel config versionato
         raw = self.live_cfg.read_text(encoding="utf-8")
         self.assertNotIn("api_key", raw)
