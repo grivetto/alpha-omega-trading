@@ -1,0 +1,14 @@
+[Unit]
+Description=Denaro — reverse tunnel mc2 -> MARCODG1 (trapper 10051, web 1080, ssh 2222)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=sergio
+ExecStart=/usr/bin/autossh -M 0 -N -o "ServerAliveInterval 30" -o "ServerAliveCountMax 3" -o "ExitOnForwardFailure yes" -R 10051:127.0.0.1:10051 -R 1080:127.0.0.1:1080 -R 2222:127.0.0.1:22 MARCODG1
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
