@@ -51,6 +51,30 @@ REMOTE_NODES = {
 }
 REMOTE_SYMS = {"ADA": "node.ada", "SOL": "node.sol", "XRP": "node.xrp"}
 
+# Servizi Denaro per macchina → item trapper svc.<unit> sugli host macchina
+# (MARCODG1, nuvola, mc2). Stato letto con systemctl is-active:
+# localmente su MARCODG1, via SSH su nuvola/mc2.
+SERVICES = {
+    "marcodg1": {
+        "host": "MARCODG1",
+        "ssh": [],  # locale
+        "units": [
+            "denaro-node-paper", "denaro-health-marcodg1", "denaro-aggregator-marcodg1",
+            "denaro-paper-ada", "denaro-paper-sol", "denaro-paper-xrp",
+        ],
+    },
+    "nuvola": {
+        "host": "nuvola",
+        "ssh": ["sergio@87.106.3.15", "-p", "22"],
+        "units": ["denaro-node-nuvola", "zabbix-tunnel"],
+    },
+    "mc2": {
+        "host": "mc2",
+        "ssh": ["sergio@127.0.0.1", "-p", "2222"],  # tunnel inverso
+        "units": ["denaro-node-mc2", "zabbix-tunnel-reverse"],
+    },
+}
+
 
 def rpc(method, params, auth=None):
     body = {"jsonrpc": "2.0", "method": method, "params": params, "id": 1}
@@ -119,6 +143,40 @@ def fetch_remote_health(node_name):
         return bots
     except Exception:
         return {}
+
+
+def push_services(data):
+    """Pusha lo stato dei servizi Denaro per macchina (systemctl is-active).
+    MARCODG1: locale. nuvola/mc2: via SSH. 1 = active, 0 = non attivo."""
+    for node_name, cfg in SERVICES.items():
+        host = cfg["host"]
+        units = cfg["units"]
+        if cfg["ssh"]:
+            ssh_args = " ".join(cfg["ssh"])
+            cmd = (f"ssh -o BatchMode=yes -o ConnectTimeout=5 {ssh_args} "
+                   f"'for u in {' '.join(units)}; do s=$(systemctl is-active $u 2>/dev/null); echo $u=$s; done'")
+            try:
+                r = subprocess.run(["bash", "-c", cmd], capture_output=True,
+                                   text=True, timeout=20)
+                states = {}
+                for line in r.stdout.splitlines():
+                    if "=" in line:
+                        u, s = line.split("=", 1)
+                        states[u.strip()] = s.strip()
+            except Exception:
+                states = {}
+        else:
+            states = {}
+            for u in units:
+                try:
+                    r = subprocess.run(["systemctl", "is-active", u],
+                                       capture_output=True, text=True, timeout=10)
+                    states[u] = r.stdout.strip()
+                except Exception:
+                    states[u] = ""
+        for u in units:
+            val = 1 if states.get(u) == "active" else 0
+            data.append({"host": host, "key": f"svc.{u}", "value": val})
 
 
 def push_remote_nodes(data, auth):
@@ -366,6 +424,9 @@ def main():
 
     # ── 6. Nodi Denaro remoti (nuvola, mc2) + auto-heal remoto ──
     push_remote_nodes(data, auth)
+
+    # ── 7. Servizi Denaro per macchina (systemctl is-active) ──
+    push_services(data)
 
     # Push
     clock = int(time.time())

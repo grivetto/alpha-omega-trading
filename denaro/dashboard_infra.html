@@ -213,6 +213,7 @@ footer { margin-top: 30px; text-align: center; color: var(--dim); font-size: 11p
   <div class="grid" style="margin-top:20px">
     <div class="card" style="grid-column:1/-1"><h2><span class="ico">█</span> NODE ENGINE — TUTTI I BOT (paper + live)</h2><div id="nodebots"></div></div>
     <div class="card" style="grid-column:1/-1"><h2><span class="ico">⛶</span> NODI DENARO (3 macchine)</h2><div id="nodes"></div></div>
+    <div class="card" style="grid-column:1/-1"><h2><span class="ico">⚙</span> SERVIZI DENARO (per macchina)</h2><div id="services"></div></div>
     <div class="card" style="grid-column:1/-1"><h2><span class="ico">∿</span> TREND EQUITY (ultime 4h)</h2><div id="trend"></div></div>
     <div class="card" style="grid-column:1/-1"><h2><span class="ico">✖</span> ERRORI BOT</h2><div id="errors"></div></div>
   </div>
@@ -347,8 +348,33 @@ function render(d) {
   // ── NODE ENGINE: tutti i bot (paper + live) ──
   renderNodeBots(d);
   renderNodes(d);
+  renderServices(d);
   renderTrend(d);
   renderErrors(d);
+}
+
+function renderServices(d) {
+  const sv = d.services || {};
+  const wrap = $('services');
+  wrap.innerHTML = '';
+  if (!Object.keys(sv).length) { wrap.innerHTML = '<div class="skeleton">NESSUN SERVIZIO</div>'; return; }
+  const colors = { marcodg1: '#00f3ff', nuvola: '#ff2bd6', mc2: '#b026ff' };
+  for (const [name, s] of Object.entries(sv)) {
+    const div = document.createElement('div');
+    div.className = 'row';
+    div.style.borderLeft = `3px solid ${colors[name] || '#00f3ff'}`;
+    div.style.paddingLeft = '8px';
+    const units = Object.entries(s.units || {})
+      .map(([u, v]) => `<span class="pill ${v ? 'ok' : 'bad'}">${esc(u.replace(/^denaro-/, ''))}</span>`)
+      .join(' ');
+    div.innerHTML = `
+      <span class="k" style="display:flex;align-items:center;gap:10px">
+        <b style="color:${colors[name] || '#00f3ff'}">${esc(name)}</b>
+        <span class="pill ${s.all_active ? 'ok' : 'bad'}">${s.all_active ? 'TUTTI ATTIVI' : 'QUALCUNO GIU'}</span>
+      </span>
+      <span class="v" style="display:flex;gap:8px;flex-wrap:wrap">${units}</span>`;
+    wrap.appendChild(div);
+  }
 }
 
 function renderNodes(d) {

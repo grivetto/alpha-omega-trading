@@ -62,7 +62,7 @@ bots:
     enabled: true
   - symbol: SOL/EUR
     mode: okx
-    capital: 5.0
+    capital: 25.0
     levels: 3
     buy_distance: 0.01
     profit_target: 0.015
@@ -75,7 +75,7 @@ bots:
   # ── LIVE KRAKEN (cutover attivo, ora locale nel Node su MARCODG1) ──
   - symbol: SOL/EUR
     mode: kraken
-    capital: 25.0
+    capital: 50.0
     levels: 3
     buy_distance: 0.01
     profit_target: 0.015

@@ -110,6 +110,7 @@ def build():
                           or any(h.get("timestamp") for h in nb.values())),
         }
     data["node_totals"] = node_totals
+    data["services"] = agg.collect_services()
 
     # Trend storico (append, max 240 punti)
     trend = agg.read_trend()

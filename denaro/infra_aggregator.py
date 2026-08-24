@@ -296,6 +296,61 @@ def read_trend():
         return []
 
 
+# Servizi Denaro per macchina (stesso set di push_metrics.py) → dashboard
+SERVICE_UNITS = {
+    "marcodg1": {
+        "ssh": [],
+        "units": [
+            "denaro-node-paper", "denaro-health-marcodg1", "denaro-aggregator-marcodg1",
+            "denaro-paper-ada", "denaro-paper-sol", "denaro-paper-xrp",
+        ],
+    },
+    "nuvola": {
+        "ssh": ["sergio@87.106.3.15", "-p", "22"],
+        "units": ["denaro-node-nuvola", "zabbix-tunnel"],
+    },
+    "mc2": {
+        "ssh": ["sergio@127.0.0.1", "-p", "2222"],  # tunnel inverso
+        "units": ["denaro-node-mc2", "zabbix-tunnel-reverse"],
+    },
+}
+
+
+def collect_services():
+    """Stato dei servizi Denaro per macchina (systemctl is-active)."""
+    out = {}
+    for node_name, cfg in SERVICE_UNITS.items():
+        units = cfg["units"]
+        if cfg["ssh"]:
+            ssh_args = " ".join(cfg["ssh"])
+            cmd = (f"ssh -o BatchMode=yes -o ConnectTimeout=5 {ssh_args} "
+                   f"'for u in {' '.join(units)}; do s=$(systemctl is-active $u 2>/dev/null); echo $u=$s; done'")
+            try:
+                r = subprocess.run(["bash", "-c", cmd], capture_output=True,
+                                   text=True, timeout=20)
+                states = {}
+                for line in r.stdout.splitlines():
+                    if "=" in line:
+                        u, s = line.split("=", 1)
+                        states[u.strip()] = s.strip()
+            except Exception:
+                states = {}
+        else:
+            states = {}
+            for u in units:
+                try:
+                    r = subprocess.run(["systemctl", "is-active", u],
+                                       capture_output=True, text=True, timeout=10)
+                    states[u] = r.stdout.strip()
+                except Exception:
+                    states[u] = ""
+        out[node_name] = {
+            "units": {u: (1 if states.get(u) == "active" else 0) for u in units},
+            "all_active": all(states.get(u) == "active" for u in units),
+        }
+    return out
+
+
 def write_trend(points):
     try:
         (HEALTH_DIR / "trend.json").write_text(json.dumps(points))
@@ -419,6 +474,7 @@ def collect():
                           or any(h.get("timestamp") for h in nb.values())),
         }
     data["node_totals"] = node_totals
+    data["services"] = collect_services()
     data["trend"] = read_trend()[-240:]
     return data
 
