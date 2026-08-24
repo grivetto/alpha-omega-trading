@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 """
 Invia TUTTE le metriche del progetto a Zabbix (trapper API).
-- Bot live: SOL (OKX), ADA (OKX), Kraken (nuvola) — da health files/snapshot
+- Bot live: SOL (OKX), ADA (OKX), Kraken — da health files/snapshot
 - Progetto aggregato: equity totale, PnL, prezzi — da infra_snapshot
 - Paper trade 500€: ADA/SOL/XRP — da paper_state
+- Nodi Denaro remoti (nuvola, mc2): health via SSH + auto-heal remoto
 Eseguito ogni minuto via cron.
 """
 import json
+import subprocess
 import time
 import urllib.request
 from pathlib import Path
@@ -26,10 +28,28 @@ BOTS = {
 
 # Node paper (M7): health scritti dal Node asincrono in node_data/
 NODE_BOTS = {
-    "ADA": ("ADA/EUR", "alpha-omega-node-paper", "node.ada"),
-    "SOL": ("SOL/EUR", "alpha-omega-node-paper", "node.sol"),
-    "XRP": ("XRP/EUR", "alpha-omega-node-paper", "node.xrp"),
+    "ADA": ("ADA/EUR", "alpha-omega-node-paper", "node.ada", "paper_default_ADA_EUR_health.json"),
+    "SOL": ("SOL/EUR", "alpha-omega-node-paper", "node.sol", "paper_default_SOL_EUR_health.json"),
+    "XRP": ("XRP/EUR", "alpha-omega-node-paper", "node.xrp", "paper_default_XRP_EUR_health.json"),
 }
+
+# Nodi Denaro remoti (nuvola, mc2): health letti via SSH, push su host dedicati
+# + auto-heal remoto (systemctl restart via SSH se health stale).
+REMOTE_NODES = {
+    "nuvola": {
+        "ssh": ["sergio@87.106.3.15", "-p", "22"],
+        "data_dir": "/home/sergio/denaro_node_app/node_data",
+        "host": "alpha-omega-node-nuvola",
+        "unit": "denaro-node-nuvola",
+    },
+    "mc2": {
+        "ssh": ["sergio@127.0.0.1", "-p", "2222"],  # tunnel inverso
+        "data_dir": "/home/sergio/denaro_node_app/node_data",
+        "host": "alpha-omega-node-mc2",
+        "unit": "denaro-node-mc2",
+    },
+}
+REMOTE_SYMS = {"ADA": "node.ada", "SOL": "node.sol", "XRP": "node.xrp"}
 
 
 def rpc(method, params, auth=None):
@@ -71,6 +91,87 @@ def file_mtime(p: Path) -> float:
         return 0.0
 
 
+# --- Nodi remoti (nuvola, mc2) ------------------------------------------------
+
+def fetch_remote_health(node_name):
+    """Legge i *_health.json del Node remoto via SSH.
+    Ritorna {symbol: health_dict}. Fallisce in silenzio -> {}."""
+    cfg = REMOTE_NODES.get(node_name)
+    if not cfg:
+        return {}
+    ssh_args = " ".join(cfg["ssh"])
+    data_dir = cfg["data_dir"]
+    cmd = (f"ssh -o BatchMode=yes -o ConnectTimeout=5 {ssh_args} "
+           f"'for f in {data_dir}/*_health.json; do echo ===FILE===; cat \"$f\"; echo; done'")
+    try:
+        r = subprocess.run(["bash", "-c", cmd], capture_output=True, text=True, timeout=20)
+        bots = {}
+        if r.returncode == 0 and r.stdout.strip():
+            for block in r.stdout.split("===FILE===")[1:]:
+                lines = block.strip().splitlines()
+                if not lines:
+                    continue
+                try:
+                    h = json.loads(lines[-1])
+                    bots[h.get("symbol", "unknown")] = h
+                except Exception:
+                    continue
+        return bots
+    except Exception:
+        return {}
+
+
+def push_remote_nodes(data, auth):
+    """Pusha le metriche dei nodi remoti e fa auto-heal remoto se stale."""
+    now = time.time()
+    for node_name, cfg in REMOTE_NODES.items():
+        host = cfg["host"]
+        prefix = f"node.{node_name}"
+        bots = fetch_remote_health(node_name)
+        all_stale = True
+        for sym, keybase in REMOTE_SYMS.items():
+            h = bots.get(f"{sym}/EUR")
+            if not h or is_stale(h.get("timestamp", 0)):
+                data.append({"host": host, "key": f"{keybase}.status", "value": 0})
+                continue
+            all_stale = False
+            running = 1 if h.get("status") == "running" else 0
+            data += [
+                {"host": host, "key": f"{keybase}.status", "value": running},
+                {"host": host, "key": f"{keybase}.equity", "value": h.get("total_equity", 0)},
+                {"host": host, "key": f"{keybase}.buys", "value": h.get("buys", 0)},
+                {"host": host, "key": f"{keybase}.sells", "value": h.get("sells", 0)},
+                {"host": host, "key": f"{keybase}.pnl", "value": h.get("pnl", 0)},
+                {"host": host, "key": f"{keybase}.trades", "value": h.get("trades", 0)},
+            ]
+        # Auto-heal remoto: nodo intero morto -> systemctl restart via SSH
+        if all_stale:
+            _heal_remote(node_name, cfg)
+        # Stato aggregato del nodo (comodita' dashboard/Zabbix)
+        data.append({"host": host, "key": f"{prefix}.status",
+                     "value": 1 if (bots and not all_stale) else 0})
+
+
+_HEAL_STATE = {}
+
+
+def _heal_remote(node_name, cfg):
+    """Riavvia l'unit systemd del nodo remoto via SSH (rate-limit 600s)."""
+    now = time.time()
+    last = _HEAL_STATE.get(node_name, 0.0)
+    if now - last < 600.0:
+        return
+    ssh_args = " ".join(cfg["ssh"])
+    cmd = (f"ssh -o BatchMode=yes -o ConnectTimeout=6 {ssh_args} "
+           f"sudo systemctl restart {cfg['unit']}")
+    try:
+        r = subprocess.run(["bash", "-c", cmd], capture_output=True, text=True, timeout=30)
+        _HEAL_STATE[node_name] = now
+        print(f"HEAL REMOTO: {node_name} ({cfg['unit']}) riavviato rc={r.returncode}")
+    except Exception as e:
+        print(f"HEAL REMOTO {node_name} ERRORE: {e}")
+
+
 # --- AUTO-HEAL locale (sostituisce i trigger Zabbix, piu' affidabile) --------
 # Health stale > HEAL_STALE_S → riavvio dell'unit systemd locale.
 # Rate-limit: stessa unit non riavviata piu' di una volta ogni HEAL_COOLDOWN_S.
@@ -78,16 +179,16 @@ HEAL_STALE_S = 180.0
 HEAL_COOLDOWN_S = 600.0
 HEAL_STATE_FILE = Path("/tmp/denaro_heal_state.json")
 HEAL_UNITS = {
-    # dopo il cutover, TUTTI i bot live/paper girano nel Node (denaro-node-paper)
+    # dopo il cutover, TUTTI i bot live/paper girano nel Node (denaro-node-paper).
+    # File attuali del Node (paths_for: paper_default_{SYM}_EUR_health.json).
+    # NB: i residui pre-refactor (ADA_EUR_health.json) e i paper v3.3 (paper_state)
+    # sono congelati e NON vanno referenziati (falsi riavvii).
     HEALTH_DIR / "ada.json": "denaro-node-paper",
     HEALTH_DIR / "sol.json": "denaro-node-paper",
     HEALTH_DIR / "sol_kraken.json": "denaro-node-paper",
-    PAPER_DIR / "ADA_EUR_paper.json": "denaro-paper-ada",
-    PAPER_DIR / "SOL_EUR_paper.json": "denaro-paper-sol",
-    PAPER_DIR / "XRP_EUR_paper.json": "denaro-paper-xrp",
-    NODE_DIR / "ADA_EUR_health.json": "denaro-node-paper",
-    NODE_DIR / "SOL_EUR_health.json": "denaro-node-paper",
-    NODE_DIR / "XRP_EUR_health.json": "denaro-node-paper",
+    NODE_DIR / "paper_default_ADA_EUR_health.json": "denaro-node-paper",
+    NODE_DIR / "paper_default_SOL_EUR_health.json": "denaro-node-paper",
+    NODE_DIR / "paper_default_XRP_EUR_health.json": "denaro-node-paper",
 }
 
 
@@ -248,8 +349,8 @@ def main():
         ]
 
     # ── 5. Node paper (M7 — da node_data health; staleness via timestamp) ──
-    for name, (symbol, host, prefix) in NODE_BOTS.items():
-        h = read_json(NODE_DIR / f"{symbol.replace('/', '_')}_health.json")
+    for name, (symbol, host, prefix, fname) in NODE_BOTS.items():
+        h = read_json(NODE_DIR / fname)
         if not h or is_stale(h.get("timestamp", 0)):
             data.append({"host": host, "key": f"{prefix}.status", "value": 0})
             continue
@@ -262,6 +363,9 @@ def main():
             {"host": host, "key": f"{prefix}.pnl", "value": h.get("pnl", 0)},
             {"host": host, "key": f"{prefix}.trades", "value": h.get("trades", 0)},
         ]
+
+    # ── 6. Nodi Denaro remoti (nuvola, mc2) + auto-heal remoto ──
+    push_remote_nodes(data, auth)
 
     # Push
     clock = int(time.time())

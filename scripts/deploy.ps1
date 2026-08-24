@@ -44,6 +44,22 @@ Run-Ssh MARCODG1 "sudo cp /home/marco/denaro/dashboard_infra.html /var/www/html/
 # 5) Zabbix push metrics -> MARCODG1
 Write-Host "-- 5. push_metrics.py -> MARCODG1"
 Copy-ViaScp "$ROOT\zabbix\push_metrics.py" "MARCODG1:/home/marco/denaro/zabbix/push_metrics.py"
+Copy-ViaScp "$ROOT\zabbix\setup\setup_zabbix_nodes.py" "MARCODG1:/home/marco/denaro/zabbix/setup_zabbix_nodes.py"
+Copy-ViaScp "$ROOT\zabbix\setup\create_node_items.py" "MARCODG1:/home/marco/denaro/zabbix/create_node_items.py"
+
+# 5b) Node su NUVOLA (package denaro + config + unit)
+Write-Host "-- 5b. Node -> nuvola (paper; live ATLAS disabilitato)"
+Copy-ViaScp "$ROOT\config\node_nuvola.yaml" "nuvola:/tmp/node_nuvola.yaml"
+Run-Ssh nuvola "sudo mkdir -p /home/sergio/denaro_node_app/config && sudo cp /tmp/node_nuvola.yaml /home/sergio/denaro_node_app/config/node_nuvola.yaml && sudo chown -R sergio:sergio /home/sergio/denaro_node_app"
+Copy-ViaScp "$ROOT\systemd\denaro-node-nuvola.service" "nuvola:/tmp/dnn.service"
+Run-Ssh nuvola "sudo cp /tmp/dnn.service /etc/systemd/system/denaro-node-nuvola.service && sudo systemctl daemon-reload && sudo systemctl restart denaro-node-nuvola"
+
+# 5c) Node su MC2 (package denaro + config + unit)
+Write-Host "-- 5c. Node -> mc2 (paper)"
+Copy-ViaScp "$ROOT\config\node_mc2.yaml" "MARCODG1:/tmp/node_mc2.yaml"
+Run-Ssh MARCODG1 "ssh -o BatchMode=yes -o ConnectTimeout=10 -p 2222 sergio@127.0.0.1 'sudo mkdir -p /home/sergio/denaro_node_app/config && sudo cp /tmp/node_mc2.yaml /home/sergio/denaro_node_app/config/node_mc2.yaml && sudo chown -R sergio:sergio /home/sergio/denaro_node_app'"
+Copy-ViaScp "$ROOT\systemd\denaro-node-mc2.service" "MARCODG1:/tmp/dnm.service"
+Run-Ssh MARCODG1 "ssh -o BatchMode=yes -o ConnectTimeout=10 -p 2222 sergio@127.0.0.1 'sudo cp /tmp/dnm.service /etc/systemd/system/denaro-node-mc2.service && sudo systemctl daemon-reload && sudo systemctl restart denaro-node-mc2'"
 
 # 6) Heal script -> mc2 (alertscripts montato nel container)
 Write-Host "-- 6. denaro_heal.sh -> mc2 alertscripts"

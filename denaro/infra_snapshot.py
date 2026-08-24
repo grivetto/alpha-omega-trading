@@ -88,6 +88,29 @@ def build():
     data["node_errors"] = {sym: b.get("error", "")
                            for sym, b in node_bots.items() if b.get("error")}
 
+    # Totali PER NODO (stessa logica dell'aggregator)
+    node_totals = {}
+    all_node_names = ["marcodg1"] + list(agg.REMOTE_NODES.keys())
+    remote_prefixes = tuple(f"{n}:" for n in agg.REMOTE_NODES)
+    for node_name in all_node_names:
+        if node_name == "marcodg1":
+            nb = {k: v for k, v in node_bots.items()
+                  if not k.startswith(remote_prefixes)}
+        else:
+            prefix = f"{node_name}:"
+            nb = {k: v for k, v in node_bots.items() if k.startswith(prefix)}
+        running = [b for b in nb.values() if b.get("status") == "running"]
+        node_totals[node_name] = {
+            "bots": len(nb),
+            "running": len(running),
+            "pnl": round(sum(b.get("pnl", 0) for b in running), 4),
+            "trades": sum(b.get("trades", 0) for b in running),
+            "equity": round(sum(b.get("total_equity", 0) for b in running), 2),
+            "reachable": (node_name == "marcodg1"
+                          or any(h.get("timestamp") for h in nb.values())),
+        }
+    data["node_totals"] = node_totals
+
     # Trend storico (append, max 240 punti)
     trend = agg.read_trend()
     trend.append({"ts": int(time.time()), "equity": data["total_equity"],

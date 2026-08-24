@@ -28,6 +28,22 @@ NODE_DIR = Path(os.getenv("NODE_DIR", "/home/marco/denaro_node_app/node_data"))
 PORT = int(os.getenv("AGG_PORT", "8912"))
 HOST = os.getenv("AGG_HOST", "127.0.0.1")
 
+# Nodi remoti che eseguono il Node Denaro (paper/live). L'aggregator gira su
+# MARCODG1 e li legge via SSH (stesso meccanismo di zabbix_state).
+# remote_data_dir: cartella node_data sul nodo remoto.
+REMOTE_NODES = {
+    "nuvola": {
+        "ssh": ["sergio@87.106.3.15", "-p", "22"],
+        "data_dir": "/home/sergio/denaro_node_app/node_data",
+        "unit": "denaro-node-nuvola",
+    },
+    "mc2": {
+        "ssh": ["sergio@127.0.0.1", "-p", "2222"],  # tunnel inverso
+        "data_dir": "/home/sergio/denaro_node_app/node_data",
+        "unit": "denaro-node-mc2",
+    },
+}
+
 # Conti OKX (per saldi reali)
 ENV_FILES = {
     "denaro (main)": "/home/marco/denaro/.env",
@@ -230,7 +246,46 @@ def collect_node_bots():
                 bots[key] = h
         except Exception:
             continue
+    # Nodi remoti: chiavi "nuvola:paper:ADA/EUR", "mc2:paper:ADA/EUR" ecc.
+    for node_name, cfg in REMOTE_NODES.items():
+        for sym, h in fetch_remote_node_bots(node_name).items():
+            bots[f"{node_name}:{sym}"] = h
     return bots
+
+
+def fetch_remote_node_bots(node_name):
+    """Legge i *_health.json del Node remoto via SSH (con cache TTL)."""
+    cfg = REMOTE_NODES.get(node_name)
+    if not cfg:
+        return {}
+    data_dir = cfg["data_dir"]
+    cache_key = f"remote_node:{node_name}"
+    now = time.time()
+    hit = _remote_cache.get(cache_key)
+    if hit and now - hit[0] < _REMOTE_TTL:
+        return hit[1]
+    ssh_args = " ".join(cfg["ssh"])
+    cmd = (f"ssh -o BatchMode=yes -o ConnectTimeout=5 {ssh_args} "
+           f"'for f in {data_dir}/*_health.json; do echo ===FILE===; cat \"$f\"; echo; done'")
+    try:
+        r = subprocess.run(["bash", "-c", cmd], capture_output=True, text=True, timeout=20)
+        bots = {}
+        if r.returncode == 0 and r.stdout.strip():
+            blocks = r.stdout.split("===FILE===")
+            for block in blocks[1:]:
+                lines = block.strip().splitlines()
+                if not lines:
+                    continue
+                try:
+                    h = json.loads(lines[-1])
+                    sym = h.get("symbol", "unknown")
+                    bots[sym] = h
+                except Exception:
+                    continue
+        _remote_cache[cache_key] = (now, bots)
+        return bots
+    except Exception:
+        return {}
 
 
 def read_trend():
@@ -265,6 +320,8 @@ def collect():
     # 1b) Bot Kraken (ora LOCALE nel Node: health/sol_kraken.json;
     #      fallback retro-compatibile allo snapshot da nuvola)
     kraken = None
+    snap = None
+    snap_path = HEALTH_DIR / "kraken_snapshot.json"
     kraken_path = HEALTH_DIR / "sol_kraken.json"
     if kraken_path.exists():
         try:
@@ -272,7 +329,6 @@ def collect():
         except Exception:
             kraken = None
     if not kraken:
-        snap_path = HEALTH_DIR / "kraken_snapshot.json"
         if snap_path.exists():
             try:
                 snap = json.loads(snap_path.read_text())
@@ -340,6 +396,29 @@ def collect():
     data["node_win_rate"] = round(wins / (wins + losses) * 100, 1) if (wins + losses) else 0
     data["node_errors"] = {sym: b.get("error", "")
                            for sym, b in node_bots.items() if b.get("error")}
+
+    # 8b) Totali PER NODO: marcodg1 (locale) + nuvola + mc2 (via SSH)
+    node_totals = {}
+    all_node_names = ["marcodg1"] + list(REMOTE_NODES.keys())
+    remote_prefixes = tuple(f"{n}:" for n in REMOTE_NODES)
+    for node_name in all_node_names:
+        if node_name == "marcodg1":
+            nb = {k: v for k, v in node_bots.items()
+                  if not k.startswith(remote_prefixes)}
+        else:
+            prefix = f"{node_name}:"
+            nb = {k: v for k, v in node_bots.items() if k.startswith(prefix)}
+        running = [b for b in nb.values() if b.get("status") == "running"]
+        node_totals[node_name] = {
+            "bots": len(nb),
+            "running": len(running),
+            "pnl": round(sum(b.get("pnl", 0) for b in running), 4),
+            "trades": sum(b.get("trades", 0) for b in running),
+            "equity": round(sum(b.get("total_equity", 0) for b in running), 2),
+            "reachable": (node_name == "marcodg1"
+                          or any(h.get("timestamp") for h in nb.values())),
+        }
+    data["node_totals"] = node_totals
     data["trend"] = read_trend()[-240:]
     return data
 

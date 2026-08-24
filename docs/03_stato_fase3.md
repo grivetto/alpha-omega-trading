@@ -1,7 +1,33 @@
-# DENARO — Stato Fase 3 e Runbook Cutover (aggiornato round 7)
+# DENARO — Stato Fase 3 e Runbook Cutover (aggiornato round 8 — 3 NODI ATTIVI)
 
 > La Fase 3 (implementazione modulare) e' in corso. Questo documento traccia
 > lo stato di ogni modulo, l'evidenza di verifica e il runbook del cutover live.
+
+---
+
+## 0. Stato operativo round 8 — 3 nodi Denaro attivi (2026-08-24)
+
+| Nodo | Host | Unit | Bot | Stato |
+|------|------|------|-----|-------|
+| MARCODG1 | 87.106.222.123 | `denaro-node-paper` | 3 paper (ADA/SOL/XRP 300/100/100) + 3 live (OKX ADA 20€, OKX SOL 5€, Kraken SOL 25€) | ✅ active |
+| nuvola | 87.106.3.15 | `denaro-node-nuvola` | 3 paper (ADA/SOL/XRP 300/100/100) | ✅ active |
+| mc2 | 192.168.1.99 (via tunnel 2222) | `denaro-node-mc2` | 3 paper (ADA/SOL/XRP 300/100/100) | ✅ active |
+
+- Equity reale totale ≈ 55€ (OKX main + marcosub1 + Kraken); Node paper +7.99€
+  (9 trade, WR 100% a round 7) — marcodg1 mostra 11.52€/14 trade a round 8.
+- **Scoperta chiavi**: tutte le coppie Kraken valide su nuvola/MARCODG1
+  (FSb6rd, OuA8bY, /IGUnb, Sc0lGC) puntano allo **stesso account** (SOL 0.303,
+  ADA 0.064, EUR 0.83, USD 0.41). Il "conto ATLAS" da 26€ non esiste come
+  conto separato → il bot ex-ATLAS resta **disabilitato** nei config di nuvola
+  (regola: mai due engine sullo stesso account). Attivazione live su nuvola
+  solo quando ci sara' capitale su un conto Kraken/OKX separato.
+- Monitoraggio: aggregator (8912) legge le health dei 3 nodi via SSH
+  (nuvola porta 22, mc2 porta 2222 via tunnel inverso) → `node_totals` nella
+  dashboard; Zabbix host nuovi `alpha-omega-node-nuvola` (10698) e
+  `alpha-omega-node-mc2` (10699) con 18 item trapper ciascuno + auto-heal
+  remoto via SSH in `push_metrics.py`.
+- Cron MARCODG1: `push_metrics.py` e `infra_snapshot.py` ogni minuto (133
+  valori/min pushati a Zabbix).
 
 ---
 
@@ -81,8 +107,14 @@ Principio: **mai due motori sullo stesso conto** (lezione del doppio bot Kraken)
 ---
 
 ## 4. Decisioni pendenti (richiedono approvazione)
-1. **Cutover live ora o dopo il gating 48h?**
+1. ~~Cutover live ora o dopo il gating 48h?~~ **ESEGUITO** (round 7): i live
+   girano nel Node su MARCODG1; paper v3.3 fermati; gating 48h superato.
 2. **Zabbix**: cambiare la password `Admin/zabbix` (default) — coordinato con
    `push_metrics.py` (leggerebbe le credenziali da file/env, non hardcoded).
 3. **Capitale**: il Node live rispetta `min(capital, free)` come il v3.3 —
-   nessun cambio di strategia al cutover.
+   nessun cambio di strategia al cutover. **Verificato round 8**: nessun conto
+   separato per ex-ATLAS; per aggiungere potenza di fuoco live serve capitale
+   su un conto nuovo (Kraken/OKX) — solo allora si attiva il bot su nuvola.
+4. **Auto-heal Zabbix**: i trigger nominali restano rotti (phantom itemids);
+   il cron `push_metrics.py` fa auto-heal locale + remoto (stale → systemctl
+   restart via SSH, cooldown 600s). Opzionale: fix trigger via MySQL diretto.

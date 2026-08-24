@@ -1,0 +1,18 @@
+[Unit]
+Description=Denaro Node — trading engine unificato su NUVOLA (paper + live Kraken ex-ATLAS)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=sergio
+ExecStart=/home/sergio/denaro/venv/bin/python -m denaro.denaro_node --config config/node_nuvola.yaml
+WorkingDirectory=/home/sergio/denaro_node_app
+EnvironmentFile=/home/sergio/denaro_node_app/.env
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
