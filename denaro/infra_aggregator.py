@@ -201,15 +201,23 @@ def collect():
                 bots[name] = {"status": "error"}
         else:
             bots[name] = {"status": "no_file"}
-    # 1b) Bot Kraken su nuvola (da snapshot locale aggiornato via cron/scp)
+    # 1b) Bot Kraken (ora LOCALE nel Node: health/sol_kraken.json;
+    #      fallback retro-compatibile allo snapshot da nuvola)
     kraken = None
-    snap_path = HEALTH_DIR / "kraken_snapshot.json"
-    if snap_path.exists():
+    kraken_path = HEALTH_DIR / "sol_kraken.json"
+    if kraken_path.exists():
         try:
-            snap = json.loads(snap_path.read_text())
-            kraken = snap.get("bot")
+            kraken = json.loads(kraken_path.read_text())
         except Exception:
-            snap = None
+            kraken = None
+    if not kraken:
+        snap_path = HEALTH_DIR / "kraken_snapshot.json"
+        if snap_path.exists():
+            try:
+                snap = json.loads(snap_path.read_text())
+                kraken = snap.get("bot")
+            except Exception:
+                kraken = None
     if kraken:
         bots["sol_kraken"] = kraken
     data["bots"] = bots

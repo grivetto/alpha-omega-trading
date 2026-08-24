@@ -78,8 +78,10 @@ HEAL_STALE_S = 180.0
 HEAL_COOLDOWN_S = 600.0
 HEAL_STATE_FILE = Path("/tmp/denaro_heal_state.json")
 HEAL_UNITS = {
-    HEALTH_DIR / "ada.json": "denaro-solo-ada-marcodg1",
-    HEALTH_DIR / "sol.json": "denaro-solo-sol-marcodg1",
+    # dopo il cutover, TUTTI i bot live/paper girano nel Node (denaro-node-paper)
+    HEALTH_DIR / "ada.json": "denaro-node-paper",
+    HEALTH_DIR / "sol.json": "denaro-node-paper",
+    HEALTH_DIR / "sol_kraken.json": "denaro-node-paper",
     PAPER_DIR / "ADA_EUR_paper.json": "denaro-paper-ada",
     PAPER_DIR / "SOL_EUR_paper.json": "denaro-paper-sol",
     PAPER_DIR / "XRP_EUR_paper.json": "denaro-paper-xrp",
@@ -157,10 +159,15 @@ def main():
             {"host": host, "key": f"{prefix}.uptime", "value": h.get("uptime", 0)},
         ]
 
-    # ── 2. Bot Kraken (da snapshot nuvola) ──
-    snap = read_json(HEALTH_DIR / "kraken_snapshot.json")
-    if snap and snap.get("bot") and not is_stale(snap["bot"].get("timestamp", 0)):
-        h = snap["bot"]
+    # ── 2. Bot Kraken (ora LOCALE nel Node: health/sol_kraken.json;
+    #      fallback retro-compatibile allo snapshot da nuvola) ──
+    kraken_h = read_json(HEALTH_DIR / "sol_kraken.json")
+    if kraken_h is None:
+        snap = read_json(HEALTH_DIR / "kraken_snapshot.json")
+        if snap and snap.get("bot"):
+            kraken_h = snap["bot"]
+    if kraken_h and not is_stale(kraken_h.get("timestamp", 0)):
+        h = kraken_h
         host = "alpha-omega-bot-kraken"
         prefix = "bot.kraken"
         running = 1 if h.get("status") == "running" else 0

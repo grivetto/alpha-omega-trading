@@ -275,7 +275,7 @@ class BotTask:
         await self._process_fills(price)
 
         self._last_error = ""
-        self._write_health(equity, blocked=False)
+        self._write_health(equity, blocked=False, free_quote=free)
         self._save_state()
 
     def _available_capital(self, free: float) -> float:
@@ -359,13 +359,14 @@ class BotTask:
 
     # --- health --------------------------------------------------------------
 
-    def _write_health(self, equity: float, blocked: bool) -> None:
+    def _write_health(self, equity: float, blocked: bool, free_quote: float = 0.0) -> None:
         if self.health is None:
             return
         payload = {
             "symbol": self.cfg.symbol,
             "status": "blocked" if blocked else "running",
             "capital": self.cfg.capital,
+            "free_quote": round(free_quote, 4),
             "total_equity": round(equity, 4),
             "buys": len(self.state.open_buys),
             "sells": len(self.state.open_sells),

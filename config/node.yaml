@@ -1,12 +1,6 @@
 # DENARO — config unificata del Node (tutti gli ambienti di trading).
-# Caricata con denaro.application.config (YAML + Pydantic + interpolazione ${VAR}).
-#
-# ARCHITETTURA UNIFICATA (docs/04_architettura_unificata.md):
-# - UN solo motore (Node asyncio) per TUTTI gli ambienti (paper + OKX + Kraken).
-# - ATLAS e' stato dismesso (legacy/atlas): il suo account Kraken (~26€ in SOL)
-#   sara' gestito dal Node con env_prefix ATLAS_ una volta approvato il cutover.
-# - I bot live hanno "enabled: false" finche' il cutover non e' approvato
-#   (mai due motori sullo stesso conto: i v3.3 sono ancora attivi).
+# CUTOVER LIVE: i bot live OKX/Kraken sono attivi (v3.3 fermati).
+# L'ex-ATLAS (Kraken ATLAS_) resta disabilitato (verifica prima, poi attivazione).
 data_dir: node_data
 supervisor:
   ram_critical_pct: 0.85
@@ -28,7 +22,7 @@ exchange_rest:
   name: okx
   eea: true
 bots:
-  # ── PAPER (500€ virtuali — ATTIVO, validazione parita' M7) ──
+  # ── PAPER (500€ virtuali — validazione parita') ──
   - symbol: ADA/EUR
     mode: paper
     capital: 300
@@ -54,7 +48,7 @@ bots:
     fee: 0.001
     tick_interval: 30
 
-  # ── LIVE OKX (in attesa di cutover — enabled: false) ──
+  # ── LIVE OKX (cutover attivo; health_path = path v3.3 per dashboard/Zabbix) ──
   - symbol: ADA/EUR
     mode: okx
     capital: 20.0
@@ -64,7 +58,8 @@ bots:
     fee: 0.001
     tick_interval: 30
     env_prefix: MARCOSUB1_
-    enabled: false
+    health_path: /home/marco/denaro/health/ada.json
+    enabled: true
   - symbol: SOL/EUR
     mode: okx
     capital: 5.0
@@ -74,9 +69,10 @@ bots:
     fee: 0.001
     tick_interval: 30
     env_prefix: ""
-    enabled: false
+    health_path: /home/marco/denaro/health/sol.json
+    enabled: true
 
-  # ── LIVE KRAKEN (ex-Denaro nuvola + ex-ATLAS — in attesa cutover) ──
+  # ── LIVE KRAKEN (cutover attivo, ora locale nel Node su MARCODG1) ──
   - symbol: SOL/EUR
     mode: kraken
     capital: 25.0
@@ -86,7 +82,10 @@ bots:
     fee: 0.0026
     tick_interval: 30
     env_prefix: KRAKEN_
-    enabled: false
+    health_path: /home/marco/denaro/health/sol_kraken.json
+    enabled: true
+
+  # ── KRAKEN ex-ATLAS (in attesa di verifica cutover) ──
   - symbol: SOL/EUR
     mode: kraken
     capital: 26.0

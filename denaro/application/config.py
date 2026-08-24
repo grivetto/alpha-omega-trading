@@ -73,6 +73,9 @@ class BotConfigSchema(BaseModel):
     fee: float = 0.001
     daily_loss_limit: float = 0.05
     max_drawdown_limit: float = 0.15
+    # health_path esplicito: per i bot LIVE mantiene i path v3.3
+    # (health/ada.json ecc.) cosi' dashboard e Zabbix restano invariati
+    health_path: str = ""
     # secret: interpolati da ${VAR} al load — mai hardcoded nel file
     api_key: str = ""
     api_secret: str = ""

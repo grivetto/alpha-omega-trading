@@ -173,6 +173,9 @@ class NodeApp:
                 continue
             exchange = build_exchange(bot, self.data_dir)
             paths = paths_for(bot, self.data_dir)
+            # health_path esplicito (bot live → path v3.3 per dashboard/Zabbix)
+            if bot.get("health_path"):
+                paths["health_path"] = Path(bot["health_path"])
             cfg = BotConfig(
                 symbol=bot["symbol"],
                 capital=float(bot.get("capital", 100)),
