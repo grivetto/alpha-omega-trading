@@ -63,22 +63,19 @@ def build():
     data["docker"] = agg.docker_state()
     data["system"] = agg.system_state()
 
-    bot_eq = 0.0
-    for name, b in bots.items():
-        if name == "sol_kraken":
-            continue
-        if b.get("status") == "running":
-            bot_eq += b.get("total_equity", 0)
-    kraken_eur = 0.0
-    if balances.get("kraken (nuvola)") and balances["kraken (nuvola)"].get("total_eur"):
-        kraken_eur = balances["kraken (nuvola)"]["total_eur"]
-    data["bot_equity"] = round(bot_eq, 2)
-    data["kraken_equity"] = round(kraken_eur, 2)
-    data["total_equity"] = round(bot_eq + kraken_eur, 2)
-
     # Node (Fase 3) — stessa logica dell'aggregator
     node_bots = agg.collect_node_bots()
     data["node_bots"] = node_bots
+
+    # CAPITALE TOTALE REALE = bot LIVE del Node (okx:* + kraken:*), esclusi paper
+    okx_eq = sum(b.get("total_equity", 0) for k, b in node_bots.items()
+                 if k.startswith("okx:") and b.get("status") == "running")
+    kraken_eq = sum(b.get("total_equity", 0) for k, b in node_bots.items()
+                    if k.startswith("kraken:") and b.get("status") == "running")
+    data["bot_equity"] = round(okx_eq, 2)
+    data["kraken_equity"] = round(kraken_eq, 2)
+    data["total_equity"] = round(okx_eq + kraken_eq, 2)
+
     node_running = [b for b in node_bots.values() if b.get("status") == "running"]
     data["node_total_pnl"] = round(sum(b.get("pnl", 0) for b in node_running), 4)
     data["node_total_trades"] = sum(b.get("trades", 0) for b in node_running)

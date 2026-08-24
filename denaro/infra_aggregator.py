@@ -426,23 +426,22 @@ def collect():
     # 6) Sistema
     data["system"] = system_state()
 
-    # 7) Totali — somma bot OKX + saldo Kraken (per riflettere tutto il capitale)
-    bot_eq = 0.0
-    for name, b in bots.items():
-        if name == "sol_kraken":
-            continue
-        if b.get("status") == "running":
-            bot_eq += b.get("total_equity", 0)
-    kraken_eur = 0.0
-    if balances.get("kraken (nuvola)") and balances["kraken (nuvola)"].get("total_eur"):
-        kraken_eur = balances["kraken (nuvola)"]["total_eur"]
-    data["bot_equity"] = round(bot_eq, 2)
-    data["kraken_equity"] = round(kraken_eur, 2)
-    data["total_equity"] = round(bot_eq + kraken_eur, 2)
-
     # 8) Node (Fase 3) — tutti i bot (paper + live) + aggregati
     node_bots = collect_node_bots()
     data["node_bots"] = node_bots
+
+    # 7) CAPITALE TOTALE REALE = somma dei bot LIVE del Node (okx:* + kraken:*),
+    #    escludendo i paper virtuali (ADA/EUR, SOL/EUR, XRP/EUR locali e remoti).
+    #    NB: i vecchi health file (health/sol.json ecc.) e il kraken_snapshot.json
+    #    da nuvola sono obsoleti — il Node scrive i valori live aggiornati.
+    okx_eq = sum(b.get("total_equity", 0) for k, b in node_bots.items()
+                 if k.startswith("okx:") and b.get("status") == "running")
+    kraken_eq = sum(b.get("total_equity", 0) for k, b in node_bots.items()
+                    if k.startswith("kraken:") and b.get("status") == "running")
+    data["bot_equity"] = round(okx_eq, 2)
+    data["kraken_equity"] = round(kraken_eq, 2)
+    data["total_equity"] = round(okx_eq + kraken_eq, 2)
+
     node_running = [b for b in node_bots.values() if b.get("status") == "running"]
     data["node_total_pnl"] = round(sum(b.get("pnl", 0) for b in node_running), 4)
     data["node_total_trades"] = sum(b.get("trades", 0) for b in node_running)
