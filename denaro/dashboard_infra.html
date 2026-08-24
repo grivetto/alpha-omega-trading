@@ -210,6 +210,12 @@ footer { margin-top: 30px; text-align: center; color: var(--dim); font-size: 11p
     <div class="card"><h2><span class="ico">▒</span> CONTAINER</h2><div id="docker"></div></div>
   </div>
 
+  <div class="grid" style="margin-top:20px">
+    <div class="card" style="grid-column:1/-1"><h2><span class="ico">█</span> NODE ENGINE — TUTTI I BOT (paper + live)</h2><div id="nodebots"></div></div>
+    <div class="card" style="grid-column:1/-1"><h2><span class="ico">∿</span> TREND EQUITY (ultime 4h)</h2><div id="trend"></div></div>
+    <div class="card" style="grid-column:1/-1"><h2><span class="ico">✖</span> ERRORI BOT</h2><div id="errors"></div></div>
+  </div>
+
   <footer>DENARO NEON GRID · AUTO-REFRESH 30s · <span id="clock">—</span></footer>
 </div>
 
@@ -336,6 +342,90 @@ function render(d) {
   const allOk = shown > 0 && ORDER.every(n => !bots[n] || bots[n].status === 'running');
   $('sysstatus').textContent = allOk ? 'SYSTEM ONLINE' : 'CAUTION — COMPONENT OFFLINE';
   $('dot').className = 'pulse' + (allOk ? '' : ' warn');
+
+  // ── NODE ENGINE: tutti i bot (paper + live) ──
+  renderNodeBots(d);
+  renderTrend(d);
+  renderErrors(d);
+}
+
+function renderNodeBots(d) {
+  const nb = d.node_bots || {};
+  const wrap = $('nodebots');
+  wrap.innerHTML = '';
+  if (!Object.keys(nb).length) { wrap.innerHTML = '<div class="skeleton">NESSUN BOT NODE</div>'; return; }
+  const meta = {
+    'ADA/EUR': '#00f3ff', 'SOL/EUR': '#ff2bd6', 'XRP/EUR': '#b026ff'
+  };
+  const totals = document.createElement('div');
+  totals.className = 'row';
+  totals.innerHTML = `<span class="k">TOTALE NODE</span>
+    <span class="v" style="display:flex;gap:14px">
+      <span>PNL <b style="color:${(d.node_total_pnl||0)>=0?'var(--neon-green)':'var(--neon-red)'}">${(d.node_total_pnl||0)>=0?'+':''}${fmt(d.node_total_pnl,2)}€</b></span>
+      <span>TRADE <b>${d.node_total_trades ?? 0}</b></span>
+      <span>WR <b>${d.node_win_rate ?? 0}%</b></span>
+    </span>`;
+  wrap.appendChild(totals);
+  for (const [sym, b] of Object.entries(nb)) {
+    const color = meta[sym] || '#00f3ff';
+    const st = b.status === 'running' ? '<span class="pill ok">RUN</span>' : `<span class="pill bad">${esc(b.status||'?')}</span>`;
+    const pnl = b.pnl || 0;
+    const div = document.createElement('div');
+    div.className = 'row';
+    div.style.borderLeft = `3px solid ${color}`;
+    div.style.paddingLeft = '8px';
+    div.innerHTML = `
+      <span class="k" style="display:flex;align-items:center;gap:10px">
+        <b style="color:${color}">${esc(sym)}</b> ${st}
+        <span style="color:var(--dim);font-size:10px">B:${b.buys??0} S:${b.sells??0} · UP ${Math.round(b.uptime||0)}s</span>
+      </span>
+      <span class="v" style="display:flex;gap:14px">
+        <span>EQ <b>${fmt(b.total_equity)}€</b></span>
+        <span>PNL <b style="color:${pnl>=0?'var(--neon-green)':'var(--neon-red)'}">${pnl>=0?'+':''}${fmt(pnl,3)}</b></span>
+        <span>TR <b>${b.trades??0}</b></span>
+        ${b.error ? `<span class="pill warn">ERR</span>` : ''}
+      </span>`;
+    wrap.appendChild(div);
+  }
+}
+
+function renderTrend(d) {
+  const t = d.trend || [];
+  const wrap = $('trend');
+  if (t.length < 2) { wrap.innerHTML = '<div class="skeleton">RACCOLTA DATI IN CORSO…</div>'; return; }
+  const W = 1200, H = 110, PAD = 8;
+  const eqs = t.map(p => p.equity || 0);
+  const pnls = t.map(p => p.node_pnl || 0);
+  const lo = Math.min(...eqs), hi = Math.max(...eqs);
+  const range = (hi - lo) || 1;
+  const px = i => PAD + (i / (t.length - 1)) * (W - PAD * 2);
+  const py = v => H - PAD - ((v - lo) / range) * (H - PAD * 2);
+  const line = eqs.map((v, i) => `${px(i).toFixed(1)},${py(v).toFixed(1)}`).join(' ');
+  const pnlMax = Math.max(...pnls.map(Math.abs), 1);
+  const pnlLine = pnls.map((v, i) => `${px(i).toFixed(1)},${(H/2 - (v / pnlMax) * (H/2 - PAD)).toFixed(1)}`).join(' ');
+  const last = t[t.length - 1];
+  wrap.innerHTML = `
+    <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--dim);margin-bottom:6px">
+      <span>EQUITY TOTALE (€) — min ${fmt(lo,1)} · max ${fmt(hi,1)}</span>
+      <span>ULTIMO: <b style="color:var(--neon-cyan)">${fmt(last.equity,1)}€</b> · PnL Node ${fmt(last.node_pnl,2)}€</span>
+    </div>
+    <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="width:100%;height:110px;background:rgba(0,243,255,0.03);border:1px solid rgba(0,243,255,0.15)">
+      <polyline points="${line}" fill="none" stroke="var(--neon-cyan)" stroke-width="2"/>
+      <polyline points="${pnlLine}" fill="none" stroke="var(--neon-green)" stroke-width="1.2" stroke-dasharray="4 3"/>
+    </svg>
+    <div style="font-size:10px;color:var(--dim);margin-top:4px;display:flex;gap:14px">
+      <span><b style="color:var(--neon-cyan)">■</b> EQUITY</span>
+      <span><b style="color:var(--neon-green)">■</b> PnL NODE (scala centrata)</span>
+    </div>`;
+}
+
+function renderErrors(d) {
+  const er = d.node_errors || {};
+  const wrap = $('errors');
+  const entries = Object.entries(er).filter(([, v]) => v);
+  if (!entries.length) { wrap.innerHTML = '<div class="skeleton">NESSUN ERRORE ATTIVO</div>'; return; }
+  wrap.innerHTML = entries.map(([sym, e]) =>
+    `<div class="row"><span class="k">${esc(sym)}</span><span class="v bad">${esc(String(e).slice(0, 90))}</span></div>`).join('');
 }
 
 function tick() { $('clock').textContent = new Date().toLocaleTimeString('it-IT'); }

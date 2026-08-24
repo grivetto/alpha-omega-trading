@@ -76,10 +76,29 @@ def build():
     data["kraken_equity"] = round(kraken_eur, 2)
     data["total_equity"] = round(bot_eq + kraken_eur, 2)
 
+    # Node (Fase 3) — stessa logica dell'aggregator
+    node_bots = agg.collect_node_bots()
+    data["node_bots"] = node_bots
+    node_running = [b for b in node_bots.values() if b.get("status") == "running"]
+    data["node_total_pnl"] = round(sum(b.get("pnl", 0) for b in node_running), 4)
+    data["node_total_trades"] = sum(b.get("trades", 0) for b in node_running)
+    wins = sum(b.get("wins", 0) for b in node_running)
+    losses = sum(b.get("losses", 0) for b in node_running)
+    data["node_win_rate"] = round(wins / (wins + losses) * 100, 1) if (wins + losses) else 0
+    data["node_errors"] = {sym: b.get("error", "")
+                           for sym, b in node_bots.items() if b.get("error")}
+
+    # Trend storico (append, max 240 punti)
+    trend = agg.read_trend()
+    trend.append({"ts": int(time.time()), "equity": data["total_equity"],
+                  "node_pnl": data["node_total_pnl"]})
+    agg.write_trend(trend[-240:])
+    data["trend"] = trend[-240:]
+
     tmp = str(OUT) + ".tmp"
     Path(tmp).write_text(json.dumps(data))
     Path(tmp).replace(OUT)
-    print(f"snapshot scritto: {data['total_equity']} EUR")
+    print(f"snapshot scritto: {data['total_equity']} EUR (node pnl {data['node_total_pnl']})")
 
 
 if __name__ == "__main__":

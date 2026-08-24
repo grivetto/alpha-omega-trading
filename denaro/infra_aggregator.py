@@ -24,6 +24,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 
 HEALTH_DIR = Path(os.getenv("HEALTH_DIR", "/home/marco/denaro/health"))
+NODE_DIR = Path(os.getenv("NODE_DIR", "/home/marco/denaro_node_app/node_data"))
 PORT = int(os.getenv("AGG_PORT", "8912"))
 HOST = os.getenv("AGG_HOST", "127.0.0.1")
 
@@ -187,6 +188,36 @@ def system_state():
         return {"error": str(e)[:200]}
 
 
+def collect_node_bots():
+    """Tutti i health del Node (node_data/*_health.json) — paper + live."""
+    bots = {}
+    try:
+        for p in sorted(NODE_DIR.glob("*_health.json")):
+            try:
+                h = json.loads(p.read_text())
+                bots[h.get("symbol", p.stem)] = h
+            except Exception:
+                continue
+    except Exception:
+        pass
+    return bots
+
+
+def read_trend():
+    """Serie storica equity (aggiornata da infra_snapshot via cron)."""
+    try:
+        return json.loads((HEALTH_DIR / "trend.json").read_text())
+    except Exception:
+        return []
+
+
+def write_trend(points):
+    try:
+        (HEALTH_DIR / "trend.json").write_text(json.dumps(points))
+    except Exception:
+        pass
+
+
 def collect():
     data = {"generated": time.time(), "ts_iso": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}
 
@@ -267,6 +298,19 @@ def collect():
     data["bot_equity"] = round(bot_eq, 2)
     data["kraken_equity"] = round(kraken_eur, 2)
     data["total_equity"] = round(bot_eq + kraken_eur, 2)
+
+    # 8) Node (Fase 3) — tutti i bot (paper + live) + aggregati
+    node_bots = collect_node_bots()
+    data["node_bots"] = node_bots
+    node_running = [b for b in node_bots.values() if b.get("status") == "running"]
+    data["node_total_pnl"] = round(sum(b.get("pnl", 0) for b in node_running), 4)
+    data["node_total_trades"] = sum(b.get("trades", 0) for b in node_running)
+    wins = sum(b.get("wins", 0) for b in node_running)
+    losses = sum(b.get("losses", 0) for b in node_running)
+    data["node_win_rate"] = round(wins / (wins + losses) * 100, 1) if (wins + losses) else 0
+    data["node_errors"] = {sym: b.get("error", "")
+                           for sym, b in node_bots.items() if b.get("error")}
+    data["trend"] = read_trend()[-240:]
     return data
 
 
