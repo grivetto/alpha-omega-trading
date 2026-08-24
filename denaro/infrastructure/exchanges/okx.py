@@ -28,6 +28,11 @@ DEFAULT_REFILL_RATE = 5.0
 MAX_RETRIES = 3
 RETRY_BASE_S = 1.0
 
+# Caching rigido dei bilanci (requisito 4 ATLAS v6): i dati in tempo reale
+# arrivano dagli eventi WS (orders/fills), il balance REST e' solo un
+# fallback → refresh minimo ogni 15s.
+BALANCE_CACHE_TTL = 15.0
+
 
 class OKXPermanentError(Exception):
     """Errore non ritentabile (ordine invalido, chiave errata, ...)."""
@@ -56,6 +61,21 @@ class OKXAdapter:
         self.sandbox = sandbox
         self.ex = ccxt.okx(config)
         self.bucket = bucket or TokenBucket(DEFAULT_CAPACITY, DEFAULT_REFILL_RATE)
+        # cache bilanci con TTL (evita chiamate REST ridondanti)
+        self._balance_cache: Optional[tuple] = None  # (value, ts)
+
+    @property
+    def min_amount(self) -> float:
+        """Amount minimo di default per gli ordini (filtro conservative)."""
+        return 0.0
+
+    def min_amount_for(self, symbol: str) -> float:
+        """Amount minimo dell'exchange per un symbol (limits.amount.min)."""
+        try:
+            m = self.ex.market(symbol)
+            return float((m.get("limits", {}).get("amount", {}).get("min") or 0.0))
+        except Exception:
+            return 0.0
 
     # --- error classification ------------------------------------------------
 
@@ -112,7 +132,18 @@ class OKXAdapter:
     # --- account --------------------------------------------------------------
 
     def fetch_balance(self) -> dict:
-        return self._call(self.ex.fetch_balance)
+        """Bilancio con cache TTL 15s (requisito 4: niente refresh ridondanti)."""
+        import time as _t
+        now = _t.time()
+        if self._balance_cache and (now - self._balance_cache[1]) < BALANCE_CACHE_TTL:
+            return self._balance_cache[0]
+        bal = self._call(self.ex.fetch_balance)
+        self._balance_cache = (bal, now)
+        return bal
+
+    def invalidate_balance(self) -> None:
+        """Forza il refresh al prossimo fetch (dopo un ordine/fill)."""
+        self._balance_cache = None
 
     def fetch_free_quote(self, quote: str = "EUR") -> float:
         bal = self.fetch_balance()
@@ -173,6 +204,10 @@ class OKXAdapter:
         if side == "buy":
             return self._call(self.ex.create_limit_buy_order, symbol, amount, price)
         return self._call(self.ex.create_limit_sell_order, symbol, amount, price)
+
+    def sell_market(self, symbol: str, amount: float) -> dict:
+        """Vendita immediata (stop-loss): market sell di `amount` asset."""
+        return self._call(self.ex.create_market_sell_order, symbol, amount)
 
     def cancel_order(self, order_id: str, symbol: str) -> dict:
         return self._call(self.ex.cancel_order, order_id, symbol)

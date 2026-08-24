@@ -24,6 +24,9 @@ DEFAULT_REFILL_RATE = 5.0
 MAX_RETRIES = 3
 RETRY_BASE_S = 1.0
 
+# Caching rigido dei bilanci (requisito 4 ATLAS v6)
+BALANCE_CACHE_TTL = 15.0
+
 
 class KrakenPermanentError(Exception):
     """Errore non ritentabile."""
@@ -45,6 +48,7 @@ class KrakenAdapter:
             "options": {"defaultType": "spot"},
         })
         self.bucket = bucket or TokenBucket(DEFAULT_CAPACITY, DEFAULT_REFILL_RATE)
+        self._balance_cache: Optional[tuple] = None  # (value, ts)
 
     @staticmethod
     def _classify(exc: Exception) -> bool:
@@ -83,7 +87,18 @@ class KrakenAdapter:
 
     # account
     def fetch_balance(self) -> dict:
-        return self._call(self.ex.fetch_balance)
+        """Bilancio con cache TTL 15s (requisito 4: niente refresh ridondanti)."""
+        import time as _t
+        now = _t.time()
+        if self._balance_cache and (now - self._balance_cache[1]) < BALANCE_CACHE_TTL:
+            return self._balance_cache[0]
+        bal = self._call(self.ex.fetch_balance)
+        self._balance_cache = (bal, now)
+        return bal
+
+    def invalidate_balance(self) -> None:
+        """Forza il refresh al prossimo fetch (dopo un ordine/fill)."""
+        self._balance_cache = None
 
     def fetch_free_quote(self, quote: str = "EUR") -> float:
         bal = self.fetch_balance()
@@ -137,6 +152,23 @@ class KrakenAdapter:
         if side == "buy":
             return self._call(self.ex.create_limit_buy_order, symbol, amount, price)
         return self._call(self.ex.create_limit_sell_order, symbol, amount, price)
+
+    def sell_market(self, symbol: str, amount: float) -> dict:
+        """Vendita immediata (stop-loss): market sell di `amount` asset."""
+        return self._call(self.ex.create_market_sell_order, symbol, amount)
+
+    @property
+    def min_amount(self) -> float:
+        """Amount minimo di default per gli ordini (filtro conservative)."""
+        return 0.0
+
+    def min_amount_for(self, symbol: str) -> float:
+        """Amount minimo dell'exchange per un symbol (limits.amount.min)."""
+        try:
+            m = self.ex.market(symbol)
+            return float((m.get("limits", {}).get("amount", {}).get("min") or 0.0))
+        except Exception:
+            return 0.0
 
     def cancel_order(self, order_id: str, symbol: str) -> dict:
         return self._call(self.ex.cancel_order, order_id, symbol)

@@ -73,6 +73,10 @@ class BotConfigSchema(BaseModel):
     fee: float = 0.001
     daily_loss_limit: float = 0.05
     max_drawdown_limit: float = 0.15
+    # stop-loss per bot: drawdown dal peak oltre il quale si CHIUDONO le
+    # posizioni (cancella ordini + vendita asset) e il bot si ferma.
+    # 0.0 = disabilitato (usa solo il circuit breaker che blocca i nuovi trade).
+    stop_loss_pct: float = 0.0
     # health_path esplicito: per i bot LIVE mantiene i path v3.3
     # (health/ada.json ecc.) cosi' dashboard e Zabbix restano invariati
     health_path: str = ""

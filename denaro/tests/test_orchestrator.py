@@ -45,11 +45,23 @@ class FakeExchange:
         return [o for o in self.orders.values() if o["status"] == "open"]
 
     def fetch_balance(self):
-        total = self.free + self.asset * self.price
-        return {"free": {self.quote: self.free}, "total": {self.quote: total}}
+        # come gli adapter reali: espone sia la quote che l'asset base
+        base = "SOL"
+        return {"free": {self.quote: self.free, base: self.asset},
+                "total": {self.quote: self.free + self.asset * self.price,
+                          base: self.asset}}
 
     def fetch_ticker(self, symbol):
         return {"last": self.price}
+
+    def sell_market(self, symbol, amount):
+        """Vendita immediata (stop-loss): converte asset in quote al prezzo corrente."""
+        amount = float(amount)
+        if amount <= 0:
+            return {"id": "", "status": "rejected"}
+        self.free += amount * self.price
+        self.asset -= amount
+        return {"id": "stop-market", "status": "closed"}
 
     def market_trade(self, price):
         """Muove il mercato e riempie gli ordini incrociati."""
@@ -145,6 +157,72 @@ class TestBotTask(unittest.IsolatedAsyncioTestCase):
         ex.market_trade(100.0)
         await bot.tick()
         self.assertLessEqual(len(bot.state.open_buys), 3)
+
+    async def test_stop_loss_chiude_posizioni_e_ferma(self):
+        """Stop-loss per bot: drawdown oltre stop_loss_pct → cancella ordini,
+        vende l'asset, flag persistente, health blocked."""
+        ex = FakeExchange(price=100.0, free_quote=30.0)
+        equity = {"v": 100.0}
+        cfg = BotConfig(
+            symbol="SOL/EUR", capital=30.0, levels=3,
+            buy_distance=0.01, profit_target=0.02,
+            state_path=Path(self.dir) / "sl_state.json",
+            journal_path=Path(self.dir) / "sl_trades.jsonl",
+            health_path=Path(self.dir) / "sl_health.json",
+            stop_loss_pct=0.08,
+        )
+        pol = GridPolicy(GridParams(levels=3, buy_distance=0.01,
+                                    profit_target=0.02, level_step=0.005,
+                                    retarget_factor=1.5))
+        risk = RiskManager(daily_loss_limit=0.05, max_drawdown_limit=0.30)
+        bot = BotTask(cfg, ex, pol, risk, now=lambda: 1_000_000.0)
+        bot._get_equity = lambda: equity["v"]
+        await bot.tick()
+        self.assertEqual(len(bot.state.open_buys), 3)
+
+        # crollo equity 25% (> stop_loss 8% ma < CB 30%) → stop-loss scatta
+        equity["v"] = 75.0
+        ex.market_trade(75.0)   # riempie anche i buy → asset in mano
+        await bot.tick()
+
+        self.assertTrue(bot.state.stop_loss_triggered)
+        self.assertTrue(bot.trading_paused)
+        self.assertIn("STOP LOSS", bot._last_error)
+        # ordini cancellati
+        self.assertEqual(len(bot.state.open_buys), 0)
+        self.assertEqual(len(bot.state.open_sells), 0)
+        # asset venduto (se ce n'era)
+        self.assertLessEqual(ex.asset, 1e-9)
+        # health blocked
+        health = (Path(self.dir) / "sl_health.json").read_text()
+        self.assertIn('"status": "blocked"', health)
+        # persistente: il tick successivo NON rivende ne' riapre
+        await bot.tick()
+        self.assertEqual(len(bot.state.open_buys), 0)
+
+    async def test_stop_loss_non_scatta_sotto_soglia(self):
+        ex = FakeExchange(price=100.0, free_quote=30.0)
+        equity = {"v": 100.0}
+        cfg = BotConfig(
+            symbol="SOL/EUR", capital=30.0, levels=3,
+            buy_distance=0.01, profit_target=0.02,
+            state_path=Path(self.dir) / "sl2_state.json",
+            journal_path=Path(self.dir) / "sl2_trades.jsonl",
+            health_path=Path(self.dir) / "sl2_health.json",
+            stop_loss_pct=0.08,
+        )
+        pol = GridPolicy(GridParams(levels=3, buy_distance=0.01,
+                                    profit_target=0.02, level_step=0.005,
+                                    retarget_factor=1.5))
+        risk = RiskManager(daily_loss_limit=0.05, max_drawdown_limit=0.30)
+        bot = BotTask(cfg, ex, pol, risk, now=lambda: 1_000_000.0)
+        bot._get_equity = lambda: equity["v"]
+        await bot.tick()
+        equity["v"] = 95.0   # drawdown 5% < 8% → nessuno stop
+        await bot.tick()
+        self.assertFalse(bot.state.stop_loss_triggered)
+        self.assertIn('"status": "running"',
+                      (Path(self.dir) / "sl2_health.json").read_text())
 
     async def test_cb_apre_e_blocca_nuovi_ordini(self):
         ex = FakeExchange(price=100.0, free_quote=30.0)

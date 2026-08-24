@@ -54,6 +54,42 @@ def build_grid_params(bot: dict) -> GridParams:
     )
 
 
+def build_policy(bot: dict, exchange):
+    """Costruisce la strategia del bot in base a `strategy`:
+    grid (default) | momentum | meanrev. I minimi dell'exchange vengono
+    passati alla policy per scartare ordini non piazzabili."""
+    strategy = bot.get("strategy", "grid")
+    fn = getattr(exchange, "min_amount_for", None)
+    min_amount = float(fn(bot["symbol"])) if fn is not None else 0.0
+    if strategy == "momentum":
+        from denaro.domain.momentum import MomentumParams, MomentumPolicy
+        return MomentumPolicy(
+            MomentumParams(
+                profit_target=float(bot.get("profit_target", 0.02)),
+                entry_slip=float(bot.get("entry_slip", 0.002)),
+            ),
+            min_amount=min_amount)
+    if strategy == "meanrev":
+        from denaro.domain.meanrev import MeanReversionParams, MeanReversionPolicy
+        return MeanReversionPolicy(
+            MeanReversionParams(
+                profit_target=float(bot.get("profit_target", 0.015)),
+                entry_slip=float(bot.get("entry_slip", 0.001)),
+            ),
+            min_amount=min_amount)
+    # default: grid
+    if strategy == "adaptive":
+        from denaro.domain.adaptive import AdaptiveEngine, AdaptiveParams
+        return AdaptiveEngine(
+            AdaptiveParams(
+                levels=int(bot.get("levels", 5)),
+                base_buy_distance=float(bot.get("buy_distance", 0.01)),
+                profit_target=float(bot.get("profit_target", 0.015)),
+            ),
+            min_amount=min_amount)
+    return GridPolicy(build_grid_params(bot), min_amount=min_amount)
+
+
 def build_rest_exchange(exchange_cfg: dict):
     """Client REST pubblico per il hub (ticker senza chiavi)."""
     import ccxt
@@ -192,9 +228,10 @@ class NodeApp:
                 tick_interval=float(bot.get("tick_interval", 60)),
                 fee=float(bot.get("fee", 0.001 if bot.get("mode", "paper") == "paper" else 0.0)),
                 bot_key=bot_key,
+                stop_loss_pct=float(bot.get("stop_loss_pct", 0.0)),
                 **paths,
             )
-            policy = GridPolicy(build_grid_params(bot))
+            policy = build_policy(bot, exchange)
             risk = RiskManager(
                 daily_loss_limit=float(bot.get("daily_loss_limit", 0.05)),
                 max_drawdown_limit=float(bot.get("max_drawdown_limit", 0.15)),
@@ -208,6 +245,11 @@ class NodeApp:
                 self.hub.subscribe(bot["symbol"], self._paper_price_handler(exchange))
                 if task.journal is not None:
                     exchange.rebuild(task.journal.read_all(), cfg.capital)
+            # AdaptiveEngine: alimenta il regime ADX/ATR con OHLCV reale (1h)
+            on_ohlcv = getattr(task.policy, "on_ohlcv", None)
+            if on_ohlcv is not None:
+                self.orchestrator.add_ohlcv_source(
+                    bot["symbol"], exchange, on_ohlcv)
             self.orchestrator.add_bot(task)
             log.info("bot %s (%s) registrato", bot["symbol"], bot.get("mode", "paper"))
 

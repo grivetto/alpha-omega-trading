@@ -24,6 +24,7 @@ from ..domain.grid import GridDecision, GridLevel, GridPolicy
 from ..domain.risk import RiskManager
 from ..domain.types import CBState, CoreState
 from ..infrastructure.storage import AtomicFile, Journal, StateStore
+from .portfolio import PortfolioManager
 
 log = logging.getLogger("denaro.bot")
 
@@ -40,6 +41,7 @@ class ExchangePort:
     def create_limit_order(self, symbol: str, side: str, amount: float,
                            price: float) -> dict: ...           # pragma: no cover
     def cancel_order(self, order_id: str, symbol: str) -> dict: ...  # pragma: no cover
+    def sell_market(self, symbol: str, amount: float) -> dict: ...  # pragma: no cover
 
 
 # --- stato bot ---------------------------------------------------------------
@@ -57,6 +59,7 @@ class BotState:
     peak_equity: float = 0.0
     max_dd: float = 0.0
     start_ts: float = 0.0
+    stop_loss_triggered: bool = False   # persistente: stop-loss gia' eseguito
 
     @property
     def open_count(self) -> int:
@@ -83,6 +86,7 @@ class BotConfig:
     state_path: Optional[Path] = None
     journal_path: Optional[Path] = None
     health_path: Optional[Path] = None
+    stop_loss_pct: float = 0.0      # drawdown dal peak → chiudi posizioni e ferma
 
 
 # --- bot task ----------------------------------------------------------------
@@ -108,6 +112,10 @@ class BotTask:
         self._running = False
         self._task: Optional[asyncio.Task] = None
         self._last_error: str = ""
+        # stop-loss gia' scattato (persistente: non rivende dopo un restart)
+        self._stop_loss_triggered = False
+        # portfolio manager anti-deadlock (capitale virtuale + preflight dedup)
+        self.portfolio = PortfolioManager(quote=self.cfg.symbol.split("/")[-1])
 
         self.state = BotState(symbol=config.symbol, start_ts=self._now())
         self.store = StateStore(Path(config.state_path)) if config.state_path else None
@@ -193,6 +201,14 @@ class BotTask:
         dd = (self.state.peak_equity - equity) / max(1e-10, self.state.peak_equity)
         self.state.max_dd = max(self.state.max_dd, dd)
 
+        # 0) STOP-LOSS per bot (PRIORITA' sul CB: chiude posizioni, non solo
+        #    blocca i nuovi ordini). Drawdown dal peak oltre la soglia →
+        #    cancella ordini + vendita asset + ferma. Persistente.
+        if (self.cfg.stop_loss_pct > 0 and not self.state.stop_loss_triggered
+                and dd > self.cfg.stop_loss_pct):
+            await self._trigger_stop_loss(equity, dd, None)
+            return
+
         # 1) risk check (circuit breaker AZIONATO — stato persistente tra i tick)
         blocked = self.risk.check_circuit_breaker(self.risk_state, equity, now)
         if blocked:
@@ -210,6 +226,13 @@ class BotTask:
             self._last_error = f"balance: {e}"
             self._write_health(equity, blocked=False)
             return
+
+        # aggiorna il portfolio con i dati gia' in mano (niente API extra)
+        try:
+            orders = await asyncio.to_thread(self.ex.fetch_open_orders, self.cfg.symbol)
+            self.portfolio.update(free, orders)
+        except Exception:  # noqa: BLE001 - il preflight usera' solo free
+            self.portfolio.update(free, [])
         try:
             if self._price_source is not None:
                 price = float(self._price_source())
@@ -222,6 +245,13 @@ class BotTask:
             return
 
         # 3) decisione (policy pura — idempotente)
+        #    aggiorna prima lo storico della strategia (momentum/meanrev)
+        on_price = getattr(self.policy, "on_price", None)
+        if on_price is not None:
+            try:
+                on_price(price)
+            except Exception:  # noqa: BLE001
+                pass
         decision = self.policy.decide(price, self.state.open_buys,
                                       self.state.open_sells, free,
                                       self.cfg.capital, free, now)
@@ -232,19 +262,28 @@ class BotTask:
             decision.to_place = []
             decision.reason = "safemode: trading paused"
 
-        # 3b) PRE-FLIGHT (TODO punto 1): fattibilita' ordini prima delle API
-        # - capitale usabile = free + locked in buy cancellabili (equity dinamica)
-        # - blocco totale se la size minima richiesta supera il capitale libero
-        available = self._available_capital(free)
+        # 3b) PRE-FLIGHT anti-deadlock (ATLAS v6): fattibilita' ordini prima
+        #     delle API. Capitale usabile = free + locked×0.85 (ordini buy
+        #     cancellabili); dedup degli ordini speculari (buy sopra il mercato).
         min_notional = self._min_notional()
         per_level = self.cfg.capital / max(1, self.cfg.levels)
-        # blocco totale se la SIZE MINIMA richiesta supera il capitale libero
-        if min_notional > 0 and min_notional > available:
-            self._last_error = (f"PRE-FLIGHT BLOCK: min_notional {min_notional:.2f} > "
-                                f"capitale disponibile {available:.2f}")
-            self._write_health(equity, blocked=False)
-            self._save_state()
-            return
+        if decision.to_place or min_notional > 0:
+            ok, reason, speculative = self.portfolio.preflight(
+                self.cfg.symbol, min_notional, per_level, price)
+            if not ok:
+                self._last_error = f"PRE-FLIGHT BLOCK: {reason}"
+                # cancella gli ordini speculari (capitale congelato) via API
+                for oid in speculative:
+                    try:
+                        await asyncio.to_thread(self.ex.cancel_order,
+                                                oid, self.cfg.symbol)
+                        self.state.open_buys.pop(oid, None)
+                        self._journal("buy_canceled", order_id=oid)
+                    except Exception:  # noqa: BLE001
+                        pass
+                self._write_health(equity, blocked=False)
+                self._save_state()
+                return
         if decision.to_place:
             decision.to_place = [l for l in decision.to_place
                                  if min_notional <= 0 or l.notional >= min_notional]
@@ -280,7 +319,13 @@ class BotTask:
         self._save_state()
 
     def _available_capital(self, free: float) -> float:
-        """Equity dinamica: free + locked in ordini limit cancellabili."""
+        """Equity dinamica anti-deadlock: free + locked×0.85 (ATLAS v6)."""
+        # usa il portfolio manager (con i dati gia' caricati nel tick)
+        try:
+            return self.portfolio.total_available(free)
+        except Exception:
+            pass
+        # fallback: metodo legacy dell'adapter (senza fattore di sconto)
         fn = getattr(self.ex, "available_trading_capital", None)
         if fn is None:
             return free
@@ -298,6 +343,58 @@ class BotTask:
             return float(fn(self.cfg.symbol) or 0.0)
         except Exception:
             return 0.0
+
+    async def _trigger_stop_loss(self, equity: float, drawdown: float,
+                                 price: Optional[float]) -> None:
+        """STOP-LOSS: cancella tutti gli ordini, vende tutto l'asset disponibile
+        e ferma il bot. Flag persistente per non ripetere dopo un restart."""
+        self.state.stop_loss_triggered = True
+        self.trading_paused = True
+        self._last_error = f"STOP LOSS: drawdown {drawdown * 100:.1f}%"
+        log.warning("STOP LOSS %s: drawdown %.1f%% equity %.2f",
+                    self.cfg.symbol, drawdown * 100, equity)
+
+        # prezzo per la vendita: dal parametro oppure fetch one-shot
+        if price is None:
+            try:
+                if self._price_source is not None:
+                    price = float(self._price_source())
+                else:
+                    t = await asyncio.to_thread(self.ex.fetch_ticker, self.cfg.symbol)
+                    price = float(t["last"])
+            except Exception:  # noqa: BLE001
+                price = 0.0
+
+        # 1) cancella ordini aperti (buy e sell)
+        for oid in list(self.state.open_buys):
+            try:
+                await asyncio.to_thread(self.ex.cancel_order, oid, self.cfg.symbol)
+            except Exception:  # noqa: BLE001
+                pass
+        for oid in list(self.state.open_sells):
+            try:
+                await asyncio.to_thread(self.ex.cancel_order, oid, self.cfg.symbol)
+            except Exception:  # noqa: BLE001
+                pass
+        self.state.open_buys.clear()
+        self.state.open_sells.clear()
+
+        # 2) vendi l'asset posseduto (free balance del base asset)
+        base = self.cfg.symbol.split("/")[0]
+        try:
+            bal = await asyncio.to_thread(self.ex.fetch_balance)
+            amount = float((bal.get("free", {}) or {}).get(base, 0.0) or 0.0)
+            if amount > 0:
+                await asyncio.to_thread(self.ex.sell_market, self.cfg.symbol, amount)
+                self._journal("stop_loss_sell", amount=amount,
+                              drawdown=round(drawdown, 4), price=price)
+        except Exception as e:  # noqa: BLE001
+            self._last_error = f"stop loss sell: {e}"
+            log.error("STOP LOSS %s: vendita fallita: %s", self.cfg.symbol, e)
+
+        self._journal("stop_loss", drawdown=round(drawdown, 4), equity=equity)
+        self._write_health(equity, blocked=True)
+        self._save_state()
 
     async def _process_fills(self, price: float) -> None:
         """Controlla i buy aperti: su fill piazza il sell al TP e journal."""
@@ -413,9 +510,15 @@ class TradeOrchestrator:
     puo' vivere su piu' account (paper + live OKX/Kraken).
     """
 
+    OHLCV_TIMEFRAME = "1h"
+    OHLCV_LIMIT = 200
+    OHLCV_REFRESH_S = 60.0
+
     def __init__(self, supervisor=None) -> None:
         self._bots: Dict[str, BotTask] = {}
         self._supervisor = supervisor
+        self._ohlcv_sources: Dict[str, tuple] = {}  # symbol -> (exchange, callback)
+        self._ohlcv_tasks: Dict[str, asyncio.Task] = {}
 
     def add_bot(self, bot: BotTask) -> None:
         key = bot.cfg.bot_key or bot.cfg.symbol
@@ -423,7 +526,29 @@ class TradeOrchestrator:
             raise ValueError(f"bot gia' registrato: {key}")
         self._bots[key] = bot
 
+    def add_ohlcv_source(self, symbol: str, exchange, callback) -> None:
+        """Alimenta la policy adattiva con OHLCV reale (candle 1h, refresh 60s)."""
+        self._ohlcv_sources[symbol] = (exchange, callback)
+
+    async def _ohlcv_loop(self, symbol: str) -> None:
+        exchange, callback = self._ohlcv_sources[symbol]
+        fetch = getattr(exchange, "fetch_ohlcv", None)
+        while True:
+            try:
+                if fetch is not None:
+                    ohlcv = await asyncio.to_thread(
+                        fetch, symbol, self.OHLCV_TIMEFRAME, self.OHLCV_LIMIT)
+                    if ohlcv:
+                        await callback(symbol, ohlcv)
+            except Exception as e:  # noqa: BLE001 - il regime resta sul fallback prezzi
+                log.warning("ohlcv %s fallito: %s", symbol, e)
+            await asyncio.sleep(self.OHLCV_REFRESH_S)
+
     async def start_all(self) -> None:
+        for symbol in list(self._ohlcv_sources):
+            self._ohlcv_tasks[symbol] = asyncio.create_task(
+                self._ohlcv_loop(symbol))
+            log.info("ohlcv source %s avviato", symbol)
         for symbol, bot in self._bots.items():
             if self._supervisor and not self._supervisor.can_start_worker():
                 log.warning("supervisor: worker %s non avviato (risorse)", symbol)
@@ -432,6 +557,12 @@ class TradeOrchestrator:
             log.info("bot %s avviato", symbol)
 
     async def stop_all(self) -> None:
+        for t in self._ohlcv_tasks.values():
+            t.cancel()
+        if self._ohlcv_tasks:
+            await asyncio.gather(*self._ohlcv_tasks.values(),
+                                 return_exceptions=True)
+        self._ohlcv_tasks.clear()
         for bot in self._bots.values():
             await bot.stop()
 

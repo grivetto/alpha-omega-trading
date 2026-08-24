@@ -111,6 +111,19 @@ class PaperExchange:
         self.orders[oid] = order
         return order
 
+    def sell_market(self, symbol: str, amount: float) -> dict:
+        """Vendita immediata (stop-loss): vende `amount` asset al prezzo corrente."""
+        amount = float(amount)
+        if amount <= 0 or self.price <= 0:
+            return {"id": "", "status": "rejected"}
+        proceeds = amount * self.price * (1 - self.fee)
+        self.cash += proceeds
+        self.asset -= amount
+        self.fill_events.append(
+            {"side": "sell", "amount": amount, "price": self.price,
+             "proceeds": proceeds, "id": "stop-loss-market"})
+        return {"id": "stop-loss-market", "status": "closed"}
+
     def cancel_order(self, order_id: str, symbol: str) -> dict:
         if order_id in self.orders:
             self.orders[order_id]["status"] = "canceled"
