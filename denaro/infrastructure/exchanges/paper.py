@@ -85,6 +85,14 @@ class PaperExchange:
     def equity(self) -> float:
         return self.cash + self.asset * self.price
 
+    def available_trading_capital(self, quote: str = "EUR") -> float:
+        """Capitale usabile = cash (il paper non ha locked)."""
+        return self.cash
+
+    def min_notional(self, symbol: str) -> float:
+        """Il paper non impone notional minimi (0 = nessun vincolo)."""
+        return 0.0
+
     # --- ExchangePort --------------------------------------------------------
 
     def fetch_ticker(self, symbol: str) -> dict:

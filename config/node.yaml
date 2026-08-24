@@ -1,0 +1,99 @@
+# DENARO — config unificata del Node (tutti gli ambienti di trading).
+# Caricata con denaro.application.config (YAML + Pydantic + interpolazione ${VAR}).
+#
+# ARCHITETTURA UNIFICATA (docs/04_architettura_unificata.md):
+# - UN solo motore (Node asyncio) per TUTTI gli ambienti (paper + OKX + Kraken).
+# - ATLAS e' stato dismesso (legacy/atlas): il suo account Kraken (~26€ in SOL)
+#   sara' gestito dal Node con env_prefix ATLAS_ una volta approvato il cutover.
+# - I bot live hanno "enabled: false" finche' il cutover non e' approvato
+#   (mai due motori sullo stesso conto: i v3.3 sono ancora attivi).
+data_dir: node_data
+supervisor:
+  ram_critical_pct: 0.85
+  ram_throttle_pct: 0.70
+  cpu_critical_pct: 0.90
+  tick_max_factor: 5.0
+safemode:
+  caution_pct: 70.0
+  safe_pct: 85.0
+  emergency_pct: 95.0
+  interval_s: 10.0
+hub:
+  ws_enabled: true
+  poll_interval: 10
+  price_ttl: 30
+  ws_max_retries: 5
+  ws_retry_base_s: 2.0
+exchange_rest:
+  name: okx
+  eea: true
+bots:
+  # ── PAPER (500€ virtuali — ATTIVO, validazione parita' M7) ──
+  - symbol: ADA/EUR
+    mode: paper
+    capital: 300
+    levels: 3
+    buy_distance: 0.015
+    profit_target: 0.02
+    fee: 0.001
+    tick_interval: 30
+  - symbol: SOL/EUR
+    mode: paper
+    capital: 100
+    levels: 3
+    buy_distance: 0.01
+    profit_target: 0.015
+    fee: 0.001
+    tick_interval: 30
+  - symbol: XRP/EUR
+    mode: paper
+    capital: 100
+    levels: 3
+    buy_distance: 0.01
+    profit_target: 0.015
+    fee: 0.001
+    tick_interval: 30
+
+  # ── LIVE OKX (in attesa di cutover — enabled: false) ──
+  - symbol: ADA/EUR
+    mode: okx
+    capital: 20.0
+    levels: 3
+    buy_distance: 0.001
+    profit_target: 0.02
+    fee: 0.001
+    tick_interval: 30
+    env_prefix: MARCOSUB1_
+    enabled: false
+  - symbol: SOL/EUR
+    mode: okx
+    capital: 5.0
+    levels: 3
+    buy_distance: 0.01
+    profit_target: 0.015
+    fee: 0.001
+    tick_interval: 30
+    env_prefix: ""
+    enabled: false
+
+  # ── LIVE KRAKEN (ex-Denaro nuvola + ex-ATLAS — in attesa cutover) ──
+  - symbol: SOL/EUR
+    mode: kraken
+    capital: 25.0
+    levels: 3
+    buy_distance: 0.01
+    profit_target: 0.015
+    fee: 0.0026
+    tick_interval: 30
+    env_prefix: KRAKEN_
+    enabled: false
+  - symbol: SOL/EUR
+    mode: kraken
+    capital: 26.0
+    levels: 3
+    buy_distance: 0.008
+    profit_target: 0.008
+    fee: 0.0026
+    tick_interval: 30
+    env_prefix: ATLAS_
+    enabled: false

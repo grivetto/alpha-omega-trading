@@ -1,0 +1,12 @@
+strategies:
+  - strategy_id: grid_btc_eur
+    class_path: atlas.strategy.engine.GridStrategy
+    enabled: true
+    symbols: ["BTC/EUR"]
+    exchanges: ["kraken"]
+    params:
+      grid_levels: 3
+      spread_pct: 0.005
+      per_level_pct: 0.10
+      order_size: 0.00005
+      min_notional: 5.0

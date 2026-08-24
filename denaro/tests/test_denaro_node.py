@@ -144,16 +144,21 @@ class TestLiveConfig(unittest.TestCase):
 
     def setUp(self):
         root = Path(__file__).resolve().parent.parent.parent
-        self.live_cfg = root / "config" / "node_live.json"
+        self.live_cfg = root / "config" / "node.yaml"
 
     def test_config_live_struttura(self):
-        import json
-        cfg = json.loads(self.live_cfg.read_text(encoding="utf-8"))
-        self.assertTrue(cfg["hub"]["ws_enabled"])
-        symbols = [(b["symbol"], b["mode"]) for b in cfg["bots"]]
-        self.assertIn(("ADA/EUR", "okx"), symbols)
-        self.assertIn(("SOL/EUR", "okx"), symbols)
-        self.assertIn(("SOL/EUR", "kraken"), symbols)
+        """Config unificata: paper attivi + live disabilitati (in attesa cutover)."""
+        from denaro.application.config import load_node_config
+        cfg = load_node_config(self.live_cfg)
+        self.assertTrue(cfg.hub.ws_enabled)
+        modes = {(b.symbol, b.mode) for b in cfg.bots}
+        self.assertIn(("ADA/EUR", "paper"), modes)
+        self.assertIn(("ADA/EUR", "okx"), modes)
+        self.assertIn(("SOL/EUR", "kraken"), modes)
+        # i live sono disabilitati (mai due motori sullo stesso conto)
+        live = [b for b in cfg.bots if b.mode != "paper"]
+        self.assertTrue(all(b.enabled is False for b in live))
+        self.assertGreaterEqual(len(live), 4)  # okx x2 + kraken x2 (incluso ex-ATLAS)
         # nessuna chiave nel config versionato
         raw = self.live_cfg.read_text(encoding="utf-8")
         self.assertNotIn("api_key", raw)

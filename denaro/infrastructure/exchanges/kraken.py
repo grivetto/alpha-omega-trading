@@ -110,6 +110,27 @@ class KrakenAdapter:
                     continue
         return equity
 
+    def available_trading_capital(self, quote: str = "EUR") -> float:
+        """Capitale usabile = free + locked in buy limit cancellabili (equity dinamica)."""
+        bal = self.fetch_balance()
+        capital = float(bal.get("free", {}).get(quote, 0.0) or 0.0)
+        try:
+            for o in self.fetch_open_orders(None):
+                if o.get("side") != "buy" or not o.get("symbol", "").endswith(f"/{quote}"):
+                    continue
+                capital += float(o.get("amount", 0.0)) * float(o.get("price", 0.0))
+        except Exception as e:  # noqa: BLE001
+            log.warning("available_trading_capital: open orders falliti (%s)", e)
+        return capital
+
+    def min_notional(self, symbol: str) -> float:
+        """Size minima (notional) richiesta da Kraken per un ordine."""
+        try:
+            m = self.ex.market(symbol)
+            return float((m.get("limits", {}).get("cost", {}).get("min") or 0.0))
+        except Exception:
+            return 0.0
+
     # orders
     def create_limit_order(self, symbol: str, side: str, amount: float,
                            price: float) -> dict:

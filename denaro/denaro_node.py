@@ -23,12 +23,15 @@ import sys
 from pathlib import Path
 from typing import Any, Dict, List
 
+from denaro.application.config import load_node_config
 from denaro.application.orchestrator import BotConfig, BotTask, TradeOrchestrator
+from denaro.application.safemode import SafeModeGuardian
 from denaro.application.supervisor import ResourceSupervisor
 from denaro.domain.grid import GridParams, GridPolicy
 from denaro.domain.risk import RiskManager
 from denaro.infrastructure.exchanges.paper import PaperExchange
 from denaro.infrastructure.market_data import MarketDataHub
+from denaro.infrastructure.sqlite_store import SqliteStateStore
 
 log = logging.getLogger("denaro.node")
 
@@ -65,8 +68,17 @@ def build_rest_exchange(exchange_cfg: dict):
 
 def build_exchange(bot: dict, data_dir: Path):
     """Costruisce l'exchange del bot. Le chiavi LIVE arrivano dall'ambiente
-    (EnvironmentFile systemd), MAI dal config versionato."""
+    (EnvironmentFile systemd), MAI dal config versionato.
+
+    `env_prefix` (es. "MARCOSUB1_", "ATLAS_") consente piu' account per lo
+    stesso exchange: le chiavi vengono lette da {PREFIX}OKX_API_KEY ecc.
+    """
     import os
+    prefix = bot.get("env_prefix", "")
+
+    def env(name, default=""):
+        return os.getenv(prefix + name, os.getenv(name, default))
+
     mode = bot.get("mode", "paper")
     symbol = bot["symbol"]
     if mode == "paper":
@@ -74,18 +86,18 @@ def build_exchange(bot: dict, data_dir: Path):
                              quote=bot.get("quote", "EUR"))
     if mode == "okx":
         from denaro.infrastructure.exchanges.okx import OKXAdapter
-        key = os.getenv("OKX_API_KEY", bot.get("api_key", ""))
-        secret = os.getenv("OKX_API_SECRET", bot.get("api_secret", ""))
-        passphrase = os.getenv("OKX_PASSPHRASE", bot.get("passphrase", ""))
+        key = env("OKX_API_KEY", bot.get("api_key", ""))
+        secret = env("OKX_API_SECRET", bot.get("api_secret", ""))
+        passphrase = env("OKX_PASSPHRASE", bot.get("passphrase", ""))
         if not key or not secret or not passphrase:
-            raise ValueError(f"chiavi OKX mancanti per {symbol} (env OKX_API_*)")
+            raise ValueError(f"chiavi OKX mancanti per {symbol} (env {prefix}OKX_API_*)")
         return OKXAdapter(api_key=key, secret=secret, passphrase=passphrase)
     if mode == "kraken":
         from denaro.infrastructure.exchanges.kraken import KrakenAdapter
-        key = os.getenv("KRAKEN_API_KEY", bot.get("api_key", ""))
-        secret = os.getenv("KRAKEN_API_SECRET", bot.get("api_secret", ""))
+        key = env("KRAKEN_API_KEY", bot.get("api_key", ""))
+        secret = env("KRAKEN_API_SECRET", bot.get("api_secret", ""))
         if not key or not secret:
-            raise ValueError(f"chiavi Kraken mancanti per {symbol} (env KRAKEN_API_*)")
+            raise ValueError(f"chiavi Kraken mancanti per {symbol} (env {prefix}KRAKEN_API_*)")
         return KrakenAdapter(api_key=key, secret=secret)
     raise ValueError(f"modalita' bot sconosciuta: {mode}")
 
@@ -117,6 +129,17 @@ class NodeApp:
             tick_max_factor=float(sup.get("tick_max_factor", 5.0)),
         )
 
+        # SafeModeGuardian (TODO punto 3): livelli CAUTION/SAFE/EMERGENCY
+        sm = config.get("safemode", {})
+        self.guardian = SafeModeGuardian(
+            caution_pct=float(sm.get("caution_pct", 70.0)),
+            safe_pct=float(sm.get("safe_pct", 85.0)),
+            emergency_pct=float(sm.get("emergency_pct", 95.0)),
+            interval_s=float(sm.get("interval_s", 10.0)),
+        )
+        # flush di emergenza su SQLite WAL (stato + guardian)
+        self.sqlite = SqliteStateStore(self.data_dir / "state.sqlite")
+
         if hub is not None:
             self.hub = hub
         else:
@@ -145,6 +168,9 @@ class NodeApp:
 
     def _build_bots(self) -> None:
         for bot in self.config.get("bots", []):
+            if not bot.get("enabled", True):
+                log.info("bot %s disabilitato (config)", bot.get("symbol"))
+                continue
             exchange = build_exchange(bot, self.data_dir)
             paths = paths_for(bot, self.data_dir)
             cfg = BotConfig(
@@ -192,8 +218,32 @@ class NodeApp:
             exchange.update_price(price)
         return handler
 
+    async def _propagate_safemode(self) -> None:
+        """Propaga i flag del guardian ai bot (trading_paused / throttling)."""
+        for bot in self.orchestrator.bots.values():
+            bot.trading_paused = self.guardian.trading_paused
+
+    async def _on_emergency(self) -> None:
+        """EMERGENCY: cancella gli ordini, flush su SQLite WAL, shutdown."""
+        log.critical("EMERGENCY SafeMode: cancellazione ordini + flush stato")
+        for symbol, bot in self.orchestrator.bots.items():
+            try:
+                cancel = getattr(bot.ex, "cancel_all", None)
+                if cancel:
+                    await asyncio.to_thread(cancel, bot.cfg.symbol)
+            except Exception as e:  # noqa: BLE001
+                log.warning("emergency cancel %s fallito: %s", symbol, e)
+            self.sqlite.save(symbol, bot.state.to_dict())
+        self.sqlite.save("guardian", {
+            "level": "emergency", "ts": time.time(),
+            "bots": list(self.orchestrator.bots),
+        })
+        log.critical("Stato flushato su SQLite; shutdown controllato del Node")
+        self._stop.set()
+
     async def run(self) -> None:
-        stop = asyncio.Event()
+        self._stop = asyncio.Event()
+        stop = self._stop
         loop = asyncio.get_running_loop()
         for sig in (signal.SIGINT, signal.SIGTERM):
             try:
@@ -204,11 +254,17 @@ class NodeApp:
 
         await self.hub.start()
         await self.orchestrator.start_all()
+        # avvia il SafeModeGuardian (Task in background)
+        self.guardian._task = asyncio.create_task(
+            self.guardian.run(on_emergency=self._on_emergency,
+                              on_change=self._propagate_safemode))
         log.info("Node avviato: %d bot", len(self.orchestrator.bots))
         await stop.wait()
         log.info("Arresto del Node...")
+        await self.guardian.stop()
         await self.orchestrator.stop_all()
         await self.hub.stop()
+        self.sqlite.close()
 
 
 def main(argv: List[str] | None = None) -> int:
@@ -222,7 +278,7 @@ def main(argv: List[str] | None = None) -> int:
         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
         stream=sys.stdout)
 
-    config = load_config(Path(args.config))
+    config = load_node_config(Path(args.config)).to_dict()
     app = NodeApp(config)
     try:
         asyncio.run(app.run())

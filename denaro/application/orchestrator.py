@@ -102,6 +102,8 @@ class BotTask:
         self._now = now or time.time
         # fonte del prezzo: hub condiviso (M6+) oppure fetch_ticker dell'exchange
         self._price_source = price_source
+        # SafeMode: flag impostato dal ResourceGuardian (TODO punto 3)
+        self.trading_paused = False
         self._running = False
         self._task: Optional[asyncio.Task] = None
         self._last_error: str = ""
@@ -223,6 +225,29 @@ class BotTask:
                                       self.state.open_sells, free,
                                       self.cfg.capital, free, now)
 
+        # 3a) SafeMode (TODO punto 3): nessun NUOVO trade se la RAM e' critica;
+        #     le posizioni esistenti continuano a essere gestite (fill/exit)
+        if self.trading_paused:
+            decision.to_place = []
+            decision.reason = "safemode: trading paused"
+
+        # 3b) PRE-FLIGHT (TODO punto 1): fattibilita' ordini prima delle API
+        # - capitale usabile = free + locked in buy cancellabili (equity dinamica)
+        # - blocco totale se la size minima richiesta supera il capitale libero
+        available = self._available_capital(free)
+        min_notional = self._min_notional()
+        per_level = self.cfg.capital / max(1, self.cfg.levels)
+        # blocco totale se la SIZE MINIMA richiesta supera il capitale libero
+        if min_notional > 0 and min_notional > available:
+            self._last_error = (f"PRE-FLIGHT BLOCK: min_notional {min_notional:.2f} > "
+                                f"capitale disponibile {available:.2f}")
+            self._write_health(equity, blocked=False)
+            self._save_state()
+            return
+        if decision.to_place:
+            decision.to_place = [l for l in decision.to_place
+                                 if min_notional <= 0 or l.notional >= min_notional]
+
         # 4) esecuzione
         for oid in decision.to_cancel:
             try:
@@ -252,6 +277,26 @@ class BotTask:
         self._last_error = ""
         self._write_health(equity, blocked=False)
         self._save_state()
+
+    def _available_capital(self, free: float) -> float:
+        """Equity dinamica: free + locked in ordini limit cancellabili."""
+        fn = getattr(self.ex, "available_trading_capital", None)
+        if fn is None:
+            return free
+        try:
+            quote = self.cfg.symbol.split("/")[1] if "/" in self.cfg.symbol else "EUR"
+            return fn(quote)
+        except Exception:
+            return free
+
+    def _min_notional(self) -> float:
+        fn = getattr(self.ex, "min_notional", None)
+        if fn is None:
+            return 0.0
+        try:
+            return float(fn(self.cfg.symbol) or 0.0)
+        except Exception:
+            return 0.0
 
     async def _process_fills(self, price: float) -> None:
         """Controlla i buy aperti: su fill piazza il sell al TP e journal."""

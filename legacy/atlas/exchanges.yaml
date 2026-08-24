@@ -1,0 +1,14 @@
+exchanges:
+  - name: kraken
+    api_key: ${KRAKEN_API_KEY}
+    api_secret: ${KRAKEN_API_SECRET}
+    sandbox: false
+    testnet: false
+  - name: okx
+    api_key: ${OKX_API_KEY}
+    api_secret: ${OKX_API_SECRET}
+    passphrase: ${OKX_PASSPHRASE}
+    sandbox: false
+    testnet: false
+    extra:
+      eea: true

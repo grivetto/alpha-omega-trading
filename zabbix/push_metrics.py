@@ -71,6 +71,61 @@ def file_mtime(p: Path) -> float:
         return 0.0
 
 
+# --- AUTO-HEAL locale (sostituisce i trigger Zabbix, piu' affidabile) --------
+# Health stale > HEAL_STALE_S → riavvio dell'unit systemd locale.
+# Rate-limit: stessa unit non riavviata piu' di una volta ogni HEAL_COOLDOWN_S.
+HEAL_STALE_S = 180.0
+HEAL_COOLDOWN_S = 600.0
+HEAL_STATE_FILE = Path("/tmp/denaro_heal_state.json")
+HEAL_UNITS = {
+    HEALTH_DIR / "ada.json": "denaro-solo-ada-marcodg1",
+    HEALTH_DIR / "sol.json": "denaro-solo-sol-marcodg1",
+    PAPER_DIR / "ADA_EUR_paper.json": "denaro-paper-ada",
+    PAPER_DIR / "SOL_EUR_paper.json": "denaro-paper-sol",
+    PAPER_DIR / "XRP_EUR_paper.json": "denaro-paper-xrp",
+    NODE_DIR / "ADA_EUR_health.json": "denaro-node-paper",
+    NODE_DIR / "SOL_EUR_health.json": "denaro-node-paper",
+    NODE_DIR / "XRP_EUR_health.json": "denaro-node-paper",
+}
+
+
+def _load_heal_state() -> dict:
+    try:
+        return json.loads(HEAL_STATE_FILE.read_text())
+    except Exception:
+        return {}
+
+
+def _save_heal_state(state: dict) -> None:
+    try:
+        HEAL_STATE_FILE.write_text(json.dumps(state))
+    except Exception:
+        pass
+
+
+def heal_if_stale() -> None:
+    """Riavvia le unit il cui health/state e' congelato (bot morto)."""
+    now = time.time()
+    state = _load_heal_state()
+    for source, unit in HEAL_UNITS.items():
+        if unit not in state:
+            state[unit] = 0.0
+        if now - state[unit] < HEAL_COOLDOWN_S:
+            continue  # rate-limit: riavvio recente
+        ts = read_json(source).get("timestamp", 0) if source.suffix == ".json" and "health" in source.name else 0
+        age = now - ts if ts else 0
+        if source.suffix == ".json" and "paper" in source.name:
+            age = now - file_mtime(source)
+        if age > HEAL_STALE_S:
+            import subprocess
+            r = subprocess.run(["sudo", "systemctl", "restart", unit],
+                               capture_output=True, text=True, timeout=30)
+            state[unit] = now
+            _save_heal_state(state)
+            print(f"HEAL: {unit} riavviato (health stale {int(age)}s) rc={r.returncode}")
+    _save_heal_state(state)
+
+
 def main():
     auth = rpc("user.login", {"username": USER, "password": PASS})
     if not auth:
@@ -159,6 +214,9 @@ def main():
         ]
 
     # ── 4. Paper bot (da paper_state; staleness via mtime del file) ──
+    # Equity reale = cash + asset × prezzo corrente (prezzi da infra_snapshot,
+    # definito nella sezione 3; senza prezzo si usa solo cash)
+    paper_prices = (infra or {}).get("prices", {})
     for pair in ("ada", "sol", "xrp"):
         p = PAPER_DIR / f"{pair.upper()}_EUR_paper.json"
         st = read_json(p)
@@ -167,8 +225,9 @@ def main():
         if not st or is_stale(file_mtime(p)):
             data.append({"host": host, "key": f"{prefix}.status", "value": 0})
             continue
-        price = 0
-        equity = st.get("cash", 0)
+        t = paper_prices.get(f"{pair.upper()}/EUR") or {}
+        last = t.get("last") or 0
+        equity = st.get("cash", 0) + st.get("asset", 0) * last
         data += [
             {"host": host, "key": f"{prefix}.status", "value": 1},
             {"host": host, "key": f"{prefix}.equity", "value": round(equity, 2)},
@@ -206,6 +265,9 @@ def main():
         print(f"PUSH OK: {len(data)} valori inviati")
     else:
         print(f"PUSH FALLITO: {result}")
+
+    # Auto-heal locale (dopo il push, per non ritardarlo)
+    heal_if_stale()
 
 
 if __name__ == "__main__":
