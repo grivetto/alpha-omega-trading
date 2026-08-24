@@ -161,11 +161,28 @@ def docker_state():
 
 
 def zabbix_state():
-    containers = docker_state()
+    """Stato dei container Zabbix — che girano su MC2, letti via tunnel SSH
+    (127.0.0.1:2222 -> porta 22 di mc2). Fallback: web check via tunnel 1080."""
     z = {}
-    for name in ("zabbix-web", "zabbix-server", "zabbix-db"):
-        z[name] = containers.get(name, "DOWN")
-    # Web reachable?
+    try:
+        r = subprocess.run(
+            ["ssh", "-p", "2222", "-o", "BatchMode=yes", "-o", "ConnectTimeout=6",
+             "-o", "StrictHostKeyChecking=accept-new", "sergio@127.0.0.1",
+             "docker ps --format '{{.Names}}|{{.Status}}'"],
+            capture_output=True, text=True, timeout=15)
+        found = False
+        for line in r.stdout.splitlines():
+            if "|" in line:
+                name, status = line.split("|", 1)
+                if name in ("zabbix-web", "zabbix-server", "zabbix-db"):
+                    z[name] = status
+                    found = True
+        if not found:
+            z = {"tunnel": "nessun container zabbix da mc2",
+                 "stderr": r.stderr.strip()[:100]}
+    except Exception as e:
+        z = {"ssh_error": str(e)[:100]}
+    # Web reachable (tunnel 1080 su mc2)
     try:
         import urllib.request
         with urllib.request.urlopen("http://127.0.0.1:1080/", timeout=5) as r:
