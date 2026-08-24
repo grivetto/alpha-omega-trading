@@ -103,11 +103,16 @@ def build_exchange(bot: dict, data_dir: Path):
 
 
 def paths_for(bot: dict, data_dir: Path) -> Dict[str, Path]:
+    """Path stato/journal/health UNIVOCI per bot (mode + env_prefix + symbol),
+    cosi' paper e live sullo stesso symbol non collidono sui file."""
+    mode = bot.get("mode", "paper")
+    prefix = (bot.get("env_prefix", "") or "default").rstrip("_")
     symbol = bot["symbol"].replace("/", "_")
+    stem = f"{mode}_{prefix}_{symbol}"
     return {
-        "state_path": data_dir / f"{symbol}_state.json",
-        "journal_path": data_dir / f"{symbol}_trades.jsonl",
-        "health_path": data_dir / f"{symbol}_health.json",
+        "state_path": data_dir / f"{stem}_state.json",
+        "journal_path": data_dir / f"{stem}_trades.jsonl",
+        "health_path": data_dir / f"{stem}_health.json",
     }
 
 
@@ -176,6 +181,8 @@ class NodeApp:
             # health_path esplicito (bot live → path v3.3 per dashboard/Zabbix)
             if bot.get("health_path"):
                 paths["health_path"] = Path(bot["health_path"])
+            # bot_key univoco: mode:env_prefix:symbol (stesso symbol su piu' account)
+            bot_key = f"{bot.get('mode', 'paper')}:{bot.get('env_prefix', '') or '-'}:{bot['symbol']}"
             cfg = BotConfig(
                 symbol=bot["symbol"],
                 capital=float(bot.get("capital", 100)),
@@ -184,6 +191,7 @@ class NodeApp:
                 profit_target=float(bot.get("profit_target", 0.015)),
                 tick_interval=float(bot.get("tick_interval", 60)),
                 fee=float(bot.get("fee", 0.001 if bot.get("mode", "paper") == "paper" else 0.0)),
+                bot_key=bot_key,
                 **paths,
             )
             policy = GridPolicy(build_grid_params(bot))

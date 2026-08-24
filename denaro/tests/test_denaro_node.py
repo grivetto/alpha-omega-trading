@@ -54,18 +54,21 @@ class TestNodeApp(unittest.IsolatedAsyncioTestCase):
         config = make_config(self.dir, bots)
         return NodeApp(config, hub=hub)
 
+    def _bot_key(self, symbol, mode="paper", prefix="-"):
+        return f"{mode}:{prefix}:{symbol}"
+
     async def test_avvio_3_bot_paper_e_griglia(self):
         app = self._app()
         await app.hub.start()
         for symbol in ("ADA/EUR", "SOL/EUR", "XRP/EUR"):
-            bot = app.orchestrator.bots[symbol]
+            bot = app.orchestrator.bots[self._bot_key(symbol)]
             await push_price(app.hub, symbol, {"ADA/EUR": 1.0,
                                                "SOL/EUR": 100.0,
                                                "XRP/EUR": 0.5}[symbol])
             await bot.tick()
             self.assertEqual(len(bot.state.open_buys), 3, symbol)
-            # health file scritto
-            health = Path(self.dir) / f"{symbol.replace('/', '_')}_health.json"
+            # health file scritto (path univoco per bot: mode_prefix_symbol)
+            health = Path(self.dir) / f"paper_default_{symbol.replace('/', '_')}_health.json"
             self.assertTrue(health.exists())
         await app.hub.stop()
 
@@ -77,7 +80,7 @@ class TestNodeApp(unittest.IsolatedAsyncioTestCase):
                                "levels": 3, "buy_distance": 0.015,
                                "profit_target": 0.02, "tick_interval": 30}])
         await app.hub.start()
-        bot = app.orchestrator.bots["ADA/EUR"]
+        bot = app.orchestrator.bots[self._bot_key("ADA/EUR")]
 
         # riferimento (dominio puro): plan_grid + sell_target + fee paper
         pol = GridPolicy(GridParams(levels=3, buy_distance=0.015,
@@ -103,14 +106,14 @@ class TestNodeApp(unittest.IsolatedAsyncioTestCase):
         self.assertAlmostEqual(bot.state.total_pnl, ref_pnl, delta=abs(ref_pnl) * 0.05 + 1e-6)
 
         # equity finale ≈ capitale + PnL (asset azzerati)
-        ex = app.orchestrator.bots["ADA/EUR"].ex
+        ex = app.orchestrator.bots[self._bot_key("ADA/EUR")].ex
         self.assertAlmostEqual(ex.equity(), 300.0 + bot.state.total_pnl, delta=1e-3)
         await app.hub.stop()
 
     async def test_drop_poi_recupero_senza_sovraesposizione(self):
         app = self._app()
         await app.hub.start()
-        bot = app.orchestrator.bots["SOL/EUR"]
+        bot = app.orchestrator.bots[self._bot_key("SOL/EUR")]
         await push_price(app.hub, "SOL/EUR", 100.0)
         await bot.tick()
         # drop sotto tutti i livelli → 3 fill → 3 sell

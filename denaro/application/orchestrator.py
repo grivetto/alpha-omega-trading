@@ -79,6 +79,7 @@ class BotConfig:
     profit_target: float = 0.015
     tick_interval: float = 60.0
     fee: float = 0.0                # fee per lato (frazione); 0 = accounting v3.3
+    bot_key: str = ""               # id univoco (mode:env_prefix:symbol)
     state_path: Optional[Path] = None
     journal_path: Optional[Path] = None
     health_path: Optional[Path] = None
@@ -406,16 +407,21 @@ class BotTask:
 
 
 class TradeOrchestrator:
-    """Gestisce il ciclo di vita di N BotTask (1 processo asyncio per nodo)."""
+    """Gestisce il ciclo di vita di N BotTask (1 processo asyncio per nodo).
+
+    Identifica i bot per `bot_key` (mode:env_prefix:symbol) — lo stesso symbol
+    puo' vivere su piu' account (paper + live OKX/Kraken).
+    """
 
     def __init__(self, supervisor=None) -> None:
         self._bots: Dict[str, BotTask] = {}
         self._supervisor = supervisor
 
     def add_bot(self, bot: BotTask) -> None:
-        if bot.cfg.symbol in self._bots:
-            raise ValueError(f"bot gia' registrato: {bot.cfg.symbol}")
-        self._bots[bot.cfg.symbol] = bot
+        key = bot.cfg.bot_key or bot.cfg.symbol
+        if key in self._bots:
+            raise ValueError(f"bot gia' registrato: {key}")
+        self._bots[key] = bot
 
     async def start_all(self) -> None:
         for symbol, bot in self._bots.items():
