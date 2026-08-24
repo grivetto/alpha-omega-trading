@@ -36,7 +36,7 @@ ENV_FILES = {
 
 NODES = {
     "nuvola": ("87.106.3.15", 22),
-    "mc2": ("192.168.1.99", 22),
+    "mc2": ("127.0.0.1", 2222),   # via tunnel inverso (autossh -R 2222 su MARCODG1)
     "marcodg1": ("127.0.0.1", 22),
 }
 
@@ -189,7 +189,8 @@ def system_state():
 
 
 def collect_node_bots():
-    """Tutti i health del Node (node_data/*_health.json) — paper + live."""
+    """Tutti i health del Node — paper (node_data/*_health.json) + live
+    (health_path espliciti: health/ada.json, sol.json, sol_kraken.json)."""
     bots = {}
     try:
         for p in sorted(NODE_DIR.glob("*_health.json")):
@@ -200,6 +201,18 @@ def collect_node_bots():
                 continue
     except Exception:
         pass
+    live = {
+        "okx:ADA/EUR": HEALTH_DIR / "ada.json",
+        "okx:SOL/EUR": HEALTH_DIR / "sol.json",
+        "kraken:SOL/EUR": HEALTH_DIR / "sol_kraken.json",
+    }
+    for key, p in live.items():
+        try:
+            h = json.loads(p.read_text())
+            if h.get("timestamp"):
+                bots[key] = h
+        except Exception:
+            continue
     return bots
 
 
