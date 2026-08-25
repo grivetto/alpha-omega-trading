@@ -46,3 +46,22 @@ bots:
     profit_target: 0.015
     fee: 0.001
     tick_interval: 30
+
+  # ── LIVE OKX sub-account mc2sub1 (25 DOGE ~1.9€ nel trading) ──
+  # GRID BILATERALE: vende i DOGE in mano sopra il prezzo (incassa EUR) e
+  # ricompra sotto. Le chiavi del sub-account sono nel .env (ultima coppia).
+  - symbol: DOGE/EUR
+    mode: okx
+    capital: 1.9
+    levels: 2
+    buy_distance: 0.02
+    profit_target: 0.03
+    fee: 0.001
+    tick_interval: 30
+    env_prefix: ""
+    health_path: /home/sergio/denaro/health/doge_mc2.json
+    stop_loss_pct: 0.10
+    sell_levels: 3
+    sell_distance: 0.02
+    sell_step: 0.01
+    enabled: true

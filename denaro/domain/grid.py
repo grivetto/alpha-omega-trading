@@ -199,6 +199,10 @@ class GridPolicy:
             amount = self.round_amount(per_level / buy_price)
             if amount <= 0:
                 continue
+            # minimo amount dell'exchange (es. Kraken SOL 0.06) — ordini piu'
+            # piccoli verrebbero rifiutati in silenzio
+            if self.min_amount and amount < self.min_amount:
+                continue
             notional = buy_price * amount
             if notional < per_level * self.params.min_notional_factor:
                 continue

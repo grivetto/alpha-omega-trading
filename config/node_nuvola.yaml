@@ -48,6 +48,25 @@ bots:
     fee: 0.001
     tick_interval: 30
 
+  # ── LIVE OKX sub-account nuvolasub1 (10 DOGE ~0.77€ nel trading) ──
+  # GRID BILATERALE: vende i DOGE in mano sopra il prezzo (incassa EUR) e
+  # ricompra sotto. Le chiavi del sub-account sono nel .env (ultima coppia).
+  - symbol: DOGE/EUR
+    mode: okx
+    capital: 0.8
+    levels: 1
+    buy_distance: 0.02
+    profit_target: 0.03
+    fee: 0.001
+    tick_interval: 30
+    env_prefix: ""
+    health_path: /home/sergio/denaro/health/doge_nuvola.json
+    stop_loss_pct: 0.10
+    sell_levels: 2
+    sell_distance: 0.02
+    sell_step: 0.01
+    enabled: true
+
   # ── LIVE KRAKEN ex-ATLAS ──
   # VERIFICA 2026-08: le chiavi ATLAS_ (/IGUnb, Sc0lGC) puntano allo STESSO
   # account Kraken del bot live su MARCODG1 (SOL 0.303 / ADA 0.064 / EUR 0.83).

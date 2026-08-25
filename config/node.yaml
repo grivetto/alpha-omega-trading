@@ -120,12 +120,13 @@ bots:
     enabled: true
 
   # ── LIVE KRAKEN (cutover attivo, ora locale nel Node su MARCODG1) ──
-  # GRID BILATERALE: il conto ha SOL 0.504 (~42€) in asset + ~9€ EUR.
-  # capital = capitale EUR per la griglia sotto; sell ladder vende l'asset
-  # sopra per incassare EUR e alimentare i buy sotto.
+  # GRID BILATERALE: il conto ha SOL 0.303 in asset (~25€) + ~26€ EUR (dopo
+  # il TP riempito). capital = capitale EUR per la griglia sotto; sell ladder
+  # vende l'asset sopra per incassare EUR e alimentare i buy sotto.
+  # NB: minimo Kraken SOL = 0.06 (~5€/ordine) → per_level deve essere >= 5€.
   - symbol: SOL/EUR
     mode: kraken
-    capital: 9.0
+    capital: 15.0
     levels: 3
     buy_distance: 0.01
     profit_target: 0.015
