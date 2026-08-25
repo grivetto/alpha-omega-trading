@@ -15,7 +15,6 @@ from pathlib import Path
 
 BASE = Path("/home/marco/denaro")
 HEALTH_DIR = BASE / "health"
-PAPER_DIR = BASE / "paper_state"
 NODE_DIR = Path("/home/marco/denaro_node_app/node_data")
 API = "http://127.0.0.1:1080/api_jsonrpc.php"
 USER = "Admin"
@@ -408,33 +407,9 @@ def main():
             {"host": host, "key": "project.win_rate", "value": wr},
         ]
 
-    # ── 4. Paper bot (da paper_state; staleness via mtime del file) ──
-    # Equity reale = cash + asset × prezzo corrente (prezzi da infra_snapshot,
-    # definito nella sezione 3; senza prezzo si usa solo cash)
-    paper_prices = (infra or {}).get("prices", {})
-    for pair in ("ada", "sol", "xrp"):
-        p = PAPER_DIR / f"{pair.upper()}_EUR_paper.json"
-        st = read_json(p)
-        host = f"alpha-omega-paper-{pair}"
-        prefix = f"paper.{pair}"
-        if not st or is_stale(file_mtime(p)):
-            data.append({"host": host, "key": f"{prefix}.status", "value": 0})
-            continue
-        t = paper_prices.get(f"{pair.upper()}/EUR") or {}
-        last = t.get("last") or 0
-        equity = st.get("cash", 0) + st.get("asset", 0) * last
-        data += [
-            {"host": host, "key": f"{prefix}.status", "value": 1},
-            {"host": host, "key": f"{prefix}.equity", "value": round(equity, 2)},
-            {"host": host, "key": f"{prefix}.cash", "value": round(st.get("cash", 0), 2)},
-            {"host": host, "key": f"{prefix}.buys", "value": len(st.get("buys", []))},
-            {"host": host, "key": f"{prefix}.sells", "value": len(st.get("sells", []))},
-            {"host": host, "key": f"{prefix}.pnl", "value": round(st.get("total_pnl", 0), 4)},
-            {"host": host, "key": f"{prefix}.trades", "value": st.get("trades", 0)},
-            {"host": host, "key": f"{prefix}.wins", "value": st.get("wins", 0)},
-            {"host": host, "key": f"{prefix}.losses", "value": st.get("losses", 0)},
-        ]
-
+    # ── 4. Paper bot v3.3 (RIMOSSO 2026-08-25): i motori paper v3.3 sono stati
+    #     fermati/disabilitati (ridondanti) — i paper girano nel Node e sono
+    #     pushati nella sezione 5 (node.*). I file paper_state sono congelati.
     # ── 5. Node paper (M7 — da node_data health; staleness via timestamp) ──
     for name, (symbol, host, prefix, fname) in NODE_BOTS.items():
         h = read_json(NODE_DIR / fname)
