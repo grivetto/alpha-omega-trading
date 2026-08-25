@@ -50,7 +50,6 @@ class FakeExchange:
         return {"free": {self.quote: self.free, base: self.asset},
                 "total": {self.quote: self.free + self.asset * self.price,
                           base: self.asset}}
-
     def fetch_ticker(self, symbol):
         return {"last": self.price}
 
@@ -223,6 +222,54 @@ class TestBotTask(unittest.IsolatedAsyncioTestCase):
         self.assertFalse(bot.state.stop_loss_triggered)
         self.assertIn('"status": "running"',
                       (Path(self.dir) / "sl2_health.json").read_text())
+
+    async def test_grid_bilaterale_piazza_sell_dell_asset(self):
+        """GRID BILATERALE: con asset in mano, il bot piazza anche i sell
+        sopra il prezzo (scala di vendita) oltre ai buy sotto."""
+        ex = FakeExchange(price=100.0, free_quote=30.0)
+        ex.asset = 0.6   # SOL 0.6 in mano (capitale intrappolato in asset)
+        cfg = BotConfig(
+            symbol="SOL/EUR", capital=30.0, levels=3,
+            buy_distance=0.01, profit_target=0.015,
+            state_path=Path(self.dir) / "bl_state.json",
+            journal_path=Path(self.dir) / "bl_trades.jsonl",
+            health_path=Path(self.dir) / "bl_health.json",
+        )
+        pol = GridPolicy(GridParams(levels=3, buy_distance=0.01,
+                                    profit_target=0.015, level_step=0.005,
+                                    retarget_factor=1.5,
+                                    sell_levels=3, sell_distance=0.02,
+                                    sell_step=0.01))
+        risk = RiskManager(daily_loss_limit=0.05, max_drawdown_limit=0.30)
+        bot = BotTask(cfg, ex, pol, risk, now=lambda: 1_000_000.0)
+        await bot.tick()
+        # 3 buy sotto + 3 sell sopra (scala bilaterale)
+        self.assertEqual(len(bot.state.open_buys), 3)
+        self.assertEqual(len(bot.state.open_sells), 3)
+        sell_prices = sorted(s["target_price"] for s in bot.state.open_sells.values())
+        self.assertAlmostEqual(sell_prices[0], 102.0, places=2)
+        self.assertAlmostEqual(sell_prices[2], 104.0, places=2)
+
+    async def test_grid_bilaterale_senza_asset_solo_buy(self):
+        """Senza asset in mano, il bot piazza solo i buy (comportamento base)."""
+        ex = FakeExchange(price=100.0, free_quote=30.0)
+        ex.asset = 0.0
+        cfg = BotConfig(
+            symbol="SOL/EUR", capital=30.0, levels=3,
+            buy_distance=0.01, profit_target=0.015,
+            state_path=Path(self.dir) / "bl2_state.json",
+            journal_path=Path(self.dir) / "bl2_trades.jsonl",
+            health_path=Path(self.dir) / "bl2_health.json",
+        )
+        pol = GridPolicy(GridParams(levels=3, buy_distance=0.01,
+                                    profit_target=0.015, level_step=0.005,
+                                    retarget_factor=1.5,
+                                    sell_levels=3, sell_distance=0.02))
+        risk = RiskManager(daily_loss_limit=0.05, max_drawdown_limit=0.30)
+        bot = BotTask(cfg, ex, pol, risk, now=lambda: 1_000_000.0)
+        await bot.tick()
+        self.assertEqual(len(bot.state.open_buys), 3)
+        self.assertEqual(len(bot.state.open_sells), 0)
 
     async def test_cb_apre_e_blocca_nuovi_ordini(self):
         ex = FakeExchange(price=100.0, free_quote=30.0)

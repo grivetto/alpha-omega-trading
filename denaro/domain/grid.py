@@ -32,6 +32,14 @@ class GridParams:
     retarget_factor: float = 1.5        # deriva prezzo vs buy (in unita' di buy_distance)
     max_order_age_s: float = 12 * 3600  # eta' massima di un buy aperto
     min_notional_factor: float = 0.8    # scarta livelli con notional < per_level * f
+    # ── GRID BILATERALE (ATLAS v6 micro-capitale) ──
+    # Vendita dell'ASSET in mano (free base) sopra il prezzo: incassa EUR
+    # per alimentare i buy sotto. `sell_levels` = quanti livelli di vendita
+    # sopra il prezzo; `sell_distance` = distanza del primo livello.
+    sell_levels: int = 0                # 0 = disabilitato (solo buy grid)
+    sell_distance: float = 0.02         # primo sell a prezzo × (1 + sell_distance)
+    sell_step: float = 0.01             # incremento distanza per livello sell
+    sell_asset_share: float = 1.0       # frazione dell'asset free usata dalla scala
 
 
 @dataclass
@@ -121,18 +129,43 @@ class GridPolicy:
     def decide(self, price: float, open_buys: Dict[str, dict],
                open_sells: Dict[str, dict], cash: float,
                capital_config: float, free_balance: float,
-               now: float) -> GridDecision:
+               now: float, free_asset: float = 0.0) -> GridDecision:
         """Decisione pura per il tick corrente.
 
         - cancella i buy stantii
         - piazza SOLO i livelli mancanti (mai piu' di `levels` buy aperti)
-        - nessuna decisione di vendita qui (le vendite nascono dai fill,
-          gestiti dal caller con `sell_target`)
+        - GRID BILATERALE: se `sell_levels > 0` e c'e' asset libero, pianifica
+          una scala di vendita SOPRA il prezzo (incassa EUR per i buy sotto)
+        - le vendite TP dei buy nascono dai fill (gestiti dal caller)
         """
         decision = GridDecision()
         if price <= 0:
             decision.reason = "prezzo non valido"
             return decision
+
+        # 0) GRID BILATERALE: scala di vendita sopra il prezzo usando l'asset
+        #    in mano (free_asset). Vende una frazione dell'asset a prezzi
+        #    crescenti: i proventi EUR alimentano i buy sotto.
+        if self.params.sell_levels > 0 and free_asset > 0:
+            sell_cap = int(self.params.sell_levels)
+            # riusa i sell gia' aperti per non raddoppiare la scala
+            open_sell_prices = {float(s.get("price") or 0) for s in open_sells.values()}
+            share = free_asset * self.params.sell_asset_share / sell_cap
+            for level in range(sell_cap):
+                dist = self.params.sell_distance + (level * self.params.sell_step)
+                sell_price = self.round_price(price * (1 + dist))
+                if sell_price <= 0:
+                    continue
+                # salta se un sell a questo prezzo esiste gia'
+                if any(abs(sell_price - p) < 1e-9 for p in open_sell_prices):
+                    continue
+                amount = self.round_amount(share)
+                if amount <= 0 or (self.min_amount and amount < self.min_amount):
+                    continue
+                decision.to_sell.append((amount, sell_price))
+            if decision.to_sell:
+                decision.reason = (f"grid bilaterale: {len(decision.to_sell)} sell "
+                                   f"sopra il prezzo (asset {free_asset:.4f})")
 
         # 1) buy stantii → cancella
         for oid, info in open_buys.items():
@@ -171,6 +204,7 @@ class GridPolicy:
                 continue
             decision.to_place.append(GridLevel(buy_price=buy_price, amount=amount, level=level))
 
-        decision.reason = (f"riposiziono {len(decision.to_place)} livelli "
-                           f"(cancello {len(decision.to_cancel)})")
+        if not decision.reason:
+            decision.reason = (f"riposiziono {len(decision.to_place)} livelli "
+                               f"(cancello {len(decision.to_cancel)})")
         return decision

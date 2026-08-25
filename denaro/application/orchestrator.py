@@ -252,17 +252,52 @@ class BotTask:
                 on_price(price)
             except Exception:  # noqa: BLE001
                 pass
-        decision = self.policy.decide(price, self.state.open_buys,
-                                      self.state.open_sells, free,
-                                      self.cfg.capital, free, now)
+        # asset libero del base currency (per il grid bilaterale)
+        base = self.cfg.symbol.split("/")[0]
+        try:
+            free_asset = float((bal.get("free", {}) or {}).get(base, 0.0) or 0.0)
+        except Exception:  # noqa: BLE001
+            free_asset = 0.0
+        try:
+            decision = self.policy.decide(price, self.state.open_buys,
+                                          self.state.open_sells, free,
+                                          self.cfg.capital, free, now,
+                                          free_asset=free_asset)
+        except TypeError:
+            # policy legacy senza free_asset (momentum/meanrev/adaptive)
+            decision = self.policy.decide(price, self.state.open_buys,
+                                          self.state.open_sells, free,
+                                          self.cfg.capital, free, now)
 
         # 3a) SafeMode (TODO punto 3): nessun NUOVO trade se la RAM e' critica;
         #     le posizioni esistenti continuano a essere gestite (fill/exit)
         if self.trading_paused:
             decision.to_place = []
+            decision.to_sell = []
             decision.reason = "safemode: trading paused"
 
-        # 3b) PRE-FLIGHT anti-deadlock (ATLAS v6): fattibilita' ordini prima
+        # 3aa) GRID BILATERALE: i SELL ladder NON richiedono EUR (usano l'asset
+        #      in mano) → si eseguono SEMPRE, anche se il preflight blocca i
+        #      buy per mancanza di free (es. ADA con 0 EUR e 9.8 ADA free).
+        for amount, sell_price in decision.to_sell:
+            try:
+                o = await asyncio.to_thread(
+                    self.ex.create_limit_order, self.cfg.symbol, "sell",
+                    amount, sell_price)
+                if o:
+                    self.state.open_sells[o["id"]] = {
+                        "amount": amount, "entry_price": price,
+                        "target_price": sell_price, "timestamp": self._now()}
+                    self._journal("sell_placed", order_id=o["id"],
+                                  amount=amount, price=sell_price,
+                                  kind="ladder")
+            except Exception as e:  # noqa: BLE001
+                self._last_error = f"place sell ladder: {e}"
+        if decision.to_sell:
+            log.info("grid bilaterale %s: %d sell ladder piazzati",
+                     self.cfg.symbol, len(decision.to_sell))
+
+        # 3b) PRE-FLIGHT anti-deadlock (ATLAS v6): fattibilita' BUY prima
         #     delle API. Capitale usabile = free + locked×0.85 (ordini buy
         #     cancellabili); dedup degli ordini speculari (buy sopra il mercato).
         min_notional = self._min_notional()

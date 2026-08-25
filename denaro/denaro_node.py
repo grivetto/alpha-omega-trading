@@ -51,6 +51,11 @@ def build_grid_params(bot: dict) -> GridParams:
         level_step=float(bot.get("level_step", 0.005)),
         retarget_factor=float(bot.get("retarget_factor", 1.5)),
         max_order_age_s=float(bot.get("max_order_age_s", 12 * 3600)),
+        # GRID BILATERALE (micro-capitale): scala di vendita dell'asset sopra
+        sell_levels=int(bot.get("sell_levels", 0)),
+        sell_distance=float(bot.get("sell_distance", 0.02)),
+        sell_step=float(bot.get("sell_step", 0.01)),
+        sell_asset_share=float(bot.get("sell_asset_share", 1.0)),
     )
 
 

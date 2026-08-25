@@ -120,10 +120,13 @@ bots:
     enabled: true
 
   # ── LIVE KRAKEN (cutover attivo, ora locale nel Node su MARCODG1) ──
+  # GRID BILATERALE: il conto ha SOL 0.504 (~42€) in asset + ~9€ EUR.
+  # capital = capitale EUR per la griglia sotto; sell ladder vende l'asset
+  # sopra per incassare EUR e alimentare i buy sotto.
   - symbol: SOL/EUR
     mode: kraken
-    capital: 50.0
-    levels: 5
+    capital: 9.0
+    levels: 3
     buy_distance: 0.01
     profit_target: 0.015
     fee: 0.0026
@@ -131,6 +134,9 @@ bots:
     env_prefix: KRAKEN_
     health_path: /home/marco/denaro/health/sol_kraken.json
     stop_loss_pct: 0.10
+    sell_levels: 4
+    sell_distance: 0.02
+    sell_step: 0.01
     enabled: true
 
   # ── KRAKEN ex-ATLAS (stesso account del live → disabilitato) ──

@@ -238,5 +238,53 @@ class TestIndicators(unittest.TestCase):
         self.assertEqual(bb.signal, "squeeze")
 
 
+class TestGridBilaterale(unittest.TestCase):
+    """GRID BILATERALE (ATLAS v6 micro-capitale): scala di vendita dell'asset
+    in mano sopra il prezzo — incassa EUR per alimentare i buy sotto."""
+
+    def make_bilateral(self, **kw) -> GridPolicy:
+        params = GridParams(levels=3, buy_distance=0.01, profit_target=0.015,
+                            sell_levels=kw.get("sell_levels", 3),
+                            sell_distance=kw.get("sell_distance", 0.02),
+                            sell_step=kw.get("sell_step", 0.01))
+        return GridPolicy(params=params, round_price=lambda p: round(p, 4),
+                          round_amount=lambda a: round(a, 6))
+
+    def test_senza_asset_nessun_sell(self):
+        pol = self.make_bilateral()
+        d = pol.decide(100.0, {}, {}, 30.0, 30.0, 30.0, 0.0, free_asset=0.0)
+        self.assertEqual(d.to_sell, [])
+        # i buy restano normali
+        self.assertEqual(len(d.to_place), 3)
+
+    def test_con_asset_piazza_scala_sopra(self):
+        pol = self.make_bilateral(sell_levels=3)
+        d = pol.decide(100.0, {}, {}, 30.0, 30.0, 30.0, 0.0, free_asset=0.6)
+        # 3 sell sopra il prezzo (2%, 3%, 4%)
+        self.assertEqual(len(d.to_sell), 3)
+        prices = sorted(p for _, p in d.to_sell)
+        self.assertAlmostEqual(prices[0], 102.0, places=2)
+        self.assertAlmostEqual(prices[1], 103.0, places=2)
+        self.assertAlmostEqual(prices[2], 104.0, places=2)
+        # amount per livello = asset / sell_levels
+        for amt, _ in d.to_sell:
+            self.assertAlmostEqual(amt, 0.2, places=4)
+
+    def test_non_duplica_i_sell_aperti(self):
+        pol = self.make_bilateral(sell_levels=3)
+        open_sells = {"s1": {"price": 102.0, "amount": 0.2},
+                      "s2": {"price": 103.0, "amount": 0.2}}
+        d = pol.decide(100.0, {}, open_sells, 30.0, 30.0, 30.0, 0.0,
+                       free_asset=0.6)
+        # solo il livello 104.0 mancante
+        self.assertEqual(len(d.to_sell), 1)
+        self.assertAlmostEqual(d.to_sell[0][1], 104.0, places=2)
+
+    def test_sell_levels_zero_disabilita(self):
+        pol = self.make_bilateral(sell_levels=0)
+        d = pol.decide(100.0, {}, {}, 30.0, 30.0, 30.0, 0.0, free_asset=0.6)
+        self.assertEqual(d.to_sell, [])
+
+
 if __name__ == "__main__":
     unittest.main()
