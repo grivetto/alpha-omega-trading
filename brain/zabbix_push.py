@@ -70,7 +70,9 @@ def push(state: dict, repairs: list[dict], hermes_age: float | None,
         data.append({"host": "MARCODG1", "key": "brain.strategy_ret", "value": strat_ret})
     for d in data:
         d["clock"] = clock
-    res = rpc("history.push", {"data": data})
+    # Zabbix 7.0: history.push vuole la LISTA diretta (niente wrapper
+    # {"data": [...]} -> "unexpected parameter data").
+    res = rpc("history.push", data)
     if res and res.get("response") == "success":
         print(f"[zabbix] push OK: {len(data)} valori")
     else:
