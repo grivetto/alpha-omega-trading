@@ -314,6 +314,124 @@ def backtest_grid(candles: list[dict], params: dict, source: str = "okx",
             "n_bars": len(equity_curve), "trade_pnls": trade_pnls}
 
 
+def _zero_metrics() -> dict:
+    return {"ret": 0.0, "max_dd": 1.0, "sharpe": 0.0, "trades": 0,
+            "win_rate": 0.0, "n_bars": 0, "trade_pnls": []}
+
+
+def backtest_momentum(candles: list[dict], params: dict, source: str = "okx",
+                      capital: float = 100.0) -> dict:
+    """Momentum bar-based (istanza TREND, no look-ahead).
+
+    Segnale calcolato sulle chiusure fino a i-1 (mai sulla barra corrente):
+    EMA8 > EMA21 E RSI14 > rsi_confirm → bullish; EMA8 < EMA21 → bearish.
+    Entry alla chiusura della barra successiva (×1+entry_slip).
+    Uscite: TP (high>=target), stop (low<=stop), time-stop (max_hold barre)
+    o segnale bearish. Fee maker + slippage dinamico."""
+    if len(candles) < 220:
+        return _zero_metrics()
+    profit_target = float(params.get("profit_target", 0.025))
+    entry_slip = float(params.get("entry_slip", 0.002))
+    rsi_confirm = float(params.get("rsi_confirm", 50.0))
+    max_hold = int(params.get("max_hold", 48))
+    stop_loss = float(params.get("stop_loss", 0.10))
+    fast_p = int(params.get("fast_period", 8))
+    slow_p = int(params.get("slow_period", 21))
+    fees = FEES.get(source, FEES["okx"])
+    fee = fees["maker"]
+
+    closes = [c["c"] for c in candles]
+    ema_fast = ema(closes, fast_p)
+    ema_slow = ema(closes, slow_p)
+    # RSI di Wilder (serie allineata)
+    rsi = [50.0] * 14
+    gains = losses = 0.0
+    for i in range(1, 15):
+        d = closes[i] - closes[i - 1]
+        gains += max(d, 0.0)
+        losses += max(-d, 0.0)
+    ag, al = gains / 14, losses / 14
+    rsi.append(100 - 100 / (1 + ag / al) if al > 0 else 100.0)
+    for i in range(15, len(closes)):
+        d = closes[i] - closes[i - 1]
+        ag = (ag * 13 + max(d, 0.0)) / 14
+        al = (al * 13 + max(-d, 0.0)) / 14
+        rsi.append(100 - 100 / (1 + ag / al) if al > 0 else 100.0)
+
+    cash = capital
+    pos_entry = None
+    pos_bar = -1
+    pos_amount = 0.0
+    trade_pnls: list[float] = []
+    equity_curve: list[float] = []
+    peak = capital
+
+    for i in range(slow_p + 1, len(candles)):
+        c = candles[i]
+        close, hi, lo = c["c"], c["h"], c["l"]
+        if i - 1 >= slow_p and i - 1 < len(ema_fast):
+            bull = ema_fast[i - 1] > ema_slow[i - 1] and rsi[i - 1] > rsi_confirm
+            bear = ema_fast[i - 1] < ema_slow[i - 1]
+        else:
+            bull = bear = False
+
+        if pos_entry is not None:
+            exit_px = None
+            target = pos_entry * (1 + profit_target)
+            stop = pos_entry * (1 - stop_loss)
+            if hi >= target:
+                exit_px = target
+            elif lo <= stop:
+                exit_px = stop
+            elif bear or (i - pos_bar) >= max_hold:
+                exit_px = close
+            if exit_px is not None:
+                slip = _dyn_slippage(pos_amount * exit_px, c["v"] * close)
+                proceeds = pos_amount * exit_px * (1 - fee - slip)
+                cash += proceeds
+                trade_pnls.append(proceeds - pos_amount * pos_entry)
+                pos_entry = None
+        elif bull:
+            entry = close * (1 + entry_slip)
+            slip = _dyn_slippage(cash * entry_slip, c["v"] * close)
+            amount = cash / entry
+            if amount > 0:
+                cash -= amount * entry * (1 + fee + slip)
+                pos_entry = entry
+                pos_bar = i
+                pos_amount = amount
+
+        equity = cash + (pos_amount * close if pos_entry else 0.0)
+        equity_curve.append(equity)
+        if equity > peak:
+            peak = equity
+
+    if not equity_curve:
+        return _zero_metrics()
+    final_equity = equity_curve[-1]
+    ret = final_equity / capital - 1
+    max_dd = max((1 - e / peak) for e in equity_curve) if peak > 0 else 1.0
+    rets = [equity_curve[i] / equity_curve[i - 1] - 1
+            for i in range(1, len(equity_curve)) if equity_curve[i - 1] > 0]
+    mean_r = sum(rets) / len(rets) if rets else 0.0
+    std_r = (sum((r - mean_r) ** 2 for r in rets) / len(rets)) ** 0.5 if rets else 0.0
+    sharpe = (mean_r / std_r * math.sqrt(24 * 365)) if std_r > 0 else 0.0
+    n_trades = len(trade_pnls)
+    wins = sum(1 for x in trade_pnls if x > 0)
+    return {"ret": ret, "max_dd": max_dd, "sharpe": sharpe,
+            "trades": n_trades,
+            "win_rate": wins / n_trades if n_trades else 0.0,
+            "n_bars": len(equity_curve), "trade_pnls": trade_pnls}
+
+
+def _backtest_for(params: dict, candles: list[dict], source: str,
+                  capital: float) -> dict:
+    """Dispatch del backtest in base alla strategia del candidato."""
+    if params.get("strategy") == "momentum":
+        return backtest_momentum(candles, params, source, capital)
+    return backtest_grid(candles, params, source, capital)
+
+
 def score(m: dict) -> float:
     if m["trades"] < MIN_TRADES:
         return -1e9
@@ -329,7 +447,7 @@ def walk_forward_evaluate(candles: list[dict], params: dict,
     n = len(candles)
     need = WFA_TRAIN + WFA_TEST
     if n < need + 50:
-        return backtest_grid(candles, params, source, capital)  # dati corti
+        return _backtest_for(params, candles, source, capital)  # dati corti
     test_metrics = []
     folds = 0
     for fold in range(WFA_FOLDS):
@@ -338,13 +456,13 @@ def walk_forward_evaluate(candles: list[dict], params: dict,
             break
         # window = warmup(200) + test(100): il backtest valuta le ultime 100
         # barre ma gli indicatori (EMA200/ADX) hanno il warmup — senza warmup
-        # backtest_grid torna subito zero (richiede >=220 barre).
+        # il backtest torna subito zero (richiede >=220 barre).
         window_c = candles[start:start + need]
-        m_test = backtest_grid(window_c, params, source, capital)
+        m_test = _backtest_for(params, window_c, source, capital)
         test_metrics.append(m_test)
         folds += 1
     if not test_metrics:
-        return backtest_grid(candles, params, source, capital)
+        return _backtest_for(params, candles, source, capital)
     # ret/max_dd/sharpe/win_rate: MEDIA sui fold (generalizzazione);
     # trades: SOMMA sui fold (il numero di trade test totali conta per il
     # minimo di campioni — la media sotto 10 trade scarterebbe tutto).
@@ -394,6 +512,26 @@ def param_grid(symbol: str) -> list[dict]:
                             })
     return grid
 
+
+def param_grid_momentum() -> list[dict]:
+    """Grid di parametri MOMENTUM (istanza TREND): TP, time-stop, stop-loss."""
+    grid = []
+    for profit_target in (0.015, 0.025, 0.04):
+        for max_hold in (24, 48, 96):
+            for stop_loss in (0.05, 0.10, 0.15):
+                grid.append({
+                    "strategy": "momentum",
+                    "profit_target": profit_target,
+                    "entry_slip": 0.002,
+                    "rsi_confirm": 50.0,
+                    "max_hold": max_hold,
+                    "stop_loss": stop_loss,
+                    "fast_period": 8,
+                    "slow_period": 21,
+                })
+    return grid
+
+
 # ── registry + runda ─────────────────────────────────────────────────────────
 
 def load_registry() -> dict:
@@ -417,9 +555,12 @@ def save_registry(reg: dict) -> None:
 
 def run_round(symbols: list[str] | None = None) -> dict:
     """Runda WFA: per ogni simbolo il best candidato e' quello con la miglior
-    performance TEST aggregata sui fold (media), filtrato per tail risk MC."""
+    performance TEST aggregata sui fold (media), filtrato per tail risk MC.
+    Per i simboli dell'istanza TREND (SOL, ETH) valuta anche i candidati
+    MOMENTUM (il best puo' essere grid o momentum)."""
     reg = load_registry()
     summary = {}
+    trend_syms = {"SOL/EUR", "ETH/EUR"}
     for sym in (symbols or SYMBOLS):
         try:
             candles = load_or_fetch(sym)
@@ -427,6 +568,10 @@ def run_round(symbols: list[str] | None = None) -> dict:
             for params in param_grid(sym):
                 m = walk_forward_evaluate(candles, params)
                 results.append((score(m), params, m))
+            if sym in trend_syms:
+                for params in param_grid_momentum():
+                    m = walk_forward_evaluate(candles, params)
+                    results.append((score(m), params, m))
             results.sort(key=lambda x: -x[0])
             top_params, top_metrics = None, None
             if results and results[0][0] > -1e8:
