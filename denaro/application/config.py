@@ -106,6 +106,10 @@ class BotConfigSchema(BaseModel):
 
 class NodeConfig(BaseModel):
     data_dir: str = "node_data"
+    # NB: se manca dallo schema, Pydantic lo SCARTA in silenzio e il nodo usa
+    # il file sbagliato (bug F1): l'istanza trend era stata convertita in grid
+    # dagli override del main. Ogni istanza DEVE poter puntare al proprio file.
+    overrides_file: str = "config/strategy_overrides.json"
     exchange_rest: Dict[str, Any] = Field(default_factory=lambda: {"name": "okx", "eea": True})
     hub: HubConfig = Field(default_factory=HubConfig)
     supervisor: SupervisorConfig = Field(default_factory=SupervisorConfig)

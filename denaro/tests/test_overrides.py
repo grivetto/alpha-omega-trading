@@ -1,9 +1,14 @@
 """Test: (1) lo schema Pydantic conserva i campi sell_* (bug storico: i sell
 ladder della griglia bilaterale non venivano MAI piazzati perché i campi
 mancavano dallo schema e Pydantic li scartava in silenzio);
-(2) il meccanismo di override strategici (strategy_overrides.json)."""
+(2) il meccanismo di override strategici (strategy_overrides.json);
+(3) overrides_file per-istanza (bug F1: l'istanza trend leggeva il file del
+main e i bot momentum venivano convertiti in grid)."""
 import json
+import tempfile
 from pathlib import Path
+
+import yaml
 
 from denaro.application.config import load_node_config
 
@@ -13,6 +18,19 @@ NODE_YAML = REPO / "config" / "node.yaml"
 
 def _bots() -> list[dict]:
     return load_node_config(NODE_YAML).to_dict()["bots"]
+
+
+def test_node_config_preserves_overrides_file():
+    with tempfile.NamedTemporaryFile("w", suffix=".yaml", delete=False) as f:
+        yaml.safe_dump({"data_dir": "node_data",
+                        "overrides_file": "config/overrides_trend.json",
+                        "bots": []}, f)
+        p = Path(f.name)
+    try:
+        cfg = load_node_config(p)
+        assert cfg.to_dict()["overrides_file"] == "config/overrides_trend.json"
+    finally:
+        p.unlink(missing_ok=True)
 
 
 def test_schema_preserves_sell_fields_okx_sol():

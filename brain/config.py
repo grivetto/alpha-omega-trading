@@ -28,7 +28,8 @@ MACHINES = {
 
 # unit systemd da tenere attive per macchina
 UNITS = {
-    "marcodg1": ["denaro-node-paper", "denaro-health-marcodg1",
+    "marcodg1": ["denaro-node-paper", "denaro-node-trend",
+                 "denaro-health-marcodg1",
                  "denaro-aggregator-marcodg1", "zabbix-agent"],
     "nuvola":   ["denaro-node-nuvola", "denaro-health-nuvola",
                  "zabbix-agent", "zabbix-tunnel"],
@@ -59,6 +60,11 @@ BOTS = {
     ("marcodg1", "paper:XRP/EUR"):  ("denaro-node-paper", "/home/marco/denaro_node_app/node_data/paper_default_XRP_EUR_health.json"),
     ("marcodg1", "paper:DOGE/EUR"): ("denaro-node-paper", "/home/marco/denaro_node_app/node_data/paper_default_DOGE_EUR_health.json"),
     ("marcodg1", "paper:ETH/EUR"):  ("denaro-node-paper", "/home/marco/denaro_node_app/node_data/paper_default_ETH_EUR_health.json"),
+    # MARCODG1 — istanza TREND (momentum + adaptive scalper, paper)
+    ("marcodg1", "trend:paper:SOL/EUR"): ("denaro-node-trend", "/home/marco/denaro_node_app/node_data_trend/paper_default_SOL_EUR_health.json"),
+    ("marcodg1", "trend:paper:ETH/EUR"): ("denaro-node-trend", "/home/marco/denaro_node_app/node_data_trend/paper_default_ETH_EUR_health.json"),
+    ("marcodg1", "trend:paper:ADA/EUR"): ("denaro-node-trend", "/home/marco/denaro_node_app/node_data_trend/paper_default_ADA_EUR_health.json"),
+    ("marcodg1", "trend:paper:XRP/EUR"): ("denaro-node-trend", "/home/marco/denaro_node_app/node_data_trend/paper_default_XRP_EUR_health.json"),
     # NUVOLA — live nuvolasub1 + paper
     ("nuvola", "okx:DOGE/EUR"): ("denaro-node-nuvola", "/home/sergio/denaro/health/doge_nuvola.json"),
     ("nuvola", "paper:ADA/EUR"): ("denaro-node-nuvola", "/home/sergio/denaro_node_app/node_data/paper_default_ADA_EUR_health.json"),
