@@ -1,0 +1,22 @@
+{
+  "paper:SOL/EUR": {
+    "strategy": "grid",
+    "buy_distance": 0.005,
+    "profit_target": 0.01,
+    "levels": 2,
+    "sell_levels": 3,
+    "sell_distance": 0.02,
+    "sell_step": 0.01,
+    "stop_loss_pct": 0.1
+  },
+  "paper:ETH/EUR": {
+    "strategy": "grid",
+    "buy_distance": 0.02,
+    "profit_target": 0.01,
+    "levels": 5,
+    "sell_levels": 2,
+    "sell_distance": 0.01,
+    "sell_step": 0.01,
+    "stop_loss_pct": 0.1
+  }
+}
