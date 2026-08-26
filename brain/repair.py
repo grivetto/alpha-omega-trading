@@ -100,9 +100,13 @@ def repair(state: dict) -> list[dict]:
             unit = b["unit"]
             if unit in restarted:
                 continue
-            if b.get("stale") or b.get("status") not in ("running",):
+            # "blocked" = stato protettivo legittimo (safemode/circuit breaker):
+            # NON va riavviato (vedi docstring del modulo). Si riavvia solo se
+            # l'health e' congelato (stale) o il bot e' morto/errore.
+            status = b.get("status")
+            if b.get("stale") or status not in ("running", "blocked"):
                 ok = restart_unit(machine, unit,
-                                  f"bot {bot_key} stale/status={b.get('status')} age={b.get('age')}s")
+                                  f"bot {bot_key} stale/status={status} age={b.get('age')}s")
                 actions.append({"machine": machine, "unit": unit,
                                 "action": "restart_unit_bot", "ok": ok,
                                 "reason": f"bot {bot_key}"})

@@ -42,17 +42,21 @@ REMOTE_NODES = {
     "nuvola": {
         "ssh": ["sergio@87.106.3.15", "-p", "22"],
         "data_dir": "/home/sergio/denaro_node_app/node_data",
+        "live_dir": "/home/sergio/denaro/health",
         "host": "alpha-omega-node-nuvola",
         "unit": "denaro-node-nuvola",
     },
     "mc2": {
         "ssh": ["sergio@127.0.0.1", "-p", "2222"],  # tunnel inverso
         "data_dir": "/home/sergio/denaro_node_app/node_data",
+        "live_dir": "/home/sergio/denaro/health",
         "host": "alpha-omega-node-mc2",
         "unit": "denaro-node-mc2",
     },
 }
-REMOTE_SYMS = {"ADA": "node.ada", "SOL": "node.sol", "XRP": "node.xrp"}
+# paper (node_data) + live DOGE (health dir, health_path dal config del node)
+REMOTE_SYMS = {"ADA": "node.ada", "SOL": "node.sol",
+               "XRP": "node.xrp", "DOGE": "node.doge"}
 
 # Servizi Denaro per macchina → item trapper svc.<unit> sugli host macchina
 # (MARCODG1, nuvola, mc2). Stato letto con systemctl is-active:
@@ -63,18 +67,20 @@ SERVICES = {
         "ssh": [],  # locale
         "units": [
             "denaro-node-paper", "denaro-health-marcodg1", "denaro-aggregator-marcodg1",
-            "denaro-paper-ada", "denaro-paper-sol", "denaro-paper-xrp",
+            "denaro-brain", "zabbix-agent",
         ],
     },
     "nuvola": {
         "host": "nuvola",
         "ssh": ["sergio@87.106.3.15", "-p", "22"],
-        "units": ["denaro-node-nuvola", "zabbix-tunnel"],
+        "units": ["denaro-node-nuvola", "denaro-health-nuvola",
+                  "zabbix-agent", "zabbix-tunnel"],
     },
     "mc2": {
         "host": "mc2",
         "ssh": ["sergio@127.0.0.1", "-p", "2222"],  # tunnel inverso
-        "units": ["denaro-node-mc2", "zabbix-tunnel-reverse"],
+        "units": ["denaro-node-mc2", "denaro-feeder-mc2", "denaro-health-mc2",
+                  "zabbix-agent", "zabbix-tunnel-reverse"],
     },
 }
 
@@ -128,10 +134,14 @@ def fetch_remote_health(node_name):
         return {}
     ssh_args = " ".join(cfg["ssh"])
     data_dir = cfg["data_dir"]
+    live_dir = cfg.get("live_dir")
+    globs = f"{data_dir}/*_health.json"
+    if live_dir:
+        globs += f" {live_dir}/*.json"
     cmd = (f"ssh -o BatchMode=yes -o ConnectTimeout=5 {ssh_args} "
-           f"'for f in {data_dir}/*_health.json; do echo ===FILE===; cat \"$f\"; echo; done'")
+           f"'for f in {globs}; do echo ===FILE===; cat \"$f\" 2>/dev/null; echo; done'")
     try:
-        r = subprocess.run(["bash", "-c", cmd], capture_output=True, text=True, timeout=20)
+        r = subprocess.run(["bash", "-c", cmd], capture_output=True, text=True, timeout=25)
         bots = {}
         if r.returncode == 0 and r.stdout.strip():
             for block in r.stdout.split("===FILE===")[1:]:
@@ -140,7 +150,13 @@ def fetch_remote_health(node_name):
                     continue
                 try:
                     h = json.loads(lines[-1])
-                    bots[h.get("symbol", "unknown")] = h
+                    sym = h.get("symbol")
+                    if sym:
+                        # health live (doge_nuvola.json) hanno symbol "DOGE/EUR":
+                        # stessa chiave dei paper -> merge con priorita' al piu' fresco
+                        if sym in bots and h.get("timestamp", 0) <= bots[sym].get("timestamp", 0):
+                            continue
+                        bots[sym] = h
                 except Exception:
                     continue
         return bots

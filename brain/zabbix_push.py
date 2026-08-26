@@ -10,10 +10,12 @@ from . import config
 _auth: str | None = None
 
 
-def rpc(method: str, params: dict, auth: bool = True) -> object:
-    body = {"jsonrpc": "2.0", "method": method,
-            "params": params if not auth else {**params, "auth": _auth},
-            "id": 1}
+def rpc(method: str, params: dict | list, auth: bool = True) -> object:
+    # Zabbix 7.0: l'auth va nel BODY top-level, NON dentro params (altrimenti
+    # "Not authorized"). params puo' essere dict o lista (item.create ecc.).
+    body = {"jsonrpc": "2.0", "method": method, "params": params, "id": 1}
+    if auth:
+        body["auth"] = _auth
     req = urllib.request.Request(config.ZABBIX_API,
                                  data=json.dumps(body).encode(),
                                  headers={"Content-Type": "application/json"})
@@ -141,9 +143,9 @@ def ensure_triggers() -> None:
         trig = {
             "description": descr,
             # sintassi Zabbix 5+: last(/host/key) — niente {itemid} (bug nominale)
+            # niente recovery_mode=1 senza recovery_expression (errore Zabbix 7.0)
             "expression": f"last(/{expr_host}/brain.bots_down)>=1",
             "priority": 4,
-            "recovery_mode": 1,
         }
         res = rpc("trigger.create", [trig])
         print(f"[zabbix] trigger creato su {host}: {res}")

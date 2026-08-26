@@ -106,12 +106,23 @@ class AdaptiveEngine(Policy):
     # --- spread dinamico ------------------------------------------------------
 
     def dynamic_spread(self) -> float:
-        """Spread griglia = max(base, ATR × multiplier), normalizzato."""
+        """Spread griglia = max(base, ATR × multiplier), normalizzato.
+        P1 — aggiustamento Hurst in regime range: H basso (mean-reverting) →
+        griglia piu' stretta (×0.8, piu' cicli di compravendita); H alto
+        (persistente) → griglia piu' larga (×1.25, meno riempimenti contro
+        un micro-trend). Hurst misura la STRUTTURA (non e' un indicatore
+        lagging: non dipende da medie sul passato, ma dalla scala del range)."""
         atr_pct = self._regime.atr_pct
         base = self.params.base_buy_distance
         if atr_pct <= 0:
             return base
         spread = max(base, atr_pct * self.params.atr_multiplier)
+        h = getattr(self._regime, "hurst", 0.5)
+        if self._regime.range_bound:
+            if h < 0.45:
+                spread *= 0.8
+            elif h > 0.55:
+                spread *= 1.25
         # normalizzazione: arrotonda alla precisione del prezzo (4 decimali)
         return max(base, round(spread, 4))
 

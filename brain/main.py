@@ -110,6 +110,12 @@ def promote_candidates(reg: dict) -> bool:
             continue
         if m_live["trades"] < strategy_lab.MIN_TRADES:
             continue
+        # gate Monte Carlo (P4): il tail p5 del candidato deve essere
+        # sopra -50% (niente strategie con rischio di coda inaccettabile)
+        mc_p5 = m_cand.get("mc_p5")
+        if mc_p5 is not None and mc_p5 <= -0.5:
+            print(f"[brain] {sym}: candidato scartato (MC p5 {mc_p5:.2f})")
+            continue
         if (m_cand["ret"] >= m_live["ret"] * config.PROMOTE_MARGIN
                 and m_cand["max_dd"] <= m_live["max_dd"] * 1.5 + 0.05):
             sreg["paper"] = {"params": cand["params"],
@@ -117,7 +123,8 @@ def promote_candidates(reg: dict) -> bool:
                              "baseline_ret": round(m_live["ret"], 4)}
             changed = True
             print(f"[brain] {sym}: candidato promosso a PAPER "
-                  f"(ret {m_cand['ret']:.3f} vs live {m_live['ret']:.3f})")
+                  f"(ret {m_cand['ret']:.3f} vs live {m_live['ret']:.3f}, "
+                  f"mc_p5 {mc_p5})")
     return changed
 
 
@@ -220,10 +227,11 @@ def main() -> None:
     zabbix_push.login()
     zabbix_push.ensure_items()
     zabbix_push.ensure_triggers()
-    outbox_snap = hermes_bridge.read_outbox()
-    last_hermes = time.time() - config.HERMES_INTERVAL_S  # primo giro subito
     last_strategy = 0.0
     print("[brain] avviato")
+    # Hermes in thread separato: primo giro immediato ma NON blocca il loop
+    threading.Thread(target=_hermes_worker, name="hermes",
+                     daemon=True).start()
 
     while True:
         t0 = time.time()
@@ -246,14 +254,6 @@ def main() -> None:
                                                 "bots_down": [b for b, x in v.get("bots", {}).items() if x.get("stale")]}
                                             for k, v in state.items() if not k.startswith("_")},
                                "repairs": repairs})
-
-            if time.time() - last_hermes >= config.HERMES_INTERVAL_S:
-                outbox_snap, ex = hermes_bridge.exchange_cycle(
-                    state, outbox_snap)
-                last_hermes = time.time()
-                if ex:
-                    print(f"[brain] scambio Hermes: ok={ex.get('ok')} "
-                          f"reply={bool(ex.get('new_reply'))}")
 
             if time.time() - last_strategy >= config.STRATEGY_INTERVAL_S:
                 strategy_cycle()

@@ -19,6 +19,7 @@ un ADX approssimato (documentato: non e' un sostituto dell'OHLCV reale).
 """
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 from typing import List, Optional, Sequence
 
@@ -52,6 +53,7 @@ class Regime:
     rsi: float
     ema200_slope: float        # >0 pendenza positiva
     signal_confidence: float   # 0..1
+    hurst: float = 0.5         # P1: esponente di Hurst (0..1)
 
     @property
     def trending(self) -> bool:
@@ -75,6 +77,53 @@ def _wilder_smooth(values: Sequence[float]) -> float:
     if not values:
         return 0.0
     return values[-1]
+
+
+def hurst_exponent(closes: Sequence[float], max_lag: int = 64) -> float:
+    """P1 — Esponente di Hurst via R/S analysis (E[R/S] = c·n^H).
+
+    Interpretazione:
+    - H > 0.55 → persistenza (trend): i movimenti tendono a continuare;
+    - H < 0.45 → anti-persistenza (mean-reverting): i movimenti si invertono;
+    - 0.45 ≤ H ≤ 0.55 → random walk.
+
+    E' complementare ad ADX (che e' LAGGING, misura la forza del trend gia'
+    formato): Hurst misura la struttura del processo (direzionalita' vs
+    reversione) e non dipende da soglie arbitrarie sul passato.
+    """
+    n = len(closes)
+    if n < 50:
+        return 0.5
+    lags = list(range(10, min(max_lag, n // 2) + 1))
+    rs_vals, ns = [], []
+    for lag in lags:
+        rs_seg = []
+        for start in range(0, n - lag, lag):
+            seg = closes[start:start + lag + 1]
+            mean = sum(seg) / len(seg)
+            devs = [x - mean for x in seg]
+            cum, acc = [], 0.0
+            for d in devs:
+                acc += d
+                cum.append(acc)
+            r = max(cum) - min(cum)
+            s = math.sqrt(sum(d * d for d in devs) / len(devs))
+            if s > 1e-12 and r > 0:
+                rs_seg.append(r / s)
+        if rs_seg:
+            rs_vals.append(sum(rs_seg) / len(rs_seg))
+            ns.append(lag)
+    if len(rs_vals) < 4:
+        return 0.5
+    # regressione log-log: log(R/S) = H·log(n) + c
+    x = [math.log(nn) for nn in ns]
+    y = [math.log(rr) for rr in rs_vals]
+    mx = sum(x) / len(x)
+    my = sum(y) / len(y)
+    num = sum((xi - mx) * (yi - my) for xi, yi in zip(x, y))
+    den = sum((xi - mx) ** 2 for xi in x)
+    h = num / den if den > 0 else 0.5
+    return max(0.0, min(1.0, h))
 
 
 def _ema(values: Sequence[float], period: int) -> float:
@@ -211,6 +260,7 @@ class RegimeFilter:
         rsi = _rsi(closes, p.rsi_period)
         ema_series = _ema_series(closes, p.ema200_period)
         ema200 = ema_series[-1] if ema_series else price
+        hurst = hurst_exponent(closes)  # P1: struttura del processo
 
         # pendenza EMA200: confronto con EMA200 calcolata N barre fa
         slope = 0.0
@@ -230,9 +280,10 @@ class RegimeFilter:
 
         return Regime(name=name, adx=round(adx, 2), atr_pct=atr_pct,
                       ema200=ema200, price=price, rsi=round(rsi, 1),
-                      ema200_slope=slope, signal_confidence=round(confidence, 3))
+                      ema200_slope=slope, signal_confidence=round(confidence, 3),
+                      hurst=round(hurst, 3))
 
     def _neutral(self, price: float) -> Regime:
         return Regime(name="range", adx=0.0, atr_pct=0.0, ema200=price,
                       price=price, rsi=50.0, ema200_slope=0.0,
-                      signal_confidence=0.0)
+                      signal_confidence=0.0, hurst=0.5)

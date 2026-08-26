@@ -578,6 +578,7 @@ class BotTask:
                 payload["ema200"] = round(float(regime.ema200), 4)
                 payload["rsi"] = round(float(regime.rsi), 1)
                 payload["regime_confidence"] = round(float(regime.signal_confidence), 3)
+                payload["hurst"] = round(float(getattr(regime, "hurst", 0.5)), 3)
             except Exception:  # noqa: BLE001
                 pass
         payload["stop_loss_triggered"] = bool(self.state.stop_loss_triggered)
