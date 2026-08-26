@@ -220,6 +220,7 @@ class CircuitBreakerState:
     reason: str = ""
     since: float = 0.0
     daily_loss_pct: float = 0.0
+    weekly_loss_pct: float = 0.0
     max_drawdown_pct: float = 0.0
     consecutive_losses: int = 0
 
@@ -233,6 +234,8 @@ class CoreState:
     peak_capital: float = 100.0
     day_start_capital: float = 100.0
     last_daily_reset: float = 0.0
+    week_start_capital: float = 100.0   # P2: baseline settimanale (lun 00:00 UTC)
+    last_weekly_reset: float = 0.0
     trade_results: List[float] = field(default_factory=list)
     kelly_fraction: float = 0.25
     sizing_multiplier: float = 1.0

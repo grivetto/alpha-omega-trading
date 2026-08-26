@@ -104,33 +104,46 @@ def ensure_items() -> None:
         hostid = hosts[0]["hostid"]
         existing = rpc("item.get", {"hostids": hostid, "output": ["key_"]}) or []
         have = {i["key_"] for i in existing}
+        # Zabbix 7.0: item.create vuole la LISTA diretta (niente wrapper
+        # {"items": [...]}) e per gli item trapper (type 2) delay DEVE essere 0.
         to_create = [{"hostid": hostid, "name": k, "key_": k,
                       "type": 2, "value_type": 0, "history": "7d",
-                      "trends": "30d", "delay": "60"}
+                      "trends": "30d", "delay": "0"}
                      for k in keys if k not in have]
         if to_create:
-            res = rpc("item.create", {"items": to_create})
+            res = rpc("item.create", to_create)
             print(f"[zabbix] items creati su {host}: {len(to_create)} -> {res}")
 
 
 def ensure_triggers() -> None:
-    """Trigger di riparazione/alert (workaround: itemid reali dal lookup)."""
+    """Trigger di riparazione/alert (best-effort; non blocca)."""
     if not _auth and not login():
         return
     expr_hosts = {"MARCODG1": "MARCODG1", "nuvola": "nuvola", "mc2": "mc2"}
     for host, expr_host in expr_hosts.items():
-        items = rpc("item.get", {"filter": {"host": expr_host, "key_": "brain.bots_down"},
+        hosts = rpc("host.get", {"filter": {"host": expr_host}, "output": ["hostid"]})
+        if not hosts:
+            print(f"[zabbix] trigger {host}: host non trovato")
+            continue
+        hostid = hosts[0]["hostid"]
+        items = rpc("item.get", {"hostids": hostid,
+                                 "filter": {"key_": "brain.bots_down"},
                                  "output": ["itemid"]})
         if not items:
             print(f"[zabbix] trigger {host}: item brain.bots_down non trovato")
             continue
-        itemid = items[0]["itemid"]
+        descr = f"Brain {host}: bot giu'"
+        # evita duplicati tra restart del brain
+        existing = rpc("trigger.get", {"filter": {"description": descr},
+                                       "output": ["triggerid"]})
+        if existing:
+            continue
         trig = {
-            "description": f"Brain {host}: bot giu'",
+            "description": descr,
             # sintassi Zabbix 5+: last(/host/key) — niente {itemid} (bug nominale)
             "expression": f"last(/{expr_host}/brain.bots_down)>=1",
             "priority": 4,
             "recovery_mode": 1,
         }
-        res = rpc("trigger.create", {"triggers": [trig]})
+        res = rpc("trigger.create", [trig])
         print(f"[zabbix] trigger creato su {host}: {res}")

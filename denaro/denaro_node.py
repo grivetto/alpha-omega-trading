@@ -44,6 +44,7 @@ _OVERRIDE_KEYS = frozenset({
     "level_step", "retarget_factor", "max_order_age_s",
     "sell_levels", "sell_distance", "sell_step", "sell_asset_share",
     "stop_loss_pct", "daily_loss_limit", "max_drawdown_limit",
+    "weekly_loss_limit", "max_slippage",
     "tick_interval", "fee", "entry_slip", "quote",
 })
 
@@ -272,12 +273,14 @@ class NodeApp:
                 fee=float(bot.get("fee", 0.001 if bot.get("mode", "paper") == "paper" else 0.0)),
                 bot_key=bot_key,
                 stop_loss_pct=float(bot.get("stop_loss_pct", 0.0)),
+                max_slippage=float(bot.get("max_slippage", 0.005)),
                 **paths,
             )
             policy = build_policy(bot, exchange)
             risk = RiskManager(
                 daily_loss_limit=float(bot.get("daily_loss_limit", 0.05)),
                 max_drawdown_limit=float(bot.get("max_drawdown_limit", 0.15)),
+                weekly_loss_limit=float(bot.get("weekly_loss_limit", 0.20)),
             )
             task = BotTask(cfg, exchange, policy, risk,
                            price_source=self._make_price_source(bot["symbol"]),

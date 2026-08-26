@@ -15,6 +15,7 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
+import threading
 import time
 
 from . import config, checks, hermes_bridge, repair, sshutil, strategy_lab, zabbix_push
@@ -192,6 +193,26 @@ def strategy_cycle() -> None:
         git_commit_if_possible("brain: runda strategie (nessun cambio)")
 
 # ── loop principale ──────────────────────────────────────────────────────────
+
+def _hermes_worker() -> None:
+    """Ciclo Hermes in THREAD separato: il watchdog non deve MAI bloccarsi su
+    un'operazione lenta (LLM headless con timeout fino a 600s). Il worker
+    rilegge l'ultimo stato salvato da config.save_state() per il digest."""
+    last = time.time() - config.HERMES_INTERVAL_S  # primo giro subito
+    outbox_snap = hermes_bridge.read_outbox()
+    while True:
+        try:
+            if time.time() - last >= config.HERMES_INTERVAL_S:
+                state = config.load_state()
+                outbox_snap, ex = hermes_bridge.exchange_cycle(state, outbox_snap)
+                last = time.time()
+                if ex:
+                    print(f"[brain] scambio Hermes: ok={ex.get('ok')} "
+                          f"reply={bool(ex.get('new_reply'))}")
+        except Exception as e:  # noqa: BLE001
+            print(f"[brain] Hermes errore: {e}")
+        time.sleep(30)
+
 
 def main() -> None:
     once = "--once" in sys.argv

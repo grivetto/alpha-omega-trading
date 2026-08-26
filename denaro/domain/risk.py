@@ -21,6 +21,17 @@ _EXPOSURE_VOL_FACTOR = {"low": 1.2, "normal": 1.0, "high": 0.7, "extreme": 0.5}
 _DAY_SEC = 86400.0
 
 
+def _week_start_ts(now: float) -> float:
+    """Timestamp del lunedi' 00:00 UTC della settimana di `now` (P2)."""
+    import datetime
+    d = datetime.datetime.fromtimestamp(now, tz=datetime.timezone.utc)
+    monday = (d - datetime.timedelta(days=d.weekday(),
+                                     hours=d.hour, minutes=d.minute,
+                                     seconds=d.second,
+                                     microseconds=d.microsecond))
+    return monday.timestamp()
+
+
 class RiskManager:
     """Risk + compounding engine. Opera su CoreState; nessun I/O."""
 
@@ -31,6 +42,7 @@ class RiskManager:
                  compound_ratio: float = 0.5,
                  kelly_cap: float = 0.50,
                  kelly_floor: float = 0.05,
+                 weekly_loss_limit: float = 0.20,
                  v7_enabled: bool = True) -> None:
         self.daily_loss_limit = daily_loss_limit
         self.max_drawdown_limit = max_drawdown_limit
@@ -39,6 +51,7 @@ class RiskManager:
         self.compound_ratio = compound_ratio
         self.kelly_cap = kelly_cap
         self.kelly_floor = kelly_floor
+        self.weekly_loss_limit = weekly_loss_limit  # P2: hard stop settimanale
         self.v7_enabled = v7_enabled
 
     # --- circuit breaker -----------------------------------------------------
@@ -60,6 +73,10 @@ class RiskManager:
         import time
         now = time.time() if now is None else now
         cs = state
+        # P2 — guardia domain: l'equity non puo' superare 30× il capitale
+        # iniziale (i conti sono micro/spot); letture sporche di fetch NON
+        # devono avvelenare peak/daily/weekly baseline (bug weekly_loss_-99%).
+        current_equity = max(0.0, min(current_equity, cs.initial_capital * 30.0))
 
         # ── Daily reset ──
         if now - cs.last_daily_reset > _DAY_SEC:
@@ -68,11 +85,28 @@ class RiskManager:
             cs.cb.daily_loss_pct = 0.0
             cs.perf.daily_pnl_pct = 0.0
 
+        # ── Weekly reset (P2: lunedi' 00:00 UTC) ──
+        ws = _week_start_ts(now)
+        if cs.last_weekly_reset < ws:
+            cs.last_weekly_reset = ws
+            cs.week_start_capital = max(cs.week_start_capital, current_equity)
+            cs.cb.weekly_loss_pct = 0.0
+
         # ── Track peak ──
         if current_equity > cs.peak_capital:
             cs.peak_capital = current_equity
 
         cs.current_capital = current_equity
+
+        # ── Weekly loss (P2: hard stop settimanale, indipendente dal daily) ──
+        week_pnl = (current_equity - cs.week_start_capital) / max(1e-10, cs.week_start_capital)
+        cs.cb.weekly_loss_pct = week_pnl
+        if week_pnl < -self.weekly_loss_limit:
+            cs.cb.state = CBState.OPEN
+            cs.cb.reason = f"weekly_loss_{week_pnl * 100:.1f}%"
+            cs.cb.since = now
+            cs.sizing_multiplier = 0.0
+            return True
 
         # ── Daily loss (vol-scaled limit) ──
         day_pnl = (current_equity - cs.day_start_capital) / max(1e-10, cs.day_start_capital)
@@ -211,6 +245,31 @@ class RiskManager:
         kelly_size *= min(1.5, max(0.5, signal_weight * r.signal_confidence))
 
         return min(kelly_size, max_var_risk)
+
+    def risk_sized_capital(self, state: CoreState, capital: float) -> float:
+        """P2 — Volatility Targeting applicato alla griglia.
+
+        Capitale effettivo = capital × exposure_factor(regime) × kelly_scale.
+        - exposure_factor: {low:1.2, normal:1.0, high:0.7, extreme:0.5} → la
+          griglia si restringe nei regimi caldi (vol-targeting via regime
+          ladder, neutro ×1.0 se il regime filter non gira).
+        - kelly_scale = clamp(kelly_eff / 0.25, 0.5, 1.5), dove kelly_eff =
+          kelly_fraction_base × sizing_multiplier: Kelly/sizing sopra il
+          baseline (0.25) espande fino a 1.5×, sotto si contrae; con CB
+          OPEN/dump (sizing 0) la griglia si azzera. NB: kelly BASE, non
+          vol-adjusted — il regime di vol entra una sola volta (vol_scale),
+          evitando il doppio conteggio.
+        Fondamento: N ∝ σ_target/σ_asset (vol targeting) — qui σ_asset è
+        discretizzato nei regimi di volatilità già calcolati dal RegimeFilter.
+        """
+        if state.cb.state == CBState.OPEN or state.regime.dump_mode:
+            return 0.0
+        kelly_eff = state.kelly_fraction * state.sizing_multiplier
+        if kelly_eff <= 0.0:
+            return 0.0
+        kelly_scale = max(0.5, min(1.5, kelly_eff / 0.25))
+        vol_scale = _EXPOSURE_VOL_FACTOR.get(state.regime.volatility_regime, 1.0)
+        return capital * vol_scale * kelly_scale
 
     # --- compounding policy --------------------------------------------------
 

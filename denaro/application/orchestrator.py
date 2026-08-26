@@ -87,6 +87,7 @@ class BotConfig:
     journal_path: Optional[Path] = None
     health_path: Optional[Path] = None
     stop_loss_pct: float = 0.0      # drawdown dal peak → chiudi posizioni e ferma
+    max_slippage: float = 0.005     # P2: spread max tollerato per market order
 
 
 # --- bot task ----------------------------------------------------------------
@@ -122,11 +123,15 @@ class BotTask:
         self.journal = Journal(Path(config.journal_path)) if config.journal_path else None
         self.health = AtomicFile(Path(config.health_path)) if config.health_path else None
 
-        # stato di rischio PERSISTENTE tra i tick (peak/drawdown/daily tracking)
+        # stato di rischio PERSISTENTE tra i tick (peak/drawdown/daily/weekly)
+        # NB: week_start_capital DEVE essere capital, non il default 100.0 della
+        # dataclass — altrimenti il max() della baseline settimanale resta
+        # avvelenato a 100 → weekly_loss_-99% spurio (bug visto in produzione).
         self.risk_state = CoreState(initial_capital=config.capital,
                                     current_capital=config.capital,
                                     peak_capital=config.capital,
-                                    day_start_capital=config.capital)
+                                    day_start_capital=config.capital,
+                                    week_start_capital=config.capital)
 
         self._load_state()
         self._rebuild_from_exchange()
@@ -196,6 +201,7 @@ class BotTask:
         now = self._now()
         # equity reale: get_equity puo' fare I/O (fetch live) → to_thread
         equity = await asyncio.to_thread(self._get_equity)
+        equity = self._guard_equity(equity)
         if equity > self.state.peak_equity:
             self.state.peak_equity = equity
         dd = (self.state.peak_equity - equity) / max(1e-10, self.state.peak_equity)
@@ -258,16 +264,20 @@ class BotTask:
             free_asset = float((bal.get("free", {}) or {}).get(base, 0.0) or 0.0)
         except Exception:  # noqa: BLE001
             free_asset = 0.0
+        # P2 — Volatility Targeting: capitale effettivo della griglia scalato
+        # per regime (exposure_factor) e Kelly (kelly_scale). Neutro di default
+        # (normal + kelly 0.25 → ×1.0); si contrae in high/extreme vol e con CB.
+        risk_capital = self.risk.risk_sized_capital(self.risk_state, self.cfg.capital)
         try:
             decision = self.policy.decide(price, self.state.open_buys,
                                           self.state.open_sells, free,
-                                          self.cfg.capital, free, now,
+                                          risk_capital, free, now,
                                           free_asset=free_asset)
         except TypeError:
             # policy legacy senza free_asset (momentum/meanrev/adaptive)
             decision = self.policy.decide(price, self.state.open_buys,
                                           self.state.open_sells, free,
-                                          self.cfg.capital, free, now)
+                                          risk_capital, free, now)
 
         # 3a) SafeMode (TODO punto 3): nessun NUOVO trade se la RAM e' critica;
         #     le posizioni esistenti continuano a essere gestite (fill/exit)
@@ -301,7 +311,7 @@ class BotTask:
         #     delle API. Capitale usabile = free + locked×0.85 (ordini buy
         #     cancellabili); dedup degli ordini speculari (buy sopra il mercato).
         min_notional = self._min_notional()
-        per_level = self.cfg.capital / max(1, self.cfg.levels)
+        per_level = risk_capital / max(1, self.cfg.levels)
         if decision.to_place or min_notional > 0:
             ok, reason, speculative = self.portfolio.preflight(
                 self.cfg.symbol, min_notional, per_level, price, free)
@@ -352,6 +362,22 @@ class BotTask:
         self._last_error = ""
         self._write_health(equity, blocked=False, free_quote=free)
         self._save_state()
+
+    def _guard_equity(self, equity: float) -> float:
+        """P2 — sanity dell'equity: letture impossibili (spike/dip da fetch
+        sporco) sostituite con l'ultimo valore valido. Range plausibile per
+        conti micro: [5% , 30×] del capitale — evita che una lettura sporca
+        avveleni peak/daily/weekly baseline (bug weekly_loss_-99% visto in
+        produzione su DOGE nuvola)."""
+        cap = max(1e-9, self.cfg.capital)
+        lo, hi = cap * 0.05, cap * 30.0
+        if equity is None or equity != equity or equity <= lo or equity > hi:
+            prev = getattr(self, "_last_sane_equity", cap)
+            log.warning("equity sospetta %.4f per %s → uso %.4f",
+                        equity, self.cfg.symbol, prev)
+            return prev
+        self._last_sane_equity = equity
+        return equity
 
     def _available_capital(self, free: float) -> float:
         """Equity dinamica anti-deadlock: free + locked×0.85 (ATLAS v6)."""
@@ -413,6 +439,34 @@ class BotTask:
                 pass
         self.state.open_buys.clear()
         self.state.open_sells.clear()
+
+        # 1b) P2 — SLIPPAGE TOLERANCE: prima di vendere al market, se lo spread
+        #     bid/ask supera max_slippage si BLOCCA la vendita e si riprova al
+        #     tick successivo (evita di svendere in mercati illiquidi/impazziti;
+        #     flag resettato per non perdere lo stop-loss). Fail-open se lo
+        #     spread non e' misurabile (meglio vendere che restare esposti).
+        max_slip = getattr(self.cfg, "max_slippage", 0.0) or 0.0
+        if max_slip > 0:
+            try:
+                t = await asyncio.to_thread(self.ex.fetch_ticker, self.cfg.symbol)
+                bid = float(t.get("bid") or 0.0)
+                ask = float(t.get("ask") or 0.0)
+                if bid > 0 and ask > 0:
+                    mid = (bid + ask) / 2.0
+                    spread = (ask - bid) / mid
+                    if spread > max_slip:
+                        self._last_error = (f"STOP LOSS BLOCCATO: spread "
+                                            f"{spread * 100:.2f}% > max "
+                                            f"{max_slip * 100:.2f}%")
+                        self.state.stop_loss_triggered = False  # riprova
+                        self._journal("stop_loss_blocked_slippage",
+                                      spread=round(spread, 4),
+                                      max_slippage=max_slip)
+                        self._write_health(equity, blocked=True)
+                        self._save_state()
+                        return
+            except Exception:  # noqa: BLE001
+                pass  # fail-open: non misurabile → procedi
 
         # 2) vendi l'asset posseduto (free balance del base asset)
         base = self.cfg.symbol.split("/")[0]
