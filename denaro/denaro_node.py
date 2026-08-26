@@ -35,6 +35,18 @@ from denaro.infrastructure.sqlite_store import SqliteStateStore
 
 log = logging.getLogger("denaro.node")
 
+# Chiavi di config dei bot modificabili a runtime via strategy_overrides.json.
+# La brain (watchdog/strategy lab) promuove/retrocede strategie scrivendo questo
+# file; il Node lo rilegge a ogni avvio di un bot. File assente o corrotto →
+# fallback silenzioso alla config YAML (MAI crash del Node).
+_OVERRIDE_KEYS = frozenset({
+    "strategy", "levels", "capital", "buy_distance", "profit_target",
+    "level_step", "retarget_factor", "max_order_age_s",
+    "sell_levels", "sell_distance", "sell_step", "sell_asset_share",
+    "stop_loss_pct", "daily_loss_limit", "max_drawdown_limit",
+    "tick_interval", "fee", "entry_slip", "quote",
+})
+
 
 # --- configurazione ----------------------------------------------------------
 
@@ -210,10 +222,36 @@ class NodeApp:
             )
 
         self.orchestrator = TradeOrchestrator(supervisor=self.supervisor)
+        self.overrides_path = Path(config.get(
+            "overrides_file", "config/strategy_overrides.json"))
         self._build_bots()
 
+    def _apply_overrides(self, bot: dict) -> dict:
+        """Fonde gli override strategici (strategy_overrides.json) nel bot dict.
+        Chiave: 'mode:symbol' oppure il solo symbol. Solo le chiavi whitelist
+        vengono accettate; un file corrotto viene ignorato (mai crash)."""
+        try:
+            if not self.overrides_path.exists():
+                return bot
+            data = json.loads(self.overrides_path.read_text(encoding="utf-8"))
+            if not isinstance(data, dict):
+                return bot
+            key = f"{bot.get('mode', 'paper')}:{bot['symbol']}"
+            ov = data.get(key) or data.get(bot["symbol"])
+            if not isinstance(ov, dict):
+                return bot
+            merged = dict(bot)
+            merged.update({k: v for k, v in ov.items() if k in _OVERRIDE_KEYS})
+            if merged != bot:
+                log.info("override strategico [%s]: %s", key, ov)
+            return merged
+        except Exception as e:  # noqa: BLE001
+            log.warning("override strategici ignorati (%s)", e)
+            return bot
+
     def _build_bots(self) -> None:
-        for bot in self.config.get("bots", []):
+        for raw_bot in self.config.get("bots", []):
+            bot = self._apply_overrides(raw_bot)
             if not bot.get("enabled", True):
                 log.info("bot %s disabilitato (config)", bot.get("symbol"))
                 continue

@@ -74,6 +74,21 @@ class BotConfigSchema(BaseModel):
     strategy: str = "grid"   # grid | momentum | meanrev | adaptive (ATLAS v6)
     daily_loss_limit: float = 0.05
     max_drawdown_limit: float = 0.15
+    # ── GRID BILATERALE ────────────────────────────────────────────────────────
+    # NB CRITICO: se questi campi mancano dallo schema, Pydantic li SCARTA in
+    # silenzio → i sell ladder NON vengono MAI piazzati (bug storico: i bot
+    # compravano sotto ma non vendevano mai l'asset sopra il prezzo).
+    sell_levels: int = 0            # quanti livelli di vendita sopra il prezzo
+    sell_distance: float = 0.02     # distanza del primo sell (frazione)
+    sell_step: float = 0.01         # passo tra i livelli di vendita
+    sell_asset_share: float = 1.0   # frazione dell'asset in mano da vendere
+    # ── griglia: parametri aggiuntivi usati da build_grid_params ──────────────
+    level_step: float = 0.005
+    retarget_factor: float = 1.5
+    max_order_age_s: float = 43200.0
+    # ── momentum/meanrev ──────────────────────────────────────────────────────
+    entry_slip: float = 0.002
+    quote: str = "EUR"
     # stop-loss per bot: drawdown dal peak oltre il quale si CHIUDONO le
     # posizioni (cancella ordini + vendita asset) e il bot si ferma.
     # 0.0 = disabilitato (usa solo il circuit breaker che blocca i nuovi trade).

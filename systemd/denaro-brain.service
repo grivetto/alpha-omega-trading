@@ -1,0 +1,17 @@
+[Unit]
+Description=Denaro — Brain: watchdog auto-healing + strategy lab + ponte Hermes
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=marco
+ExecStart=/home/marco/denaro/venv/bin/python -m brain.main
+WorkingDirectory=/home/marco/denaro
+Restart=always
+RestartSec=15
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

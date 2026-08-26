@@ -61,8 +61,11 @@ bots:
     tick_interval: 30
     env_prefix: ""
     health_path: /home/sergio/denaro/health/doge_nuvola.json
-    stop_loss_pct: 0.10
-    sell_levels: 2
+    stop_loss_pct: 0.30
+    daily_loss_limit: 0.20
+    max_drawdown_limit: 0.30
+    # 10 DOGE totali: 1 solo livello (minimo OKX DOGE = 10)
+    sell_levels: 1
     sell_distance: 0.02
     sell_step: 0.01
     enabled: true

@@ -68,6 +68,10 @@ bots:
     strategy: adaptive
 
   # ── LIVE OKX (health_path = path v3.3 per dashboard/Zabbix) ──
+  # Account MAIN condiviso da 3 bot (SOL/DOGE/ETH in asset, ~28€ totali).
+  # GRID BILATERALE: ogni bot vende il proprio asset in mano per generare EUR
+  # e ricomprare sotto. stop_loss 0.15 (il conto e' condiviso → oscillazioni
+  # di equity comuni non devono fermare tutti insieme; il CB daily_loss resta).
   - symbol: ADA/EUR
     mode: okx
     capital: 20.0
@@ -78,45 +82,55 @@ bots:
     tick_interval: 30
     env_prefix: MARCOSUB1_
     health_path: /home/marco/denaro/health/ada.json
-    stop_loss_pct: 0.10
+    stop_loss_pct: 0.15
+    sell_levels: 2
+    sell_distance: 0.01
+    sell_step: 0.008
     enabled: true
   - symbol: SOL/EUR
     mode: okx
     capital: 15.0
-    levels: 5
+    levels: 3
     buy_distance: 0.01
     profit_target: 0.015
     fee: 0.001
     tick_interval: 30
     env_prefix: ""
     health_path: /home/marco/denaro/health/sol.json
-    stop_loss_pct: 0.10
+    stop_loss_pct: 0.15
+    sell_levels: 2
+    sell_distance: 0.01
+    sell_step: 0.008
     enabled: true
   - symbol: DOGE/EUR
     mode: okx
-    capital: 5.0
-    levels: 5
+    capital: 3.0
+    levels: 3
     buy_distance: 0.015
     profit_target: 0.02
     fee: 0.001
     tick_interval: 30
     env_prefix: ""
     health_path: /home/marco/denaro/health/doge.json
-    stop_loss_pct: 0.10
-    strategy: adaptive
+    stop_loss_pct: 0.15
+    sell_levels: 3
+    sell_distance: 0.02
+    sell_step: 0.01
     enabled: true
   - symbol: ETH/EUR
     mode: okx
-    capital: 12.0
-    levels: 5
+    capital: 9.0
+    levels: 3
     buy_distance: 0.008
     profit_target: 0.012
     fee: 0.001
     tick_interval: 30
     env_prefix: ""
     health_path: /home/marco/denaro/health/eth.json
-    stop_loss_pct: 0.10
-    strategy: adaptive
+    stop_loss_pct: 0.15
+    sell_levels: 2
+    sell_distance: 0.008
+    sell_step: 0.006
     enabled: true
 
   # ── LIVE KRAKEN (cutover attivo, ora locale nel Node su MARCODG1) ──
