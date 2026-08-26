@@ -221,16 +221,30 @@ def _hermes_worker() -> None:
         time.sleep(30)
 
 
+def _strategy_worker() -> None:
+    """Ciclo Strategy Lab in THREAD separato: i backtest (fetch OHLCV + gira)
+    possono durare minuti e NON devono mai bloccare il watchdog."""
+    time.sleep(config.STRATEGY_INTERVAL_S)  # primo giro dopo 6h, non subito
+    while True:
+        try:
+            strategy_cycle()
+        except Exception as e:  # noqa: BLE001
+            print(f"[brain] strategy ciclo errore: {e}")
+        time.sleep(config.STRATEGY_INTERVAL_S)
+
+
 def main() -> None:
     once = "--once" in sys.argv
     config.LOG_DIR.mkdir(parents=True, exist_ok=True)
     zabbix_push.login()
     zabbix_push.ensure_items()
     zabbix_push.ensure_triggers()
-    last_strategy = 0.0
     print("[brain] avviato")
-    # Hermes in thread separato: primo giro immediato ma NON blocca il loop
+    # Hermes e Strategy Lab in thread separati: il watchdog non si blocca MAI
+    # su operazioni lunghe (LLM, backtest).
     threading.Thread(target=_hermes_worker, name="hermes",
+                     daemon=True).start()
+    threading.Thread(target=_strategy_worker, name="strategy",
                      daemon=True).start()
 
     while True:
@@ -254,10 +268,6 @@ def main() -> None:
                                                 "bots_down": [b for b, x in v.get("bots", {}).items() if x.get("stale")]}
                                             for k, v in state.items() if not k.startswith("_")},
                                "repairs": repairs})
-
-            if time.time() - last_strategy >= config.STRATEGY_INTERVAL_S:
-                strategy_cycle()
-                last_strategy = time.time()
         except Exception as e:  # noqa: BLE001
             print(f"[brain] ciclo errore: {e}")
             time.sleep(20)

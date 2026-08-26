@@ -336,18 +336,22 @@ def walk_forward_evaluate(candles: list[dict], params: dict,
         start = fold * WFA_TEST
         if start + need > n:
             break
-        train_c = candles[start:start + WFA_TRAIN]
-        test_c = candles[start + WFA_TRAIN:start + need]
-        # ottimizza sui parametri GIA' passati (vengono dal grid della runda):
-        # qui facciamo un mini-ri-ottimizzazione solo se il caller lo chiede;
-        # v1: il candidate e' gia' il best su train del fold (vedi run_round).
-        m_test = backtest_grid(test_c, params, source, capital)
+        # window = warmup(200) + test(100): il backtest valuta le ultime 100
+        # barre ma gli indicatori (EMA200/ADX) hanno il warmup — senza warmup
+        # backtest_grid torna subito zero (richiede >=220 barre).
+        window_c = candles[start:start + need]
+        m_test = backtest_grid(window_c, params, source, capital)
         test_metrics.append(m_test)
         folds += 1
     if not test_metrics:
         return backtest_grid(candles, params, source, capital)
-    agg = {k: sum(m[k] for m in test_metrics) / len(test_metrics)
-           for k in ("ret", "max_dd", "sharpe", "trades", "win_rate")}
+    # ret/max_dd/sharpe/win_rate: MEDIA sui fold (generalizzazione);
+    # trades: SOMMA sui fold (il numero di trade test totali conta per il
+    # minimo di campioni — la media sotto 10 trade scarterebbe tutto).
+    n_folds = len(test_metrics)
+    agg = {k: sum(m[k] for m in test_metrics) / n_folds
+           for k in ("ret", "max_dd", "sharpe", "win_rate")}
+    agg["trades"] = sum(m["trades"] for m in test_metrics)
     agg["n_bars"] = sum(m["n_bars"] for m in test_metrics)
     agg["trade_pnls"] = [x for m in test_metrics for x in m.get("trade_pnls", [])]
     agg["folds"] = folds

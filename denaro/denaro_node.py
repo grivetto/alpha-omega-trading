@@ -362,7 +362,7 @@ class NodeApp:
         log.info("Arresto del Node...")
         await self.guardian.stop()
         await self.orchestrator.stop_all()
-        await self.hub.stop()
+        await self.hub.close()   # P3: chiude anche i client ccxt.pro (no leak)
         self.sqlite.close()
 
 

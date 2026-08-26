@@ -540,6 +540,18 @@ class BotTask:
                               entry=float(info["entry_price"]),
                               exit=float(info["target_price"]),
                               profit=profit, total_pnl=self.state.total_pnl)
+                # P5: performance metrics (Sharpe/Sortino/Calmar/ProfitFactor)
+                self.risk_state.trade_results.append(profit)
+                pnl_pct = profit / max(1e-9, self.cfg.capital)
+                self.risk_state.perf.update(pnl_pct)
+                try:
+                    self.risk_state.perf.recalc_ratios(
+                        self.risk_state.trade_results,
+                        self.risk_state.peak_capital,
+                        self.risk_state.current_capital,
+                        self.risk_state.initial_capital)
+                except Exception:  # noqa: BLE001
+                    pass
                 self.state.open_sells.pop(oid, None)
             elif st in ("canceled", "expired", "rejected"):
                 self.state.open_sells.pop(oid, None)
@@ -585,6 +597,17 @@ class BotTask:
         try:
             payload["cap_locked"] = round(float(self.portfolio.locked), 4)
             payload["cap_available"] = round(float(self.portfolio.total_available()), 4)
+        except Exception:  # noqa: BLE001
+            pass
+        # P5 — telemetria: Sharpe/Sortino/Calmar/ProfitFactor/WinRate
+        try:
+            perf = self.risk_state.perf
+            payload["sharpe"] = round(float(perf.sharpe_ratio), 3)
+            payload["sortino"] = round(float(perf.sortino_ratio), 3)
+            payload["calmar"] = round(float(perf.calmar_ratio), 3)
+            payload["profit_factor"] = round(float(perf.profit_factor), 3)
+            payload["win_rate_pct"] = round(float(perf.win_rate) * 100, 1)
+            payload["kelly"] = round(float(self.risk_state.kelly_fraction), 4)
         except Exception:  # noqa: BLE001
             pass
         self.health.write_json(payload)
