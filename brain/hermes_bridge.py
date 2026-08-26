@@ -70,7 +70,36 @@ def build_digest(state: dict) -> str:
                 for k, v in bots.items() if v.get("error")]
         lines.append(f"- {machine}: ok={ms.get('ok')} unit_giu={units_down or '-'} "
                      f"bot_giu={bad or '-'} errori={errs or '-'}")
+    # VALIDAZIONE TREND vs GRID (istanza "miracolo onesto"): confronto PnL
+    # paper per simbolo — il Brain lo ripassa a Hermes ogni 30 min.
+    trend_lines = _trend_vs_grid(state)
+    if trend_lines:
+        lines.append("TREND vs GRID (paper, PnL EUR):")
+        lines.extend(trend_lines)
     return "\n".join(lines)
+
+
+def _trend_vs_grid(state: dict) -> list[str]:
+    """Confronto PnL per simbolo tra l'istanza TREND e l'istanza GRID (paper)."""
+    m = state.get("marcodg1", {})
+    bots = m.get("bots", {})
+    trend = {}
+    grid = {}
+    for k, v in bots.items():
+        sym = k.split(":")[-1] if ":" in k else k
+        pnl = v.get("pnl", 0) or 0
+        if k.startswith("trend:"):
+            trend[sym] = pnl
+        elif k.startswith("paper:") and sym in trend:
+            grid[sym] = pnl
+    if not trend:
+        return []
+    out = []
+    for sym in sorted(trend):
+        t, g = trend.get(sym, 0.0), grid.get(sym, 0.0)
+        out.append(f"  {sym}: trend={t:.2f}€ grid={g:.2f}€ "
+                   f"delta={t - g:+.2f}€")
+    return out
 
 
 def send_telegram(text: str) -> bool:
