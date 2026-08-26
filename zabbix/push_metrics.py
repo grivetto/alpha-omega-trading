@@ -251,6 +251,14 @@ def _push_atlas_metrics(data, host, keybase, h):
         {"host": host, "key": f"{keybase}.stop_loss", "value": int(bool(h.get("stop_loss_triggered")))},
         {"host": host, "key": f"{keybase}.cap_locked", "value": h.get("cap_locked", 0)},
         {"host": host, "key": f"{keybase}.cap_available", "value": h.get("cap_available", 0)},
+        # P5 — telemetria performance (value_type float)
+        {"host": host, "key": f"{keybase}.sharpe", "value": h.get("sharpe", 0)},
+        {"host": host, "key": f"{keybase}.sortino", "value": h.get("sortino", 0)},
+        {"host": host, "key": f"{keybase}.calmar", "value": h.get("calmar", 0)},
+        {"host": host, "key": f"{keybase}.profit_factor", "value": h.get("profit_factor", 0)},
+        {"host": host, "key": f"{keybase}.win_rate", "value": h.get("win_rate_pct", 0)},
+        {"host": host, "key": f"{keybase}.kelly", "value": h.get("kelly", 0)},
+        {"host": host, "key": f"{keybase}.hurst", "value": h.get("hurst", 0.5)},
     ]
 
 

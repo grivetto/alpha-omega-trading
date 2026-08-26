@@ -19,7 +19,10 @@ HOSTS = {
     "alpha-omega-bot-eth-eur": ("10701", "bot.eth.", [""]),
 }
 ATLAS_KEYS = ["regime", "adx", "atr_pct", "rsi", "ema200",
-              "strategy", "stop_loss", "cap_locked", "cap_available"]
+              "strategy", "stop_loss", "cap_locked", "cap_available",
+              # P5 — telemetria performance
+              "sharpe", "sortino", "calmar", "profit_factor", "win_rate",
+              "kelly", "hurst"]
 
 
 def rpc(method, params, auth=None):

@@ -102,8 +102,8 @@ def promote_candidates(reg: dict) -> bool:
             continue
         try:
             candles = strategy_lab.load_or_fetch(sym)
-            m_live = strategy_lab.backtest_grid(candles, live,
-                                                strategy_lab.FEES["okx"])
+            # source come STRINGA ("okx"/"kraken"): backtest_grid usa FEES[source]
+            m_live = strategy_lab.backtest_grid(candles, live, "okx")
             m_cand = cand["metrics"]
         except Exception as e:  # noqa: BLE001
             print(f"[brain] backtest confronto {sym}: {e}")
