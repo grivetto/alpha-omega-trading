@@ -89,7 +89,7 @@ bots:
     enabled: true
   - symbol: SOL/EUR
     mode: okx
-    capital: 15.0
+    capital: 13.5   # per_level 4.5 <= free reale ~4.80 (fix preflight, opzione A Hermes)
     levels: 3
     buy_distance: 0.01
     profit_target: 0.015
