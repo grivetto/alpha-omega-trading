@@ -48,19 +48,40 @@ def _open(url: str, timeout: float = 25.0):
     return urllib.request.urlopen(req, timeout=timeout)
 
 
-def fetch_ohlcv_okx(symbol: str, bar: str = "1H", limit: int = 400) -> list[dict]:
+def fetch_ohlcv_okx(symbol: str, bar: str = "1H", limit: int = 500) -> list[dict]:
+    """OHLCV con PAGINAZIONE: OKX limita a 300 candele per richiesta; per la
+    WFA servono ~500 barre → si fanno pagine da 300 con `after` (ts più
+    vecchio) fino a coprire `limit`. NB: hostname EEA = "eea.okx.com";
+    OKX blocca l'UA Python-urllib (403) → serve un UA browser."""
     inst = symbol.replace("/", "-")
-    # NB: hostname EEA = "eea.okx.com" (come ccxt), NON "www.eea.okx.com";
-    # OKX blocca l'User-Agent Python-urllib (403) → serve un UA browser.
-    url = (f"https://eea.okx.com/api/v5/market/candles"
-           f"?instId={inst}&bar={bar}&limit={limit}")
-    with _open(url) as r:
-        data = json.loads(r.read())
+    base = (f"https://eea.okx.com/api/v5/market/candles"
+            f"?instId={inst}&bar={bar}")
+    rows_all: list[list] = []
+    after = None
+    while len(rows_all) < limit:
+        page = base + "&limit=300"
+        if after:
+            page += f"&after={after}"
+        with _open(page) as r:
+            data = json.loads(r.read())
+        page_rows = data.get("data") or []
+        if not page_rows:
+            break
+        rows_all.extend(page_rows)
+        oldest = page_rows[-1][0]
+        if after == oldest or len(page_rows) < 300:
+            break
+        after = oldest
     out = []
-    for row in reversed(data.get("data", [])):  # OKX ritorna desc
-        out.append({"ts": int(row[0]), "o": float(row[1]), "h": float(row[2]),
+    seen = set()
+    for row in reversed(rows_all):  # OKX ritorna desc → asc
+        ts = int(row[0])
+        if ts in seen:
+            continue
+        seen.add(ts)
+        out.append({"ts": ts, "o": float(row[1]), "h": float(row[2]),
                     "l": float(row[3]), "c": float(row[4]), "v": float(row[5])})
-    return out
+    return out[-limit:]
 
 
 def fetch_ohlcv_kraken(symbol: str, interval: int = 60) -> list[dict]:
