@@ -16,7 +16,7 @@ DATA_DIR = BRAIN_DIR / "data"
 STATE_FILE = DATA_DIR / "brain_state.json"       # ultimo stato raccolto
 REPAIR_LOG = LOG_DIR / "repairs.jsonl"
 HERMES_LOG = LOG_DIR / "hermes_conv.md"
-GIT_REPO = Path("/home/marco/alpha-omega-trading")  # checkout del repo (se esiste)
+GIT_REPO = Path("/home/marco/alpha-omega-brain")  # clone della repo (origine: origin/main)
 
 # ── macchine ─────────────────────────────────────────────────────────────────
 # ssh: lista argomenti per `ssh -o BatchMode=yes ...` ([] = locale)
@@ -95,8 +95,9 @@ HERMES_TIMEOUT_S = 600.0     # timeout per `hermes -z` (LLM lento)
 STRATEGY_INTERVAL_S = 6 * 3600.0   # runde di backtest ogni 6h
 PAPER_VALIDATE_H = 24.0            # un candidato paper si valuta dopo 24h
 PROMOTE_MARGIN = 1.3               # il candidato deve battere il baseline ×1.3
-REGISTRY_PATH = BRAIN_DIR.parent / "config" / "strategies" / "registry.json"
-OVERRIDES_PATH = BRAIN_DIR.parent / "config" / "strategy_overrides.json"
+# artefatti strategie DENTRO la repo clonata su MARCODG1 (committati dal Brain)
+REGISTRY_PATH = GIT_REPO / "config" / "strategies" / "registry.json"
+OVERRIDES_PATH = GIT_REPO / "config" / "strategy_overrides.json"
 
 
 def load_state() -> dict:

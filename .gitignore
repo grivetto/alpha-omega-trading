@@ -55,4 +55,8 @@ _*.md
 # Tooling locale / residui non-progetto
 .codewhale/
 
+# Brain: log e stato locale (mai committati)
+brain/logs/
+brain/data/
+
 node_data/
