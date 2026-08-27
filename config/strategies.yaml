@@ -1,12 +1,12 @@
 strategies:
-  - strategy_id: grid_btc_usdt
+  - strategy_id: grid_btc_eur
     class_path: atlas.strategy.engine.GridStrategy
     enabled: true
-    symbols: ["BTC/USDT"]
+    symbols: ["BTC/EUR"]
     exchanges: ["okx"]
     params:
-      grid_levels: 3
-      spread_pct: 0.005
+      grid_levels: 2
+      spread_pct: 0.02
       per_level_pct: 0.10
-      order_size: 0.00005
+      order_size: 0.0001
       min_notional: 5.0

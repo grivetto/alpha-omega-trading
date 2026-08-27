@@ -1,0 +1,4 @@
+total 12
+drwxr-xr-x 2 zabbix zabbix 4096 Aug 24 22:51 .
+drwxrwxr-x 1 zabbix root   4096 Aug 24 22:51 ..
+-rw-rw-r-- 1 zabbix zabbix    4 Aug 24 22:51 .daemon.lock

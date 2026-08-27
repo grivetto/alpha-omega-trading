@@ -1,0 +1,26 @@
+total 0
+dr-x------ 2 zabbix zabbix 23 Aug 27 00:17 .
+dr-xr-xr-x 9 zabbix zabbix  0 Aug 24 22:51 ..
+lr-x------ 1 zabbix zabbix 64 Aug 27 00:17 0 -> /dev/null
+l-wx------ 1 zabbix zabbix 64 Aug 27 00:17 1 -> /dev/null
+l-wx------ 1 zabbix zabbix 64 Aug 27 00:17 10 -> pipe:[29821875]
+lrwx------ 1 zabbix zabbix 64 Aug 27 00:17 11 -> anon_inode:[eventfd]
+lrwx------+1 zabbix zabbix 64 Aug 27 00:17 12 -> socket:[18073972]
+lrwx------+1 zabbix zabbix 64 Aug 27 00:17 13 -> socket:[18074978]
+lrwx------+1 zabbix zabbix 64 Aug 27 00:17 14 -> socket:[18072288]
+lrwx------ 1 zabbix zabbix 64 Aug 27 00:17 15 -> anon_inode:[eventfd]
+lr-x------ 1 zabbix zabbix 64 Aug 27 00:17 16 -> /dev/null
+lrwx------+1 zabbix zabbix 64 Aug 27 00:17 17 -> socket:[29821878]
+lr-x------ 1 zabbix zabbix 64 Aug 27 00:17 18 -> anon_inode:inotify
+lrwx------+1 zabbix zabbix 64 Aug 27 00:17 19 -> socket:[29823234]
+l-wx------ 1 zabbix zabbix 64 Aug 27 00:17 2 -> /dev/null
+lrwx------+1 zabbix zabbix 64 Aug 27 00:17 20 -> socket:[18081289]
+lrwx------ 1 zabbix zabbix 64 Aug 27 00:17 21 -> anon_inode:[eventfd]
+lrwx------+1 zabbix zabbix 64 Aug 27 00:17 22 -> socket:[81778629]
+lrwx------+1 zabbix zabbix 64 Aug 27 00:17 3 -> socket:[29824063]
+lrwx------+1 zabbix zabbix 64 Aug 27 00:17 4 -> socket:[18073953]
+lrwx------ 1 zabbix zabbix 64 Aug 27 00:17 5 -> anon_inode:[eventpoll]
+lr-x------ 1 zabbix zabbix 64 Aug 27 00:17 6 -> pipe:[29821874]
+l-wx------ 1 zabbix zabbix 64 Aug 27 00:17 7 -> pipe:[29821874]
+lr-x------ 1 zabbix zabbix 64 Aug 27 00:17 8 -> pipe:[29821875]
+lrwx------+1 zabbix zabbix 64 Aug 27 00:17 9 -> socket:[18074947]

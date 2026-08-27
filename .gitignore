@@ -54,3 +54,5 @@ keys_master.env
 *_API_SECRET=
 *_PASSPHRASE=
 
+forensics/*.bin
+ponte_ai.py
