@@ -52,12 +52,42 @@ def window_report() -> dict:
     return out
 
 
-def verdict(report: dict) -> str:
+def wfa_momentum_signal() -> float:
+    """Segnale momentum su finestra LUNGA (900 barre ~37gg): media del ret WFA
+    dei migliori candidati momentum su SOL/ETH. Negativo → regime avverso al
+    trend: il paper 24h puo' essere una finestra fortunata, il live no."""
+    from . import strategy_lab  # import lazy: evita ciclo con la runda
+    rets = []
+    for sym in ("SOL/EUR", "ETH/EUR"):
+        try:
+            candles = strategy_lab.fetch_ohlcv_okx(sym, limit=900)
+            best = None
+            for p in strategy_lab.param_grid_momentum():
+                m = strategy_lab.walk_forward_evaluate(candles, p)
+                s = strategy_lab.score(m)
+                if s > -1e8 and (best is None or s > best[0]):
+                    best = (s, m)
+            if best:
+                rets.append(best[1]["ret"])
+        except Exception:  # noqa: BLE001
+            continue
+    return sum(rets) / len(rets) if rets else 0.0
+
+
+def verdict(report: dict, wfa_signal: float | None = None) -> str:
     t = report["totals"]["trend"]
     g = report["totals"]["grid"]
+    if wfa_signal is None:
+        wfa_signal = wfa_momentum_signal()
     if t > 0 and t > g:
-        return ("CONFERMA: il trend batte la griglia in paper (24h) → "
-                "pronto per il deploy LIVE")
+        if wfa_signal >= -0.03:
+            return ("CONFERMA: il trend batte la griglia in paper (24h) e la "
+                    "WFA 37gg sul momentum non e' negativa → pronto per il "
+                    "deploy LIVE")
+        return ("CONFERMA PARZIALE: paper 24h positivo MA la WFA 37gg sul "
+                "momentum e' avversa (" + f"{wfa_signal:.1%}" +
+                ") → live SOLO se il mercato entra in trend (Hurst/ADX alto); "
+                "intanto resta in paper")
     if t > 0:
         return ("POSITIVO ma sotto la griglia: il trend guadagna, la griglia "
                 "di piu' → tieni il trend in paper")
@@ -74,8 +104,10 @@ def check_and_report() -> bool:
     if state.get("trend_validation_done"):
         return False
     report = window_report()
-    v = verdict(report)
+    wfa = wfa_momentum_signal()   # ~1-2 min (WFA 900 barre su SOL/ETH)
+    v = verdict(report, wfa)
     text = ("🧠 Verdetto validazione TREND vs GRID (paper 24h):\n" + v + "\n" +
+            f"WFA momentum 37gg: {wfa:.1%}\n" +
             "\n".join(f"{k}: trend={x['trend']:.2f}€ grid={x['grid']:.2f}€"
                       for k, x in report["symbols"].items()) +
             f"\nTOTALE trend={report['totals']['trend']:.2f}€ "
@@ -85,9 +117,9 @@ def check_and_report() -> bool:
     try:
         p = config.GIT_REPO / "config" / "strategies" / "trend_validation.json"
         p.parent.mkdir(parents=True, exist_ok=True)
-        p.write_text(json.dumps({"verdict": v, "report": report,
-                                 "ts": time.time()}, indent=2),
-                     encoding="utf-8")
+        p.write_text(json.dumps({"verdict": v, "wfa_signal": wfa,
+                                 "report": report, "ts": time.time()},
+                                indent=2), encoding="utf-8")
     except Exception:  # noqa: BLE001
         pass
     state["trend_validation_done"] = True
