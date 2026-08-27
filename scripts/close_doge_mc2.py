@@ -31,6 +31,7 @@ def load_env(path: Path) -> dict:
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--close", action="store_true", help="esegue la chiusura (default: dry-run)")
+    ap.add_argument("--main", action="store_true", help="usa l'account MAIN (senza parametro subAcct)")
     args = ap.parse_args()
 
     env = load_env(Path("/home/sergio/denaro_node_app/.env"))
@@ -49,7 +50,9 @@ def main() -> None:
     ex.enableRateLimit = True
 
     # OKX v5: il parametro per il sub-account e' "subAcct" (non "subAccount")
-    params = {"subAcct": "mc2sub1"}
+    # Se --main: nessun parametro (la chiave .env di denaro_node_app potrebbe
+    # essere gia' la chiave del sub-account stesso)
+    params = {} if args.main else {"subAcct": "mc2sub1"}
 
     # 1) Saldo sub-account (read-only)
     doge = 0.0
