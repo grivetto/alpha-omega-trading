@@ -36,6 +36,17 @@ NODE_BOTS = {
     "ETH": ("ETH/EUR", "alpha-omega-node-paper", "node.eth", "paper_default_ETH_EUR_health.json"),
 }
 
+# istanza TREND paper (MARCODG1): node_data_trend/paper_default_*_health.json
+TREND_BOTS = {
+    "SOL": ("SOL/EUR", "alpha-omega-node-trend", "trend.sol", "paper_default_SOL_EUR_health.json"),
+    "ETH": ("ETH/EUR", "alpha-omega-node-trend", "trend.eth", "paper_default_ETH_EUR_health.json"),
+    "ADA": ("ADA/EUR", "alpha-omega-node-trend", "trend.ada", "paper_default_ADA_EUR_health.json"),
+    "XRP": ("XRP/EUR", "alpha-omega-node-trend", "trend.xrp", "paper_default_XRP_EUR_health.json"),
+}
+# TREND LIVE su Kraken (swap): health/trend_sol_kraken.json
+TREND_LIVE = ("alpha-omega-bot-trend-live", "bot.trend_live",
+              HEALTH_DIR / "trend_sol_kraken.json")
+
 # Nodi Denaro remoti (nuvola, mc2): health letti via SSH, push su host dedicati
 # + auto-heal remoto (systemctl restart via SSH se health stale).
 REMOTE_NODES = {
@@ -465,6 +476,39 @@ def main():
         kraken_h = read_json(HEALTH_DIR / "sol_kraken.json")
     if kraken_h and not is_stale(kraken_h.get("timestamp", 0)):
         _push_atlas_metrics(data, "alpha-omega-bot-kraken", "bot.kraken", kraken_h)
+
+    # ── 5c. istanza TREND paper (MARCODG1) + TREND LIVE Kraken ──
+    for name, (symbol, host, prefix, fname) in TREND_BOTS.items():
+        h = read_json(NODE_DIR.parent / "node_data_trend" / fname)
+        if not h or is_stale(h.get("timestamp", 0)):
+            data.append({"host": host, "key": f"{prefix}.status", "value": 0})
+            continue
+        running = 1 if h.get("status") == "running" else 0
+        data += [
+            {"host": host, "key": f"{prefix}.status", "value": running},
+            {"host": host, "key": f"{prefix}.equity", "value": h.get("total_equity", 0)},
+            {"host": host, "key": f"{prefix}.buys", "value": h.get("buys", 0)},
+            {"host": host, "key": f"{prefix}.sells", "value": h.get("sells", 0)},
+            {"host": host, "key": f"{prefix}.pnl", "value": h.get("pnl", 0)},
+            {"host": host, "key": f"{prefix}.trades", "value": h.get("trades", 0)},
+        ]
+        _push_atlas_metrics(data, host, prefix, h)
+    tl_host, tl_prefix, tl_path = TREND_LIVE
+    tl_h = read_json(tl_path)
+    if tl_h and not is_stale(tl_h.get("timestamp", 0)):
+        data += [
+            {"host": tl_host, "key": f"{tl_prefix}.status",
+             "value": 1 if tl_h.get("status") == "running" else 0},
+            {"host": tl_host, "key": f"{tl_prefix}.equity",
+             "value": tl_h.get("total_equity", 0)},
+            {"host": tl_host, "key": f"{tl_prefix}.buys", "value": tl_h.get("buys", 0)},
+            {"host": tl_host, "key": f"{tl_prefix}.sells", "value": tl_h.get("sells", 0)},
+            {"host": tl_host, "key": f"{tl_prefix}.pnl", "value": tl_h.get("pnl", 0)},
+            {"host": tl_host, "key": f"{tl_prefix}.trades", "value": tl_h.get("trades", 0)},
+        ]
+        _push_atlas_metrics(data, tl_host, tl_prefix, tl_h)
+    else:
+        data.append({"host": tl_host, "key": f"{tl_prefix}.status", "value": 0})
 
     # ── 6. Nodi Denaro remoti (nuvola, mc2) + auto-heal remoto ──
     push_remote_nodes(data, auth)

@@ -23,25 +23,17 @@ OUT = HEALTH_DIR / "infra_snapshot.json"
 def build():
     data = {"generated": time.time(), "ts_iso": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}
 
-    bots = {}
-    for name in ("sol", "ada"):
-        p = HEALTH_DIR / f"{name}.json"
-        if p.exists():
-            try:
-                bots[name] = json.loads(p.read_text())
-            except Exception:
-                bots[name] = {"status": "error"}
-        else:
-            bots[name] = {"status": "no_file"}
+    # TUTTI i bot (live + paper + trend, locali e remoti) dall'aggregator —
+    # stessa fonte di /infra.json: un unico set di verita'.
+    bots = agg.collect_node_bots()
+    data["bots"] = bots
     snap_path = HEALTH_DIR / "kraken_snapshot.json"
+    snap = None
     if snap_path.exists():
         try:
             snap = json.loads(snap_path.read_text())
-            if snap.get("bot"):
-                bots["sol_kraken"] = snap["bot"]
         except Exception:
             snap = None
-    data["bots"] = bots
 
     balances = {}
     for label, path in agg.ENV_FILES.items():
@@ -67,11 +59,12 @@ def build():
     node_bots = agg.collect_node_bots()
     data["node_bots"] = node_bots
 
-    # CAPITALE TOTALE REALE = bot LIVE del Node (okx:* + kraken:*), esclusi paper
+    # CAPITALE TOTALE REALE = bot LIVE del Node (okx:* + kraken:* + trend-live:*)
     okx_eq = sum(b.get("total_equity", 0) for k, b in node_bots.items()
                  if k.startswith("okx:") and b.get("status") == "running")
     kraken_eq = sum(b.get("total_equity", 0) for k, b in node_bots.items()
-                    if k.startswith("kraken:") and b.get("status") == "running")
+                    if (k.startswith("kraken:") or k.startswith("trend-live:"))
+                    and b.get("status") == "running")
     data["bot_equity"] = round(okx_eq, 2)
     data["kraken_equity"] = round(kraken_eq, 2)
     data["total_equity"] = round(okx_eq + kraken_eq, 2)

@@ -249,8 +249,11 @@ def main() -> None:
     print("[brain] avviato")
     # Hermes e Strategy Lab in thread separati: il watchdog non si blocca MAI
     # su operazioni lunghe (LLM, backtest).
-    threading.Thread(target=_hermes_worker, name="hermes",
-                     daemon=True).start()
+    # Hermes DISABILITATO (HERMES_ENABLED=False): hermes -z headless su mc2
+    # uccide la TUI interattiva dell'utente (lock di sessione Hermes).
+    if config.HERMES_ENABLED:
+        threading.Thread(target=_hermes_worker, name="hermes",
+                         daemon=True).start()
     threading.Thread(target=_strategy_worker, name="strategy",
                      daemon=True).start()
 

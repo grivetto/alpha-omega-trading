@@ -234,10 +234,24 @@ def collect_node_bots():
                 continue
     except Exception:
         pass
+    # istanza TREND paper (MARCODG1): node_data_trend/paper_default_*
+    try:
+        trend_dir = NODE_DIR.parent / "node_data_trend"
+        for p in sorted(trend_dir.glob("*_health.json")):
+            try:
+                h = json.loads(p.read_text())
+                bots[f"trend:{h.get('symbol', p.stem)}"] = h
+            except Exception:
+                continue
+    except Exception:
+        pass
     live = {
         "okx:ADA/EUR": HEALTH_DIR / "ada.json",
         "okx:SOL/EUR": HEALTH_DIR / "sol.json",
+        "okx:DOGE/EUR": HEALTH_DIR / "doge.json",
+        "okx:ETH/EUR": HEALTH_DIR / "eth.json",
         "kraken:SOL/EUR": HEALTH_DIR / "sol_kraken.json",
+        "trend-live:SOL/EUR": HEALTH_DIR / "trend_sol_kraken.json",
     }
     for key, p in live.items():
         try:
@@ -282,6 +296,25 @@ def fetch_remote_node_bots(node_name):
                     bots[sym] = h
                 except Exception:
                     continue
+        # istanza TREND paper sul remoto: node_data_trend/*_health.json
+        trend_dir = data_dir.rsplit("/", 1)[0] + "/node_data_trend"
+        cmd2 = (f"ssh -o BatchMode=yes -o ConnectTimeout=5 {ssh_args} "
+                f"'for f in {trend_dir}/*_health.json; do echo ===FILE===; cat \"$f\"; echo; done'")
+        try:
+            r2 = subprocess.run(["bash", "-c", cmd2], capture_output=True,
+                                text=True, timeout=20)
+            if r2.returncode == 0 and r2.stdout.strip():
+                for block in r2.stdout.split("===FILE===")[1:]:
+                    lines = block.strip().splitlines()
+                    if not lines:
+                        continue
+                    try:
+                        h = json.loads(lines[-1])
+                        bots[f"trend:{h.get('symbol', 'unknown')}"] = h
+                    except Exception:
+                        continue
+        except Exception:
+            pass
         _remote_cache[cache_key] = (now, bots)
         return bots
     except Exception:
