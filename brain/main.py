@@ -18,7 +18,7 @@ import sys
 import threading
 import time
 
-from . import config, checks, hermes_bridge, repair, sshutil, strategy_lab, zabbix_push
+from . import config, checks, hermes_bridge, repair, sshutil, strategy_lab, validation, zabbix_push
 
 # ── git ──────────────────────────────────────────────────────────────────────
 
@@ -32,7 +32,8 @@ def git_commit_if_possible(message: str) -> bool:
             return False
         subprocess.run(["git", "-C", str(repo), "add",
                         "config/strategies/registry.json",
-                        "config/strategy_overrides.json"],
+                        "config/strategy_overrides.json",
+                        "config/strategies/trend_validation.json"],
                        capture_output=True, timeout=10)
         r = subprocess.run(["git", "-C", str(repo), "commit", "-m", message],
                            capture_output=True, text=True, timeout=15)
@@ -262,6 +263,9 @@ def main() -> None:
             if mt:
                 hermes_age = round(t0 - mt, 1)
             zabbix_push.push(state, repairs, hermes_age)
+            # verdetto validazione TREND vs GRID allo scadere delle 24h
+            # (una sola volta; invia Telegram + report committato)
+            validation.check_and_report()
             # lo stato salvato include i bot COMPLETI (pnl, status, strategy):
             # il worker Hermes legge questo file per il digest TREND vs GRID.
             config.save_state({"ts": t0,
