@@ -6,6 +6,7 @@ __pycache__/
 
 # Virtual environments
 venv/
+.venv/
 env/
 .env
 .env.*
@@ -45,3 +46,11 @@ htmlcov/
 # Tooling state  
 .deepseek/  
 .env
+
+# Keys vault (MAI committare)
+.denaro_vault/
+keys_master.env
+*_API_KEY=
+*_API_SECRET=
+*_PASSPHRASE=
+

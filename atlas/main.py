@@ -240,6 +240,17 @@ class AtlasApplication:
 
 async def main() -> None:
     """Main entry point."""
+    # Safety guard: l'engine piazza ordini reali (legge exchanges.yaml con
+    # sandbox:false). Serve ATLAS_ALLOW_LIVE=1 esplicito, anche via modulo.
+    import os as _os
+    if _os.environ.get("ATLAS_ALLOW_LIVE") != "1":
+        print(
+            "FATAL: ATLAS piazza ordini REALI (shadow/mock non implementato).\n"
+            "  Imposta ATLAS_ALLOW_LIVE=1 SOLO se vuoi davvero tradare con capitale reale.",
+            file=sys.stderr,
+        )
+        sys.exit(2)
+
     app = AtlasApplication()
 
     try:
