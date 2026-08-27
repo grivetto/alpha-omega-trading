@@ -29,6 +29,7 @@ MACHINES = {
 # unit systemd da tenere attive per macchina
 UNITS = {
     "marcodg1": ["denaro-node-paper", "denaro-node-trend",
+                 "denaro-node-trend-live",
                  "denaro-health-marcodg1",
                  "denaro-aggregator-marcodg1", "zabbix-agent"],
     "nuvola":   ["denaro-node-nuvola", "denaro-health-nuvola",
@@ -53,7 +54,9 @@ BOTS = {
     ("marcodg1", "okx:SOL/EUR"):   ("denaro-node-paper", "/home/marco/denaro/health/sol.json"),
     ("marcodg1", "okx:DOGE/EUR"):  ("denaro-node-paper", "/home/marco/denaro/health/doge.json"),
     ("marcodg1", "okx:ETH/EUR"):   ("denaro-node-paper", "/home/marco/denaro/health/eth.json"),
-    ("marcodg1", "kraken:SOL/EUR"):("denaro-node-paper", "/home/marco/denaro/health/sol_kraken.json"),
+    # Kraken: griglia in PAUSA (swap 2026-08-27) → il conto ospita il trend
+    # live; il bot live e' monitorato sotto "trend-live:SOL/EUR".
+    # ("marcodg1", "kraken:SOL/EUR"): ("denaro-node-paper", ".../sol_kraken.json"),
     # MARCODG1 — paper (stesso Node)
     ("marcodg1", "paper:ADA/EUR"):  ("denaro-node-paper", "/home/marco/denaro_node_app/node_data/paper_default_ADA_EUR_health.json"),
     ("marcodg1", "paper:SOL/EUR"):  ("denaro-node-paper", "/home/marco/denaro_node_app/node_data/paper_default_SOL_EUR_health.json"),
@@ -65,6 +68,8 @@ BOTS = {
     ("marcodg1", "trend:paper:ETH/EUR"): ("denaro-node-trend", "/home/marco/denaro_node_app/node_data_trend/paper_default_ETH_EUR_health.json"),
     ("marcodg1", "trend:paper:ADA/EUR"): ("denaro-node-trend", "/home/marco/denaro_node_app/node_data_trend/paper_default_ADA_EUR_health.json"),
     ("marcodg1", "trend:paper:XRP/EUR"): ("denaro-node-trend", "/home/marco/denaro_node_app/node_data_trend/paper_default_XRP_EUR_health.json"),
+    # MARCODG1 — TREND LIVE su Kraken (swap: griglia in pausa)
+    ("marcodg1", "trend-live:SOL/EUR"): ("denaro-node-trend-live", "/home/marco/denaro/health/trend_sol_kraken.json"),
     # NUVOLA — live nuvolasub1 + paper
     ("nuvola", "okx:DOGE/EUR"): ("denaro-node-nuvola", "/home/sergio/denaro/health/doge_nuvola.json"),
     ("nuvola", "paper:ADA/EUR"): ("denaro-node-nuvola", "/home/sergio/denaro_node_app/node_data/paper_default_ADA_EUR_health.json"),

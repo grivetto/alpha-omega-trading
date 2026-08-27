@@ -152,7 +152,10 @@ bots:
     sell_levels: 4
     sell_distance: 0.02
     sell_step: 0.01
-    enabled: true
+    # SWAP 2026-08-27: pausa grid su Kraken (0 ordini, conto liquido) —
+    # il conto e' passato all'istanza TREND live (denaro-node-trend-live).
+    # Reversibile: riportare enabled: true e fermare il nodo trend-live.
+    enabled: false
 
   # ── KRAKEN ex-ATLAS (stesso account del live → disabilitato) ──
   - symbol: SOL/EUR
