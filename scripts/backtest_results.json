@@ -6,7 +6,7 @@
     "fee_taker": 0.0026,
     "slippage": 0.0005,
     "min_notional": 5.0,
-    "run_utc": "2026-08-27T00:01:50.286201+00:00"
+    "run_utc": "2026-08-27T00:44:10.569658+00:00"
   },
   "windows": {
     "SOL/EUR full_2y": {
@@ -14,8 +14,8 @@
       "regime": "bear (-23%)",
       "strategies": {
         "buy_hold": {
-          "final_eur": 77.12,
-          "pnl_pct": -22.88,
+          "final_eur": 76.53,
+          "pnl_pct": -23.47,
           "maxdd_pct": 78.73,
           "sharpe_ann": 0.01,
           "trades": 1,
@@ -25,8 +25,8 @@
           "cash": 0.0
         },
         "grid_5p_2l": {
-          "final_eur": 61.9,
-          "pnl_pct": -38.1,
+          "final_eur": 61.44,
+          "pnl_pct": -38.56,
           "maxdd_pct": 62.93,
           "sharpe_ann": -0.01,
           "trades": 162,
@@ -38,10 +38,10 @@
           "cash": 2.95
         },
         "grid_5p_5l": {
-          "final_eur": 77.55,
-          "pnl_pct": -22.45,
+          "final_eur": 76.97,
+          "pnl_pct": -23.03,
           "maxdd_pct": 52.52,
-          "sharpe_ann": -0.0,
+          "sharpe_ann": -0.01,
           "trades": 265,
           "fees_eur": 11.16,
           "fee_drag_pct": 11.16,
@@ -51,8 +51,8 @@
           "cash": 1.84
         },
         "grid_5p_10l": {
-          "final_eur": 87.3,
-          "pnl_pct": -12.7,
+          "final_eur": 86.87,
+          "pnl_pct": -13.13,
           "maxdd_pct": 45.98,
           "sharpe_ann": -0.0,
           "trades": 351,
@@ -64,8 +64,8 @@
           "cash": 31.21
         },
         "grid_10p_2l": {
-          "final_eur": 88.74,
-          "pnl_pct": -11.26,
+          "final_eur": 88.18,
+          "pnl_pct": -11.82,
           "maxdd_pct": 46.59,
           "sharpe_ann": -0.0,
           "trades": 108,
@@ -77,8 +77,8 @@
           "cash": 15.1
         },
         "grid_10p_5l": {
-          "final_eur": 94.36,
-          "pnl_pct": -5.64,
+          "final_eur": 93.86,
+          "pnl_pct": -6.14,
           "maxdd_pct": 42.84,
           "sharpe_ann": 0.0,
           "trades": 148,
@@ -90,8 +90,8 @@
           "cash": 28.15
         },
         "grid_10p_10l": {
-          "final_eur": 98.45,
-          "pnl_pct": -1.55,
+          "final_eur": 98.05,
+          "pnl_pct": -1.95,
           "maxdd_pct": 35.26,
           "sharpe_ann": 0.0,
           "trades": 210,
@@ -103,8 +103,8 @@
           "cash": 45.77
         },
         "grid_20p_2l": {
-          "final_eur": 116.97,
-          "pnl_pct": 16.97,
+          "final_eur": 116.65,
+          "pnl_pct": 16.65,
           "maxdd_pct": 33.13,
           "sharpe_ann": 0.01,
           "trades": 63,
@@ -116,8 +116,8 @@
           "cash": 74.32
         },
         "grid_20p_5l": {
-          "final_eur": 106.68,
-          "pnl_pct": 6.68,
+          "final_eur": 106.28,
+          "pnl_pct": 6.28,
           "maxdd_pct": 31.24,
           "sharpe_ann": 0.01,
           "trades": 93,
@@ -129,8 +129,8 @@
           "cash": 54.06
         },
         "grid_20p_10l": {
-          "final_eur": 106.34,
-          "pnl_pct": 6.34,
+          "final_eur": 106.13,
+          "pnl_pct": 6.13,
           "maxdd_pct": 18.92,
           "sharpe_ann": 0.01,
           "trades": 131,
@@ -142,8 +142,8 @@
           "cash": 80.02
         },
         "grid_30p_2l": {
-          "final_eur": 115.66,
-          "pnl_pct": 15.66,
+          "final_eur": 114.99,
+          "pnl_pct": 14.99,
           "maxdd_pct": 35.88,
           "sharpe_ann": 0.01,
           "trades": 46,
@@ -155,8 +155,8 @@
           "cash": 28.1
         },
         "grid_30p_5l": {
-          "final_eur": 112.3,
-          "pnl_pct": 12.3,
+          "final_eur": 111.88,
+          "pnl_pct": 11.88,
           "maxdd_pct": 22.82,
           "sharpe_ann": 0.01,
           "trades": 73,
@@ -168,8 +168,8 @@
           "cash": 57.89
         },
         "grid_30p_10l": {
-          "final_eur": 109.75,
-          "pnl_pct": 9.75,
+          "final_eur": 109.54,
+          "pnl_pct": 9.54,
           "maxdd_pct": 12.6,
           "sharpe_ann": 0.01,
           "trades": 101,
@@ -181,8 +181,8 @@
           "cash": 82.55
         },
         "dca": {
-          "final_eur": 72.75,
-          "pnl_pct": -27.25,
+          "final_eur": 72.19,
+          "pnl_pct": -27.81,
           "maxdd_pct": 78.73,
           "sharpe_ann": 0.01,
           "trades": 11,
@@ -193,8 +193,8 @@
           "cash": 0.0
         },
         "dca_cad": {
-          "final_eur": 77.56,
-          "pnl_pct": -22.44,
+          "final_eur": 76.97,
+          "pnl_pct": -23.03,
           "maxdd_pct": 59.87,
           "sharpe_ann": -0.01,
           "trades": 20,
@@ -211,8 +211,8 @@
       "regime": "bear (-18%)",
       "strategies": {
         "buy_hold": {
-          "final_eur": 82.23,
-          "pnl_pct": -17.77,
+          "final_eur": 81.6,
+          "pnl_pct": -18.4,
           "maxdd_pct": 57.08,
           "sharpe_ann": -0.01,
           "trades": 1,
@@ -222,8 +222,8 @@
           "cash": 0.0
         },
         "grid_5p_2l": {
-          "final_eur": 91.52,
-          "pnl_pct": -8.48,
+          "final_eur": 91.2,
+          "pnl_pct": -8.8,
           "maxdd_pct": 24.57,
           "sharpe_ann": -0.01,
           "trades": 5,
@@ -235,8 +235,8 @@
           "cash": 49.97
         },
         "grid_5p_5l": {
-          "final_eur": 87.47,
-          "pnl_pct": -12.53,
+          "final_eur": 86.95,
+          "pnl_pct": -13.05,
           "maxdd_pct": 38.57,
           "sharpe_ann": -0.01,
           "trades": 16,
@@ -248,8 +248,8 @@
           "cash": 19.93
         },
         "grid_5p_10l": {
-          "final_eur": 86.99,
-          "pnl_pct": -13.01,
+          "final_eur": 86.4,
+          "pnl_pct": -13.6,
           "maxdd_pct": 42.59,
           "sharpe_ann": -0.01,
           "trades": 31,
@@ -261,8 +261,8 @@
           "cash": 9.9
         },
         "grid_10p_2l": {
-          "final_eur": 84.77,
-          "pnl_pct": -15.23,
+          "final_eur": 84.13,
+          "pnl_pct": -15.87,
           "maxdd_pct": 47.97,
           "sharpe_ann": -0.0,
           "trades": 6,
@@ -274,8 +274,8 @@
           "cash": 0.37
         },
         "grid_10p_5l": {
-          "final_eur": 86.19,
-          "pnl_pct": -13.81,
+          "final_eur": 85.53,
+          "pnl_pct": -14.47,
           "maxdd_pct": 47.04,
           "sharpe_ann": -0.0,
           "trades": 15,
@@ -287,8 +287,8 @@
           "cash": 0.37
         },
         "grid_10p_10l": {
-          "final_eur": 91.83,
-          "pnl_pct": -8.17,
+          "final_eur": 91.21,
+          "pnl_pct": -8.79,
           "maxdd_pct": 41.1,
           "sharpe_ann": 0.0,
           "trades": 39,
@@ -300,8 +300,8 @@
           "cash": 10.68
         },
         "grid_20p_2l": {
-          "final_eur": 85.72,
-          "pnl_pct": -14.28,
+          "final_eur": 85.06,
+          "pnl_pct": -14.94,
           "maxdd_pct": 47.16,
           "sharpe_ann": -0.0,
           "trades": 4,
@@ -313,8 +313,8 @@
           "cash": 0.58
         },
         "grid_20p_5l": {
-          "final_eur": 93.92,
-          "pnl_pct": -6.08,
+          "final_eur": 93.37,
+          "pnl_pct": -6.63,
           "maxdd_pct": 37.5,
           "sharpe_ann": 0.0,
           "trades": 22,
@@ -326,8 +326,8 @@
           "cash": 22.67
         },
         "grid_20p_10l": {
-          "final_eur": 96.63,
-          "pnl_pct": -3.37,
+          "final_eur": 96.13,
+          "pnl_pct": -3.87,
           "maxdd_pct": 32.41,
           "sharpe_ann": 0.0,
           "trades": 37,
@@ -339,8 +339,8 @@
           "cash": 32.22
         },
         "grid_30p_2l": {
-          "final_eur": 87.56,
-          "pnl_pct": -12.44,
+          "final_eur": 86.9,
+          "pnl_pct": -13.1,
           "maxdd_pct": 46.11,
           "sharpe_ann": -0.0,
           "trades": 4,
@@ -352,8 +352,8 @@
           "cash": 1.08
         },
         "grid_30p_5l": {
-          "final_eur": 93.71,
-          "pnl_pct": -6.29,
+          "final_eur": 93.0,
+          "pnl_pct": -7.0,
           "maxdd_pct": 42.11,
           "sharpe_ann": 0.0,
           "trades": 11,
@@ -365,8 +365,8 @@
           "cash": 1.33
         },
         "grid_30p_10l": {
-          "final_eur": 99.68,
-          "pnl_pct": -0.32,
+          "final_eur": 99.33,
+          "pnl_pct": -0.67,
           "maxdd_pct": 23.32,
           "sharpe_ann": 0.0,
           "trades": 33,
@@ -378,8 +378,8 @@
           "cash": 53.5
         },
         "dca": {
-          "final_eur": 75.86,
-          "pnl_pct": -24.14,
+          "final_eur": 75.28,
+          "pnl_pct": -24.72,
           "maxdd_pct": 57.08,
           "sharpe_ann": -0.01,
           "trades": 11,
@@ -390,8 +390,8 @@
           "cash": 0.0
         },
         "dca_cad": {
-          "final_eur": 117.51,
-          "pnl_pct": 17.51,
+          "final_eur": 116.61,
+          "pnl_pct": 16.61,
           "maxdd_pct": 24.54,
           "sharpe_ann": 0.03,
           "trades": 20,
@@ -408,8 +408,8 @@
       "regime": "bear (-33%)",
       "strategies": {
         "buy_hold": {
-          "final_eur": 67.16,
-          "pnl_pct": -32.84,
+          "final_eur": 66.64,
+          "pnl_pct": -33.36,
           "maxdd_pct": 74.25,
           "sharpe_ann": -0.0,
           "trades": 1,
@@ -419,8 +419,8 @@
           "cash": 0.0
         },
         "grid_5p_2l": {
-          "final_eur": 48.1,
-          "pnl_pct": -51.9,
+          "final_eur": 47.74,
+          "pnl_pct": -52.26,
           "maxdd_pct": 71.09,
           "sharpe_ann": -0.02,
           "trades": 82,
@@ -432,8 +432,8 @@
           "cash": 1.37
         },
         "grid_5p_5l": {
-          "final_eur": 74.47,
-          "pnl_pct": -25.53,
+          "final_eur": 73.91,
+          "pnl_pct": -26.09,
           "maxdd_pct": 54.38,
           "sharpe_ann": -0.01,
           "trades": 189,
@@ -445,8 +445,8 @@
           "cash": 1.24
         },
         "grid_5p_10l": {
-          "final_eur": 84.54,
-          "pnl_pct": -15.46,
+          "final_eur": 83.9,
+          "pnl_pct": -16.1,
           "maxdd_pct": 47.94,
           "sharpe_ann": -0.0,
           "trades": 332,
@@ -458,8 +458,8 @@
           "cash": 1.06
         },
         "grid_10p_2l": {
-          "final_eur": 81.81,
-          "pnl_pct": -18.19,
+          "final_eur": 81.25,
+          "pnl_pct": -18.75,
           "maxdd_pct": 49.62,
           "sharpe_ann": -0.01,
           "trades": 60,
@@ -471,8 +471,8 @@
           "cash": 8.17
         },
         "grid_10p_5l": {
-          "final_eur": 91.06,
-          "pnl_pct": -8.94,
+          "final_eur": 90.41,
+          "pnl_pct": -9.59,
           "maxdd_pct": 43.65,
           "sharpe_ann": -0.0,
           "trades": 137,
@@ -484,8 +484,8 @@
           "cash": 7.42
         },
         "grid_10p_10l": {
-          "final_eur": 96.58,
-          "pnl_pct": -3.42,
+          "final_eur": 96.04,
+          "pnl_pct": -3.96,
           "maxdd_pct": 33.98,
           "sharpe_ann": 0.0,
           "trades": 214,
@@ -497,8 +497,8 @@
           "cash": 25.78
         },
         "grid_20p_2l": {
-          "final_eur": 94.36,
-          "pnl_pct": -5.64,
+          "final_eur": 93.77,
+          "pnl_pct": -6.23,
           "maxdd_pct": 42.35,
           "sharpe_ann": 0.0,
           "trades": 46,
@@ -510,8 +510,8 @@
           "cash": 17.12
         },
         "grid_20p_5l": {
-          "final_eur": 106.76,
-          "pnl_pct": 6.76,
+          "final_eur": 106.37,
+          "pnl_pct": 6.37,
           "maxdd_pct": 24.39,
           "sharpe_ann": 0.01,
           "trades": 107,
@@ -523,8 +523,8 @@
           "cash": 56.26
         },
         "grid_20p_10l": {
-          "final_eur": 105.18,
-          "pnl_pct": 5.18,
+          "final_eur": 104.84,
+          "pnl_pct": 4.84,
           "maxdd_pct": 20.45,
           "sharpe_ann": 0.01,
           "trades": 145,
@@ -536,8 +536,8 @@
           "cash": 60.93
         },
         "grid_30p_2l": {
-          "final_eur": 104.14,
-          "pnl_pct": 4.14,
+          "final_eur": 103.87,
+          "pnl_pct": 3.87,
           "maxdd_pct": 37.86,
           "sharpe_ann": 0.01,
           "trades": 31,
@@ -549,8 +549,8 @@
           "cash": 69.2
         },
         "grid_30p_5l": {
-          "final_eur": 106.64,
-          "pnl_pct": 6.64,
+          "final_eur": 106.4,
+          "pnl_pct": 6.4,
           "maxdd_pct": 25.32,
           "sharpe_ann": 0.01,
           "trades": 60,
@@ -562,8 +562,8 @@
           "cash": 74.84
         },
         "grid_30p_10l": {
-          "final_eur": 103.42,
-          "pnl_pct": 3.42,
+          "final_eur": 103.08,
+          "pnl_pct": 3.08,
           "maxdd_pct": 24.73,
           "sharpe_ann": 0.01,
           "trades": 79,
@@ -575,8 +575,8 @@
           "cash": 59.42
         },
         "dca": {
-          "final_eur": 58.79,
-          "pnl_pct": -41.21,
+          "final_eur": 58.34,
+          "pnl_pct": -41.66,
           "maxdd_pct": 74.25,
           "sharpe_ann": -0.01,
           "trades": 11,
@@ -587,8 +587,8 @@
           "cash": 0.0
         },
         "dca_cad": {
-          "final_eur": 86.96,
-          "pnl_pct": -13.04,
+          "final_eur": 86.29,
+          "pnl_pct": -13.71,
           "maxdd_pct": 51.58,
           "sharpe_ann": -0.0,
           "trades": 20,
@@ -602,11 +602,11 @@
     },
     "SOL/EUR 90d_4h": {
       "period": "2026-05-29\u21922026-08-27",
-      "regime": "bull (+24%)",
+      "regime": "bull (+23%)",
       "strategies": {
         "buy_hold": {
-          "final_eur": 123.43,
-          "pnl_pct": 23.43,
+          "final_eur": 122.49,
+          "pnl_pct": 22.49,
           "maxdd_pct": 24.82,
           "sharpe_ann": 0.06,
           "trades": 1,
@@ -772,10 +772,10 @@
           "cash": 103.35
         },
         "dca": {
-          "final_eur": 123.29,
-          "pnl_pct": 23.29,
+          "final_eur": 122.35,
+          "pnl_pct": 22.35,
           "maxdd_pct": 24.81,
-          "sharpe_ann": 0.06,
+          "sharpe_ann": 0.05,
           "trades": 13,
           "fees_eur": 0.26,
           "fee_drag_pct": 0.26,
@@ -784,8 +784,8 @@
           "cash": 0.0
         },
         "dca_cad": {
-          "final_eur": 134.83,
-          "pnl_pct": 34.83,
+          "final_eur": 133.79,
+          "pnl_pct": 33.79,
           "maxdd_pct": 9.36,
           "sharpe_ann": 0.12,
           "trades": 20,
@@ -797,13 +797,801 @@
         }
       }
     },
-    "DOGE/EUR full_2y": {
+    "ADA/EUR full_2y": {
       "period": "2024-09-06\u21922026-08-27",
+      "regime": "bear (-36%)",
+      "strategies": {
+        "buy_hold": {
+          "final_eur": 63.47,
+          "pnl_pct": -36.53,
+          "maxdd_pct": 89.15,
+          "sharpe_ann": 0.01,
+          "trades": 1,
+          "fees_eur": 0.26,
+          "fee_drag_pct": 0.26,
+          "inventory": 350.528659,
+          "cash": 0.0
+        },
+        "grid_5p_2l": {
+          "final_eur": 75.22,
+          "pnl_pct": -24.78,
+          "maxdd_pct": 36.03,
+          "sharpe_ann": -0.03,
+          "trades": 11,
+          "fees_eur": 1.16,
+          "fee_drag_pct": 1.16,
+          "RT": 5,
+          "rt_margin_pct": 0.08,
+          "inventory": 138.795304,
+          "cash": 50.09
+        },
+        "grid_5p_5l": {
+          "final_eur": 68.28,
+          "pnl_pct": -31.72,
+          "maxdd_pct": 47.58,
+          "sharpe_ann": -0.02,
+          "trades": 24,
+          "fees_eur": 1.01,
+          "fee_drag_pct": 1.01,
+          "RT": 10,
+          "rt_margin_pct": 0.08,
+          "inventory": 266.704544,
+          "cash": 19.99
+        },
+        "grid_5p_10l": {
+          "final_eur": 71.57,
+          "pnl_pct": -28.43,
+          "maxdd_pct": 51.14,
+          "sharpe_ann": -0.01,
+          "trades": 96,
+          "fees_eur": 2.02,
+          "fee_drag_pct": 2.02,
+          "RT": 44,
+          "rt_margin_pct": 0.08,
+          "inventory": 283.828348,
+          "cash": 20.18
+        },
+        "grid_10p_2l": {
+          "final_eur": 64.06,
+          "pnl_pct": -35.94,
+          "maxdd_pct": 56.49,
+          "sharpe_ann": -0.01,
+          "trades": 10,
+          "fees_eur": 1.05,
+          "fee_drag_pct": 1.05,
+          "RT": 4,
+          "rt_margin_pct": 0.58,
+          "inventory": 348.559431,
+          "cash": 0.95
+        },
+        "grid_10p_5l": {
+          "final_eur": 74.41,
+          "pnl_pct": -25.59,
+          "maxdd_pct": 48.3,
+          "sharpe_ann": -0.01,
+          "trades": 50,
+          "fees_eur": 2.11,
+          "fee_drag_pct": 2.11,
+          "RT": 23,
+          "rt_margin_pct": 0.58,
+          "inventory": 286.702648,
+          "cash": 22.49
+        },
+        "grid_10p_10l": {
+          "final_eur": 85.47,
+          "pnl_pct": -14.53,
+          "maxdd_pct": 38.53,
+          "sharpe_ann": -0.0,
+          "trades": 106,
+          "fees_eur": 2.24,
+          "fee_drag_pct": 2.24,
+          "RT": 50,
+          "rt_margin_pct": 0.58,
+          "inventory": 235.853434,
+          "cash": 42.76
+        },
+        "grid_20p_2l": {
+          "final_eur": 82.38,
+          "pnl_pct": -17.62,
+          "maxdd_pct": 27.5,
+          "sharpe_ann": -0.02,
+          "trades": 1,
+          "fees_eur": 0.11,
+          "fee_drag_pct": 0.11,
+          "RT": 0,
+          "rt_margin_pct": 1.58,
+          "inventory": 179.397284,
+          "cash": 49.9
+        },
+        "grid_20p_5l": {
+          "final_eur": 73.48,
+          "pnl_pct": -26.52,
+          "maxdd_pct": 42.82,
+          "sharpe_ann": -0.01,
+          "trades": 4,
+          "fees_eur": 0.17,
+          "fee_drag_pct": 0.17,
+          "RT": 0,
+          "rt_margin_pct": 1.58,
+          "inventory": 296.264132,
+          "cash": 19.83
+        },
+        "grid_20p_10l": {
+          "final_eur": 89.89,
+          "pnl_pct": -10.11,
+          "maxdd_pct": 39.97,
+          "sharpe_ann": -0.0,
+          "trades": 44,
+          "fees_eur": 0.93,
+          "fee_drag_pct": 0.93,
+          "RT": 20,
+          "rt_margin_pct": 1.58,
+          "inventory": 148.132066,
+          "cash": 63.07
+        },
+        "grid_30p_2l": {
+          "final_eur": 82.71,
+          "pnl_pct": -17.29,
+          "maxdd_pct": 27.64,
+          "sharpe_ann": -0.02,
+          "trades": 1,
+          "fees_eur": 0.11,
+          "fee_drag_pct": 0.11,
+          "RT": 0,
+          "rt_margin_pct": 2.58,
+          "inventory": 181.246741,
+          "cash": 49.9
+        },
+        "grid_30p_5l": {
+          "final_eur": 85.17,
+          "pnl_pct": -14.83,
+          "maxdd_pct": 34.37,
+          "sharpe_ann": -0.01,
+          "trades": 21,
+          "fees_eur": 0.89,
+          "fee_drag_pct": 0.89,
+          "RT": 9,
+          "rt_margin_pct": 2.58,
+          "inventory": 224.590011,
+          "cash": 44.51
+        },
+        "grid_30p_10l": {
+          "final_eur": 94.9,
+          "pnl_pct": -5.1,
+          "maxdd_pct": 35.45,
+          "sharpe_ann": 0.0,
+          "trades": 39,
+          "fees_eur": 0.83,
+          "fee_drag_pct": 0.83,
+          "RT": 18,
+          "rt_margin_pct": 2.58,
+          "inventory": 112.295005,
+          "cash": 74.57
+        },
+        "dca": {
+          "final_eur": 58.73,
+          "pnl_pct": -41.27,
+          "maxdd_pct": 89.15,
+          "sharpe_ann": 0.01,
+          "trades": 11,
+          "fees_eur": 0.26,
+          "fee_drag_pct": 0.26,
+          "deployed": 100.0,
+          "inventory": 324.325956,
+          "cash": 0.0
+        },
+        "dca_cad": {
+          "final_eur": 50.73,
+          "pnl_pct": -49.27,
+          "maxdd_pct": 72.58,
+          "sharpe_ann": -0.02,
+          "trades": 20,
+          "fees_eur": 0.26,
+          "fee_drag_pct": 0.26,
+          "deployed": 100.0,
+          "inventory": 280.133517,
+          "cash": 0.0
+        }
+      }
+    },
+    "ADA/EUR 240d": {
+      "period": "2025-12-31\u21922026-08-27",
+      "regime": "bear (-36%)",
+      "strategies": {
+        "buy_hold": {
+          "final_eur": 63.72,
+          "pnl_pct": -36.28,
+          "maxdd_pct": 65.17,
+          "sharpe_ann": -0.02,
+          "trades": 1,
+          "fees_eur": 0.26,
+          "fee_drag_pct": 0.26,
+          "inventory": 351.894668,
+          "cash": 0.0
+        },
+        "grid_5p_2l": {
+          "final_eur": 80.45,
+          "pnl_pct": -19.55,
+          "maxdd_pct": 29.34,
+          "sharpe_ann": -0.03,
+          "trades": 5,
+          "fees_eur": 0.53,
+          "fee_drag_pct": 0.53,
+          "RT": 2,
+          "rt_margin_pct": 0.08,
+          "inventory": 168.312086,
+          "cash": 49.97
+        },
+        "grid_5p_5l": {
+          "final_eur": 71.07,
+          "pnl_pct": -28.93,
+          "maxdd_pct": 44.64,
+          "sharpe_ann": -0.03,
+          "trades": 10,
+          "fees_eur": 0.42,
+          "fee_drag_pct": 0.42,
+          "RT": 3,
+          "rt_margin_pct": 0.08,
+          "inventory": 282.716596,
+          "cash": 19.88
+        },
+        "grid_5p_10l": {
+          "final_eur": 79.42,
+          "pnl_pct": -20.58,
+          "maxdd_pct": 45.79,
+          "sharpe_ann": -0.01,
+          "trades": 143,
+          "fees_eur": 3.01,
+          "fee_drag_pct": 3.01,
+          "RT": 68,
+          "rt_margin_pct": 0.08,
+          "inventory": 270.751424,
+          "cash": 30.39
+        },
+        "grid_10p_2l": {
+          "final_eur": 82.18,
+          "pnl_pct": -17.82,
+          "maxdd_pct": 27.63,
+          "sharpe_ann": -0.03,
+          "trades": 1,
+          "fees_eur": 0.11,
+          "fee_drag_pct": 0.11,
+          "RT": 0,
+          "rt_margin_pct": 0.58,
+          "inventory": 178.277239,
+          "cash": 49.9
+        },
+        "grid_10p_5l": {
+          "final_eur": 72.68,
+          "pnl_pct": -27.32,
+          "maxdd_pct": 43.48,
+          "sharpe_ann": -0.02,
+          "trades": 6,
+          "fees_eur": 0.25,
+          "fee_drag_pct": 0.25,
+          "RT": 1,
+          "rt_margin_pct": 0.58,
+          "inventory": 291.202275,
+          "cash": 19.95
+        },
+        "grid_10p_10l": {
+          "final_eur": 85.62,
+          "pnl_pct": -14.38,
+          "maxdd_pct": 38.2,
+          "sharpe_ann": -0.01,
+          "trades": 96,
+          "fees_eur": 2.03,
+          "fee_drag_pct": 2.03,
+          "RT": 45,
+          "rt_margin_pct": 0.58,
+          "inventory": 238.250587,
+          "cash": 42.47
+        },
+        "grid_20p_2l": {
+          "final_eur": 82.51,
+          "pnl_pct": -17.49,
+          "maxdd_pct": 27.55,
+          "sharpe_ann": -0.03,
+          "trades": 1,
+          "fees_eur": 0.11,
+          "fee_drag_pct": 0.11,
+          "RT": 0,
+          "rt_margin_pct": 1.58,
+          "inventory": 180.096395,
+          "cash": 49.9
+        },
+        "grid_20p_5l": {
+          "final_eur": 73.69,
+          "pnl_pct": -26.31,
+          "maxdd_pct": 42.71,
+          "sharpe_ann": -0.02,
+          "trades": 4,
+          "fees_eur": 0.17,
+          "fee_drag_pct": 0.17,
+          "RT": 0,
+          "rt_margin_pct": 1.58,
+          "inventory": 297.418672,
+          "cash": 19.83
+        },
+        "grid_20p_10l": {
+          "final_eur": 90.0,
+          "pnl_pct": -10.0,
+          "maxdd_pct": 39.92,
+          "sharpe_ann": -0.0,
+          "trades": 44,
+          "fees_eur": 0.93,
+          "fee_drag_pct": 0.93,
+          "RT": 20,
+          "rt_margin_pct": 1.58,
+          "inventory": 148.709336,
+          "cash": 63.07
+        },
+        "grid_30p_2l": {
+          "final_eur": 82.84,
+          "pnl_pct": -17.16,
+          "maxdd_pct": 27.69,
+          "sharpe_ann": -0.03,
+          "trades": 1,
+          "fees_eur": 0.11,
+          "fee_drag_pct": 0.11,
+          "RT": 0,
+          "rt_margin_pct": 2.58,
+          "inventory": 181.953059,
+          "cash": 49.9
+        },
+        "grid_30p_5l": {
+          "final_eur": 85.33,
+          "pnl_pct": -14.67,
+          "maxdd_pct": 40.69,
+          "sharpe_ann": -0.01,
+          "trades": 21,
+          "fees_eur": 0.89,
+          "fee_drag_pct": 0.89,
+          "RT": 9,
+          "rt_margin_pct": 2.58,
+          "inventory": 225.465237,
+          "cash": 44.51
+        },
+        "grid_30p_10l": {
+          "final_eur": 94.98,
+          "pnl_pct": -5.02,
+          "maxdd_pct": 36.23,
+          "sharpe_ann": 0.0,
+          "trades": 39,
+          "fees_eur": 0.83,
+          "fee_drag_pct": 0.83,
+          "RT": 18,
+          "rt_margin_pct": 2.58,
+          "inventory": 112.732619,
+          "cash": 74.57
+        },
+        "dca": {
+          "final_eur": 54.13,
+          "pnl_pct": -45.87,
+          "maxdd_pct": 65.17,
+          "sharpe_ann": -0.03,
+          "trades": 10,
+          "fees_eur": 0.26,
+          "fee_drag_pct": 0.26,
+          "deployed": 100.0,
+          "inventory": 298.944725,
+          "cash": 0.0
+        },
+        "dca_cad": {
+          "final_eur": 89.77,
+          "pnl_pct": -10.23,
+          "maxdd_pct": 36.25,
+          "sharpe_ann": -0.01,
+          "trades": 20,
+          "fees_eur": 0.26,
+          "fee_drag_pct": 0.26,
+          "deployed": 100.0,
+          "inventory": 495.761444,
+          "cash": 0.0
+        }
+      }
+    },
+    "ADA/EUR 480d": {
+      "period": "2025-05-05\u21922026-08-27",
+      "regime": "bear (-69%)",
+      "strategies": {
+        "buy_hold": {
+          "final_eur": 30.81,
+          "pnl_pct": -69.19,
+          "maxdd_pct": 84.64,
+          "sharpe_ann": -0.03,
+          "trades": 1,
+          "fees_eur": 0.26,
+          "fee_drag_pct": 0.26,
+          "inventory": 170.177535,
+          "cash": 0.0
+        },
+        "grid_5p_2l": {
+          "final_eur": 27.41,
+          "pnl_pct": -72.59,
+          "maxdd_pct": 81.33,
+          "sharpe_ann": -0.04,
+          "trades": 120,
+          "fees_eur": 12.63,
+          "fee_drag_pct": 12.63,
+          "RT": 59,
+          "rt_margin_pct": 0.08,
+          "inventory": 139.696592,
+          "cash": 2.12
+        },
+        "grid_5p_5l": {
+          "final_eur": 30.2,
+          "pnl_pct": -69.8,
+          "maxdd_pct": 80.94,
+          "sharpe_ann": -0.04,
+          "trades": 151,
+          "fees_eur": 6.36,
+          "fee_drag_pct": 6.36,
+          "RT": 73,
+          "rt_margin_pct": 0.08,
+          "inventory": 161.598721,
+          "cash": 0.94
+        },
+        "grid_5p_10l": {
+          "final_eur": 44.71,
+          "pnl_pct": -55.29,
+          "maxdd_pct": 72.9,
+          "sharpe_ann": -0.03,
+          "trades": 364,
+          "fees_eur": 7.66,
+          "fee_drag_pct": 7.66,
+          "RT": 177,
+          "rt_margin_pct": 0.08,
+          "inventory": 240.377731,
+          "cash": 1.19
+        },
+        "grid_10p_2l": {
+          "final_eur": 30.79,
+          "pnl_pct": -69.21,
+          "maxdd_pct": 78.78,
+          "sharpe_ann": -0.04,
+          "trades": 38,
+          "fees_eur": 4.01,
+          "fee_drag_pct": 4.01,
+          "RT": 18,
+          "rt_margin_pct": 0.58,
+          "inventory": 142.469565,
+          "cash": 4.99
+        },
+        "grid_10p_5l": {
+          "final_eur": 51.35,
+          "pnl_pct": -48.65,
+          "maxdd_pct": 65.68,
+          "sharpe_ann": -0.03,
+          "trades": 159,
+          "fees_eur": 6.71,
+          "fee_drag_pct": 6.71,
+          "RT": 77,
+          "rt_margin_pct": 0.58,
+          "inventory": 235.573491,
+          "cash": 8.69
+        },
+        "grid_10p_10l": {
+          "final_eur": 63.24,
+          "pnl_pct": -36.76,
+          "maxdd_pct": 61.34,
+          "sharpe_ann": -0.02,
+          "trades": 295,
+          "fees_eur": 6.23,
+          "fee_drag_pct": 6.23,
+          "RT": 143,
+          "rt_margin_pct": 0.58,
+          "inventory": 249.404014,
+          "cash": 18.07
+        },
+        "grid_20p_2l": {
+          "final_eur": 44.1,
+          "pnl_pct": -55.9,
+          "maxdd_pct": 70.79,
+          "sharpe_ann": -0.03,
+          "trades": 34,
+          "fees_eur": 3.6,
+          "fee_drag_pct": 3.6,
+          "RT": 16,
+          "rt_margin_pct": 1.58,
+          "inventory": 175.112053,
+          "cash": 12.4
+        },
+        "grid_20p_5l": {
+          "final_eur": 62.79,
+          "pnl_pct": -37.21,
+          "maxdd_pct": 61.23,
+          "sharpe_ann": -0.02,
+          "trades": 105,
+          "fees_eur": 4.45,
+          "fee_drag_pct": 4.45,
+          "RT": 50,
+          "rt_margin_pct": 1.58,
+          "inventory": 260.912257,
+          "cash": 15.55
+        },
+        "grid_20p_10l": {
+          "final_eur": 77.4,
+          "pnl_pct": -22.6,
+          "maxdd_pct": 51.97,
+          "sharpe_ann": -0.01,
+          "trades": 171,
+          "fees_eur": 3.63,
+          "fee_drag_pct": 3.63,
+          "RT": 82,
+          "rt_margin_pct": 1.58,
+          "inventory": 191.198354,
+          "cash": 42.77
+        },
+        "grid_30p_2l": {
+          "final_eur": 65.78,
+          "pnl_pct": -34.22,
+          "maxdd_pct": 56.88,
+          "sharpe_ann": -0.02,
+          "trades": 54,
+          "fees_eur": 5.75,
+          "fee_drag_pct": 5.75,
+          "RT": 26,
+          "rt_margin_pct": 2.58,
+          "inventory": 179.683755,
+          "cash": 33.25
+        },
+        "grid_30p_5l": {
+          "final_eur": 78.46,
+          "pnl_pct": -21.54,
+          "maxdd_pct": 52.99,
+          "sharpe_ann": -0.01,
+          "trades": 104,
+          "fees_eur": 4.43,
+          "fee_drag_pct": 4.43,
+          "RT": 50,
+          "rt_margin_pct": 2.58,
+          "inventory": 181.632023,
+          "cash": 45.57
+        },
+        "grid_30p_10l": {
+          "final_eur": 92.51,
+          "pnl_pct": -7.49,
+          "maxdd_pct": 41.8,
+          "sharpe_ann": -0.0,
+          "trades": 155,
+          "fees_eur": 3.3,
+          "fee_drag_pct": 3.3,
+          "RT": 75,
+          "rt_margin_pct": 2.58,
+          "inventory": 128.738407,
+          "cash": 69.2
+        },
+        "dca": {
+          "final_eur": 26.51,
+          "pnl_pct": -73.49,
+          "maxdd_pct": 84.64,
+          "sharpe_ann": -0.03,
+          "trades": 11,
+          "fees_eur": 0.26,
+          "fee_drag_pct": 0.26,
+          "deployed": 100.0,
+          "inventory": 146.417693,
+          "cash": 0.0
+        },
+        "dca_cad": {
+          "final_eur": 59.24,
+          "pnl_pct": -40.76,
+          "maxdd_pct": 61.79,
+          "sharpe_ann": -0.02,
+          "trades": 20,
+          "fees_eur": 0.26,
+          "fee_drag_pct": 0.26,
+          "deployed": 100.0,
+          "inventory": 327.139872,
+          "cash": 0.0
+        }
+      }
+    },
+    "ADA/EUR 90d_4h": {
+      "period": "2026-05-29\u21922026-08-27",
       "regime": "bear (-10%)",
       "strategies": {
         "buy_hold": {
-          "final_eur": 89.64,
-          "pnl_pct": -10.36,
+          "final_eur": 89.61,
+          "pnl_pct": -10.39,
+          "maxdd_pct": 39.27,
+          "sharpe_ann": -0.0,
+          "trades": 1,
+          "fees_eur": 0.26,
+          "fee_drag_pct": 0.26,
+          "inventory": 494.881901,
+          "cash": 0.0
+        },
+        "grid_5p_2l": {
+          "final_eur": 97.99,
+          "pnl_pct": -2.01,
+          "maxdd_pct": 35.61,
+          "sharpe_ann": 0.01,
+          "trades": 48,
+          "fees_eur": 5.05,
+          "fee_drag_pct": 5.05,
+          "RT": 23,
+          "rt_margin_pct": 0.08,
+          "inventory": 537.279669,
+          "cash": 0.7
+        },
+        "grid_5p_5l": {
+          "final_eur": 99.1,
+          "pnl_pct": -0.9,
+          "maxdd_pct": 35.16,
+          "sharpe_ann": 0.01,
+          "trades": 95,
+          "fees_eur": 4.0,
+          "fee_drag_pct": 4.0,
+          "RT": 46,
+          "rt_margin_pct": 0.08,
+          "inventory": 323.080021,
+          "cash": 40.6
+        },
+        "grid_5p_10l": {
+          "final_eur": 99.52,
+          "pnl_pct": -0.48,
+          "maxdd_pct": 31.4,
+          "sharpe_ann": 0.01,
+          "trades": 152,
+          "fees_eur": 3.2,
+          "fee_drag_pct": 3.2,
+          "RT": 74,
+          "rt_margin_pct": 0.08,
+          "inventory": 215.489897,
+          "cash": 60.5
+        },
+        "grid_10p_2l": {
+          "final_eur": 88.72,
+          "pnl_pct": -11.28,
+          "maxdd_pct": 37.6,
+          "sharpe_ann": -0.01,
+          "trades": 8,
+          "fees_eur": 0.84,
+          "fee_drag_pct": 0.84,
+          "RT": 3,
+          "rt_margin_pct": 0.58,
+          "inventory": 486.309899,
+          "cash": 0.66
+        },
+        "grid_10p_5l": {
+          "final_eur": 100.01,
+          "pnl_pct": 0.01,
+          "maxdd_pct": 34.84,
+          "sharpe_ann": 0.01,
+          "trades": 52,
+          "fees_eur": 2.19,
+          "fee_drag_pct": 2.19,
+          "RT": 25,
+          "rt_margin_pct": 0.58,
+          "inventory": 205.488296,
+          "cash": 62.81
+        },
+        "grid_10p_10l": {
+          "final_eur": 101.05,
+          "pnl_pct": 1.05,
+          "maxdd_pct": 24.48,
+          "sharpe_ann": 0.01,
+          "trades": 88,
+          "fees_eur": 1.86,
+          "fee_drag_pct": 1.86,
+          "RT": 43,
+          "rt_margin_pct": 0.58,
+          "inventory": 102.744148,
+          "cash": 82.44
+        },
+        "grid_20p_2l": {
+          "final_eur": 97.08,
+          "pnl_pct": -2.92,
+          "maxdd_pct": 36.63,
+          "sharpe_ann": 0.01,
+          "trades": 12,
+          "fees_eur": 1.27,
+          "fee_drag_pct": 1.27,
+          "RT": 5,
+          "rt_margin_pct": 1.58,
+          "inventory": 515.543619,
+          "cash": 3.73
+        },
+        "grid_20p_5l": {
+          "final_eur": 101.14,
+          "pnl_pct": 1.14,
+          "maxdd_pct": 29.94,
+          "sharpe_ann": 0.01,
+          "trades": 27,
+          "fees_eur": 1.14,
+          "fee_drag_pct": 1.14,
+          "RT": 12,
+          "rt_margin_pct": 1.58,
+          "inventory": 317.445521,
+          "cash": 43.66
+        },
+        "grid_20p_10l": {
+          "final_eur": 102.14,
+          "pnl_pct": 2.14,
+          "maxdd_pct": 19.95,
+          "sharpe_ann": 0.01,
+          "trades": 47,
+          "fees_eur": 1.0,
+          "fee_drag_pct": 1.0,
+          "RT": 22,
+          "rt_margin_pct": 1.58,
+          "inventory": 158.722761,
+          "cash": 73.4
+        },
+        "grid_30p_2l": {
+          "final_eur": 97.42,
+          "pnl_pct": -2.58,
+          "maxdd_pct": 19.0,
+          "sharpe_ann": -0.0,
+          "trades": 6,
+          "fees_eur": 0.64,
+          "fee_drag_pct": 0.64,
+          "RT": 2,
+          "rt_margin_pct": 2.58,
+          "inventory": 524.978899,
+          "cash": 2.36
+        },
+        "grid_30p_5l": {
+          "final_eur": 102.06,
+          "pnl_pct": 2.06,
+          "maxdd_pct": 27.1,
+          "sharpe_ann": 0.01,
+          "trades": 18,
+          "fees_eur": 0.77,
+          "fee_drag_pct": 0.77,
+          "RT": 8,
+          "rt_margin_pct": 2.58,
+          "inventory": 209.99156,
+          "cash": 64.03
+        },
+        "grid_30p_10l": {
+          "final_eur": 102.57,
+          "pnl_pct": 2.57,
+          "maxdd_pct": 17.29,
+          "sharpe_ann": 0.01,
+          "trades": 30,
+          "fees_eur": 0.64,
+          "fee_drag_pct": 0.64,
+          "RT": 14,
+          "rt_margin_pct": 2.58,
+          "inventory": 104.99578,
+          "cash": 83.56
+        },
+        "dca": {
+          "final_eur": 89.5,
+          "pnl_pct": -10.5,
+          "maxdd_pct": 39.27,
+          "sharpe_ann": -0.0,
+          "trades": 13,
+          "fees_eur": 0.26,
+          "fee_drag_pct": 0.26,
+          "deployed": 100.0,
+          "inventory": 494.269336,
+          "cash": 0.0
+        },
+        "dca_cad": {
+          "final_eur": 119.19,
+          "pnl_pct": 19.19,
+          "maxdd_pct": 16.24,
+          "sharpe_ann": 0.05,
+          "trades": 20,
+          "fees_eur": 0.26,
+          "fee_drag_pct": 0.26,
+          "deployed": 100.0,
+          "inventory": 658.248804,
+          "cash": 0.0
+        }
+      }
+    },
+    "DOGE/EUR full_2y": {
+      "period": "2024-09-06\u21922026-08-27",
+      "regime": "bear (-11%)",
+      "strategies": {
+        "buy_hold": {
+          "final_eur": 88.89,
+          "pnl_pct": -11.11,
           "maxdd_pct": 86.43,
           "sharpe_ann": 0.01,
           "trades": 1,
@@ -813,8 +1601,8 @@
           "cash": 0.0
         },
         "grid_5p_2l": {
-          "final_eur": 70.43,
-          "pnl_pct": -29.57,
+          "final_eur": 70.26,
+          "pnl_pct": -29.74,
           "maxdd_pct": 55.15,
           "sharpe_ann": -0.01,
           "trades": 7,
@@ -826,8 +1614,8 @@
           "cash": 50.01
         },
         "grid_5p_5l": {
-          "final_eur": 52.89,
-          "pnl_pct": -47.11,
+          "final_eur": 52.62,
+          "pnl_pct": -47.38,
           "maxdd_pct": 74.6,
           "sharpe_ann": -0.0,
           "trades": 22,
@@ -839,8 +1627,8 @@
           "cash": 19.97
         },
         "grid_5p_10l": {
-          "final_eur": 71.0,
-          "pnl_pct": -29.0,
+          "final_eur": 70.83,
+          "pnl_pct": -29.17,
           "maxdd_pct": 59.03,
           "sharpe_ann": -0.0,
           "trades": 125,
@@ -852,8 +1640,8 @@
           "cash": 50.37
         },
         "grid_10p_2l": {
-          "final_eur": 74.75,
-          "pnl_pct": -25.25,
+          "final_eur": 74.58,
+          "pnl_pct": -25.42,
           "maxdd_pct": 58.81,
           "sharpe_ann": -0.0,
           "trades": 31,
@@ -865,8 +1653,8 @@
           "cash": 54.23
         },
         "grid_10p_5l": {
-          "final_eur": 80.35,
-          "pnl_pct": -19.65,
+          "final_eur": 80.21,
+          "pnl_pct": -19.79,
           "maxdd_pct": 50.36,
           "sharpe_ann": -0.0,
           "trades": 70,
@@ -878,8 +1666,8 @@
           "cash": 63.85
         },
         "grid_10p_10l": {
-          "final_eur": 91.5,
-          "pnl_pct": -8.5,
+          "final_eur": 91.43,
+          "pnl_pct": -8.57,
           "maxdd_pct": 30.96,
           "sharpe_ann": -0.0,
           "trades": 116,
@@ -891,8 +1679,8 @@
           "cash": 83.25
         },
         "grid_20p_2l": {
-          "final_eur": 81.66,
-          "pnl_pct": -18.34,
+          "final_eur": 81.49,
+          "pnl_pct": -18.51,
           "maxdd_pct": 56.19,
           "sharpe_ann": 0.0,
           "trades": 29,
@@ -904,8 +1692,8 @@
           "cash": 60.93
         },
         "grid_20p_5l": {
-          "final_eur": 97.06,
-          "pnl_pct": -2.94,
+          "final_eur": 96.82,
+          "pnl_pct": -3.18,
           "maxdd_pct": 30.18,
           "sharpe_ann": 0.0,
           "trades": 58,
@@ -917,8 +1705,8 @@
           "cash": 68.74
         },
         "grid_20p_10l": {
-          "final_eur": 100.58,
-          "pnl_pct": 0.58,
+          "final_eur": 100.46,
+          "pnl_pct": 0.46,
           "maxdd_pct": 15.87,
           "sharpe_ann": 0.0,
           "trades": 84,
@@ -930,8 +1718,8 @@
           "cash": 86.42
         },
         "grid_30p_2l": {
-          "final_eur": 106.83,
-          "pnl_pct": 6.83,
+          "final_eur": 106.05,
+          "pnl_pct": 6.05,
           "maxdd_pct": 20.0,
           "sharpe_ann": 0.01,
           "trades": 22,
@@ -943,8 +1731,8 @@
           "cash": 12.66
         },
         "grid_30p_5l": {
-          "final_eur": 107.88,
-          "pnl_pct": 7.88,
+          "final_eur": 107.57,
+          "pnl_pct": 7.57,
           "maxdd_pct": 8.18,
           "sharpe_ann": 0.01,
           "trades": 42,
@@ -956,8 +1744,8 @@
           "cash": 70.21
         },
         "grid_30p_10l": {
-          "final_eur": 105.48,
-          "pnl_pct": 5.48,
+          "final_eur": 105.33,
+          "pnl_pct": 5.33,
           "maxdd_pct": 4.34,
           "sharpe_ann": 0.01,
           "trades": 54,
@@ -969,8 +1757,8 @@
           "cash": 86.65
         },
         "dca": {
-          "final_eur": 82.33,
-          "pnl_pct": -17.67,
+          "final_eur": 81.65,
+          "pnl_pct": -18.35,
           "maxdd_pct": 86.43,
           "sharpe_ann": 0.01,
           "trades": 11,
@@ -981,8 +1769,8 @@
           "cash": 0.0
         },
         "dca_cad": {
-          "final_eur": 60.67,
-          "pnl_pct": -39.33,
+          "final_eur": 60.17,
+          "pnl_pct": -39.83,
           "maxdd_pct": 65.29,
           "sharpe_ann": -0.01,
           "trades": 20,
@@ -999,8 +1787,8 @@
       "regime": "bear (-25%)",
       "strategies": {
         "buy_hold": {
-          "final_eur": 75.09,
-          "pnl_pct": -24.91,
+          "final_eur": 74.46,
+          "pnl_pct": -25.54,
           "maxdd_pct": 53.76,
           "sharpe_ann": -0.01,
           "trades": 1,
@@ -1010,8 +1798,8 @@
           "cash": 0.0
         },
         "grid_5p_2l": {
-          "final_eur": 88.21,
-          "pnl_pct": -11.79,
+          "final_eur": 87.89,
+          "pnl_pct": -12.11,
           "maxdd_pct": 19.63,
           "sharpe_ann": -0.02,
           "trades": 5,
@@ -1023,8 +1811,8 @@
           "cash": 49.97
         },
         "grid_5p_5l": {
-          "final_eur": 92.22,
-          "pnl_pct": -7.78,
+          "final_eur": 91.8,
+          "pnl_pct": -8.2,
           "maxdd_pct": 26.21,
           "sharpe_ann": -0.0,
           "trades": 133,
@@ -1036,8 +1824,8 @@
           "cash": 40.9
         },
         "grid_5p_10l": {
-          "final_eur": 98.3,
-          "pnl_pct": -1.7,
+          "final_eur": 98.07,
+          "pnl_pct": -1.93,
           "maxdd_pct": 21.06,
           "sharpe_ann": 0.0,
           "trades": 229,
@@ -1049,8 +1837,8 @@
           "cash": 70.83
         },
         "grid_10p_2l": {
-          "final_eur": 79.98,
-          "pnl_pct": -20.02,
+          "final_eur": 79.32,
+          "pnl_pct": -20.68,
           "maxdd_pct": 36.59,
           "sharpe_ann": -0.02,
           "trades": 8,
@@ -1062,8 +1850,8 @@
           "cash": 0.66
         },
         "grid_10p_5l": {
-          "final_eur": 100.38,
-          "pnl_pct": 0.38,
+          "final_eur": 99.92,
+          "pnl_pct": -0.08,
           "maxdd_pct": 19.97,
           "sharpe_ann": 0.01,
           "trades": 91,
@@ -1075,8 +1863,8 @@
           "cash": 44.96
         },
         "grid_10p_10l": {
-          "final_eur": 101.93,
-          "pnl_pct": 1.93,
+          "final_eur": 101.7,
+          "pnl_pct": 1.7,
           "maxdd_pct": 16.77,
           "sharpe_ann": 0.01,
           "trades": 151,
@@ -1088,8 +1876,8 @@
           "cash": 74.21
         },
         "grid_20p_2l": {
-          "final_eur": 94.07,
-          "pnl_pct": -5.93,
+          "final_eur": 93.33,
+          "pnl_pct": -6.67,
           "maxdd_pct": 29.61,
           "sharpe_ann": -0.0,
           "trades": 16,
@@ -1101,8 +1889,8 @@
           "cash": 5.31
         },
         "grid_20p_5l": {
-          "final_eur": 102.97,
-          "pnl_pct": 2.97,
+          "final_eur": 102.51,
+          "pnl_pct": 2.51,
           "maxdd_pct": 18.12,
           "sharpe_ann": 0.01,
           "trades": 51,
@@ -1114,8 +1902,8 @@
           "cash": 47.44
         },
         "grid_20p_10l": {
-          "final_eur": 104.32,
-          "pnl_pct": 4.32,
+          "final_eur": 104.09,
+          "pnl_pct": 4.09,
           "maxdd_pct": 9.44,
           "sharpe_ann": 0.01,
           "trades": 87,
@@ -1127,8 +1915,8 @@
           "cash": 76.56
         },
         "grid_30p_2l": {
-          "final_eur": 127.97,
-          "pnl_pct": 27.97,
+          "final_eur": 127.15,
+          "pnl_pct": 27.15,
           "maxdd_pct": 20.51,
           "sharpe_ann": 0.04,
           "trades": 48,
@@ -1140,8 +1928,8 @@
           "cash": 29.39
         },
         "grid_30p_5l": {
-          "final_eur": 117.88,
-          "pnl_pct": 17.88,
+          "final_eur": 117.55,
+          "pnl_pct": 17.55,
           "maxdd_pct": 10.43,
           "sharpe_ann": 0.04,
           "trades": 74,
@@ -1153,8 +1941,8 @@
           "cash": 78.45
         },
         "grid_30p_10l": {
-          "final_eur": 111.77,
-          "pnl_pct": 11.77,
+          "final_eur": 111.61,
+          "pnl_pct": 11.61,
           "maxdd_pct": 5.9,
           "sharpe_ann": 0.03,
           "trades": 96,
@@ -1166,8 +1954,8 @@
           "cash": 92.05
         },
         "dca": {
-          "final_eur": 62.31,
-          "pnl_pct": -37.69,
+          "final_eur": 61.8,
+          "pnl_pct": -38.2,
           "maxdd_pct": 52.94,
           "sharpe_ann": -0.03,
           "trades": 10,
@@ -1178,8 +1966,8 @@
           "cash": 0.0
         },
         "dca_cad": {
-          "final_eur": 92.63,
-          "pnl_pct": -7.37,
+          "final_eur": 91.86,
+          "pnl_pct": -8.14,
           "maxdd_pct": 31.66,
           "sharpe_ann": -0.01,
           "trades": 20,
@@ -1193,11 +1981,11 @@
     },
     "DOGE/EUR 480d": {
       "period": "2025-05-05\u21922026-08-27",
-      "regime": "bear (-50%)",
+      "regime": "bear (-51%)",
       "strategies": {
         "buy_hold": {
-          "final_eur": 49.73,
-          "pnl_pct": -50.27,
+          "final_eur": 49.32,
+          "pnl_pct": -50.68,
           "maxdd_pct": 75.65,
           "sharpe_ann": -0.01,
           "trades": 1,
@@ -1207,8 +1995,8 @@
           "cash": 0.0
         },
         "grid_5p_2l": {
-          "final_eur": 42.28,
-          "pnl_pct": -57.72,
+          "final_eur": 41.95,
+          "pnl_pct": -58.05,
           "maxdd_pct": 68.29,
           "sharpe_ann": -0.02,
           "trades": 104,
@@ -1220,8 +2008,8 @@
           "cash": 1.8
         },
         "grid_5p_5l": {
-          "final_eur": 40.83,
-          "pnl_pct": -59.17,
+          "final_eur": 40.5,
+          "pnl_pct": -59.5,
           "maxdd_pct": 71.3,
           "sharpe_ann": -0.03,
           "trades": 121,
@@ -1233,8 +2021,8 @@
           "cash": 0.71
         },
         "grid_5p_10l": {
-          "final_eur": 71.65,
-          "pnl_pct": -28.35,
+          "final_eur": 71.48,
+          "pnl_pct": -28.52,
           "maxdd_pct": 50.84,
           "sharpe_ann": -0.01,
           "trades": 433,
@@ -1246,8 +2034,8 @@
           "cash": 51.58
         },
         "grid_10p_2l": {
-          "final_eur": 45.31,
-          "pnl_pct": -54.69,
+          "final_eur": 45.0,
+          "pnl_pct": -55.0,
           "maxdd_pct": 65.32,
           "sharpe_ann": -0.03,
           "trades": 54,
@@ -1259,8 +2047,8 @@
           "cash": 7.3
         },
         "grid_10p_5l": {
-          "final_eur": 88.04,
-          "pnl_pct": -11.96,
+          "final_eur": 87.58,
+          "pnl_pct": -12.42,
           "maxdd_pct": 40.02,
           "sharpe_ann": -0.0,
           "trades": 228,
@@ -1272,8 +2060,8 @@
           "cash": 32.78
         },
         "grid_10p_10l": {
-          "final_eur": 87.86,
-          "pnl_pct": -12.14,
+          "final_eur": 87.54,
+          "pnl_pct": -12.46,
           "maxdd_pct": 38.72,
           "sharpe_ann": -0.0,
           "trades": 346,
@@ -1285,8 +2073,8 @@
           "cash": 49.7
         },
         "grid_20p_2l": {
-          "final_eur": 68.62,
-          "pnl_pct": -31.38,
+          "final_eur": 68.19,
+          "pnl_pct": -31.81,
           "maxdd_pct": 52.87,
           "sharpe_ann": -0.01,
           "trades": 46,
@@ -1298,8 +2086,8 @@
           "cash": 17.12
         },
         "grid_20p_5l": {
-          "final_eur": 90.58,
-          "pnl_pct": -9.42,
+          "final_eur": 90.16,
+          "pnl_pct": -9.84,
           "maxdd_pct": 37.73,
           "sharpe_ann": -0.0,
           "trades": 128,
@@ -1311,8 +2099,8 @@
           "cash": 39.37
         },
         "grid_20p_10l": {
-          "final_eur": 101.91,
-          "pnl_pct": 1.91,
+          "final_eur": 101.7,
+          "pnl_pct": 1.7,
           "maxdd_pct": 28.45,
           "sharpe_ann": 0.01,
           "trades": 212,
@@ -1324,8 +2112,8 @@
           "cash": 76.3
         },
         "grid_30p_2l": {
-          "final_eur": 87.68,
-          "pnl_pct": -12.32,
+          "final_eur": 87.16,
+          "pnl_pct": -12.84,
           "maxdd_pct": 39.57,
           "sharpe_ann": -0.0,
           "trades": 42,
@@ -1337,8 +2125,8 @@
           "cash": 25.53
         },
         "grid_30p_5l": {
-          "final_eur": 96.54,
-          "pnl_pct": -3.46,
+          "final_eur": 96.25,
+          "pnl_pct": -3.75,
           "maxdd_pct": 33.64,
           "sharpe_ann": 0.0,
           "trades": 85,
@@ -1350,8 +2138,8 @@
           "cash": 60.98
         },
         "grid_30p_10l": {
-          "final_eur": 104.96,
-          "pnl_pct": 4.96,
+          "final_eur": 104.82,
+          "pnl_pct": 4.82,
           "maxdd_pct": 29.14,
           "sharpe_ann": 0.01,
           "trades": 137,
@@ -1363,8 +2151,8 @@
           "cash": 87.18
         },
         "dca": {
-          "final_eur": 39.86,
-          "pnl_pct": -60.14,
+          "final_eur": 39.52,
+          "pnl_pct": -60.48,
           "maxdd_pct": 75.65,
           "sharpe_ann": -0.02,
           "trades": 10,
@@ -1375,8 +2163,8 @@
           "cash": 0.0
         },
         "dca_cad": {
-          "final_eur": 67.54,
-          "pnl_pct": -32.46,
+          "final_eur": 66.98,
+          "pnl_pct": -33.02,
           "maxdd_pct": 52.72,
           "sharpe_ann": -0.02,
           "trades": 20,
@@ -1393,8 +2181,8 @@
       "regime": "bear (-12%)",
       "strategies": {
         "buy_hold": {
-          "final_eur": 88.09,
-          "pnl_pct": -11.91,
+          "final_eur": 87.42,
+          "pnl_pct": -12.58,
           "maxdd_pct": 31.51,
           "sharpe_ann": -0.02,
           "trades": 1,
@@ -1404,8 +2192,8 @@
           "cash": 0.0
         },
         "grid_5p_2l": {
-          "final_eur": 93.24,
-          "pnl_pct": -6.76,
+          "final_eur": 92.53,
+          "pnl_pct": -7.47,
           "maxdd_pct": 30.98,
           "sharpe_ann": -0.01,
           "trades": 40,
@@ -1417,8 +2205,8 @@
           "cash": 0.54
         },
         "grid_5p_5l": {
-          "final_eur": 95.68,
-          "pnl_pct": -4.32,
+          "final_eur": 95.26,
+          "pnl_pct": -4.74,
           "maxdd_pct": 24.79,
           "sharpe_ann": -0.01,
           "trades": 79,
@@ -1430,8 +2218,8 @@
           "cash": 40.47
         },
         "grid_5p_10l": {
-          "final_eur": 99.0,
-          "pnl_pct": -1.0,
+          "final_eur": 98.86,
+          "pnl_pct": -1.14,
           "maxdd_pct": 24.3,
           "sharpe_ann": 0.0,
           "trades": 130,
@@ -1443,10 +2231,10 @@
           "cash": 80.46
         },
         "grid_10p_2l": {
-          "final_eur": 95.0,
-          "pnl_pct": -5.0,
+          "final_eur": 94.29,
+          "pnl_pct": -5.71,
           "maxdd_pct": 29.76,
-          "sharpe_ann": -0.0,
+          "sharpe_ann": -0.01,
           "trades": 20,
           "fees_eur": 2.11,
           "fee_drag_pct": 2.11,
@@ -1456,10 +2244,10 @@
           "cash": 2.39
         },
         "grid_10p_5l": {
-          "final_eur": 99.5,
-          "pnl_pct": -0.5,
+          "final_eur": 99.22,
+          "pnl_pct": -0.78,
           "maxdd_pct": 23.17,
-          "sharpe_ann": 0.01,
+          "sharpe_ann": 0.0,
           "trades": 46,
           "fees_eur": 1.94,
           "fee_drag_pct": 1.94,
@@ -1469,8 +2257,8 @@
           "cash": 62.46
         },
         "grid_10p_10l": {
-          "final_eur": 101.14,
-          "pnl_pct": 1.14,
+          "final_eur": 101.0,
+          "pnl_pct": 1.0,
           "maxdd_pct": 10.26,
           "sharpe_ann": 0.01,
           "trades": 94,
@@ -1482,10 +2270,10 @@
           "cash": 82.62
         },
         "grid_20p_2l": {
-          "final_eur": 99.31,
-          "pnl_pct": -0.69,
+          "final_eur": 98.59,
+          "pnl_pct": -1.41,
           "maxdd_pct": 14.42,
-          "sharpe_ann": 0.0,
+          "sharpe_ann": -0.0,
           "trades": 14,
           "fees_eur": 1.48,
           "fee_drag_pct": 1.48,
@@ -1495,8 +2283,8 @@
           "cash": 4.52
         },
         "grid_20p_5l": {
-          "final_eur": 106.04,
-          "pnl_pct": 6.04,
+          "final_eur": 105.73,
+          "pnl_pct": 5.73,
           "maxdd_pct": 11.74,
           "sharpe_ann": 0.03,
           "trades": 42,
@@ -1508,8 +2296,8 @@
           "cash": 66.22
         },
         "grid_20p_10l": {
-          "final_eur": 104.44,
-          "pnl_pct": 4.44,
+          "final_eur": 104.28,
+          "pnl_pct": 4.28,
           "maxdd_pct": 5.46,
           "sharpe_ann": 0.04,
           "trades": 60,
@@ -1521,8 +2309,8 @@
           "cash": 84.53
         },
         "grid_30p_2l": {
-          "final_eur": 101.22,
-          "pnl_pct": 1.22,
+          "final_eur": 100.48,
+          "pnl_pct": 0.48,
           "maxdd_pct": 14.05,
           "sharpe_ann": 0.01,
           "trades": 10,
@@ -1534,8 +2322,8 @@
           "cash": 4.94
         },
         "grid_30p_5l": {
-          "final_eur": 106.87,
-          "pnl_pct": 6.87,
+          "final_eur": 106.72,
+          "pnl_pct": 6.72,
           "maxdd_pct": 12.02,
           "sharpe_ann": 0.03,
           "trades": 29,
@@ -1547,8 +2335,8 @@
           "cash": 87.16
         },
         "grid_30p_10l": {
-          "final_eur": 104.72,
-          "pnl_pct": 4.72,
+          "final_eur": 104.65,
+          "pnl_pct": 4.65,
           "maxdd_pct": 6.59,
           "sharpe_ann": 0.04,
           "trades": 39,
@@ -1560,10 +2348,10 @@
           "cash": 94.87
         },
         "dca": {
-          "final_eur": 87.0,
-          "pnl_pct": -13.0,
+          "final_eur": 86.34,
+          "pnl_pct": -13.66,
           "maxdd_pct": 31.48,
-          "sharpe_ann": -0.02,
+          "sharpe_ann": -0.03,
           "trades": 13,
           "fees_eur": 0.26,
           "fee_drag_pct": 0.26,
@@ -1572,10 +2360,10 @@
           "cash": 0.0
         },
         "dca_cad": {
-          "final_eur": 112.44,
-          "pnl_pct": 12.44,
+          "final_eur": 111.58,
+          "pnl_pct": 11.58,
           "maxdd_pct": 11.57,
-          "sharpe_ann": 0.05,
+          "sharpe_ann": 0.04,
           "trades": 20,
           "fees_eur": 0.26,
           "fee_drag_pct": 0.26,
@@ -1585,790 +2373,790 @@
         }
       }
     },
-    "BTC/EUR full_2y": {
+    "ETH/EUR full_2y": {
       "period": "2024-09-06\u21922026-08-27",
-      "regime": "bull (+39%)",
+      "regime": "sideways (+6.7%)",
       "strategies": {
         "buy_hold": {
-          "final_eur": 138.59,
-          "pnl_pct": 38.59,
-          "maxdd_pct": 51.73,
-          "sharpe_ann": 0.02,
+          "final_eur": 106.32,
+          "pnl_pct": 6.32,
+          "maxdd_pct": 66.72,
+          "sharpe_ann": 0.01,
           "trades": 1,
           "fees_eur": 0.26,
           "fee_drag_pct": 0.26,
-          "inventory": 0.002045,
+          "inventory": 0.049626,
           "cash": 0.0
         },
         "grid_5p_2l": {
-          "final_eur": 101.3,
-          "pnl_pct": 1.3,
-          "maxdd_pct": 12.1,
+          "final_eur": 87.94,
+          "pnl_pct": -12.06,
+          "maxdd_pct": 46.99,
           "sharpe_ann": 0.0,
-          "trades": 66,
-          "fees_eur": 6.95,
-          "fee_drag_pct": 6.95,
-          "RT": 33,
+          "trades": 102,
+          "fees_eur": 10.74,
+          "fee_drag_pct": 10.74,
+          "RT": 50,
           "rt_margin_pct": 0.08,
-          "inventory": 0.0,
-          "cash": 101.3
+          "inventory": 0.040222,
+          "cash": 1.76
         },
         "grid_5p_5l": {
-          "final_eur": 100.52,
-          "pnl_pct": 0.52,
-          "maxdd_pct": 4.91,
+          "final_eur": 91.16,
+          "pnl_pct": -8.84,
+          "maxdd_pct": 40.9,
           "sharpe_ann": 0.0,
-          "trades": 66,
-          "fees_eur": 2.78,
-          "fee_drag_pct": 2.78,
-          "RT": 33,
+          "trades": 201,
+          "fees_eur": 8.46,
+          "fee_drag_pct": 8.46,
+          "RT": 99,
           "rt_margin_pct": 0.08,
-          "inventory": 0.0,
-          "cash": 100.52
+          "inventory": 0.023207,
+          "cash": 41.44
         },
         "grid_5p_10l": {
-          "final_eur": 100.26,
-          "pnl_pct": 0.26,
-          "maxdd_pct": 2.47,
+          "final_eur": 96.27,
+          "pnl_pct": -3.73,
+          "maxdd_pct": 24.41,
           "sharpe_ann": 0.0,
-          "trades": 66,
-          "fees_eur": 1.39,
-          "fee_drag_pct": 1.39,
-          "RT": 33,
+          "trades": 377,
+          "fees_eur": 7.94,
+          "fee_drag_pct": 7.94,
+          "RT": 187,
           "rt_margin_pct": 0.08,
-          "inventory": 0.0,
-          "cash": 100.26
+          "inventory": 0.011604,
+          "cash": 71.41
         },
         "grid_10p_2l": {
-          "final_eur": 100.0,
-          "pnl_pct": 0.0,
-          "maxdd_pct": 0.0,
-          "sharpe_ann": 0.0,
-          "trades": 0,
-          "fees_eur": 0.0,
-          "fee_drag_pct": 0.0,
-          "RT": 0,
+          "final_eur": 99.62,
+          "pnl_pct": -0.38,
+          "maxdd_pct": 35.1,
+          "sharpe_ann": 0.01,
+          "trades": 83,
+          "fees_eur": 8.76,
+          "fee_drag_pct": 8.76,
+          "RT": 41,
           "rt_margin_pct": 0.58,
-          "inventory": 0.0,
-          "cash": 100.0
+          "inventory": 0.01768,
+          "cash": 61.74
         },
         "grid_10p_5l": {
-          "final_eur": 100.0,
-          "pnl_pct": 0.0,
-          "maxdd_pct": 0.0,
-          "sharpe_ann": 0.0,
-          "trades": 0,
-          "fees_eur": 0.0,
-          "fee_drag_pct": 0.0,
-          "RT": 0,
+          "final_eur": 107.67,
+          "pnl_pct": 7.67,
+          "maxdd_pct": 23.93,
+          "sharpe_ann": 0.01,
+          "trades": 145,
+          "fees_eur": 6.12,
+          "fee_drag_pct": 6.12,
+          "RT": 72,
           "rt_margin_pct": 0.58,
-          "inventory": 0.0,
-          "cash": 100.0
+          "inventory": 0.009052,
+          "cash": 88.28
         },
         "grid_10p_10l": {
-          "final_eur": 100.0,
-          "pnl_pct": 0.0,
-          "maxdd_pct": 0.0,
-          "sharpe_ann": 0.0,
-          "trades": 0,
-          "fees_eur": 0.0,
-          "fee_drag_pct": 0.0,
-          "RT": 0,
+          "final_eur": 103.97,
+          "pnl_pct": 3.97,
+          "maxdd_pct": 18.18,
+          "sharpe_ann": 0.01,
+          "trades": 223,
+          "fees_eur": 4.71,
+          "fee_drag_pct": 4.71,
+          "RT": 111,
           "rt_margin_pct": 0.58,
-          "inventory": 0.0,
-          "cash": 100.0
+          "inventory": 0.003536,
+          "cash": 96.39
         },
         "grid_20p_2l": {
-          "final_eur": 100.0,
-          "pnl_pct": 0.0,
-          "maxdd_pct": 0.0,
-          "sharpe_ann": 0.0,
-          "trades": 0,
-          "fees_eur": 0.0,
-          "fee_drag_pct": 0.0,
-          "RT": 0,
+          "final_eur": 126.0,
+          "pnl_pct": 26.0,
+          "maxdd_pct": 22.84,
+          "sharpe_ann": 0.02,
+          "trades": 66,
+          "fees_eur": 7.0,
+          "fee_drag_pct": 7.0,
+          "RT": 33,
           "rt_margin_pct": 1.58,
-          "inventory": 0.0,
-          "cash": 100.0
+          "inventory": -0.0,
+          "cash": 126.0
         },
         "grid_20p_5l": {
-          "final_eur": 100.0,
-          "pnl_pct": 0.0,
-          "maxdd_pct": 0.0,
-          "sharpe_ann": 0.0,
-          "trades": 0,
-          "fees_eur": 0.0,
-          "fee_drag_pct": 0.0,
-          "RT": 0,
+          "final_eur": 115.76,
+          "pnl_pct": 15.76,
+          "maxdd_pct": 17.35,
+          "sharpe_ann": 0.01,
+          "trades": 100,
+          "fees_eur": 4.24,
+          "fee_drag_pct": 4.24,
+          "RT": 50,
           "rt_margin_pct": 1.58,
           "inventory": 0.0,
-          "cash": 100.0
+          "cash": 115.76
         },
         "grid_20p_10l": {
-          "final_eur": 100.0,
-          "pnl_pct": 0.0,
-          "maxdd_pct": 0.0,
-          "sharpe_ann": 0.0,
-          "trades": 0,
-          "fees_eur": 0.0,
-          "fee_drag_pct": 0.0,
-          "RT": 0,
+          "final_eur": 109.93,
+          "pnl_pct": 9.93,
+          "maxdd_pct": 11.17,
+          "sharpe_ann": 0.01,
+          "trades": 126,
+          "fees_eur": 2.67,
+          "fee_drag_pct": 2.67,
+          "RT": 63,
           "rt_margin_pct": 1.58,
-          "inventory": 0.0,
-          "cash": 100.0
+          "inventory": -0.0,
+          "cash": 109.93
         },
         "grid_30p_2l": {
-          "final_eur": 100.0,
-          "pnl_pct": 0.0,
-          "maxdd_pct": 0.0,
-          "sharpe_ann": 0.0,
-          "trades": 0,
-          "fees_eur": 0.0,
-          "fee_drag_pct": 0.0,
-          "RT": 0,
+          "final_eur": 118.51,
+          "pnl_pct": 18.51,
+          "maxdd_pct": 21.86,
+          "sharpe_ann": 0.01,
+          "trades": 29,
+          "fees_eur": 3.09,
+          "fee_drag_pct": 3.09,
+          "RT": 14,
           "rt_margin_pct": 2.58,
-          "inventory": 0.0,
-          "cash": 100.0
+          "inventory": 0.023617,
+          "cash": 67.91
         },
         "grid_30p_5l": {
-          "final_eur": 100.0,
-          "pnl_pct": 0.0,
-          "maxdd_pct": 0.0,
-          "sharpe_ann": 0.0,
-          "trades": 0,
-          "fees_eur": 0.0,
-          "fee_drag_pct": 0.0,
-          "RT": 0,
+          "final_eur": 113.58,
+          "pnl_pct": 13.58,
+          "maxdd_pct": 12.66,
+          "sharpe_ann": 0.02,
+          "trades": 53,
+          "fees_eur": 2.26,
+          "fee_drag_pct": 2.26,
+          "RT": 26,
           "rt_margin_pct": 2.58,
-          "inventory": 0.0,
-          "cash": 100.0
+          "inventory": 0.009447,
+          "cash": 93.34
         },
         "grid_30p_10l": {
-          "final_eur": 100.0,
-          "pnl_pct": 0.0,
-          "maxdd_pct": 0.0,
-          "sharpe_ann": 0.0,
-          "trades": 0,
-          "fees_eur": 0.0,
-          "fee_drag_pct": 0.0,
-          "RT": 0,
+          "final_eur": 108.59,
+          "pnl_pct": 8.59,
+          "maxdd_pct": 7.43,
+          "sharpe_ann": 0.01,
+          "trades": 67,
+          "fees_eur": 1.43,
+          "fee_drag_pct": 1.43,
+          "RT": 33,
           "rt_margin_pct": 2.58,
-          "inventory": 0.0,
-          "cash": 100.0
+          "inventory": 0.004723,
+          "cash": 98.47
         },
         "dca": {
-          "final_eur": 130.13,
-          "pnl_pct": 30.13,
-          "maxdd_pct": 51.73,
-          "sharpe_ann": 0.02,
-          "trades": 12,
+          "final_eur": 101.37,
+          "pnl_pct": 1.37,
+          "maxdd_pct": 66.72,
+          "sharpe_ann": 0.01,
+          "trades": 11,
           "fees_eur": 0.26,
           "fee_drag_pct": 0.26,
           "deployed": 100.0,
-          "inventory": 0.00192,
+          "inventory": 0.047315,
           "cash": 0.0
         },
         "dca_cad": {
-          "final_eur": 91.59,
-          "pnl_pct": -8.41,
-          "maxdd_pct": 41.21,
-          "sharpe_ann": -0.0,
+          "final_eur": 95.78,
+          "pnl_pct": -4.22,
+          "maxdd_pct": 55.31,
+          "sharpe_ann": 0.0,
           "trades": 20,
           "fees_eur": 0.26,
           "fee_drag_pct": 0.26,
           "deployed": 100.0,
-          "inventory": 0.001351,
+          "inventory": 0.044702,
           "cash": 0.0
         }
       }
     },
-    "BTC/EUR 240d": {
+    "ETH/EUR 240d": {
       "period": "2025-12-31\u21922026-08-27",
-      "regime": "sideways (-9.0%)",
+      "regime": "bear (-15%)",
       "strategies": {
         "buy_hold": {
-          "final_eur": 90.69,
-          "pnl_pct": -9.31,
-          "maxdd_pct": 38.39,
+          "final_eur": 84.56,
+          "pnl_pct": -15.44,
+          "maxdd_pct": 52.65,
           "sharpe_ann": -0.0,
           "trades": 1,
           "fees_eur": 0.26,
           "fee_drag_pct": 0.26,
-          "inventory": 0.001338,
+          "inventory": 0.039466,
           "cash": 0.0
         },
         "grid_5p_2l": {
-          "final_eur": 95.79,
-          "pnl_pct": -4.21,
-          "maxdd_pct": 15.63,
+          "final_eur": 92.15,
+          "pnl_pct": -7.85,
+          "maxdd_pct": 23.92,
           "sharpe_ann": -0.01,
           "trades": 5,
           "fees_eur": 0.53,
           "fee_drag_pct": 0.53,
           "RT": 2,
           "rt_margin_pct": 0.08,
-          "inventory": 0.000676,
+          "inventory": 0.019684,
           "cash": 49.97
         },
         "grid_5p_5l": {
-          "final_eur": 93.74,
-          "pnl_pct": -6.26,
-          "maxdd_pct": 24.73,
+          "final_eur": 88.03,
+          "pnl_pct": -11.97,
+          "maxdd_pct": 44.37,
           "sharpe_ann": -0.0,
-          "trades": 20,
-          "fees_eur": 0.84,
-          "fee_drag_pct": 0.84,
-          "RT": 8,
-          "rt_margin_pct": 0.08,
-          "inventory": 0.001089,
-          "cash": 19.96
-        },
-        "grid_5p_10l": {
-          "final_eur": 93.93,
-          "pnl_pct": -6.07,
-          "maxdd_pct": 26.77,
-          "sharpe_ann": -0.0,
-          "trades": 27,
-          "fees_eur": 0.57,
-          "fee_drag_pct": 0.57,
-          "RT": 9,
-          "rt_margin_pct": 0.08,
-          "inventory": 0.00124,
-          "cash": 9.88
-        },
-        "grid_10p_2l": {
-          "final_eur": 93.28,
-          "pnl_pct": -6.72,
-          "maxdd_pct": 30.0,
-          "sharpe_ann": -0.0,
-          "trades": 8,
-          "fees_eur": 0.84,
-          "fee_drag_pct": 0.84,
-          "RT": 3,
-          "rt_margin_pct": 0.58,
-          "inventory": 0.001367,
-          "cash": 0.66
-        },
-        "grid_10p_5l": {
-          "final_eur": 94.1,
-          "pnl_pct": -5.9,
-          "maxdd_pct": 29.18,
-          "sharpe_ann": 0.0,
-          "trades": 13,
-          "fees_eur": 0.55,
-          "fee_drag_pct": 0.55,
-          "RT": 4,
-          "rt_margin_pct": 0.58,
-          "inventory": 0.001385,
-          "cash": 0.25
-        },
-        "grid_10p_10l": {
-          "final_eur": 97.91,
-          "pnl_pct": -2.09,
-          "maxdd_pct": 19.88,
-          "sharpe_ann": 0.0,
-          "trades": 43,
-          "fees_eur": 0.91,
-          "fee_drag_pct": 0.91,
-          "RT": 19,
-          "rt_margin_pct": 0.58,
-          "inventory": 0.000692,
-          "cash": 50.99
-        },
-        "grid_20p_2l": {
-          "final_eur": 95.21,
-          "pnl_pct": -4.79,
-          "maxdd_pct": 28.73,
-          "sharpe_ann": 0.0,
-          "trades": 6,
-          "fees_eur": 0.63,
-          "fee_drag_pct": 0.63,
-          "RT": 2,
-          "rt_margin_pct": 1.58,
-          "inventory": 0.001385,
-          "cash": 1.37
-        },
-        "grid_20p_5l": {
-          "final_eur": 99.29,
-          "pnl_pct": -0.71,
-          "maxdd_pct": 21.72,
-          "sharpe_ann": 0.0,
-          "trades": 19,
-          "fees_eur": 0.8,
-          "fee_drag_pct": 0.8,
-          "RT": 8,
-          "rt_margin_pct": 1.58,
-          "inventory": 0.000839,
-          "cash": 42.4
-        },
-        "grid_20p_10l": {
-          "final_eur": 101.38,
-          "pnl_pct": 1.38,
-          "maxdd_pct": 13.91,
-          "sharpe_ann": 0.01,
-          "trades": 41,
-          "fees_eur": 0.87,
-          "fee_drag_pct": 0.87,
-          "RT": 19,
-          "rt_margin_pct": 1.58,
-          "inventory": 0.00042,
-          "cash": 72.93
-        },
-        "grid_30p_2l": {
-          "final_eur": 96.79,
-          "pnl_pct": -3.21,
-          "maxdd_pct": 14.61,
-          "sharpe_ann": -0.0,
-          "trades": 1,
-          "fees_eur": 0.11,
-          "fee_drag_pct": 0.11,
-          "RT": 0,
-          "rt_margin_pct": 2.58,
-          "inventory": 0.000692,
-          "cash": 49.9
-        },
-        "grid_30p_5l": {
-          "final_eur": 100.6,
-          "pnl_pct": 0.6,
-          "maxdd_pct": 20.52,
-          "sharpe_ann": 0.01,
-          "trades": 12,
-          "fees_eur": 0.51,
-          "fee_drag_pct": 0.51,
-          "RT": 5,
-          "rt_margin_pct": 2.58,
-          "inventory": 0.000562,
-          "cash": 62.49
-        },
-        "grid_30p_10l": {
-          "final_eur": 102.36,
-          "pnl_pct": 2.36,
-          "maxdd_pct": 12.07,
-          "sharpe_ann": 0.01,
-          "trades": 28,
-          "fees_eur": 0.6,
-          "fee_drag_pct": 0.6,
-          "RT": 13,
-          "rt_margin_pct": 2.58,
-          "inventory": 0.000281,
-          "cash": 83.3
-        },
-        "dca": {
-          "final_eur": 86.97,
-          "pnl_pct": -13.03,
-          "maxdd_pct": 38.39,
-          "sharpe_ann": -0.01,
-          "trades": 12,
-          "fees_eur": 0.26,
-          "fee_drag_pct": 0.26,
-          "deployed": 100.0,
-          "inventory": 0.001283,
-          "cash": 0.0
-        },
-        "dca_cad": {
-          "final_eur": 109.99,
-          "pnl_pct": 9.99,
-          "maxdd_pct": 19.67,
-          "sharpe_ann": 0.02,
-          "trades": 20,
-          "fees_eur": 0.26,
-          "fee_drag_pct": 0.26,
-          "deployed": 100.0,
-          "inventory": 0.001623,
-          "cash": 0.0
-        }
-      }
-    },
-    "BTC/EUR 480d": {
-      "period": "2025-05-05\u21922026-08-27",
-      "regime": "bear (-19%)",
-      "strategies": {
-        "buy_hold": {
-          "final_eur": 80.65,
-          "pnl_pct": -19.35,
-          "maxdd_pct": 51.73,
-          "sharpe_ann": -0.01,
-          "trades": 1,
-          "fees_eur": 0.26,
-          "fee_drag_pct": 0.26,
-          "inventory": 0.00119,
-          "cash": 0.0
-        },
-        "grid_5p_2l": {
-          "final_eur": 76.23,
-          "pnl_pct": -23.77,
-          "maxdd_pct": 44.06,
-          "sharpe_ann": -0.01,
-          "trades": 30,
-          "fees_eur": 3.16,
-          "fee_drag_pct": 3.16,
+          "trades": 33,
+          "fees_eur": 1.39,
+          "fee_drag_pct": 1.39,
           "RT": 14,
           "rt_margin_pct": 0.08,
-          "inventory": 0.00112,
-          "cash": 0.34
-        },
-        "grid_5p_5l": {
-          "final_eur": 89.03,
-          "pnl_pct": -10.97,
-          "maxdd_pct": 33.53,
-          "sharpe_ann": -0.0,
-          "trades": 125,
-          "fees_eur": 5.26,
-          "fee_drag_pct": 5.26,
-          "RT": 60,
-          "rt_margin_pct": 0.08,
-          "inventory": 0.001303,
-          "cash": 0.74
+          "inventory": 0.041082,
+          "cash": 0.01
         },
         "grid_5p_10l": {
-          "final_eur": 92.51,
-          "pnl_pct": -7.49,
-          "maxdd_pct": 29.96,
+          "final_eur": 90.25,
+          "pnl_pct": -9.75,
+          "maxdd_pct": 39.18,
           "sharpe_ann": -0.0,
-          "trades": 171,
-          "fees_eur": 3.6,
-          "fee_drag_pct": 3.6,
-          "RT": 81,
+          "trades": 53,
+          "fees_eur": 1.12,
+          "fee_drag_pct": 1.12,
+          "RT": 22,
           "rt_margin_pct": 0.08,
-          "inventory": 0.001211,
-          "cash": 10.45
+          "inventory": 0.037463,
+          "cash": 9.98
         },
         "grid_10p_2l": {
-          "final_eur": 99.76,
-          "pnl_pct": -0.24,
-          "maxdd_pct": 28.43,
-          "sharpe_ann": 0.0,
-          "trades": 54,
-          "fees_eur": 5.7,
-          "fee_drag_pct": 5.7,
-          "RT": 26,
+          "final_eur": 87.74,
+          "pnl_pct": -12.26,
+          "maxdd_pct": 44.66,
+          "sharpe_ann": -0.0,
+          "trades": 12,
+          "fees_eur": 1.27,
+          "fee_drag_pct": 1.27,
+          "RT": 5,
           "rt_margin_pct": 0.58,
-          "inventory": 0.001364,
-          "cash": 7.3
+          "inventory": 0.040375,
+          "cash": 1.23
         },
         "grid_10p_5l": {
-          "final_eur": 99.97,
-          "pnl_pct": -0.03,
-          "maxdd_pct": 24.75,
+          "final_eur": 90.23,
+          "pnl_pct": -9.77,
+          "maxdd_pct": 42.94,
           "sharpe_ann": 0.0,
-          "trades": 90,
-          "fees_eur": 3.8,
-          "fee_drag_pct": 3.8,
-          "RT": 43,
+          "trades": 25,
+          "fees_eur": 1.05,
+          "fee_drag_pct": 1.05,
+          "RT": 10,
           "rt_margin_pct": 0.58,
-          "inventory": 0.001109,
-          "cash": 24.8
+          "inventory": 0.041671,
+          "cash": 0.95
         },
         "grid_10p_10l": {
-          "final_eur": 101.02,
-          "pnl_pct": 1.02,
-          "maxdd_pct": 19.72,
+          "final_eur": 93.55,
+          "pnl_pct": -6.45,
+          "maxdd_pct": 40.68,
           "sharpe_ann": 0.0,
-          "trades": 143,
-          "fees_eur": 3.02,
-          "fee_drag_pct": 3.02,
-          "RT": 69,
+          "trades": 42,
+          "fees_eur": 0.89,
+          "fee_drag_pct": 0.89,
+          "RT": 17,
           "rt_margin_pct": 0.58,
-          "inventory": 0.000695,
-          "cash": 53.88
+          "inventory": 0.033947,
+          "cash": 20.81
         },
         "grid_20p_2l": {
-          "final_eur": 84.25,
-          "pnl_pct": -15.75,
-          "maxdd_pct": 36.81,
-          "sharpe_ann": -0.01,
-          "trades": 4,
-          "fees_eur": 0.42,
-          "fee_drag_pct": 0.42,
-          "RT": 1,
+          "final_eur": 91.69,
+          "pnl_pct": -8.31,
+          "maxdd_pct": 42.38,
+          "sharpe_ann": 0.0,
+          "trades": 10,
+          "fees_eur": 1.06,
+          "fee_drag_pct": 1.06,
+          "RT": 4,
           "rt_margin_pct": 1.58,
-          "inventory": 0.001235,
-          "cash": 0.58
+          "inventory": 0.04142,
+          "cash": 2.94
         },
         "grid_20p_5l": {
-          "final_eur": 100.4,
-          "pnl_pct": 0.4,
-          "maxdd_pct": 20.77,
+          "final_eur": 92.65,
+          "pnl_pct": -7.35,
+          "maxdd_pct": 41.45,
           "sharpe_ann": 0.0,
-          "trades": 41,
-          "fees_eur": 1.74,
-          "fee_drag_pct": 1.74,
-          "RT": 19,
+          "trades": 15,
+          "fees_eur": 0.63,
+          "fee_drag_pct": 0.63,
+          "RT": 5,
           "rt_margin_pct": 1.58,
-          "inventory": 0.000805,
-          "cash": 45.86
+          "inventory": 0.042604,
+          "cash": 1.37
         },
         "grid_20p_10l": {
-          "final_eur": 102.4,
-          "pnl_pct": 2.4,
-          "maxdd_pct": 14.57,
-          "sharpe_ann": 0.01,
-          "trades": 69,
-          "fees_eur": 1.46,
-          "fee_drag_pct": 1.46,
-          "RT": 33,
+          "final_eur": 97.9,
+          "pnl_pct": -2.1,
+          "maxdd_pct": 30.71,
+          "sharpe_ann": 0.0,
+          "trades": 38,
+          "fees_eur": 0.8,
+          "fee_drag_pct": 0.8,
+          "RT": 16,
           "rt_margin_pct": 1.58,
-          "inventory": 0.000402,
-          "cash": 75.14
+          "inventory": 0.025905,
+          "cash": 42.4
         },
         "grid_30p_2l": {
-          "final_eur": 86.07,
-          "pnl_pct": -13.93,
-          "maxdd_pct": 35.42,
-          "sharpe_ann": -0.01,
-          "trades": 4,
-          "fees_eur": 0.42,
-          "fee_drag_pct": 0.42,
-          "RT": 1,
+          "final_eur": 93.81,
+          "pnl_pct": -6.19,
+          "maxdd_pct": 41.22,
+          "sharpe_ann": 0.0,
+          "trades": 8,
+          "fees_eur": 0.85,
+          "fee_drag_pct": 0.85,
+          "RT": 3,
           "rt_margin_pct": 2.58,
-          "inventory": 0.001254,
-          "cash": 1.08
+          "inventory": 0.042079,
+          "cash": 3.65
         },
         "grid_30p_5l": {
-          "final_eur": 96.95,
-          "pnl_pct": -3.05,
-          "maxdd_pct": 26.3,
-          "sharpe_ann": 0.0,
-          "trades": 18,
-          "fees_eur": 0.76,
-          "fee_drag_pct": 0.76,
-          "RT": 7,
+          "final_eur": 95.27,
+          "pnl_pct": -4.73,
+          "maxdd_pct": 39.79,
+          "sharpe_ann": 0.01,
+          "trades": 11,
+          "fees_eur": 0.47,
+          "fee_drag_pct": 0.47,
+          "RT": 3,
           "rt_margin_pct": 2.58,
-          "inventory": 0.001085,
-          "cash": 23.44
+          "inventory": 0.043845,
+          "cash": 1.33
         },
         "grid_30p_10l": {
-          "final_eur": 101.55,
-          "pnl_pct": 1.55,
-          "maxdd_pct": 14.02,
+          "final_eur": 99.95,
+          "pnl_pct": -0.05,
+          "maxdd_pct": 23.21,
           "sharpe_ann": 0.0,
-          "trades": 37,
-          "fees_eur": 0.79,
-          "fee_drag_pct": 0.79,
-          "RT": 17,
+          "trades": 29,
+          "fees_eur": 0.62,
+          "fee_drag_pct": 0.62,
+          "RT": 12,
           "rt_margin_pct": 2.58,
-          "inventory": 0.000402,
-          "cash": 74.31
+          "inventory": 0.021922,
+          "cash": 52.98
         },
         "dca": {
-          "final_eur": 74.58,
-          "pnl_pct": -25.42,
-          "maxdd_pct": 51.73,
+          "final_eur": 80.01,
+          "pnl_pct": -19.99,
+          "maxdd_pct": 52.65,
           "sharpe_ann": -0.01,
-          "trades": 13,
+          "trades": 10,
           "fees_eur": 0.26,
           "fee_drag_pct": 0.26,
           "deployed": 100.0,
-          "inventory": 0.0011,
+          "inventory": 0.037343,
           "cash": 0.0
         },
         "dca_cad": {
-          "final_eur": 90.67,
-          "pnl_pct": -9.33,
-          "maxdd_pct": 33.75,
-          "sharpe_ann": -0.01,
+          "final_eur": 118.33,
+          "pnl_pct": 18.33,
+          "maxdd_pct": 23.59,
+          "sharpe_ann": 0.03,
           "trades": 20,
           "fees_eur": 0.26,
           "fee_drag_pct": 0.26,
           "deployed": 100.0,
-          "inventory": 0.001338,
+          "inventory": 0.055231,
           "cash": 0.0
         }
       }
     },
-    "BTC/EUR 90d_4h": {
-      "period": "2026-05-29\u21922026-08-27",
-      "regime": "sideways (+7.5%)",
+    "ETH/EUR 480d": {
+      "period": "2025-05-05\u21922026-08-27",
+      "regime": "bull (+33%)",
       "strategies": {
         "buy_hold": {
-          "final_eur": 107.12,
-          "pnl_pct": 7.12,
-          "maxdd_pct": 19.6,
-          "sharpe_ann": 0.03,
+          "final_eur": 132.72,
+          "pnl_pct": 32.72,
+          "maxdd_pct": 66.72,
+          "sharpe_ann": 0.02,
           "trades": 1,
           "fees_eur": 0.26,
           "fee_drag_pct": 0.26,
-          "inventory": 0.001581,
+          "inventory": 0.061947,
           "cash": 0.0
         },
         "grid_5p_2l": {
-          "final_eur": 100.08,
-          "pnl_pct": 0.08,
-          "maxdd_pct": 9.47,
-          "sharpe_ann": 0.0,
-          "trades": 4,
-          "fees_eur": 0.42,
-          "fee_drag_pct": 0.42,
-          "RT": 2,
+          "final_eur": 99.72,
+          "pnl_pct": -0.28,
+          "maxdd_pct": 36.7,
+          "sharpe_ann": 0.01,
+          "trades": 69,
+          "fees_eur": 7.26,
+          "fee_drag_pct": 7.26,
+          "RT": 34,
           "rt_margin_pct": 0.08,
-          "inventory": 0.0,
-          "cash": 100.08
+          "inventory": 0.022631,
+          "cash": 51.24
         },
         "grid_5p_5l": {
-          "final_eur": 100.13,
-          "pnl_pct": 0.13,
-          "maxdd_pct": 14.46,
-          "sharpe_ann": 0.01,
-          "trades": 16,
-          "fees_eur": 0.67,
-          "fee_drag_pct": 0.67,
-          "RT": 8,
-          "rt_margin_pct": 0.08,
-          "inventory": 0.0,
-          "cash": 100.13
-        },
-        "grid_5p_10l": {
-          "final_eur": 100.17,
-          "pnl_pct": 0.17,
-          "maxdd_pct": 13.22,
-          "sharpe_ann": 0.01,
-          "trades": 42,
-          "fees_eur": 0.88,
-          "fee_drag_pct": 0.88,
-          "RT": 21,
-          "rt_margin_pct": 0.08,
-          "inventory": -0.0,
-          "cash": 100.17
-        },
-        "grid_10p_2l": {
-          "final_eur": 100.87,
-          "pnl_pct": 0.87,
-          "maxdd_pct": 18.0,
-          "sharpe_ann": 0.01,
-          "trades": 6,
-          "fees_eur": 0.63,
-          "fee_drag_pct": 0.63,
-          "RT": 3,
-          "rt_margin_pct": 0.58,
-          "inventory": 0.0,
-          "cash": 100.87
-        },
-        "grid_10p_5l": {
-          "final_eur": 100.69,
-          "pnl_pct": 0.69,
-          "maxdd_pct": 13.73,
-          "sharpe_ann": 0.01,
-          "trades": 12,
-          "fees_eur": 0.51,
-          "fee_drag_pct": 0.51,
-          "RT": 6,
-          "rt_margin_pct": 0.58,
-          "inventory": -0.0,
-          "cash": 100.69
-        },
-        "grid_10p_10l": {
-          "final_eur": 100.75,
-          "pnl_pct": 0.75,
-          "maxdd_pct": 12.08,
-          "sharpe_ann": 0.01,
-          "trades": 26,
-          "fees_eur": 0.55,
-          "fee_drag_pct": 0.55,
-          "RT": 13,
-          "rt_margin_pct": 0.58,
-          "inventory": -0.0,
-          "cash": 100.75
-        },
-        "grid_20p_2l": {
-          "final_eur": 100.79,
-          "pnl_pct": 0.79,
-          "maxdd_pct": 8.8,
-          "sharpe_ann": 0.01,
-          "trades": 2,
-          "fees_eur": 0.21,
-          "fee_drag_pct": 0.21,
-          "RT": 1,
-          "rt_margin_pct": 1.58,
-          "inventory": 0.0,
-          "cash": 100.79
-        },
-        "grid_20p_5l": {
-          "final_eur": 101.58,
-          "pnl_pct": 1.58,
-          "maxdd_pct": 11.95,
-          "sharpe_ann": 0.01,
-          "trades": 10,
-          "fees_eur": 0.42,
-          "fee_drag_pct": 0.42,
-          "RT": 5,
-          "rt_margin_pct": 1.58,
-          "inventory": 0.0,
-          "cash": 101.58
-        },
-        "grid_20p_10l": {
-          "final_eur": 101.58,
-          "pnl_pct": 1.58,
-          "maxdd_pct": 5.18,
-          "sharpe_ann": 0.02,
-          "trades": 20,
-          "fees_eur": 0.42,
-          "fee_drag_pct": 0.42,
-          "RT": 10,
-          "rt_margin_pct": 1.58,
-          "inventory": 0.0,
-          "cash": 101.58
-        },
-        "grid_30p_2l": {
           "final_eur": 101.29,
           "pnl_pct": 1.29,
-          "maxdd_pct": 8.5,
-          "sharpe_ann": 0.01,
-          "trades": 2,
-          "fees_eur": 0.21,
-          "fee_drag_pct": 0.21,
-          "RT": 1,
-          "rt_margin_pct": 2.58,
-          "inventory": 0.0,
+          "maxdd_pct": 19.47,
+          "sharpe_ann": 0.0,
+          "trades": 164,
+          "fees_eur": 6.91,
+          "fee_drag_pct": 6.91,
+          "RT": 82,
+          "rt_margin_pct": 0.08,
+          "inventory": -0.0,
           "cash": 101.29
         },
-        "grid_30p_5l": {
-          "final_eur": 102.57,
-          "pnl_pct": 2.57,
-          "maxdd_pct": 8.94,
+        "grid_5p_10l": {
+          "final_eur": 101.04,
+          "pnl_pct": 1.04,
+          "maxdd_pct": 11.31,
+          "sharpe_ann": 0.0,
+          "trades": 264,
+          "fees_eur": 5.56,
+          "fee_drag_pct": 5.56,
+          "RT": 132,
+          "rt_margin_pct": 0.08,
+          "inventory": 0.0,
+          "cash": 101.04
+        },
+        "grid_10p_2l": {
+          "final_eur": 108.09,
+          "pnl_pct": 8.09,
+          "maxdd_pct": 22.58,
+          "sharpe_ann": 0.01,
+          "trades": 56,
+          "fees_eur": 5.91,
+          "fee_drag_pct": 5.91,
+          "RT": 28,
+          "rt_margin_pct": 0.58,
+          "inventory": 0.0,
+          "cash": 108.09
+        },
+        "grid_10p_5l": {
+          "final_eur": 106.82,
+          "pnl_pct": 6.82,
+          "maxdd_pct": 9.33,
           "sharpe_ann": 0.02,
-          "trades": 10,
-          "fees_eur": 0.43,
-          "fee_drag_pct": 0.43,
-          "RT": 5,
+          "trades": 118,
+          "fees_eur": 4.98,
+          "fee_drag_pct": 4.98,
+          "RT": 59,
+          "rt_margin_pct": 0.58,
+          "inventory": -0.0,
+          "cash": 106.82
+        },
+        "grid_10p_10l": {
+          "final_eur": 104.28,
+          "pnl_pct": 4.28,
+          "maxdd_pct": 10.67,
+          "sharpe_ann": 0.01,
+          "trades": 148,
+          "fees_eur": 3.12,
+          "fee_drag_pct": 3.12,
+          "RT": 74,
+          "rt_margin_pct": 0.58,
+          "inventory": 0.0,
+          "cash": 104.28
+        },
+        "grid_20p_2l": {
+          "final_eur": 117.33,
+          "pnl_pct": 17.33,
+          "maxdd_pct": 10.65,
+          "sharpe_ann": 0.03,
+          "trades": 44,
+          "fees_eur": 4.67,
+          "fee_drag_pct": 4.67,
+          "RT": 22,
+          "rt_margin_pct": 1.58,
+          "inventory": 0.0,
+          "cash": 117.33
+        },
+        "grid_20p_5l": {
+          "final_eur": 109.77,
+          "pnl_pct": 9.77,
+          "maxdd_pct": 8.35,
+          "sharpe_ann": 0.02,
+          "trades": 62,
+          "fees_eur": 2.63,
+          "fee_drag_pct": 2.63,
+          "RT": 31,
+          "rt_margin_pct": 1.58,
+          "inventory": 0.0,
+          "cash": 109.77
+        },
+        "grid_20p_10l": {
+          "final_eur": 105.52,
+          "pnl_pct": 5.52,
+          "maxdd_pct": 4.39,
+          "sharpe_ann": 0.02,
+          "trades": 70,
+          "fees_eur": 1.48,
+          "fee_drag_pct": 1.48,
+          "RT": 35,
+          "rt_margin_pct": 1.58,
+          "inventory": 0.0,
+          "cash": 105.52
+        },
+        "grid_30p_2l": {
+          "final_eur": 121.88,
+          "pnl_pct": 21.88,
+          "maxdd_pct": 12.14,
+          "sharpe_ann": 0.03,
+          "trades": 34,
+          "fees_eur": 3.62,
+          "fee_drag_pct": 3.62,
+          "RT": 17,
           "rt_margin_pct": 2.58,
           "inventory": -0.0,
-          "cash": 102.57
+          "cash": 121.88
+        },
+        "grid_30p_5l": {
+          "final_eur": 110.81,
+          "pnl_pct": 10.81,
+          "maxdd_pct": 7.47,
+          "sharpe_ann": 0.03,
+          "trades": 42,
+          "fees_eur": 1.79,
+          "fee_drag_pct": 1.79,
+          "RT": 21,
+          "rt_margin_pct": 2.58,
+          "inventory": 0.0,
+          "cash": 110.81
         },
         "grid_30p_10l": {
-          "final_eur": 101.54,
-          "pnl_pct": 1.54,
-          "maxdd_pct": 3.87,
-          "sharpe_ann": 0.02,
+          "final_eur": 105.66,
+          "pnl_pct": 5.66,
+          "maxdd_pct": 3.56,
+          "sharpe_ann": 0.03,
+          "trades": 44,
+          "fees_eur": 0.94,
+          "fee_drag_pct": 0.94,
+          "RT": 22,
+          "rt_margin_pct": 2.58,
+          "inventory": 0.0,
+          "cash": 105.66
+        },
+        "dca": {
+          "final_eur": 104.77,
+          "pnl_pct": 4.77,
+          "maxdd_pct": 66.72,
+          "sharpe_ann": 0.01,
           "trades": 12,
           "fees_eur": 0.26,
           "fee_drag_pct": 0.26,
-          "RT": 6,
+          "deployed": 100.0,
+          "inventory": 0.048899,
+          "cash": 0.0
+        },
+        "dca_cad": {
+          "final_eur": 97.83,
+          "pnl_pct": -2.17,
+          "maxdd_pct": 47.4,
+          "sharpe_ann": 0.0,
+          "trades": 20,
+          "fees_eur": 0.26,
+          "fee_drag_pct": 0.26,
+          "deployed": 100.0,
+          "inventory": 0.045659,
+          "cash": 0.0
+        }
+      }
+    },
+    "ETH/EUR 90d_4h": {
+      "period": "2026-05-29\u21922026-08-27",
+      "regime": "bull (+24%)",
+      "strategies": {
+        "buy_hold": {
+          "final_eur": 124.02,
+          "pnl_pct": 24.02,
+          "maxdd_pct": 22.4,
+          "sharpe_ann": 0.06,
+          "trades": 1,
+          "fees_eur": 0.26,
+          "fee_drag_pct": 0.26,
+          "inventory": 0.057883,
+          "cash": 0.0
+        },
+        "grid_5p_2l": {
+          "final_eur": 101.58,
+          "pnl_pct": 1.58,
+          "maxdd_pct": 20.69,
+          "sharpe_ann": 0.01,
+          "trades": 80,
+          "fees_eur": 8.42,
+          "fee_drag_pct": 8.42,
+          "RT": 40,
+          "rt_margin_pct": 0.08,
+          "inventory": 0.0,
+          "cash": 101.58
+        },
+        "grid_5p_5l": {
+          "final_eur": 100.71,
+          "pnl_pct": 0.71,
+          "maxdd_pct": 20.56,
+          "sharpe_ann": 0.01,
+          "trades": 90,
+          "fees_eur": 3.79,
+          "fee_drag_pct": 3.79,
+          "RT": 45,
+          "rt_margin_pct": 0.08,
+          "inventory": -0.0,
+          "cash": 100.71
+        },
+        "grid_5p_10l": {
+          "final_eur": 100.54,
+          "pnl_pct": 0.54,
+          "maxdd_pct": 15.62,
+          "sharpe_ann": 0.01,
+          "trades": 138,
+          "fees_eur": 2.91,
+          "fee_drag_pct": 2.91,
+          "RT": 69,
+          "rt_margin_pct": 0.08,
+          "inventory": -0.0,
+          "cash": 100.54
+        },
+        "grid_10p_2l": {
+          "final_eur": 104.91,
+          "pnl_pct": 4.91,
+          "maxdd_pct": 20.06,
+          "sharpe_ann": 0.02,
+          "trades": 34,
+          "fees_eur": 3.59,
+          "fee_drag_pct": 3.59,
+          "RT": 17,
+          "rt_margin_pct": 0.58,
+          "inventory": -0.0,
+          "cash": 104.91
+        },
+        "grid_10p_5l": {
+          "final_eur": 103.24,
+          "pnl_pct": 3.24,
+          "maxdd_pct": 16.71,
+          "sharpe_ann": 0.02,
+          "trades": 56,
+          "fees_eur": 2.36,
+          "fee_drag_pct": 2.36,
+          "RT": 28,
+          "rt_margin_pct": 0.58,
+          "inventory": 0.0,
+          "cash": 103.24
+        },
+        "grid_10p_10l": {
+          "final_eur": 102.6,
+          "pnl_pct": 2.6,
+          "maxdd_pct": 9.93,
+          "sharpe_ann": 0.02,
+          "trades": 90,
+          "fees_eur": 1.9,
+          "fee_drag_pct": 1.9,
+          "RT": 45,
+          "rt_margin_pct": 0.58,
+          "inventory": -0.0,
+          "cash": 102.6
+        },
+        "grid_20p_2l": {
+          "final_eur": 107.09,
+          "pnl_pct": 7.09,
+          "maxdd_pct": 18.53,
+          "sharpe_ann": 0.03,
+          "trades": 18,
+          "fees_eur": 1.91,
+          "fee_drag_pct": 1.91,
+          "RT": 9,
+          "rt_margin_pct": 1.58,
+          "inventory": 0.0,
+          "cash": 107.09
+        },
+        "grid_20p_5l": {
+          "final_eur": 105.04,
+          "pnl_pct": 5.04,
+          "maxdd_pct": 9.04,
+          "sharpe_ann": 0.03,
+          "trades": 32,
+          "fees_eur": 1.36,
+          "fee_drag_pct": 1.36,
+          "RT": 16,
+          "rt_margin_pct": 1.58,
+          "inventory": -0.0,
+          "cash": 105.04
+        },
+        "grid_20p_10l": {
+          "final_eur": 103.62,
+          "pnl_pct": 3.62,
+          "maxdd_pct": 4.46,
+          "sharpe_ann": 0.04,
+          "trades": 46,
+          "fees_eur": 0.98,
+          "fee_drag_pct": 0.98,
+          "RT": 23,
+          "rt_margin_pct": 1.58,
+          "inventory": -0.0,
+          "cash": 103.62
+        },
+        "grid_30p_2l": {
+          "final_eur": 103.86,
+          "pnl_pct": 3.86,
+          "maxdd_pct": 9.65,
+          "sharpe_ann": 0.02,
+          "trades": 6,
+          "fees_eur": 0.64,
+          "fee_drag_pct": 0.64,
+          "RT": 3,
           "rt_margin_pct": 2.58,
           "inventory": 0.0,
-          "cash": 101.54
+          "cash": 103.86
+        },
+        "grid_30p_5l": {
+          "final_eur": 105.15,
+          "pnl_pct": 5.15,
+          "maxdd_pct": 8.89,
+          "sharpe_ann": 0.03,
+          "trades": 20,
+          "fees_eur": 0.85,
+          "fee_drag_pct": 0.85,
+          "RT": 10,
+          "rt_margin_pct": 2.58,
+          "inventory": 0.0,
+          "cash": 105.15
+        },
+        "grid_30p_10l": {
+          "final_eur": 103.09,
+          "pnl_pct": 3.09,
+          "maxdd_pct": 4.64,
+          "sharpe_ann": 0.04,
+          "trades": 24,
+          "fees_eur": 0.51,
+          "fee_drag_pct": 0.51,
+          "RT": 12,
+          "rt_margin_pct": 2.58,
+          "inventory": 0.0,
+          "cash": 103.09
         },
         "dca": {
-          "final_eur": 107.0,
-          "pnl_pct": 7.0,
-          "maxdd_pct": 19.6,
-          "sharpe_ann": 0.03,
+          "final_eur": 123.42,
+          "pnl_pct": 23.42,
+          "maxdd_pct": 22.39,
+          "sharpe_ann": 0.06,
           "trades": 13,
           "fees_eur": 0.26,
           "fee_drag_pct": 0.26,
           "deployed": 100.0,
-          "inventory": 0.001579,
+          "inventory": 0.057603,
           "cash": 0.0
         },
         "dca_cad": {
-          "final_eur": 120.96,
-          "pnl_pct": 20.96,
-          "maxdd_pct": 5.43,
-          "sharpe_ann": 0.11,
+          "final_eur": 135.58,
+          "pnl_pct": 35.58,
+          "maxdd_pct": 5.8,
+          "sharpe_ann": 0.12,
           "trades": 20,
           "fees_eur": 0.26,
           "fee_drag_pct": 0.26,
           "deployed": 100.0,
-          "inventory": 0.001785,
+          "inventory": 0.063283,
           "cash": 0.0
         }
       }

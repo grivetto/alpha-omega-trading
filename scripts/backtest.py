@@ -37,7 +37,7 @@ FEE_TAKER = 0.0026          # Kraken 0.26% taker
 SLIPPAGE = 0.0005           # 0.05% per fill
 CAPITAL = 100.0             # EUR (micro-capital ~100 EUR totale)
 MIN_NOTIONAL = 5.0          # min notional Kraken (EUR)
-SYMBOLS = ["SOL/EUR", "DOGE/EUR", "BTC/EUR"]
+SYMBOLS = ["SOL/EUR", "ADA/EUR", "DOGE/EUR", "ETH/EUR"]
 
 # Timeframe dati: 1d ~= 2 anni (720 candele) — multi-regime in una chiamata
 TF_DAILY = "1d"
