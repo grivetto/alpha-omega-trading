@@ -136,8 +136,15 @@ def build_exchange(bot: dict, data_dir: Path):
     mode = bot.get("mode", "paper")
     symbol = bot["symbol"]
     if mode == "paper":
-        return PaperExchange(symbol, capital=float(bot.get("capital", 100)),
-                             quote=bot.get("quote", "EUR"))
+        # realismo v2: fee/min_notional/slippage dal config bot (parita' live)
+        return PaperExchange(
+            symbol, capital=float(bot.get("capital", 100)),
+            quote=bot.get("quote", "EUR"),
+            fee=float(bot.get("fee", 0.001)),
+            min_notional=bot.get("min_notional", 1.0),
+            slippage=bot.get("slippage", 0.001),
+            amount_precision=float(bot.get("amount_precision", 1e-8)),
+            price_precision=float(bot.get("price_precision", 1e-6)))
     if mode == "okx":
         from denaro.infrastructure.exchanges.okx import OKXAdapter
         key = env("OKX_API_KEY", bot.get("api_key", ""))

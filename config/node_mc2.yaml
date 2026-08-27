@@ -1,10 +1,8 @@
-# DENARO — config del Node su MC2 (192.168.1.99).
-# Bot: solo PAPER (validazione parita'). Nessun live su mc2 per ora.
 data_dir: node_data
 supervisor:
   ram_critical_pct: 0.85
-  ram_throttle_pct: 0.70
-  cpu_critical_pct: 0.90
+  ram_throttle_pct: 0.7
+  cpu_critical_pct: 0.9
   tick_max_factor: 5.0
 safemode:
   caution_pct: 70.0
@@ -21,50 +19,65 @@ exchange_rest:
   name: okx
   eea: true
 bots:
-  # ── PAPER (500€ virtuali — validazione parita') ──
-  - symbol: ADA/EUR
-    mode: paper
-    capital: 300
-    levels: 3
-    buy_distance: 0.015
-    profit_target: 0.02
-    fee: 0.001
-    tick_interval: 30
-  - symbol: SOL/EUR
-    mode: paper
-    capital: 100
-    levels: 3
-    buy_distance: 0.01
-    profit_target: 0.015
-    fee: 0.001
-    tick_interval: 30
-  - symbol: XRP/EUR
-    mode: paper
-    capital: 100
-    levels: 3
-    buy_distance: 0.01
-    profit_target: 0.015
-    fee: 0.001
-    tick_interval: 30
-
-  # ── LIVE OKX sub-account mc2sub1 (25 DOGE ~1.9€ nel trading) ──
-  # GRID BILATERALE: vende i DOGE in mano sopra il prezzo (incassa EUR) e
-  # ricompra sotto. Le chiavi del sub-account sono nel .env (ultima coppia).
-  - symbol: DOGE/EUR
-    mode: okx
-    capital: 1.9
-    levels: 2
-    buy_distance: 0.02
-    profit_target: 0.03
-    fee: 0.001
-    tick_interval: 30
-    env_prefix: ""
-    health_path: /home/sergio/denaro/health/doge_mc2.json
-    stop_loss_pct: 0.30
-    daily_loss_limit: 0.20
-    max_drawdown_limit: 0.30
-    # 25 DOGE: 2 livelli da 12.5 (minimo OKX DOGE = 10)
-    sell_levels: 2
-    sell_distance: 0.02
-    sell_step: 0.01
-    enabled: true
+- symbol: ADA/EUR
+  mode: okx
+  capital: 20.0
+  levels: 3
+  buy_distance: 0.02
+  profit_target: 0.02
+  fee: 0.001
+  min_notional: 1.0
+  slippage: 0.001
+  stop_loss_pct: 0.1
+  tick_interval: 30
+  sell_levels: 2
+  sell_distance: 0.02
+  sell_step: 0.01
+  enabled: true
+- symbol: SOL/EUR
+  mode: okx
+  capital: 20.0
+  levels: 3
+  buy_distance: 0.02
+  profit_target: 0.02
+  fee: 0.001
+  min_notional: 1.0
+  slippage: 0.001
+  stop_loss_pct: 0.1
+  tick_interval: 30
+  sell_levels: 2
+  sell_distance: 0.02
+  sell_step: 0.01
+  enabled: true
+- symbol: XRP/EUR
+  mode: okx
+  capital: 20.0
+  levels: 3
+  buy_distance: 0.02
+  profit_target: 0.02
+  fee: 0.001
+  min_notional: 1.0
+  slippage: 0.001
+  stop_loss_pct: 0.1
+  tick_interval: 30
+  sell_levels: 2
+  sell_distance: 0.02
+  sell_step: 0.01
+  enabled: true
+- symbol: DOGE/EUR
+  mode: okx
+  capital: 1.9
+  levels: 2
+  buy_distance: 0.02
+  profit_target: 0.03
+  fee: 0.001
+  tick_interval: 30
+  env_prefix: ''
+  health_path: /home/sergio/denaro/health/doge_mc2.json
+  stop_loss_pct: 0.3
+  daily_loss_limit: 0.2
+  max_drawdown_limit: 0.3
+  sell_levels: 2
+  sell_distance: 0.02
+  sell_step: 0.01
+  enabled: true

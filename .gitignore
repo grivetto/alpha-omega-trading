@@ -43,20 +43,12 @@ htmlcov/
 *.backup
   
 # Tooling state  
-.deepseek/
+.deepseek/  
 
-# File temporanei di diagnostica/operativi (non fanno parte del codice)
-_*.py
-_*.sh
-_*.bat
-_*.md
-*.sql.gz
+# Keys vault (MAI committare)
+.denaro_vault/
+keys_master.env
+*_API_KEY=
+*_API_SECRET=
+*_PASSPHRASE=
 
-# Tooling locale / residui non-progetto
-.codewhale/
-
-# Brain: log e stato locale (mai committati)
-brain/logs/
-brain/data/
-
-node_data/
