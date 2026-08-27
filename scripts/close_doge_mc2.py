@@ -48,7 +48,8 @@ def main() -> None:
         ex.urls["api"]["private"] = "https://eea.okx.com/api/v5"
     ex.enableRateLimit = True
 
-    params = {"subAccount": "mc2sub1"}
+    # OKX v5: il parametro per il sub-account e' "subAcct" (non "subAccount")
+    params = {"subAcct": "mc2sub1"}
 
     # 1) Saldo sub-account (read-only)
     doge = 0.0
