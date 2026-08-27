@@ -32,9 +32,11 @@ UNITS = {
                  "denaro-node-trend-live",
                  "denaro-health-marcodg1",
                  "denaro-aggregator-marcodg1", "zabbix-agent"],
-    "nuvola":   ["denaro-node-nuvola", "denaro-health-nuvola",
+    "nuvola":   ["denaro-node-nuvola", "denaro-node-trend",
+                 "denaro-health-nuvola",
                  "zabbix-agent", "zabbix-tunnel"],
-    "mc2":      ["denaro-node-mc2", "denaro-feeder-mc2", "denaro-health-mc2",
+    "mc2":      ["denaro-node-mc2", "denaro-node-trend",
+                 "denaro-feeder-mc2", "denaro-health-mc2",
                  "zabbix-agent", "zabbix-tunnel-reverse"],
 }
 
@@ -70,16 +72,20 @@ BOTS = {
     ("marcodg1", "trend:paper:XRP/EUR"): ("denaro-node-trend", "/home/marco/denaro_node_app/node_data_trend/paper_default_XRP_EUR_health.json"),
     # MARCODG1 — TREND LIVE su Kraken (swap: griglia in pausa)
     ("marcodg1", "trend-live:SOL/EUR"): ("denaro-node-trend-live", "/home/marco/denaro/health/trend_sol_kraken.json"),
-    # NUVOLA — live nuvolasub1 + paper
+    # NUVOLA — live nuvolasub1 (solo DOGE; ADA/SOL/XRP disabilitati: sub 0.76€
+    # non finanziabile) + istanza TREND paper
     ("nuvola", "okx:DOGE/EUR"): ("denaro-node-nuvola", "/home/sergio/denaro/health/doge_nuvola.json"),
-    ("nuvola", "paper:ADA/EUR"): ("denaro-node-nuvola", "/home/sergio/denaro_node_app/node_data/paper_default_ADA_EUR_health.json"),
-    ("nuvola", "paper:SOL/EUR"): ("denaro-node-nuvola", "/home/sergio/denaro_node_app/node_data/paper_default_SOL_EUR_health.json"),
-    ("nuvola", "paper:XRP/EUR"): ("denaro-node-nuvola", "/home/sergio/denaro_node_app/node_data/paper_default_XRP_EUR_health.json"),
-    # MC2 — live mc2sub1 + paper
+    ("nuvola", "trend:paper:SOL/EUR"): ("denaro-node-trend", "/home/sergio/denaro_node_app/node_data_trend/paper_default_SOL_EUR_health.json"),
+    ("nuvola", "trend:paper:ETH/EUR"): ("denaro-node-trend", "/home/sergio/denaro_node_app/node_data_trend/paper_default_ETH_EUR_health.json"),
+    ("nuvola", "trend:paper:ADA/EUR"): ("denaro-node-trend", "/home/sergio/denaro_node_app/node_data_trend/paper_default_ADA_EUR_health.json"),
+    ("nuvola", "trend:paper:XRP/EUR"): ("denaro-node-trend", "/home/sergio/denaro_node_app/node_data_trend/paper_default_XRP_EUR_health.json"),
+    # MC2 — live mc2sub1 (ADA cap 3.4 + DOGE 3.7) + istanza TREND paper
+    ("mc2", "okx:ADA/EUR"): ("denaro-node-mc2", "/home/sergio/denaro_node_app/node_data/okx_default_ADA_EUR_health.json"),
     ("mc2", "okx:DOGE/EUR"): ("denaro-node-mc2", "/home/sergio/denaro/health/doge_mc2.json"),
-    ("mc2", "paper:ADA/EUR"): ("denaro-node-mc2", "/home/sergio/denaro_node_app/node_data/paper_default_ADA_EUR_health.json"),
-    ("mc2", "paper:SOL/EUR"): ("denaro-node-mc2", "/home/sergio/denaro_node_app/node_data/paper_default_SOL_EUR_health.json"),
-    ("mc2", "paper:XRP/EUR"): ("denaro-node-mc2", "/home/sergio/denaro_node_app/node_data/paper_default_XRP_EUR_health.json"),
+    ("mc2", "trend:paper:SOL/EUR"): ("denaro-node-trend", "/home/sergio/denaro_node_app/node_data_trend/paper_default_SOL_EUR_health.json"),
+    ("mc2", "trend:paper:ETH/EUR"): ("denaro-node-trend", "/home/sergio/denaro_node_app/node_data_trend/paper_default_ETH_EUR_health.json"),
+    ("mc2", "trend:paper:ADA/EUR"): ("denaro-node-trend", "/home/sergio/denaro_node_app/node_data_trend/paper_default_ADA_EUR_health.json"),
+    ("mc2", "trend:paper:XRP/EUR"): ("denaro-node-trend", "/home/sergio/denaro_node_app/node_data_trend/paper_default_XRP_EUR_health.json"),
 }
 
 # ── soglie ───────────────────────────────────────────────────────────────────
@@ -94,6 +100,12 @@ ZABBIX_API = "http://127.0.0.1:1080/api_jsonrpc.php"
 ZABBIX_USER = "Admin"
 ZABBIX_PASS = "zabbix"
 ZABBIX_HOSTS = {"marcodg1": "MARCODG1", "nuvola": "nuvola", "mc2": "mc2"}
+
+# ── Hermes AI ─────────────────────────────────────────────────────────────────
+# DISABILITATO 2026-08-28: il ciclo Hermes (hermes -z headless su mc2) uccide
+# la TUI interattiva dell'utente (lock di sessione Hermes: un solo processo).
+# Se si riattiva (True), il primo giro parte DOPO HERMES_INTERVAL_S (mai subito).
+HERMES_ENABLED = False
 
 # ── Hermes (ponte su mc2) ────────────────────────────────────────────────────
 HERMES_INBOX = "/home/sergio/hermes_bridge/inbox.md"

@@ -1,3 +1,5 @@
+# Nota: stessa unit 'denaro-node-trend' deployata su MARCODG1 (User=marco),
+# nuvola e mc2 (User=sergio). Su nuvola/mc2 cambia solo User=.
 [Unit]
 Description=Denaro Node — istanza TREND (momentum + adaptive scalper, paper)
 After=network-online.target

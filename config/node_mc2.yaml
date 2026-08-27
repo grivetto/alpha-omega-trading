@@ -21,8 +21,8 @@ exchange_rest:
 bots:
 - symbol: ADA/EUR
   mode: okx
-  capital: 20.0
-  levels: 3
+  capital: 3.4
+  levels: 2
   buy_distance: 0.02
   profit_target: 0.02
   fee: 0.001
@@ -48,7 +48,7 @@ bots:
   sell_levels: 2
   sell_distance: 0.02
   sell_step: 0.01
-  enabled: true
+  enabled: false
 - symbol: XRP/EUR
   mode: okx
   capital: 20.0
@@ -63,13 +63,13 @@ bots:
   sell_levels: 2
   sell_distance: 0.02
   sell_step: 0.01
-  enabled: true
+  enabled: false
 - symbol: DOGE/EUR
   mode: okx
-  capital: 1.9
-  levels: 2
-  buy_distance: 0.02
-  profit_target: 0.03
+  capital: 3.7
+  levels: 3
+  buy_distance: 0.015
+  profit_target: 0.02
   fee: 0.001
   tick_interval: 30
   env_prefix: ''
@@ -81,3 +81,4 @@ bots:
   sell_distance: 0.02
   sell_step: 0.01
   enabled: true
+  min_notional: 1.0

@@ -81,7 +81,16 @@ class OKXAdapter:
 
     @staticmethod
     def _classify(exc: Exception) -> bool:
-        """True se l'errore e' transitorio (ritentabile)."""
+        """True se l'errore e' transitorio (ritentabile).
+
+        Gli errori di ORDINE sono PERMANENTI (InvalidOrder, InsufficientFunds,
+        OrderNotFound...): ritentarli in loop blocca il tick e congela le
+        health (bug visto in produzione: stop-loss DOGE appeso 90 min).
+        """
+        if isinstance(exc, (ccxt.InvalidOrder, ccxt.InsufficientFunds,
+                           ccxt.OrderNotFound, ccxt.NotSupported,
+                           ccxt.BadRequest)):
+            return False
         if isinstance(exc, ccxt.RateLimitExceeded):
             return True
         if isinstance(exc, ccxt.NetworkError):
