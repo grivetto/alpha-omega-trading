@@ -56,10 +56,15 @@ def invoke_hermes(prompt: str) -> tuple[bool, str]:
 
 
 def build_digest(state: dict) -> str:
-    """Digest compatto dello stato per Hermes."""
+    """Digest compatto dello stato per Hermes.
+    Accetta sia lo stato di collect_all() (macchine in top-level, con _ts)
+    sia lo stato salvato da config.save_state() (wrapper 'machines')."""
+    machines = state.get("machines") if isinstance(state.get("machines"), dict) else state
+    if not isinstance(machines, dict):
+        machines = {}
     lines = ["STATO ALPHA-OMEGA (Brain -> Hermes):"]
-    for machine, ms in state.items():
-        if machine.startswith("_"):
+    for machine, ms in machines.items():
+        if machine.startswith("_") or not isinstance(ms, dict):
             continue
         units_down = [u for u, s in ms.get("units", {}).items() if s != "active"]
         bots = ms.get("bots", {})
@@ -80,18 +85,23 @@ def build_digest(state: dict) -> str:
 
 
 def _trend_vs_grid(state: dict) -> list[str]:
-    """Confronto PnL per simbolo tra l'istanza TREND e l'istanza GRID (paper)."""
-    m = state.get("marcodg1", {})
+    """Confronto PnL per simbolo tra l'istanza TREND e l'istanza GRID (paper).
+    Due passate separate: i bot trend compaiono DOPO i paper nell'ordine del
+    dict, quindi il filtro 'sym in trend' in un'unica passata dava grid=0."""
+    machines = state.get("machines") if isinstance(state.get("machines"), dict) else state
+    m = machines.get("marcodg1", {}) if isinstance(machines, dict) else {}
     bots = m.get("bots", {})
     trend = {}
     grid = {}
     for k, v in bots.items():
-        sym = k.split(":")[-1] if ":" in k else k
-        pnl = v.get("pnl", 0) or 0
         if k.startswith("trend:"):
-            trend[sym] = pnl
-        elif k.startswith("paper:") and sym in trend:
-            grid[sym] = pnl
+            sym = k.split(":")[-1]
+            trend[sym] = v.get("pnl", 0) or 0
+    for k, v in bots.items():
+        if k.startswith("paper:"):
+            sym = k.split(":")[-1]
+            if sym in trend:
+                grid[sym] = v.get("pnl", 0) or 0
     if not trend:
         return []
     out = []

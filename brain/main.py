@@ -262,10 +262,13 @@ def main() -> None:
             if mt:
                 hermes_age = round(t0 - mt, 1)
             zabbix_push.push(state, repairs, hermes_age)
+            # lo stato salvato include i bot COMPLETI (pnl, status, strategy):
+            # il worker Hermes legge questo file per il digest TREND vs GRID.
             config.save_state({"ts": t0,
                                "machines": {k: {"ok": v.get("ok"),
                                                 "units_down": [u for u, s in v.get("units", {}).items() if s != "active"],
-                                                "bots_down": [b for b, x in v.get("bots", {}).items() if x.get("stale")]}
+                                                "bots_down": [b for b, x in v.get("bots", {}).items() if x.get("stale")],
+                                                "bots": v.get("bots", {})}
                                             for k, v in state.items() if not k.startswith("_")},
                                "repairs": repairs})
         except Exception as e:  # noqa: BLE001
