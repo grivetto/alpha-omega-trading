@@ -9,8 +9,11 @@ case "$HOST" in
   # MARCODG1 — tutti i bot live/paper girano nel Node unificato (denaro-node-paper)
   alpha-omega-bot-sol-eur|alpha-omega-bot-ada-eur|alpha-omega-bot-doge-eur|alpha-omega-bot-eth-eur|alpha-omega-node-paper|alpha-omega-paper-ada|alpha-omega-paper-sol|alpha-omega-paper-xrp)
     T="marco@87.106.222.123"; U="denaro-node-paper" ;;
-  # nuvola — node unificato (Kraken SOL incluso)
-  alpha-omega-bot-kraken|alpha-omega-node-nuvola|nuvola)
+  # Kraken: trend live su MARCODG1 (denaro-node-trend-live)
+  alpha-omega-bot-kraken)
+    T="marco@87.106.222.123"; U="denaro-node-trend-live" ;;
+  # nuvola — node unificato
+  alpha-omega-node-nuvola|nuvola)
     T="sergio@87.106.3.15"; U="denaro-node-nuvola" ;;
   # mc2 — node locale (ssh dal container all'host)
   alpha-omega-node-mc2|mc2)

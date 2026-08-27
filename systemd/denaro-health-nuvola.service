@@ -1,0 +1,20 @@
+[Unit]
+Description=Denaro - Health Server nuvola (:8911)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=sergio
+ExecStart=/usr/bin/python3 /home/sergio/denaro/health_server_nuvola.py
+WorkingDirectory=/home/sergio/denaro
+Environment=HEALTH_DIR=/home/sergio/denaro/health
+Environment=HEALTH_PORT=8911
+Environment=HEALTH_HOST=127.0.0.1
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

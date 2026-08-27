@@ -295,7 +295,7 @@ HEAL_UNITS = {
     # sono congelati e NON vanno referenziati (falsi riavvii).
     HEALTH_DIR / "ada.json": "denaro-node-paper",
     HEALTH_DIR / "sol.json": "denaro-node-paper",
-    HEALTH_DIR / "sol_kraken.json": "denaro-node-paper",
+    HEALTH_DIR / "trend_sol_kraken.json": "denaro-node-trend-live",
     NODE_DIR / "paper_default_ADA_EUR_health.json": "denaro-node-paper",
     NODE_DIR / "paper_default_SOL_EUR_health.json": "denaro-node-paper",
     NODE_DIR / "paper_default_XRP_EUR_health.json": "denaro-node-paper",
@@ -370,9 +370,12 @@ def main():
             {"host": host, "key": f"{prefix}.uptime", "value": h.get("uptime", 0)},
         ]
 
-    # ── 2. Bot Kraken (ora LOCALE nel Node: health/sol_kraken.json;
-    #      fallback retro-compatibile allo snapshot da nuvola) ──
-    kraken_h = read_json(HEALTH_DIR / "sol_kraken.json")
+    # ── 2. Bot Kraken (ora LOCALE in denaro-node-trend-live: il bot live
+    #      scrive health/trend_sol_kraken.json; sol_kraken.json è il residuo
+    #      della griglia precedente, in PAUSA) ──
+    kraken_h = read_json(HEALTH_DIR / "trend_sol_kraken.json")
+    if kraken_h is None:
+        kraken_h = read_json(HEALTH_DIR / "sol_kraken.json")
     if kraken_h is None:
         snap = read_json(HEALTH_DIR / "kraken_snapshot.json")
         if snap and snap.get("bot"):
@@ -457,7 +460,9 @@ def main():
         h = read_json(HEALTH_DIR / f"{name}.json")
         if h and not is_stale(h.get("timestamp", 0)):
             _push_atlas_metrics(data, host, prefix, h)
-    kraken_h = read_json(HEALTH_DIR / "sol_kraken.json")
+    kraken_h = read_json(HEALTH_DIR / "trend_sol_kraken.json")
+    if kraken_h is None:
+        kraken_h = read_json(HEALTH_DIR / "sol_kraken.json")
     if kraken_h and not is_stale(kraken_h.get("timestamp", 0)):
         _push_atlas_metrics(data, "alpha-omega-bot-kraken", "bot.kraken", kraken_h)
 

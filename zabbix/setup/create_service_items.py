@@ -11,14 +11,17 @@ USER, PASS = "Admin", "zabbix"
 # hostid -> lista unit
 HOST_SERVICES = {
     "10688": [  # MARCODG1
-        "denaro-node-paper", "denaro-health-marcodg1", "denaro-aggregator-marcodg1",
-        "denaro-paper-ada", "denaro-paper-sol", "denaro-paper-xrp",
+        "denaro-node-paper", "denaro-node-trend", "denaro-node-trend-live",
+        "denaro-health-marcodg1", "denaro-aggregator-marcodg1",
+        "denaro-brain", "zabbix-agent",
     ],
     "10684": [  # nuvola
-        "denaro-node-nuvola", "zabbix-tunnel",
+        "denaro-node-nuvola", "denaro-health-nuvola",
+        "zabbix-agent", "zabbix-tunnel",
     ],
     "10683": [  # mc2
-        "denaro-node-mc2", "zabbix-tunnel-reverse",
+        "denaro-node-mc2", "denaro-feeder-mc2", "denaro-health-mc2",
+        "zabbix-agent", "zabbix-tunnel-reverse",
     ],
 }
 

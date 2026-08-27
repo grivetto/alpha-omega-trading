@@ -20,6 +20,9 @@ import time
 
 from . import config, checks, hermes_bridge, repair, sshutil, strategy_lab, validation, zabbix_push
 
+# rate-limit alert per macchina (max 1/30min) — evita spam su outage di rete
+_last_alert: dict = {}
+
 # ── git ──────────────────────────────────────────────────────────────────────
 
 def git_commit_if_possible(message: str) -> bool:
@@ -253,11 +256,18 @@ def main() -> None:
         try:
             state = checks.collect_all()
             repairs = repair.repair(state)
+            # alert con rate-limit per macchina (max 1/30min): durante un
+            # outage di rete (es. tunnel mc2 giu') N riparazioni falliscono
+            # a ogni ciclo → senza guardia sarebbe spam di notifiche.
             for rp in repairs:
                 if not rp.get("ok"):
-                    hermes_bridge.send_telegram(
-                        f"⚠️ Brain: riparazione FALLITA su {rp.get('machine')} "
-                        f"({rp.get('unit')}) — {rp.get('reason')}")
+                    key = rp.get("machine", "?")
+                    last_a = _last_alert.get(key, 0.0)
+                    if t0 - last_a >= 1800:
+                        _last_alert[key] = t0
+                        hermes_bridge.send_telegram(
+                            f"⚠️ Brain: riparazione FALLITA su {key} "
+                            f"({rp.get('unit')}) — {rp.get('reason')}")
             hermes_age = None
             mt = hermes_bridge.outbox_mtime()
             if mt:
