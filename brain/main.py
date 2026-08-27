@@ -209,7 +209,10 @@ def _hermes_worker() -> None:
     """Ciclo Hermes in THREAD separato: il watchdog non deve MAI bloccarsi su
     un'operazione lenta (LLM headless con timeout fino a 600s). Il worker
     rilegge l'ultimo stato salvato da config.save_state() per il digest."""
-    last = time.time() - config.HERMES_INTERVAL_S  # primo giro subito
+    # Primo giro DOPO HERMES_INTERVAL_S (niente ciclo immediato al riavvio:
+    # un hermes -z subito dopo un restart del brain collideva con la TUI
+    # dell'utente — lock di sessione Hermes).
+    last = time.time()
     outbox_snap = hermes_bridge.read_outbox()
     while True:
         try:

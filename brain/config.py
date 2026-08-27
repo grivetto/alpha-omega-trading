@@ -99,7 +99,9 @@ ZABBIX_HOSTS = {"marcodg1": "MARCODG1", "nuvola": "nuvola", "mc2": "mc2"}
 HERMES_INBOX = "/home/sergio/hermes_bridge/inbox.md"
 HERMES_OUTBOX = "/home/sergio/hermes_bridge/outbox.md"
 HERMES_RUNNER = "/home/sergio/hermes_bridge/run_hermes.sh"  # script su mc2
-HERMES_INTERVAL_S = 1800.0   # ciclo di scambio con Hermes ogni 30 min
+HERMES_INTERVAL_S = 3600.0   # ciclo di scambio con Hermes ogni 60 min
+                             # (30 min bloccava la TUI dell'utente: lock di
+                             # sessione Hermes — un solo processo alla volta)
 HERMES_TIMEOUT_S = 600.0     # timeout per `hermes -z` (LLM lento)
 
 # ── Strategy Lab ─────────────────────────────────────────────────────────────
