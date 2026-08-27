@@ -65,6 +65,8 @@ def push(state: dict, repairs: list[dict], hermes_age: float | None,
          "value": len(repairs) + sum(1 for _ in _count_repairs())},
         {"host": "MARCODG1", "key": "brain.hermes_age",
          "value": hermes_age if hermes_age is not None else -1},
+        # S2: heartbeat del Brain (1 a ogni push) — item per il template Zabbix
+        {"host": "MARCODG1", "key": "brain.heartbeat", "value": 1},
     ]
     if strat_ret is not None:
         data.append({"host": "MARCODG1", "key": "brain.strategy_ret", "value": strat_ret})
@@ -94,9 +96,12 @@ def ensure_items() -> None:
     if not _auth and not login():
         return
     wanted = {
+        # brain.heartbeat = 1 a ogni push (S2: heartbeat del Brain, visibile
+        # in Zabbix; se manca per >2 min → Brain/Host giu')
         "MARCODG1": ["brain.status", "brain.bots_down", "brain.units_down",
                      "brain.last_cycle", "brain.repairs_total",
-                     "brain.hermes_age", "brain.strategy_ret"],
+                     "brain.hermes_age", "brain.strategy_ret",
+                     "brain.heartbeat"],
         "nuvola": ["brain.status", "brain.bots_down", "brain.units_down", "brain.last_cycle"],
         "mc2": ["brain.status", "brain.bots_down", "brain.units_down", "brain.last_cycle"],
     }

@@ -161,6 +161,14 @@ def exchange_cycle(state: dict, last_snapshot: str, force: bool = False
         new_part = snapshot.strip()
     result = {"ok": ok, "hermes_out": out[-400:], "new_reply": new_part[:2000]}
     _log_exchange(digest, result)
+    # RELAY in chat Telegram: lo scambio del ponte deve essere leggibile
+    # nella chat di Hermes (richiesta utente) — digest + risposta di Hermes.
+    try:
+        chat = ("📨 BRAIN → HERMES\n" + digest + "\n\n📨 HERMES → BRAIN\n" +
+                (new_part[:1200] if new_part else "(nessuna nuova risposta)"))
+        send_telegram(chat)
+    except Exception:  # noqa: BLE001
+        pass
     _last_exchange_ts = now
     return snapshot, result
 
