@@ -15,6 +15,10 @@ import time
 
 from . import config, sshutil
 
+# partenza dell'istanza TREND paper (2026-08-27 01:33 CEST ≈ 1787787180):
+# usato per il timer di validazione 24h nel digest TREND vs GRID.
+TREND_START_TS = 1787787180.0
+
 _last_exchange_ts = 0.0
 
 
@@ -109,6 +113,10 @@ def _trend_vs_grid(state: dict) -> list[str]:
         t, g = trend.get(sym, 0.0), grid.get(sym, 0.0)
         out.append(f"  {sym}: trend={t:.2f}€ grid={g:.2f}€ "
                    f"delta={t - g:+.2f}€")
+    # timer validazione: ore trascorse dalla partenza istanza trend (01:33 UTC)
+    elapsed = (time.time() - TREND_START_TS) / 3600.0
+    out.append(f"  [validazione paper: {elapsed:.1f}h / 24h — "
+               f"conclusiva a {24 - elapsed:.1f}h]")
     return out
 
 
