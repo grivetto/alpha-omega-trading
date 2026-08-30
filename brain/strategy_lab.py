@@ -424,11 +424,192 @@ def backtest_momentum(candles: list[dict], params: dict, source: str = "okx",
             "n_bars": len(equity_curve), "trade_pnls": trade_pnls}
 
 
+def backtest_vp_breakout(candles: list[dict], params: dict, source: str = "okx",
+                         capital: float = 100.0) -> dict:
+    """VolumeProfile+VolatilityBreakout backtest su barre 1h.
+
+    Logica (no look-ahead):
+    - Costruisce Volume Profile su vp_lookback barre (vp_bins bins)
+    - ATR su atr_period barre
+    - Breakout quando close > mid + breakout_atr_mult*ATR (long) o < mid - breakout_atr_mult*ATR (short)
+    - Solo entra se prezzo vicino a top 25% bin VP (entro 1.5*ATR)
+    - Trailing stop = trailing_atr_mult * ATR
+    - Cooldown di cooldown_candles barre tra segnali opposti
+    - Fee taker per entry (market), maker per exit (limit/stop)
+    """
+    if len(candles) < 220:
+        return _zero_metrics()
+
+    atr_period = int(params.get("atr_period", 14))
+    vp_bins = int(params.get("vp_bins", 20))
+    vp_lookback = int(params.get("vp_lookback", 60))
+    breakout_atr_mult = float(params.get("breakout_atr_mult", 1.5))
+    trailing_atr_mult = float(params.get("trailing_atr_mult", 2.5))
+    max_position_pct = float(params.get("max_position_pct", 0.5))
+    cooldown_candles = int(params.get("cooldown_candles", 3))
+
+    fees = FEES.get(source, FEES["okx"])
+    fee_taker = fees["taker"]
+
+    closes = [c["c"] for c in candles]
+    highs = [c["h"] for c in candles]
+    lows = [c["l"] for c in candles]
+    vols = [c["v"] for c in candles]
+
+    # ATR Wilder incrementale
+    def atr_wilder(i: int, period: int) -> float:
+        if i < period:
+            return 0.0
+        tr_sum = 0.0
+        for j in range(i - period + 1, i + 1):
+            if j == 0:
+                tr_sum += max(highs[j] - lows[j], 1e-12)
+            else:
+                tr = max(
+                    highs[j] - lows[j],
+                    abs(highs[j] - closes[j - 1]),
+                    abs(lows[j] - closes[j - 1]),
+                )
+                tr_sum += tr
+        return tr_sum / period
+
+    cash = capital
+    pos_entry = None
+    pos_amount = 0.0
+    pos_bar = -1
+    trailing_stop = None
+    last_signal_sign = 0
+    cooldown_remaining = 0
+    trade_pnls: list[float] = []
+    equity_curve: list[float] = []
+    peak = capital
+
+    for i in range(200, len(candles)):
+        c = candles[i]
+        p, hi, lo = c["c"], c["h"], c["l"]
+        vol_eur = c["v"] * p
+
+        atr = atr_wilder(i, atr_period)
+        if atr <= 0:
+            equity = cash + (pos_amount * p if pos_entry else 0.0)
+            equity_curve.append(equity)
+            if equity > peak:
+                peak = equity
+            continue
+
+        # Cooldown
+        if cooldown_remaining > 0:
+            cooldown_remaining -= 1
+
+        # Volume Profile (ultimi vp_lookback)
+        start_vp = max(0, i - vp_lookback)
+        vp_highs = highs[start_vp:i+1]
+        vp_lows = lows[start_vp:i+1]
+        vp_vols = vols[start_vp:i+1]
+
+        if len(vp_highs) >= 2:
+            vplow = min(vp_lows)
+            vphigh = max(vp_highs)
+            span = max(vphigh - vplow, 1e-12)
+            bin_w = span / vp_bins
+            vp_volumes = [0.0] * vp_bins
+            for j in range(len(vp_highs)):
+                mid = (vp_highs[j] + vp_lows[j]) / 2.0
+                idx = int((mid - vplow) / bin_w)
+                idx = max(0, min(vp_bins - 1, idx))
+                vp_volumes[idx] += vp_vols[j]
+            # Top 25% bins by volume
+            import numpy as np
+            order = np.argsort(vp_volumes)[::-1][: max(1, vp_bins // 4)]
+            liquidity = [(vplow + (int(idx) + 0.5) * bin_w, float(vp_volumes[int(idx)])) for idx in order]
+        else:
+            liquidity = []
+
+        # Breakout signal
+        if i >= 6:
+            frame_hi = max(highs[i-5:i+1])
+            frame_lo = min(lows[i-5:i+1])
+            frame_mid = (frame_hi + frame_lo) / 2.0
+            thr = atr * breakout_atr_mult
+            sig = 0
+            if p > frame_mid + thr:
+                sig = 1
+            elif p < frame_mid - thr:
+                sig = -1
+        else:
+            sig = 0
+
+        # Update trailing stop
+        if pos_entry is not None and pos_amount > 0:
+            stop_dist = atr * trailing_atr_mult
+            if trailing_stop is None:
+                trailing_stop = pos_entry - stop_dist
+            else:
+                trailing_stop = max(trailing_stop, p - stop_dist)
+
+        # Check trailing stop hit
+        if pos_entry is not None and pos_amount > 0 and trailing_stop is not None:
+            if lo <= trailing_stop:
+                slip = _dyn_slippage(pos_amount * trailing_stop, vol_eur)
+                proceeds = pos_amount * trailing_stop * (1 - fee_taker - slip)
+                cash += proceeds
+                trade_pnls.append(proceeds - pos_amount * pos_entry)
+                pos_entry = None
+                pos_amount = 0.0
+                trailing_stop = None
+                last_signal_sign = 0
+                cooldown_remaining = cooldown_candles
+
+        # Entry logic
+        if sig != 0 and sig != last_signal_sign and cooldown_remaining == 0:
+            if liquidity:
+                near_liquid = min((abs(p - lp) for lp, _ in liquidity[:3]), default=float('inf'))
+                if near_liquid <= atr * 1.5:
+                    # Enter position
+                    size = capital * max_position_pct
+                    if size > cash:
+                        size = cash
+                    if size > 0:
+                        slip = _dyn_slippage(size, vol_eur)
+                        entry_price = p * (1 + fee_taker + slip)
+                        pos_amount = size / entry_price
+                        cash -= size
+                        pos_entry = entry_price
+                        trailing_stop = pos_entry - atr * trailing_atr_mult
+                        last_signal_sign = sig
+                        cooldown_remaining = cooldown_candles
+
+        equity = cash + (pos_amount * p if pos_entry else 0.0)
+        equity_curve.append(equity)
+        if equity > peak:
+            peak = equity
+
+    if not equity_curve:
+        return _zero_metrics()
+
+    final_equity = equity_curve[-1]
+    ret = final_equity / capital - 1
+    max_dd = max((1 - e / peak) for e in equity_curve) if peak > 0 else 1.0
+    rets = [equity_curve[i] / equity_curve[i - 1] - 1
+            for i in range(1, len(equity_curve)) if equity_curve[i - 1] > 0]
+    mean_r = sum(rets) / len(rets) if rets else 0.0
+    std_r = (sum((r - mean_r) ** 2 for r in rets) / len(rets)) ** 0.5 if rets else 0.0
+    sharpe = (mean_r / std_r * math.sqrt(24 * 365)) if std_r > 0 else 0.0
+    n_trades = len(trade_pnls)
+    wins = sum(1 for x in trade_pnls if x > 0)
+    return {"ret": ret, "max_dd": max_dd, "sharpe": sharpe,
+            "trades": n_trades,
+            "win_rate": wins / n_trades if n_trades else 0.0,
+            "n_bars": len(equity_curve), "trade_pnls": trade_pnls}
+
+
 def _backtest_for(params: dict, candles: list[dict], source: str,
                   capital: float) -> dict:
     """Dispatch del backtest in base alla strategia del candidato."""
     if params.get("strategy") == "momentum":
         return backtest_momentum(candles, params, source, capital)
+    if params.get("strategy") == "vp_breakout":
+        return backtest_vp_breakout(candles, params, source, capital)
     return backtest_grid(candles, params, source, capital)
 
 
@@ -532,6 +713,40 @@ def param_grid_momentum() -> list[dict]:
     return grid
 
 
+def param_grid_vp_breakout(symbol: str) -> list[dict]:
+    """Grid di parametri VolumeProfile+VolatilityBreakout.
+
+    Parametri principali:
+    - atr_period: periodo ATR per breakout detection
+    - vp_bins: numero bin del Volume Profile
+    - vp_lookback: candele per costruire il VP
+    - breakout_atr_mult: soglia breakout (k * ATR)
+    - trailing_atr_mult: trailing stop distance (k * ATR)
+    - max_position_pct: frazione capitale per trade
+    - cooldown_candles: pausa tra segnali opposti
+    """
+    grid = []
+    for atr_period in (10, 14, 20):
+        for vp_bins in (15, 20, 25):
+            for vp_lookback in (50, 60, 80):
+                for breakout_atr_mult in (1.2, 1.5, 1.8):
+                    for trailing_atr_mult in (2.0, 2.5, 3.0):
+                        for max_position_pct in (0.4, 0.5, 0.6):
+                            for cooldown_candles in (2, 3, 5):
+                                grid.append({
+                                    "strategy": "vp_breakout",
+                                    "atr_period": atr_period,
+                                    "vp_bins": vp_bins,
+                                    "vp_lookback": vp_lookback,
+                                    "breakout_atr_mult": breakout_atr_mult,
+                                    "trailing_atr_mult": trailing_atr_mult,
+                                    "max_position_pct": max_position_pct,
+                                    "cooldown_candles": cooldown_candles,
+                                    "capital": 100.0,
+                                })
+    return grid
+
+
 # ── registry + runda ─────────────────────────────────────────────────────────
 
 def load_registry() -> dict:
@@ -557,7 +772,8 @@ def run_round(symbols: list[str] | None = None) -> dict:
     """Runda WFA: per ogni simbolo il best candidato e' quello con la miglior
     performance TEST aggregata sui fold (media), filtrato per tail risk MC.
     Per i simboli dell'istanza TREND (SOL, ETH) valuta anche i candidati
-    MOMENTUM (il best puo' essere grid o momentum)."""
+    MOMENTUM. Per tutti i simboli valuta VP_BREAKOUT.
+    """
     reg = load_registry()
     summary = {}
     trend_syms = {"SOL/EUR", "ETH/EUR"}
@@ -572,6 +788,10 @@ def run_round(symbols: list[str] | None = None) -> dict:
                 for params in param_grid_momentum():
                     m = walk_forward_evaluate(candles, params)
                     results.append((score(m), params, m))
+            # VP Breakout per tutti i simboli
+            for params in param_grid_vp_breakout(sym):
+                m = walk_forward_evaluate(candles, params)
+                results.append((score(m), params, m))
             results.sort(key=lambda x: -x[0])
             top_params, top_metrics = None, None
             if results and results[0][0] > -1e8:

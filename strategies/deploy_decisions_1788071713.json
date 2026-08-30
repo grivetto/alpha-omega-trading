@@ -1,0 +1,23 @@
+{
+  "ts": "2026-08-30 08:34",
+  "cycle": "20260830_0831",
+  "generated_strategy": "auto_gen_20260830_0831_volgridx.py (VOLGRIDx - Volatility-Expansion Adaptive Grid)",
+  "validation": "INLINE SELF-TEST PASSED (400 ticks, 233 re-anchors) + py_compile OK",
+  "deepseek_deploy_decision": {
+    "deploy": [
+      {"node": "MARCODG1", "strategy_file": "auto_gen_20260830_0831_volgridx.py", "config_patch": {"capital": 13.5, "spacing": "adaptive_volatility", "levels": 8}},
+      {"node": "MARCODG1", "strategy_file": "auto_gen_20260830_0800_atrailmom.py", "config_patch": {"capital": 5.0, "spacing": 1.2, "levels": 4, "mode": "paper"}}
+    ],
+    "adjust": [
+      {"node": "nuvola", "bot": "DOGE/EUR grid", "param": "capital", "value": 0.8},
+      {"node": "nuvola", "bot": "DOGE/EUR grid", "param": "spacing", "value": 1.5},
+      {"node": "nuvola", "bot": "DOGE/EUR grid", "param": "levels", "value": 3}
+    ],
+    "skip": [
+      "ADAPTREGIME: richiede storico lungo non disponibile",
+      "mc2: solo paper trading",
+      "nuvola: capital 0.8 troppo basso per volgridx/atrailmom"
+    ]
+  },
+  "notes": "FASE1+FASE3 inviate via /api/send (HTTP 200). DeepSeek ha proposto fix al calcolo vol. Pipeline sana."
+}

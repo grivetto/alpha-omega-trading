@@ -1,0 +1,51 @@
+{
+  "ts": "2026-08-30 07:33",
+  "strategy": "auto_gen_20260830_0731_halo.py (HALO) [new, test PASS]",
+  "deploy": [
+    {
+      "node": "mc2",
+      "strategy_file": "auto_gen_20260830_0731_halo.py",
+      "config_patch": {
+        "capital": 3.5577,
+        "fast_ewma_span": 20,
+        "slow_ewma_span": 180,
+        "vol_impulse_mult": 2.2,
+        "kelly_fraction": 0.15,
+        "max_exposure_pct": 0.40,
+        "stop_loss_pct": 0.008,
+        "take_profit_pct": 0.012,
+        "cooldown_s": 45.0,
+        "halflife_ratio_min": 0.15,
+        "halflife_ratio_max": 0.55
+      }
+    }
+  ],
+  "adjust": [
+    {"node": "mc2", "bot": "denaro-node-mc2", "param": "cap_available", "value": 3.5577}
+  ],
+  "skip": [
+    "MARCODG1: HALO NON deployata su real money SOL - win_rate 100%/13 trade su ~3.5h insufficiente per validare Kelly sizing; richiede backtest 5000+ tick prima di live",
+    "nuvola: HALO non deployata - capital 0.7565 troppo basso per kelly fraction 0.12 (min ~0.09 EUR/ordine con cap_available basso)",
+    "mc2: PROBSKEW/VOSPREAD in coda pending normalize deploy (cicli 07:10/07:20) - HALO priorita' nuova, deploy solo dopo normalize"
+  ],
+  "hermes_reconcile": {
+    "note": "DS propone HALO su MARCODG1 (capital 2.0) e mc2 (capital 1.0). RIFIUTATO MARCODG1 real money (13.5€ SOL, validazione insufficiente). MC2 accettato ma normalize: chiavi DS 'spacing/levels/half_life/max_position' NON esistono in HaloConfig -> mappate a vol_impulse_mult/halflife_ratio/fast_ewma_span/max_exposure_pct (come da reconciling cicli precedenti). kelly_fraction 0.15 conservativo. Priorita' MEDIA, backtest prima di live.",
+    "action": "PENDING_APPLY_normalize_before_deploy"
+  },
+  "raw_deepseek": {
+    "deploy": [
+      {"node": "MARCODG1", "strategy_file": "auto_gen_20260830_0731_halo.py", "config_patch": {"capital": 2.0, "spacing": 0.008, "levels": 5, "kelly_fraction": 0.25, "half_life": 15, "max_position": 0.5}},
+      {"node": "mc2", "strategy_file": "auto_gen_20260830_0731_halo.py", "config_patch": {"capital": 1.0, "spacing": 0.006, "levels": 3, "kelly_fraction": 0.2, "half_life": 20, "max_position": 0.3}}
+    ],
+    "adjust": [
+      {"node": "MARCODG1", "bot": "node-trend", "param": "capital", "value": 11.5},
+      {"node": "mc2", "bot": "feeder-mc2", "param": "cap_locked", "value": 0.85},
+      {"node": "nuvola", "bot": "node", "param": "spacing", "value": 0.005}
+    ],
+    "skip": [
+      "HALO su nuvola: capitale troppo basso (0.8) per sizing Kelly minimo",
+      "PROBSKEW su mc2: pending normalize non ancora completato, priorita' a HALO",
+      "VOSPREAD su nuvola: pending normalize non ancora completato, priorita' a HALO"
+    ]
+  }
+}

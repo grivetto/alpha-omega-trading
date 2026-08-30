@@ -1,0 +1,23 @@
+{
+  "cycle_ts": "2026-08-30T05:2x",
+  "strategy_gen": "auto_gen_1788060000.py VolScaledBreakoutGrid (testato OK)",
+  "fleet": "tutti healthy, 0 kill-switch, tutte win/dd~0",
+  "ds_plan": {
+    "deploy": [
+      {"node": "mc2", "strategy_file": "auto_gen_1788060000.py", "config_patch": {"capital": 3.70, "base_spacing": 0.012, "levels": 12, "vol_decay": 0.94, "atr_period": 14, "ref_atr": 0.015, "dd_collar": 0.03, "numeraire_vol": 0.02, "max_qty": 150}},
+      {"node": "nuvola", "strategy_file": "auto_gen_1788060000.py", "config_patch": {"capital": 0.80, "base_spacing": 0.010, "levels": 8, "vol_decay": 0.94, "atr_period": 14, "ref_atr": 0.012, "dd_collar": 0.03, "numeraire_vol": 0.018, "max_qty": 60}}
+    ],
+    "adjust": [
+      {"node": "MARCODG1", "bot": "sol-trend-live-grid", "param": "capital", "value": 15.0},
+      {"node": "MARCODG1", "bot": "sol-trend-live-grid", "param": "base_spacing", "value": 0.014}
+    ],
+    "skip": ["MARCODG1: no deploy nuovo - gia 13/13 win con vol trend"]
+  },
+  "hermes_notes": [
+    "dd_collar=0.03 positivo fuori specifica (collar mai attivo) -> va corretto a -0.03 in deploy reale",
+    "max_qty 150/60 va validato contro capital: levels*max_qty*spacing risk check da fare prima del deploy reale",
+    "FASE1: DS segnala presunto bug inversione PnL in on_fill; ritenuto FALSO (logica BUY riduce/SELL aumenta corretta), non fixato"
+  ],
+  "deploy_executed": false,
+  "reason": "orchestrazione: piani DS salvati, deploy reale richiede validazione risk e viene gestito dal framework denaro"
+}

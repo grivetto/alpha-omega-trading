@@ -1,0 +1,54 @@
+{
+  "ts": 1788049010,
+  "fase": "3",
+  "fleet": "2026-08-30 02:15",
+  "generated": "auto_gen_1788048700.py FLBF fakeout/liquidation fader",
+  "smoke": "PASSED",
+  "deepseek_json_raw": true,
+  "deepseek_json_corrected": {
+    "deploy": [
+      {
+        "node": "MARCODG1",
+        "strategy_file": "auto_gen_1788048700.py",
+        "config_patch": {
+          "capital": 2.0,
+          "spacing": 0.008,
+          "levels": 12,
+          "use_dom": true,
+          "kelly_fraction": 0.5,
+          "fade_wick_threshold": 0.0012
+        }
+      },
+      {
+        "node": "mc2",
+        "strategy_file": "auto_gen_1788048700.py",
+        "config_patch": {
+          "capital": 0.5,
+          "spacing": 0.006,
+          "levels": 8,
+          "use_dom": false,
+          "kelly_fraction": 0.3,
+          "fade_wick_threshold": 0.0018
+        }
+      }
+    ],
+    "adjust": [
+      {
+        "node": "MARCODG1",
+        "bot": "existing_sol_grid",
+        "param": "spacing",
+        "value": 0.007
+      },
+      {
+        "node": "nuvola",
+        "bot": "doge_grid",
+        "param": "capital",
+        "value": 1.0
+      }
+    ],
+    "skip": [
+      "FLBF su nuvola: capitale troppo basso (0.8) per Kelly sizing efficace; meglio consolidare su mc2",
+      "LSMR-ARX: gia' in backtest, non maturo per deploy live"
+    ]
+  }
+}

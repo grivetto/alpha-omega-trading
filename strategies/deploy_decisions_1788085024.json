@@ -1,0 +1,10 @@
+{
+  "ts": 1788085024.6908438,
+  "cycle": "2026-08-30 12:15",
+  "strategy_gen": "auto_gen_20260830_1216_zmeanrev.py",
+  "deploy": [],
+  "adjust": [],
+  "skip": [
+    "decisione DeepSeek in corso - pool async"
+  ]
+}

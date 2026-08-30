@@ -1,0 +1,12 @@
+{
+  "ts": "2026-08-30T05:06:13.964941",
+  "cycle": "auto every 10min",
+  "new_strategy": "auto_gen_1788059000.py (CLUSTERQ) - POSTATA e review DeepSeek; critiche su _ensure_price_range",
+  "phase3_deepseek": "deploy VolAdaptiveGrid->nuvola(cap1.0), GVAF->MARCODG1(cap14); adjust mc2 cap4.0, nuvola spacing tighter; skip CLUSTERQ(non fixato), WICKFADOS(duplicazione), ATRKEL(vol bassa), hybrid(non testato)",
+  "hermes_overlay": "CLUSTERQ NON deployare in live finche fix; WICKFADOS gia dry-run; nessun deploy live questo ciclo - fleet tutto healthy, no urgenze",
+  "skip_reasons": [
+    "CLUSTERQ _ensure_price_range non fixato",
+    "Fleet healthy: tutti i nodi PnL positivo, zero errori, zero kill-switch",
+    "Nessun cambio live necessario ora"
+  ]
+}

@@ -1,0 +1,81 @@
+{
+  "deploy": [
+    {
+      "node": "MARCODG1",
+      "strategy_file": "auto_gen_1788016564.py",
+      "config_patch": {
+        "capital": 13.5,
+        "base_spacing_pct": 0.008,
+        "base_levels": 9,
+        "stop_loss": 0.06,
+        "flow_window_slots": 24,
+        "flow_slot_ticks": 50,
+        "skew_k": 2.0,
+        "min_inv_frac": 0.25,
+        "max_inv_frac": 0.25,
+        "vol_ewma_span": 40,
+        "chunk": 2048
+      }
+    },
+    {
+      "node": "MC2",
+      "strategy_file": "auto_gen_1788016564.py",
+      "config_patch": {
+        "capital": 3.7,
+        "base_spacing_pct": 0.01,
+        "base_levels": 7,
+        "stop_loss": 0.06,
+        "flow_window_slots": 24,
+        "flow_slot_ticks": 50,
+        "skew_k": 2.0,
+        "min_inv_frac": 0.25,
+        "max_inv_frac": 0.25,
+        "vol_ewma_span": 40,
+        "chunk": 1024
+      }
+    },
+    {
+      "node": "NUVOLA",
+      "strategy_file": "auto_gen_1788016564.py",
+      "config_patch": {
+        "capital": 0.8,
+        "base_spacing_pct": 0.012,
+        "base_levels": 5,
+        "stop_loss": 0.06,
+        "flow_window_slots": 24,
+        "flow_slot_ticks": 50,
+        "skew_k": 2.0,
+        "min_inv_frac": 0.25,
+        "max_inv_frac": 0.25,
+        "vol_ewma_span": 40,
+        "chunk": 512
+      }
+    }
+  ],
+  "adjust": [
+    {
+      "node": "MARCODG1",
+      "bot": "denaro-node-trend-live",
+      "param": "stop_loss",
+      "value": 0.06
+    },
+    {
+      "node": "MC2",
+      "bot": "denaro-node-grid-doge",
+      "param": "stop_loss",
+      "value": 0.06
+    },
+    {
+      "node": "NUVOLA",
+      "bot": "denaro-node-grid-doge",
+      "param": "stop_loss",
+      "value": 0.06
+    }
+  ],
+  "skip": [
+    "MARCODG1 trend-live frozen: kill-switch e restart prima di deploy. Non deployare su bot stale finche non verificato. Dopo restart, deploy IMR-Grid su nuovo bot.",
+    "NUVOLA capitale 0.8 < 1.5 EUR: deploy IMR-Grid solo se si aumenta capitale. Altrimenti skip.",
+    "Nessuna auto-gen deployata su bot vivi: tutti i nodi con grid base, quindi deploy IMR-Grid su tutti i nodi con capitale >= 1.5 EUR dopo aver risolto anomalia.",
+    "Stop-loss OFF su tutti: aggiungere stop_loss 0.06 come patch di sicurezza prima di deploy."
+  ]
+}

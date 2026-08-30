@@ -1,0 +1,63 @@
+{
+  "cycle_ts": "2026-08-29 16:16 UTC",
+  "status": "ALL_NODES_HEALTHY_ALL_PROFITABLE",
+  "strategy_generated": "auto_gen_1788013000.py (VAGR-KS v2, DeepSeek-corrected: asymmetric dense-below levels, vol warmup 10, per-level Kelly, memory cleanup)",
+  "deploy": [
+    {
+      "node": "mc2",
+      "strategy_file": "auto_gen_1788013000.py",
+      "config_patch": {
+        "capital": 5.0,
+        "spacing_pct": 0.012,
+        "levels_above": 4,
+        "levels_below": 10,
+        "vol_warmup": 10,
+        "kelly_fraction": 0.25,
+        "regime_lock": "range"
+      }
+    }
+  ],
+  "adjust": [
+    {
+      "node": "MARCODG1",
+      "bot": "sol",
+      "param": "take_profit_pct",
+      "value": 0.018,
+      "reason": "13/13 win ma dd 0.79% widening -> stringi TP prima di trend exhaustion"
+    },
+    {
+      "node": "MARCODG1",
+      "bot": "sol",
+      "param": "max_drawdown_kill",
+      "value": 0.015,
+      "reason": "hard ceiling, dd attuale 0.107 EUR, kill a 0.20 EUR"
+    },
+    {
+      "node": "mc2",
+      "bot": "doge",
+      "param": "capital",
+      "value": 5.0,
+      "reason": "3.7 EUR insufficienti per 10 livelli below con Kelly"
+    },
+    {
+      "node": "mc2",
+      "bot": "doge",
+      "param": "max_open_orders",
+      "value": 8,
+      "reason": "soft cap finche Kelly non si stabilizza"
+    }
+  ],
+  "skip": [
+    {
+      "node": "MARCODG1",
+      "reason": "SOL trend-live 13/13 win, regime trending: VAGR-KS v2 e' range-locked mean-reversion, CONFLITTO. Solo TP/DD tightening."
+    },
+    {
+      "node": "nuvola",
+      "reason": "capital 0.8 EUR sotto soglia min VAGR-KS v2 (>=1.2 EUR). Top-up prima di deploy."
+    },
+    {
+      "reason": "auto_gen_1788013000.py presente SOLO su mc2. Serve scp mc2->nuvola e mc2->MARCODG1 prima di deploy cross-nodo, altrimenti ImportError."
+    }
+  ]
+}

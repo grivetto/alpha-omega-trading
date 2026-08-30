@@ -1,0 +1,24 @@
+{
+  "ts": "2026-08-30 06:16",
+  "strategy": "auto_gen_20260830_061549 (ISgrid - Inventory-Skew Grid with Mean-Reversion Bias)",
+  "ds_deploy": [
+    {"node": "mc2", "strategy_file": "auto_gen_20260830_061549", "config_patch": {"spacing": 0.014, "levels": 8, "cap_locked": 0.95, "inventory_watermark": 0.3, "skew_bias": 0.15}},
+    {"node": "MARCODG1", "strategy_file": "auto_gen_20260830_061549", "config_patch": {"spacing": 0.02, "levels": 10, "stop_loss": 0.03, "inventory_watermark": 0.25, "skew_bias": 0.12}}
+  ],
+  "ds_adjust": [
+    {"node": "mc2", "bot": "doge", "param": "capital", "value": 4.0},
+    {"node": "MARCODG1", "bot": "sol", "param": "capital", "value": 14.0},
+    {"node": "nuvola", "bot": "doge", "param": "capital", "value": 1.0}
+  ],
+  "ds_skip": [
+    "nuvola: capital 0.8 troppo basso per ISgrid - richiede almeno 1.0 per gestire inventory skew senza rischio margin call",
+    "mc2: spacing 0.012 attuale troppo aggressivo per ISgrid - aumentato a 0.014",
+    "MARCODG1: SL 0.025 troppo stretto per ISgrid con lv10 - portato a 0.03"
+  ],
+  "hermes_reconcile": {
+    "keep_live_configs": true,
+    "note": "Deploy registrato. DS ha proposto inventor watermark 0.3/0.25 e skew_bias 0.15/0.12. NOTA: strategia ISgrid usa campo config inv_half_life/max_skew, non inventory_watermark/skew_bias - mappare prima del deploy reale.",
+    "action": "PENDING_APPLY - attendere verifica mapping config, non applicare patch JSON direttamente senza adattare ai nomi parametri della strategia"
+  },
+  "status": "decision_received"
+}

@@ -1,0 +1,53 @@
+{
+  "deploy": [
+    {
+      "node": "mc2",
+      "strategy_file": "auto_gen_20260830_1105_volresp.py",
+      "config_patch": {
+        "capital": 5.0,
+        "spacing": "adaptive_vol_ewma",
+        "levels": 12,
+        "respacing_on_drawdown": true
+      }
+    },
+    {
+      "node": "nuvola",
+      "strategy_file": "auto_gen_20260830_1105_volresp.py",
+      "config_patch": {
+        "capital": 2.5,
+        "spacing": "adaptive_vol_ewma",
+        "levels": 10,
+        "respacing_on_drawdown": true
+      }
+    }
+  ],
+  "adjust": [
+    {
+      "node": "mc2",
+      "bot": "DOGE/EUR",
+      "param": "capital",
+      "value": 5.0
+    },
+    {
+      "node": "nuvola",
+      "bot": "DOGE/EUR",
+      "param": "capital",
+      "value": 2.5
+    },
+    {
+      "node": "MARCODG1",
+      "bot": "SOL/EUR",
+      "param": "levels",
+      "value": 15
+    },
+    {
+      "node": "MARCODG1",
+      "bot": "SOL/EUR",
+      "param": "drawdown_threshold",
+      "value": 0.005
+    }
+  ],
+  "skip": [
+    "Nessuna strategia da ritirare: tutte attive e profittevoli. VolRespGrid deployata solo su nodi con RAM sufficiente (mc2, nuvola). MARCODG1 mantiene grid classica ma con livelli aumentati per sfruttare trend SOL/EUR."
+  ]
+}

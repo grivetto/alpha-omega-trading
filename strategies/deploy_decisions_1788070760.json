@@ -1,0 +1,22 @@
+{
+  "ts": "2026-08-30 08:15",
+  "generated_strategy": "auto_gen_1788070605.py (ADAPTREGIME)",
+  "validation": "ALL TESTS PASSED (200-tick smoke + streaming file)",
+  "deepseek_directive": {
+    "deploy": [
+      {
+        "node": "marcodg1",
+        "strategy_file": "auto_gen_1788070605.py",
+        "config_patch": {"mode": "paper", "exchange": "kraken", "symbol": "SOL/USDT", "data_source": "denaro-node-trend-live", "capital_alloc_pct": 0.15, "max_position_usd": 50, "spacing_pct": 0.012, "levels": 8, "regime_indicators": {"atr_percentile_window": 100, "ema_slope_window": 50, "high_vol": 0.7, "low_vol": 0.3}, "momentum": {"enabled": true, "size_pct": 0.25}}
+      }
+    ],
+    "adjust": [
+      {"node": "mc2", "bot": "doge grid", "param": "capital", "value": 4.0},
+      {"node": "marcodg1", "bot": "sol grid", "param": "spacing", "value": 1.5}
+    ],
+    "skip": [
+      "nuvola: capital troppo basso (0.8) per ADAPTREGIME, rischio drawdown eccessivo",
+      "mc2: solo paper trading, non deployare strategie live"
+    ]
+  }
+}

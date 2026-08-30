@@ -1,0 +1,23 @@
+[
+  {
+    "type": "import_error",
+    "timestamp": "2026-08-26T15:45:36Z",
+    "file": "main.py",
+    "message": "ModuleNotFoundError: No module named 'denaro' — main.py riga 21 importa denaro.launcher (e denaro.config/orchestrator/logging_setup alle righe 60,87,124). Package denaro/ rimosso dal commit a2449a3 (cleanup v6 legacy). Entry point rotto per EXCHANGE=kraken via run.py.",
+    "status": "open"
+  },
+  {
+    "type": "connection_anomaly",
+    "timestamp": "2026-08-26T15:45:36Z",
+    "file": "run.py",
+    "message": "run.py con EXCHANGE=kraken fallisce all'import di main (vedi sopra). Verifica anche che EXCHANGE=mexc→main_mexc.py e EXCHANGE=bybit→main_v5.py esistano ancora (main_v5/main_mexc rimossi da a2449a3).",
+    "status": "open"
+  },
+  {
+    "type": "import_error",
+    "timestamp": "2026-08-26T15:45:36Z",
+    "file": "test_denaro_v6.py, test_denaro_orchestrator.py, _smoke_denaro_v6.py",
+    "message": "Test file ancora referenziano il package denaro/ rimosso (denaro.config, denaro.core, denaro.grid, denaro.orchestrator, denaro.risk, ecc.). Non bloccano il bot ma i test sono rotti dopo a2449a3.",
+    "status": "open"
+  }
+]

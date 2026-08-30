@@ -1,0 +1,36 @@
+{
+  "ts": 1788047292.2605424,
+  "fase": "3",
+  "fleet": "2026-08-30 01:45",
+  "generated": "auto_gen_1788047900.py VOLTGT vol-target z-band",
+  "smoke": "PASSED",
+  "deepseek_json_raw": true,
+  "deepseek_json_corrected": {
+    "deploy": [
+      {
+        "node": "MARCODG1",
+        "strategy_file": "auto_gen_1788047900.py",
+        "config_patch": {
+          "capital": 2.0,
+          "kelly_fraction": 0.3,
+          "vol_target": 0.02,
+          "z_enter": 1.6,
+          "z_exit": 0.4,
+          "z_max": 3.2,
+          "ewma_span": 14,
+          "levels": 4,
+          "spacing_pct": 0.004,
+          "exit_step_pct": 0.0045,
+          "kurt_high": 4.0,
+          "max_loss_pct": 0.03,
+          "max_deque": 4096
+        }
+      }
+    ],
+    "adjust": [],
+    "skip": [
+      "mc2 e nuvola: gia' occupati con strategie attive e healthy, nessun cambio necessario",
+      "VOLTGT deployato su MARCODG1 per test su SOL/EUR"
+    ]
+  }
+}

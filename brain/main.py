@@ -52,7 +52,10 @@ def git_commit_if_possible(message: str) -> bool:
 # ── strategy lab: promozione ────────────────────────────────────────────────
 
 _NODE_KEYS = {"strategy", "levels", "buy_distance", "profit_target",
-              "sell_levels", "sell_distance", "sell_step", "stop_loss_pct"}
+              "sell_levels", "sell_distance", "sell_step", "stop_loss_pct",
+              "atr_period", "vp_bins", "vp_lookback", "breakout_atr_mult",
+              "trailing_atr_mult", "max_position_pct", "min_order_size",
+              "cooldown_candles", "candle_interval_sec"}
 
 
 def _to_node_params(p: dict) -> dict:
@@ -74,14 +77,28 @@ def _live_params_from_yaml(sym: str) -> dict | None:
         for b in cfg.get("bots", []):
             if (b.get("symbol") == sym and b.get("mode") != "paper"
                     and b.get("enabled", True)):
-                return {"strategy": b.get("strategy", "grid"),
-                        "buy_distance": b.get("buy_distance", 0.01),
-                        "profit_target": b.get("profit_target", 0.015),
-                        "levels": b.get("levels", 3),
-                        "sell_levels": b.get("sell_levels", 0),
-                        "sell_distance": b.get("sell_distance", 0.02),
-                        "sell_step": b.get("sell_step", 0.01),
-                        "stop_loss": b.get("stop_loss_pct", 0.0)}
+                strat = b.get("strategy", "grid")
+                params = {"strategy": strat,
+                          "buy_distance": b.get("buy_distance", 0.01),
+                          "profit_target": b.get("profit_target", 0.015),
+                          "levels": b.get("levels", 3),
+                          "sell_levels": b.get("sell_levels", 0),
+                          "sell_distance": b.get("sell_distance", 0.02),
+                          "sell_step": b.get("sell_step", 0.01),
+                          "stop_loss": b.get("stop_loss_pct", 0.0)}
+                # Add vp_breakout specific params if present
+                if strat == "volume_profile_breakout":
+                    params.update({
+                        "atr_period": b.get("atr_period", 14),
+                        "vp_bins": b.get("vp_bins", 20),
+                        "vp_lookback": b.get("vp_lookback", 60),
+                        "breakout_atr_mult": b.get("breakout_atr_mult", 1.5),
+                        "trailing_atr_mult": b.get("trailing_atr_mult", 2.5),
+                        "max_position_pct": b.get("max_position_pct", 0.5),
+                        "min_order_size": b.get("min_order_size", 0.1),
+                        "cooldown_candles": b.get("cooldown_candles", 3),
+                    })
+                return params
     except Exception as e:  # noqa: BLE001
         print(f"[brain] node.yaml non leggibile: {e}")
     return None
@@ -106,8 +123,13 @@ def promote_candidates(reg: dict) -> bool:
             continue
         try:
             candles = strategy_lab.load_or_fetch(sym)
-            # source come STRINGA ("okx"/"kraken"): backtest_grid usa FEES[source]
-            m_live = strategy_lab.backtest_grid(candles, live, "okx")
+            # Dispatch to correct backtest function based on strategy
+            if live.get("strategy") == "momentum":
+                m_live = strategy_lab.backtest_momentum(candles, live, "okx")
+            elif live.get("strategy") == "vp_breakout":
+                m_live = strategy_lab.backtest_vp_breakout(candles, live, "okx")
+            else:
+                m_live = strategy_lab.backtest_grid(candles, live, "okx")
             m_cand = cand["metrics"]
         except Exception as e:  # noqa: BLE001
             print(f"[brain] backtest confronto {sym}: {e}")

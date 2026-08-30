@@ -1,0 +1,25 @@
+{
+  "ts": 1788038227,
+  "fase": "3",
+  "fleet": "2026-08-29 23:15 UTC",
+  "generated": "auto_gen_20260829_231624775723053.py LSMR-ARX (Liquidity-Scaled Mean Reversion + ATR/Hurst regime gate)",
+  "deepseek_json": {
+    "deploy": [
+      {
+        "node": "MARCODG1",
+        "strategy_file": "auto_gen_20260829_231624775723053.py",
+        "config_patch": {"symbol": "SOL/EUR", "capital": 2.0, "spacing": 0.015, "levels": 8, "risk": 0.01, "params": {"liquidity_scale": true, "atr_period": 14, "hurst_threshold": 0.5, "mean_reversion_window": 20}}
+      }
+    ],
+    "adjust": [
+      {"node": "MARCODG1", "bot": "SOL/EUR grid", "param": "max_trades", "value": 15},
+      {"node": "nuvola", "bot": "DOGE/EUR grid", "param": "spacing", "value": 0.022},
+      {"node": "nuvola", "bot": "DOGE/EUR grid", "param": "levels", "value": 6}
+    ],
+    "skip": [
+      "mc2 orchestrator-only, no trading",
+      "nuvola: capital 0.8 troppo basso per LSMR-ARX (richiede liquidita minima), mercato notturno low-liquidity",
+      "LSMR-ARX deploy solo su SOL (capital maggiore) per evitare slippage notturno"
+    ]
+  }
+}

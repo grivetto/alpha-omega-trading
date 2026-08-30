@@ -1,0 +1,68 @@
+{
+  "ts": "2026-08-29T18:18:59Z",
+  "cycle": "20:15",
+  "new_strategy": "auto_gen_1788027346.py (MVA-AGR - momentum-VWAP anchored adaptive grid, self-test OK 500 ticks mem 0.07MB)",
+  "fleet": {
+    "mc2": "healthy, doge grid pnl+0.0148 2W/0L capital 3.7",
+    "nuvola": "healthy, doge grid pnl+0.0061 1W/0L capital 0.8",
+    "marcodg1": "healthy(5 units), sol grid pnl+0.37 13W/0L dd0.79% capital 13.5"
+  },
+  "critical_alert": "marcodg1 SOL bot timestam STALE ~4h (ts 1787953312 vs now ~1788027). Feeder/bot not updating. BLOCK live SOL deploy until freshness <5min.",
+  "deepseek": {
+    "deploy": [
+      {
+        "node": "marcodg1",
+        "strategy_file": "auto_gen_1788027346.py",
+        "config_patch": {
+          "capital": 5.0,
+          "vol_ewma_span": 24,
+          "dd_gate": 0.06,
+          "spacing_vol_mult": 1.2,
+          "levels": 8,
+          "inventory_fade": 0.5,
+          "max_position_pct": 0.5,
+          "anchor_mode": "vwap"
+        }
+      }
+    ],
+    "adjust": [
+      {
+        "node": "marcodg1",
+        "bot": "sol-grid",
+        "param": "health_check.feeder_stale_seconds",
+        "value": "1800 WARN / 3600 CRITICAL-halt (currently ~4h STALE invisible)"
+      },
+      {
+        "node": "marcodg1",
+        "bot": "sol-grid",
+        "param": "diagnostic_action",
+        "value": "BLOCK new SOL deploys until feeder<5min; check WS sub, restart worker"
+      },
+      {
+        "node": "marcodg1",
+        "bot": "sol-grid",
+        "param": "capital_alloc",
+        "value": "freeze 13.5 EUR"
+      },
+      {
+        "node": "nuvola",
+        "bot": "doge-grid",
+        "param": "capital",
+        "value": "HOLD 0.8 EUR"
+      },
+      {
+        "node": "mc2",
+        "bot": "doge-grid",
+        "param": "vol_ewma_span",
+        "value": "keep 24"
+      }
+    ],
+    "skip": [
+      "nuvola: 0.8EUR too small for MVA-AGR",
+      "mc2 DOGE: wait VTK-GAR >=2h (~11min in)",
+      "marcodg1 SOL main: timestamp STALE 4h, live alloc blocked",
+      "scale-up any bot: premature before shadow validation",
+      "RPVL-EGR / VTK-GAR: keep in paper_shadow, monitor"
+    ]
+  }
+}

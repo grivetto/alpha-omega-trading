@@ -1,13 +1,22 @@
 {
   "paper:SOL/EUR": {
-    "strategy": "grid",
-    "buy_distance": 0.005,
-    "profit_target": 0.01,
-    "levels": 2,
-    "sell_levels": 3,
-    "sell_distance": 0.02,
-    "sell_step": 0.01,
-    "stop_loss_pct": 0.1
+    "strategy": "vagr",
+    "capital": 50,
+    "tick_interval": 30,
+    "fee": 0.0016,
+    "atr_window": 120,
+    "vol_target_pct": 0.08,
+    "min_spacing_pct": 0.002,
+    "max_spacing_pct": 0.06,
+    "max_grid_levels": 12,
+    "quiet_threshold": 0.003,
+    "active_threshold": 0.012,
+    "base_position_pct": 0.92,
+    "min_position_pct": 0.35,
+    "mr_inventory_band_pct": 0.5,
+    "max_daily_loss_pct": 0.10,
+    "kill_switch_drawdown_pct": 0.15,
+    "fee_rate": 0.0016
   },
   "paper:ETH/EUR": {
     "strategy": "grid",

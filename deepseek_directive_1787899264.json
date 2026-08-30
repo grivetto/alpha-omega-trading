@@ -1,0 +1,82 @@
+{
+  "deploy": [
+    {
+      "node": "marcodg1",
+      "strategy_file": "/home/sergio/denaro/strategies/auto_gen_1787899264.py",
+      "config_patch": {
+        "symbol": "SOL/EUR",
+        "capital": 13.5,
+        "grid_spacing_pct": 0.012,
+        "grid_levels": 12,
+        "momentum_window": 80,
+        "momentum_threshold": 0.0015,
+        "max_position_pct": 0.7
+      }
+    },
+    {
+      "node": "mc2",
+      "strategy_file": "/home/sergio/denaro/strategies/auto_gen_1787899264.py",
+      "config_patch": {
+        "symbol": "DOGE/EUR",
+        "capital": 3.7,
+        "grid_spacing_pct": 0.018,
+        "grid_levels": 10,
+        "momentum_window": 100,
+        "momentum_threshold": 0.002,
+        "max_position_pct": 0.6
+      }
+    },
+    {
+      "node": "nuvola",
+      "strategy_file": "/home/sergio/denaro/strategies/auto_gen_1787899264.py",
+      "config_patch": {
+        "symbol": "DOGE/EUR",
+        "capital": 0.8,
+        "grid_spacing_pct": 0.02,
+        "grid_levels": 8,
+        "momentum_window": 100,
+        "momentum_threshold": 0.0025,
+        "max_position_pct": 0.5
+      }
+    }
+  ],
+  "adjust": [
+    {
+      "node": "marcodg1",
+      "bot": "sol",
+      "param": "grid_spacing_pct",
+      "value": 0.012
+    },
+    {
+      "node": "marcodg1",
+      "bot": "sol",
+      "param": "capital",
+      "value": 13.5
+    },
+    {
+      "node": "mc2",
+      "bot": "doge",
+      "param": "grid_spacing_pct",
+      "value": 0.018
+    },
+    {
+      "node": "mc2",
+      "bot": "doge",
+      "param": "capital",
+      "value": 3.7
+    },
+    {
+      "node": "nuvola",
+      "bot": "doge",
+      "param": "grid_spacing_pct",
+      "value": 0.02
+    },
+    {
+      "node": "nuvola",
+      "bot": "doge",
+      "param": "capital",
+      "value": 0.8
+    }
+  ],
+  "skip": []
+}

@@ -1,0 +1,63 @@
+{
+  "ts": 1788039186,
+  "fase": "3",
+  "fleet": "2026-08-29 23:30",
+  "generated": "auto_gen_1788039131.py VOLT-SR (Volatility-Scaled S/R grid + OFI + Hurst + Kelly)",
+  "deepseek_json": {
+    "deploy": [
+      {
+        "node": "MARCODG1",
+        "strategy_file": "auto_gen_1788039131.py",
+        "config_patch": {
+          "capital": 2.0,
+          "spacing": 0.015,
+          "levels": 8,
+          "risk": 0.01,
+          "liquidity_scale": true,
+          "atr_period": 14,
+          "hurst": 0.5,
+          "mrw": 20
+        }
+      },
+      {
+        "node": "MC2",
+        "strategy_file": "auto_gen_1788039131.py",
+        "config_patch": {
+          "capital": 1.5,
+          "spacing": 0.02,
+          "levels": 6,
+          "risk": 0.008,
+          "liquidity_scale": true,
+          "atr_period": 14,
+          "hurst": 0.5,
+          "mrw": 20
+        }
+      }
+    ],
+    "adjust": [
+      {
+        "node": "NUVOLA",
+        "bot": "DOGE/EUR",
+        "param": "spacing",
+        "value": 0.022
+      },
+      {
+        "node": "NUVOLA",
+        "bot": "DOGE/EUR",
+        "param": "levels",
+        "value": 6
+      },
+      {
+        "node": "MARCODG1",
+        "bot": "SOL/EUR",
+        "param": "max_trades",
+        "value": 15
+      }
+    ],
+    "skip": [
+      "NUVOLA: capital 0.8 troppo basso per VOLT-SR (richiede min 1.5)",
+      "MC2: orchestrator-only, deploy VOLT-SR solo come backup se capital libero > 1.5",
+      "LSMR-ARX su MC2/NUVOLA: capital insufficiente o rischio eccessivo rispetto a drawdown attuale"
+    ]
+  }
+}

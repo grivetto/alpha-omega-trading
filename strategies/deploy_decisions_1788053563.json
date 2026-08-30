@@ -1,0 +1,16 @@
+{
+  "ts": "2026-08-30 03:35",
+  "strategy": "auto_gen_1788053563.py CEFR (Capital-Efficient Fractional Reversion)",
+  "test": "942 emissioni/2000 tick, wr 0.49, mem 0.02MB, compile+validate OK",
+  "deploy": [
+    {"node": "marcodg1", "strategy_file": "auto_gen_1788053563.py", "config_patch": {"symbol": "SOL/EUR", "capital": 13.5, "spacing": "fractional_band", "levels": 10, "kelly_fraction": 0.25, "dd_throttle_pct": 1.0}},
+    {"node": "mc2", "strategy_file": "auto_gen_1788053563.py", "config_patch": {"symbol": "DOGE/EUR", "capital": 3.7, "spacing": "fractional_band", "levels": 8, "kelly_fraction": 0.20, "dd_throttle_pct": 1.5}},
+    {"node": "nuvola", "strategy_file": "auto_gen_1788053563.py", "config_patch": {"symbol": "DOGE/EUR", "capital": 0.8, "spacing": "fractional_band", "levels": 6, "kelly_fraction": 0.15, "dd_throttle_pct": 2.0}}
+  ],
+  "adjust": [
+    {"node": "marcodg1", "bot": "sol", "param": "stop_loss_pct", "value": "2.0"},
+    {"node": "mc2", "bot": "doge", "param": "take_profit_pct", "value": "1.2"},
+    {"node": "nuvola", "bot": "doge", "param": "max_drawdown_pct", "value": "1.0"}
+  ],
+  "skip": []
+}

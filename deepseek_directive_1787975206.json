@@ -1,0 +1,16 @@
+{
+  "ts": "2026-08-29 05:55",
+  "phase1_strategy": "auto_gen_1787975206.py (VSAG Volatility-Scaled Adaptive Grid) TEST PASSATO; critiche DS applicate (last_price, gc fix, dead-code rimossi, level counters corretti)",
+  "phase3_directive": {
+    "deploy": [
+      {"node": "marcodg1", "strategy_file": "auto_gen_1787975206.py", "config_patch": {"symbol":"SOL/EUR","capital":13.5,"spacing_pct":0.015,"levels":12,"volatility_lookback":96,"min_spread_bps":8}},
+      {"node": "mc2", "strategy_file": "auto_gen_1787975206.py", "config_patch": {"symbol":"DOGE/EUR","capital":3.7,"spacing_pct":0.012,"levels":10,"volatility_lookback":96,"min_spread_bps":6}}
+    ],
+    "adjust": [{"node":"nuvola","bot":"DOGE/EUR_grid","param":"capital","value":5.0}],
+    "skip": [
+      "nuvola: capitale 0.8 EUR insufficiente per VSAG (minimo ~5 EUR); aumentare capitale prima di deploy",
+      "auto_gen_1787973341.py (LETF trap-flip): non applicabile a DOGE/SOL spot, richiede leva",
+      "hybrid_grid_momentum_adaptive.py, chandelier_trend_rider.py: backup; VSAG prioritario"
+    ]
+  }
+}

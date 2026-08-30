@@ -1,0 +1,5 @@
+{
+  "ts": "2026-08-30 04:33",
+  "source": "deepseek reply_hermes",
+  "reply": "```json\n{\n  \"deploy\": [\n    {\n      \"node\": \"denaro-node-mc2\",\n      \"strategy_file\": \"auto_gen_1788057085.py\",\n      \"config_patch\": {\n        \"capital\": 1.2,\n        \"spacing\": 0.35,\n        \"levels\": 3,\n        \"kelly\": 0.5\n      }\n    },\n    {\n      \"node\": \"denaro-node-trend-live\",\n      \"strategy_file\": \"auto_gen_1788060315.py\",\n      \"config_patch\": {\n        \"capital\": 2.5,\n        \"spacing\": 0.5,\n        \"levels\": 2,\n        \"kelly\": 0.3\n      }\n    }\n  ],\n  \"adjust\": [\n    {\n      \"node\": \"denaro-node-mc2\",\n      \"bot\": \"mc2\",\n      \"param\": \"free_capital_target\",\n      \"value\": 1.55\n    },\n    {\n      \"node\": \"denaro-node-nuvola\",\n      \"bot\": \"nuvola\",\n      \"param\": \"max_dd_percent\",\n      \"value\": 3.5\n    }\n  ],\n  \"skip\": [\n    {\n      \"reason\": \"VolGrid 20260830_041643 e CEFR 1788053563: alta correlazione con LAPSE su sol, rischio sovraesposizione; LIQABS 1788046370: capitale nuvola insufficiente per sizing minimo\"\n    }\n  ]\n}\n```"
+}

@@ -1,0 +1,43 @@
+{
+  "ts": "2026-08-30 03:19",
+  "deploy": [
+    {
+      "node": "nuvola",
+      "strategy_file": "auto_gen_1788052622.py",
+      "config_patch": {
+        "capital": 0.8,
+        "spacing": "volatility_mapped",
+        "levels": 5,
+        "kill_switch": true
+      }
+    },
+    {
+      "node": "MARCODG1",
+      "strategy_file": "auto_gen_1788052622.py",
+      "config_patch": {
+        "capital": 13.5,
+        "spacing": "volatility_mapped",
+        "levels": 10,
+        "kill_switch": true
+      }
+    }
+  ],
+  "adjust": [
+    {
+      "node": "mc2",
+      "bot": "DOGE/EUR",
+      "param": "orchestrator_mode",
+      "value": "active_monitoring"
+    },
+    {
+      "node": "MARCODG1",
+      "bot": "SOL/EUR",
+      "param": "trailing_stop",
+      "value": "enabled_with_vol_mapping"
+    }
+  ],
+  "skip": [
+    "mc2: orchestrator node, keep no-trading directive",
+    "auto_gen_1788052155.py RRMAG: already deployed, do not duplicate on same nodes"
+  ]
+}

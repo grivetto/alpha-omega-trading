@@ -1,0 +1,39 @@
+{
+  "orchestrator": "hermes",
+  "timestamp": 1788021188,
+  "strategy_generated": "auto_gen_1788021188.py",
+  "strategy_name": "VAIG-CRL (Value-Anchored Inventory Gravity with Cyclic Regime Locks)",
+  "novelty": "value-anchored vwap gravity + inventory skew + cyclic regime capital lock",
+  "inline_test": "PASSED (24000 orders, mem 0.004776 MB)",
+  "deploy": [
+    {
+      "node": "marcodg1",
+      "strategy_file": "/home/sergio/denaro/strategies/auto_gen_1788021188.py",
+      "target_module": "denaro.domain.vaig_crl",
+      "config_patch": {
+        "symbol": "SOL/EUR",
+        "capital": 13.5,
+        "range_pct": 0.035,
+        "levels": 8,
+        "vwap_window": 30,
+        "roc_period": 12,
+        "roc_trend_threshold": 0.002,
+        "stick_pct": 0.25,
+        "force_asym": 0.12,
+        "max_hold_age_s": 7200.0,
+        "fee": 0.0016
+      }
+    }
+  ],
+  "adjust": [
+    {"node": "marcodg1", "bot": "sol", "param": "capital", "value": 13.5},
+    {"node": "marcodg1", "bot": "sol", "param": "range_pct", "value": 0.035},
+    {"node": "marcodg1", "bot": "sol", "param": "levels", "value": 8}
+  ],
+  "skip": [
+    "mc2: DOGE/EUR capital 3.7 troppo basso per VAIG-CRL, mantieni grid classico",
+    "nuvola: DOGE/EUR capital 0.8 insufficiente per grid multi-livello",
+    "VAIG-CRL richiede trend/volume data, solo marcodg1 SOL ha uptime sufficiente"
+  ],
+  "action_status": "REGISTRATO. Deploy runtime BLOCCATO: denaro_node carica solo moduli da denaro.domain (nessun plugin loader per file esterni). Promozione richiede scrittura modulo vaig_crl.py + restart nodo. Trend-live OKX stallo (trendsub1 non esiste) - nessun restart a caldo del paper attivo (13 win). Candidata salvata per promozione codificata prossimo backup."
+}

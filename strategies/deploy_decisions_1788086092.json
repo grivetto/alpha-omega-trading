@@ -1,0 +1,56 @@
+{
+  "ts": 1788086092,
+  "ts_human": "2026-08-30 12:34",
+  "strategy_new": "auto_gen_20260830_1230_chandelier_momentum.py",
+  "ds_directive": {
+    "deploy": [
+      {
+        "node": "MARCODG1",
+        "strategy_file": "auto_gen_20260830_1230_chandelier_momentum.py",
+        "config_patch": {
+          "symbol": "SOL/EUR",
+          "capital": 13.5,
+          "spacing": 0.015,
+          "levels": 3,
+          "trailing_stop_pct": 0.012,
+          "min_order_size": 0.1
+        }
+      }
+    ],
+    "adjust": [
+      {
+        "node": "mc2",
+        "bot": "doge_grid",
+        "param": "spacing",
+        "value": 0.008
+      },
+      {
+        "node": "mc2",
+        "bot": "doge_grid",
+        "param": "levels",
+        "value": 4
+      },
+      {
+        "node": "nuvola",
+        "bot": "doge_grid",
+        "param": "spacing",
+        "value": 0.01
+      },
+      {
+        "node": "nuvola",
+        "bot": "doge_grid",
+        "param": "levels",
+        "value": 3
+      }
+    ],
+    "skip": [
+      {
+        "reason": "zmeanrev non deployato: chandelier_momentum priorita' trend-following; zmeanrev fallback 24h"
+      },
+      {
+        "reason": "MARCODG1 capital non aumentato: equity 13.207 vs 13.5 = -2.2% sotto fee, monitorare se DD>2%"
+      }
+    ]
+  },
+  "note_config_mismatch": "DS config_patch usa params (spacing, trailing_stop_pct, levels) NON presenti in DEFAULT_CONFIG di chandelier_momentum (che usa level_spacing_atr, chandelier_mult, max_levels). Patches vanno mappati/validati PRIMA di applicare a runtime; non applicare ciechi."
+}

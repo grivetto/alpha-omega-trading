@@ -88,6 +88,22 @@ class BotConfigSchema(BaseModel):
     level_step: float = 0.005
     retarget_factor: float = 1.5
     max_order_age_s: float = 43200.0
+    # ── VAGR (Volatility-Adaptive Grid with Streaming Welford ATR) ──────────────
+    # Tutti i parametri VAGR: config-driven, no magic constants
+    atr_window: int = 120
+    vol_target_pct: float = 0.08
+    min_spacing_pct: float = 0.002
+    max_spacing_pct: float = 0.06
+    max_grid_levels: int = 12
+    quiet_threshold: float = 0.003
+    active_threshold: float = 0.012
+    base_position_pct: float = 0.92
+    min_position_pct: float = 0.35
+    mr_inventory_band_pct: float = 0.5
+    max_daily_loss_pct: float = 0.10
+    kill_switch_drawdown_pct: float = 0.15
+    fee_rate: float = 0.0016
+    backtest_chunk: int = 100_000
     # ── momentum/meanrev ──────────────────────────────────────────────────────
     entry_slip: float = 0.002
     quote: str = "EUR"

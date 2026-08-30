@@ -1,0 +1,40 @@
+{
+  "ts": "2026-08-29T20:51:00Z",
+  "cycle": "20:46",
+  "new_strategy": "auto_gen_1788029172.py (OIFV-RBC / order-imbalance fair-value mean-reversion with adaptive band compaction)",
+  "deepseek": {
+    "deploy": [
+      {
+        "node": "mc2",
+        "strategy_file": "auto_gen_1788029172.py",
+        "config_patch": {"capital": 3.7, "base_spacing_pct": 0.012, "min_spacing_pct": 0.004, "max_spacing_pct": 0.035, "levels_per_side": 5, "imbalance_ewma_span": 12, "imbalance_threshold": 0.55, "fair_value_window": 64, "win_bonus": 0.10, "loss_penalty": 0.22, "max_position_frac": 0.85, "fee": 0.0016, "stop_loss_frac": 0.06}
+      }
+    ],
+    "adjust": [
+      {"node": "nuvola", "bot": "grid", "param": "capital", "value": 0.8},
+      {"node": "nuvola", "bot": "grid", "param": "max_spacing_pct", "value": 0.025},
+      {"node": "MARCODG1", "bot": "feeder", "param": "status", "value": "check_and_restart"}
+    ],
+    "skip": [
+      "MARCODG1: timestamp stale ~21h, dati obsoleti - non usare per decisioni live fino a verifica feeder",
+      "nuvola: capital sub-1EUR HIGH RISK - non deployare nuove strategie, preservare capitale minimo",
+      "auto_gen_1788028230.py (VolExpansionGrid): superato da OIFV-RBC piu' recente e testato"
+    ]
+  },
+  "hermes": {
+    "deploy": [
+      {"node": "nuvola", "strategy_file": "auto_gen_1788029172.py", "mode": "paper_shadow", "shadow_duration_s": 7200, "config_patch": {"symbol": "DOGE/EUR", "capital": 0.8, "base_spacing_pct": 0.012, "min_spacing_pct": 0.004, "max_spacing_pct": 0.035, "levels_per_side": 5, "imbalance_ewma_span": 12, "imbalance_threshold": 0.55, "fair_value_window": 32, "max_position_frac": 0.50, "stop_loss_frac": 0.05, "fee": 0.0016}},
+      {"node": "mc2", "strategy_file": "auto_gen_1788028230.py", "mode": "paper_shadow", "shadow_duration_s": 7200, "config_patch": {"symbol": "DOGE/EUR", "capital": 3.7, "levels_per_side": 4}}
+    ],
+    "adjust": [
+      {"node": "MARCODG1", "bot": "feeder", "param": "feeder_health_check", "value": "MANDATORY", "note": "stale bot_ts 1787953312 vs now 1788029172 gap=75860s"},
+      {"node": "nuvola", "bot": "grid", "param": "min_capital_guard", "value": 0.5},
+      {"node": "mc2", "bot": "grid", "param": "grid_levels_per_side", "value": 4}
+    ],
+    "skip": [
+      "MARCODG1 SOL: deploy live BLOCCATO (feed stale), sospendere paper_shadow VTK-GAR auto_gen_1788026645 e invalidarne i risultati",
+      "Promozione live OIFV-RBC: BLOCCATA, solo paper_shadow finche' non validata su dati live (2h min)"
+    ]
+  },
+  "fleet_note": "Tutti 3 nodi healthy (mc2 5 unit active, nuvola 2, MARCODG1 5). mc2 DOGE 3.7 grid pnl+0.0148 2/2W dd0; nuvola DOGE 0.8 pnl+0.0061 1/1W dd0; MARCODG1 SOL 13.5 pnl+0.37 13/13W dd0.79% MA bot_ts stale ~21h (1787953312) - feeder lag confermato, MARCODG1 escluso da decisioni live. OIFV-RBC self-test OK (26 buy/68 sell, mem 0.0008MB). DS ha prodotto variante produzione OIFV_RBC_V2."
+}

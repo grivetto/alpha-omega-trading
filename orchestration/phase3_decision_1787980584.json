@@ -1,0 +1,38 @@
+{
+  "cycle": "2026-08-29 07:16",
+  "decision_ts": "2026-08-29 07:22",
+  "phase1_strategy": "auto_gen_1787980584.py (MRAB - Mean-Reversion Adaptive Bollinger w/ Volume-Regime Gate) TEST PASSATO (4000 tick, 36 segnali, 0.0067MB). POSTATO su DS /api/send OK (log 07:21).",
+  "deepseek_reply": {
+    "deploy": [
+      {"node": "nuvola", "strategy_file": "MRAB.py", "config_patch": {"capital": 0.8, "position_pct": 0.5, "entry_z": 1.5, "estimator_window": 100, "levels": 5, "cap_locked": 0.9}},
+      {"node": "MARCODG1", "strategy_file": "VTGK.py", "config_patch": {"capital": 13.5, "position_pct": 0.6, "kelly": 0.3, "entry_z": 1.2, "estimator_window": 150, "levels": 8, "cap_locked": 0.95}}
+    ],
+    "adjust": [
+      {"node": "MARCODG1", "bot": "sol", "param": "spread", "value": 0.0015},
+      {"node": "MARCODG1", "bot": "sol", "param": "spacing", "value": 0.002},
+      {"node": "nuvola", "bot": "doge", "param": "capital", "value": 1.0}
+    ],
+    "skip": [
+      "LETF: alta complessita', richiede piu' RAM su nuvola; test paper prima",
+      "VAGR: sovrapposizione con grid gia' attivo su mc2, no beneficio immediato",
+      "mc2: solo orchestrazione, niente deploy per competizione risorse con watchdog/feeder"
+    ]
+  },
+  "hermes_decision": {
+    "rule3_block": true,
+    "deploy_recco": [
+      {"node": "MARCODG1", "mode": "PAPER (node-trend)", "strategy_file": "auto_gen_1787980584.py MRAB", "config_patch": {"symbol": "SOL/EUR", "capital_eur": 13.5, "entry_z": 1.5, "estimator_window": 150, "position_pct": 0.35, "skew_gate": 0.55}},
+      {"node": "MC2", "mode": "PAPER (doge grid attuale)", "strategy_file": "auto_gen_1787976318 or VTGK auto_gen_1787979895.py", "config_patch": {"symbol": "DOGE/EUR", "capital_eur": 3.7, "entry_z": 1.2, "estimator_window": 100, "position_pct": 0.25}}
+    ],
+    "apply_now": [
+      {"node": "MARCODG1", "bot": "sol", "param": "spreading", "reason": "NON applicare tightening su live senza validazione paper VTGK/MRAB; mantenere config vincente (13 win, DD 0.79%)"},
+      {"node": "nuvola", "bot": "doge", "param": "capital", "value": 0.8, "reason": "top-up a >=1.2EUR necessario; 0.8 insufficiente per MRAB/position_pct 0.5 (sotto min_notional OKX)"}
+    ],
+    "skip": [
+      "MRAB live su nuvola a 0.8 EUR: sotto min viable dopo fee; attendere top-up",
+      "VTGK live su MARCODG1 live (trend-live): VIOLA regola 3; servira' paper 48h/20-30 trade prima di GO",
+      "DS adjust tight spread 0.0015/spacing 0.002 su sol live: troppo aggressivo sul nodo reale vincente"
+    ],
+    "note": "Fleet tutto healthy. mc2 doge +0.0148 (2 win), nuvola +0.006 (1 win), MARCODG1 sol +0.3705 (13/13 win, DD 0.79%, real money). RAM 9.6/15Gi, load 6.9. Nessun errore, nessun kill-switch. DM: nessun deploy live in questo ciclo (Regola 3)."
+  }
+}

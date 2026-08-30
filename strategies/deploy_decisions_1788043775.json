@@ -1,0 +1,66 @@
+{
+ "ts": 1788043775.8871882,
+ "fase": "3",
+ "fleet": "2026-08-30 00:45",
+ "generated": "auto_gen_1788043569.py V-FLUX volatility-flux adaptive grid",
+ "deepseek_json_raw": true,
+ "deepseek_json_corrected": {
+  "deploy": [
+   {
+    "node": "mc2",
+    "strategy_file": "auto_gen_1788043569.py",
+    "config_patch": {
+     "base_asset": "DOGE",
+     "quote_asset": "EUR",
+     "grid_cap": 3.6,
+     "spacing": "flux-adaptive",
+     "flux_estimator": {
+      "chunk_size": 50000,
+      "lookback": 200000
+     },
+     "kill_switch_dd": 10,
+     "kelly_fraction": 0.3,
+     "side_bias": "neutral",
+     "max_orders": 2
+    }
+   },
+   {
+    "node": "nuvola",
+    "strategy_file": "auto_gen_1788043569.py",
+    "config_patch": {
+     "base_asset": "DOGE",
+     "quote_asset": "EUR",
+     "grid_cap": 0.8,
+     "spacing": "flux-adaptive",
+     "flux_estimator": {
+      "chunk_size": 20000,
+      "lookback": 100000
+     },
+     "kill_switch_dd": 10,
+     "kelly_fraction": 0.3,
+     "side_bias": "mean-reverting",
+     "max_orders": 1
+    }
+   }
+  ],
+  "adjust": [
+   {
+    "node": "MARCODG1",
+    "bot": "SOL/EUR grid",
+    "param": "feed_timeout",
+    "value": 3600
+   },
+   {
+    "node": "nuvola",
+    "bot": "DOGE/EUR grid",
+    "param": "spacing",
+    "value": "1.2%"
+   }
+  ],
+  "skip": [
+   {
+    "reason": "MARCODG1 feed stale ~22h, no-deploy until SOL feed restored; adjust timeout to auto-halt"
+   }
+  ]
+ }
+}

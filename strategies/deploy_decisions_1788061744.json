@@ -1,0 +1,20 @@
+{
+  "cycle_ts": "2026-08-30T05:46",
+  "strategy_gen": "auto_gen_20260830_054547.py VOLTRAIL (ATR-scaled grid spacing + chandelier trailing guard, family volatility-adaptive; ATR14, spacing=mult*ATR), SMOKE PASS, mem 0.002MB",
+  "fleet": "tutti healthy, 0 kill-switch, 0 errori; mc2 doge pnl +0.0148 (2/2), nuvola doge +0.0061 (1/1), marcodg1 sol +0.3705 (13/13) dd 0.0079",
+  "ds_plan": {
+    "deploy": [
+      {"node": "nuvola", "strategy_file": "auto_gen_20260830_054547.py", "config_patch": {"capital": 0.8, "atr_spacing_mult": 0.5, "chandelier_mult": 3.0, "atr_window": 14, "levels": 5, "base_fraction": 0.2, "risk_pct": 0.01}},
+      {"node": "MARCODG1", "strategy_file": "auto_gen_20260830_054547.py", "config_patch": {"capital": 13.5, "atr_spacing_mult": 0.35, "chandelier_mult": 2.5, "atr_window": 14, "levels": 8, "base_fraction": 0.15, "risk_pct": 0.015}}
+    ],
+    "adjust": [{"node": "MARCODG1", "bot": "sol", "param": "trend-live", "value": "keep_active"}],
+    "skip": ["mc2 orchestrator no-trading", "nessun kill-switch/errore, nessun adjust su health/brain"]
+  },
+  "hermes_notes": [
+    "FASE1: VOLTRAIL = nuova famiglia volatility-adaptive, distinta da QUEUEFLOW (L2 queue) e grid/trend. ATR-scaled spacing + chandelier trailing guard. SMOKE PASS: 4 ordini in regime volatile, 0 in calma; config invalide (cap 0, window 2, fee 1.5) rifiutate. mem 0.002MB, O(ATR14) bound, zero allocazioni grandi.",
+    "FASE2: fleet stabile 3 nodi, zero drawdown, zero kill-switch, nessun errore.",
+    "FASE3: DS propone deploy VOLTRAIL su nuvola (cap 0.8, spacing mult 0.5, chandelier 3.0) e MARCODG1 (cap 13.5, spacing 0.35, chandelier 2.5, levels 8). Rispetta policy mc2 orchestrator-only. Piani salvati; deploy reale gestito dal framework denaro."
+  ],
+  "deploy_executed": false,
+  "reason": "orchestrazione: piani DS salvati, deploy reale richiede validazione risk e viene gestito dal framework denaro"
+}

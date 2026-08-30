@@ -1,0 +1,127 @@
+{
+  "ts": "2026-08-29T19:08:32Z",
+  "cycle": "21:06",
+  "new_strategy": "auto_gen_1788030367.py (SPER-KE: Sign-Persistence Exhaustion Reaper with Kinetic-Energy Sizing)",
+  "deepseek": {
+    "deploy": [
+      {
+        "node": "mc2",
+        "strategy_file": "auto_gen_1788030367.py",
+        "config_patch": {
+          "capital": 1.0,
+          "spacing": 0.015,
+          "levels": 5,
+          "kinetic": {
+            "ewma_span": 12,
+            "max_position_pct": 0.25,
+            "saturation_mult": 2.5
+          },
+          "stale_run_guard": {
+            "max_same_dir_prints": 8,
+            "cooldown_prints": 4
+          }
+        }
+      },
+      {
+        "node": "MARCODG1",
+        "strategy_file": "auto_gen_1788030367.py",
+        "config_patch": {
+          "capital": 2.0,
+          "spacing": 0.02,
+          "levels": 4,
+          "kinetic": {
+            "ewma_span": 15,
+            "max_position_pct": 0.2,
+            "saturation_mult": 3.0
+          },
+          "stale_run_guard": {
+            "max_same_dir_prints": 6,
+            "cooldown_prints": 5
+          }
+        }
+      }
+    ],
+    "adjust": [
+      {
+        "node": "MARCODG1",
+        "bot": "trend-live",
+        "param": "kill_switch",
+        "value": true
+      },
+      {
+        "node": "MARCODG1",
+        "bot": "trend",
+        "param": "paper_shadow_strategy",
+        "value": "auto_gen_1788030367.py"
+      }
+    ],
+    "skip": [
+      "nuvola: capital 0.80 sub-EUR HIGH RISK - non adatto a nuova strategia, mantieni OIFV-RBC in paper_shadow",
+      "auto_gen_1788028230.py VolExpansionGrid: superato da OIFV-RBC, non deployare",
+      "auto_gen_1788019585.py ATFB: non prioritaria, OIFV-RBC e SPER-KE coprono mean-rev + trend-exhaustion",
+      "MARCODG1 live: feed stale 47h, escludere da decisioni live fino a fix feeder"
+    ]
+  },
+  "hermes": {
+    "verdict": "OVERRIDE deploy DS su MARCODG1 (skip): (1) feed stale 47h corrompe sign-persistence; (2) mismatch asset/regime SOL-trend vs SPER-KE mean-rev su DOGE. SPER-KE va solo su nodi DOGE-dedicati.",
+    "deploy": [
+      {
+        "node": "mc2",
+        "strategy_file": "auto_gen_1788030367.py",
+        "mode": "paper_shadow",
+        "note": "secondo slot paper parallelo a OIFV-RBC per test head-to-head DOGE/EUR. capital_alloc=0.50 (cap_available 3.56), spacing ATR-based 1m, levels=6, kine_ewma_alpha=0.30, kine_size_cap_pct=0.50, stale_run=8"
+      },
+      {
+        "node": "nuvola",
+        "strategy_file": "auto_gen_1788030367.py",
+        "mode": "paper_shadow",
+        "note": "baseline DOGE/EUR regime validate 126858s. capital_alloc=0.20 (25% cap 0.80 HIGH RISK), stessi parametri mc2"
+      }
+    ],
+    "adjust": [
+      {
+        "node": "mc2",
+        "bot": "doge-grid",
+        "param": "capital",
+        "value": "2.50 (scala da 3.70: 0.50 SPER-KE paper, 1.20 buffer)"
+      },
+      {
+        "node": "mc2",
+        "bot": "doge-grid",
+        "param": "spacing",
+        "value": "ricalibra su ATR 1m (campione 4h)"
+      },
+      {
+        "node": "mc2",
+        "bot": "doge-grid",
+        "param": "max_open_levels",
+        "value": 5
+      },
+      {
+        "node": "nuvola",
+        "bot": "doge",
+        "param": "position_size_pct",
+        "value": "0.15 (HIGH RISK node)"
+      },
+      {
+        "node": "nuvola",
+        "bot": "doge",
+        "param": "max_daily_loss_eur",
+        "value": 0.1
+      },
+      {
+        "node": "MARCODG1",
+        "bot": "sol-trend-live",
+        "param": "status",
+        "value": "PAUSE - paper_only fino a fix feed WS"
+      }
+    ],
+    "skip": [
+      "SPER-KE live: solo paper_shadow 48h prima di promozione",
+      "SPER-KE su MARCODG1 (SOL): mismatch asset/regime + feed stale",
+      "OIFV-RBC promozione live: paper_shadow non completata, attendere 48h Sharpe>grid",
+      "MARCODG1: mantenere 13.5 SOL su paper equity curve, live_capital=0"
+    ]
+  },
+  "fleet_note": "Tutti 3 nodi healthy (mc2 4 unit, nuvola 2, MARCODG1 5). mc2 DOGE 3.70 grid pnl+0.0148 2/2W dd0; nuvola DOGE 0.80 pnl+0.0061 1/1W dd0; MARCODG1 SOL 13.5 pnl+0.37 13/13W dd0.79% MA bot_ts STALE 47h (1787953312 vs 1788030375) - feeder lag, escluso live. SPER-KE self-test OK (buys=6 sells=12 fades=18 mem 0.004MB). Nuova strategia distinta da OIFV-RBC (sign-persistence print-stream vs book imbalance)."
+}

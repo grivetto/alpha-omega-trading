@@ -1,0 +1,54 @@
+{
+ "ts": 1788046370.0,
+ "fase": "1",
+ "fleet": "2026-08-30 01:30",
+ "generated": "auto_gen_1788046370.py LIQABS order-flow grab-absorption scalper",
+ "smoke": "PASSED",
+ "deepseek_json_raw": true,
+ "deepseek_json_corrected": {
+  "deploy": [
+   {
+    "node": "mc2",
+    "strategy_file": "auto_gen_1788046370.py",
+    "config_patch": {
+     "capital": 1.5,
+     "kelly_fraction": 0.3,
+     "dom_lookback": 200,
+     "absorption_window": 10,
+     "max_levels": 5,
+     "exit_step": 0.0035
+    }
+   },
+   {
+    "node": "nuvola",
+    "strategy_file": "auto_gen_1788046370.py",
+    "config_patch": {
+     "capital": 0.5,
+     "kelly_fraction": 0.25,
+     "dom_lookback": 180,
+     "absorption_window": 8,
+     "max_levels": 4,
+     "exit_step": 0.003
+    }
+   }
+  ],
+  "adjust": [
+   {
+    "node": "mc2",
+    "bot": "DOGE/EUR",
+    "param": "max_capital",
+    "value": 4.2
+   },
+   {
+    "node": "nuvola",
+    "bot": "DOGE/EUR",
+    "param": "max_capital",
+    "value": 1.0
+   }
+  ],
+  "skip": [
+   "MARCODG1: SOL/EUR non compatibile con LIQABS (richiede DOM depth, non disponibile su trend-live paper)",
+   "V-FLUX gia' deployato su mc2 e nuvola, mantenere invariato"
+  ]
+ }
+}

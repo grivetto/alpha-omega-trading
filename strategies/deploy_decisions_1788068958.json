@@ -1,0 +1,42 @@
+{
+  "ts": "2026-08-30 07:49:18",
+  "strategy": "auto_gen_20260830_0746_flowgrid.py FLOWGRID",
+  "deploy": [
+    {
+      "node": "MARCODG1",
+      "strategy_file": "auto_gen_20260830_0746_flowgrid.py",
+      "config_patch": {
+        "capital": 3.5,
+        "levels": 8,
+        "spacing": 0.012,
+        "flow_threshold": 0.3,
+        "max_position": 0.8
+      }
+    }
+  ],
+  "adjust": [
+    {
+      "node": "MARCODG1",
+      "bot": "denaro-node-trend",
+      "param": "capital",
+      "value": 8.0
+    },
+    {
+      "node": "MARCODG1",
+      "bot": "denaro-node-trend-live",
+      "param": "capital",
+      "value": 2.0
+    },
+    {
+      "node": "mc2",
+      "bot": "denaro-feeder-mc2",
+      "param": "spacing",
+      "value": 0.01
+    }
+  ],
+  "skip": [
+    "nuvola: capital 0.7565 troppo basso per FLOWGRID multi-level, mantenere grid semplice",
+    "HALO su MARCODG1+mc2: non duplicare, FLOWGRID complementare",
+    "PROBSKEW/VOSPREAD: rimandare a prossimo ciclo"
+  ]
+}

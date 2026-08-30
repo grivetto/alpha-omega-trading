@@ -1,0 +1,65 @@
+{
+  "ts": "2026-08-29T20:34:00Z",
+  "cycle": "20:30",
+  "new_strategy": "auto_gen_1788028230.py (VolExpansionGrid / squeeze-breakout)",
+  "deepseek": {
+    "deploy": [
+      {
+        "node": "mc2",
+        "strategy_file": "auto_gen_1788028230.py",
+        "config_patch": {
+          "symbol": "DOGE",
+          "capital": 3.7,
+          "base_spacing": 0.8,
+          "tight_spacing": 0.4,
+          "levels_per_side": 5,
+          "atr_window": 20,
+          "momentum_window": 14,
+          "breakout_slope": 0.05,
+          "max_position": 0.9,
+          "fee": 0.0016
+        }
+      },
+      {
+        "node": "nuvola",
+        "strategy_file": "auto_gen_1788028230.py",
+        "config_patch": {
+          "symbol": "DOGE",
+          "capital": 0.8,
+          "base_spacing": 0.8,
+          "tight_spacing": 0.4,
+          "levels_per_side": 3,
+          "atr_window": 20,
+          "momentum_window": 14,
+          "breakout_slope": 0.05,
+          "max_position": 0.7,
+          "fee": 0.0016
+        }
+      }
+    ],
+    "adjust": [
+      {
+        "node": "mc2",
+        "bot": "auto_gen_1788028230",
+        "param": "capital",
+        "value": 3.7
+      },
+      {
+        "node": "nuvola",
+        "bot": "auto_gen_1788028230",
+        "param": "levels_per_side",
+        "value": 3
+      },
+      {
+        "node": "nuvola",
+        "bot": "auto_gen_1788028230",
+        "param": "max_position",
+        "value": 0.7
+      }
+    ],
+    "skip": [
+      "MARCODG1: feed SOL stale ~4h - non deployare nuova strategia finche' il feeder non e' verificato; fermare bot esistenti su MARCODG1 per evitare decisioni su dati obsoleti"
+    ]
+  },
+  "fleet_note": "Tutti 3 nodi healthy. mc2 DOGE 3.7 grid 2/2 win pnl+0.0148; nuvola DOGE 0.8 sub-1EUR 1/1 win; MARCODG1 SOL 13.5 grid 13/13 win pnl+0.37 dd 0.79% MA timestamp stale ~4h (feeder lag poss.). VTK-GAR in paper_shadow da 20:04 atteso 2h."
+}

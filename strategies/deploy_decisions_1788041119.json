@@ -1,0 +1,42 @@
+{
+  "ts": 1788041119,
+  "fase": "3",
+  "fleet": "2026-08-30 00:04",
+  "generated": "auto_gen_1788041119.py REJ-GUARD",
+  "deepseek_json_raw": true,
+  "deepseek_json_corrected": {
+    "deploy": [
+      {
+        "node": "mc2",
+        "strategy_file": "auto_gen_1788041119.py",
+        "config_patch": {
+          "symbol": "DOGE/EUR",
+          "mode": "okx",
+          "max_rejects_window": 5,
+          "cooldown_base_s": 60,
+          "max_cooldown_s": 1800,
+          "check_real_balance": true
+        }
+      }
+    ],
+    "adjust": [
+      {
+        "node": "mc2",
+        "bot": "DOGE/EUR",
+        "param": "max_rejects_window",
+        "value": 5
+      }
+    ],
+    "kill": [
+      {
+        "node": "mc2",
+        "bot": "DOGE/EUR_grid",
+        "reason": "OKX EEA 51008: EUR reale esaurito, cap_available 3.56 desincronizzato da balance reale. Fermare spam buy (104 rifiuti/20min). Re-deploy dopo ricarica EUR."
+      }
+    ],
+    "skip": [
+      "MARCODG1 bot_ts SOL stale: solo drift timestamp, non critico; monitorare."
+    ]
+  },
+  "_note": "CRITICO LIVE: avalanche rigetti OKX 51008 in corso su mc2 DOGE/EUR. REJ-GUARD generata in questo ciclo come guardia anti-avalanche (cooldown esponenziale + check saldo reale). Applicazione kill/deploy richiede modifica config node_mc2.yaml + restart denaro-node-mc2; verificato solo record, NON eseguito live per non interrompere node."
+}

@@ -1,0 +1,47 @@
+{
+  "ts": "2026-08-29T21:35:00Z",
+  "cycle": "21:35",
+  "new_strategy": "auto_gen_1788032011.py (FRWG-CRA: Fill-Rate Weighted Grid with Capital-Rejection Aversion)",
+  "critical_finding": {
+    "event": "OKX 51008 EUR insufficient - 231 order failures 20:47-21:31 (~4/min)",
+    "scope": "mc2 denaro_node runs ADA(3.4)+DOGE(3.7) on OKX EEA; EUR balance exhausted, margin too low for borrow",
+    "impact": "bots hammer repeated failed buy orders; DOGE free_quote 2.75 locked, buys not filling on book",
+    "verified": "journalctl confirms recurring 51008; ccxt balance query blocked by IPv6 IP whitelist 50110 (key 58b2cc6b)"
+  },
+  "deepseek": {
+    "status": "INBOX DELIVERED via webchat3080 /api/send async; FULL CODE + fleet + directive appended to inbox.md 21:34-21:35",
+    "note": "POST /api/send HTTP times out on sync reply (HTTP 000 60s); async inbox path WORKS (ponte confirmed), DS heartbeat alive status=0. Reply expected in outbox next cycles."
+  },
+  "hermes": {
+    "verdict": "AZIONE CRITICA PRIORITARIA: sbloccare OKX EUR prima di ogni deploy di strategia. FRWG-CRA progettata ESATTAMENTE per questo failure mode (widen buy spacing + stand-down on cap-rejection). NESSUN deploy/spacing utile finche' nodo senza quote disponibile.",
+    "deploy": [
+      {
+        "node": "mc2",
+        "strategy_file": "auto_gen_1788032011.py",
+        "mode": "paper_shadow",
+        "note": "candidata DOGE/EUR dopo ripristino EUR; valida handling 51008"
+      }
+    ],
+    "adjust": [
+      {
+        "node": "mc2",
+        "bot": "ada-grid",
+        "param": "capital",
+        "value": "RIDURRE o disable: OKX EUR esaurito, martella buy falliti (4/min)",
+        "action": "verificare EUR OKX + riallocare via transfer dai sub"
+      },
+      {
+        "node": "mc2",
+        "bot": "doge-grid",
+        "param": "capital",
+        "value": "3.7 -> free_quote 2.75 reali; buy_distance 0.015 troppo aggressivo su EUR scarso"
+      }
+    ],
+    "skip": [
+      "MARCODG1 SOL: feed bot_ts stale 47h, escluso da decisioni live",
+      "nuvola: capital 0.80 sub-EUR HIGH RISK, non toccare",
+      "OIFV-RBC/SPER-KE promotion live: solo paper finche' capital crisis risolta"
+    ]
+  },
+  "fleet_note": "Tutti 3 nodi healthy (mc2 4 unit, nuvola 2, MARCODG1 5). mc2 doge grid cap 3.7 pnl+0.0148 2/2W dd0 free_quote 2.75; nuvola doge 0.8 pnl+0.0061; MARCODG1 SOL 13.5 pnl+0.37 13/13W dd0.79% MA bot_ts stale 47h. RAM 9.6G avail load 0.91. CRITICO: OKX EUR insufficient su mc2."
+}

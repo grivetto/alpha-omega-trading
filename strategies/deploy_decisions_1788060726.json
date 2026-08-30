@@ -1,0 +1,30 @@
+{
+  "cycle_ts": "2026-08-30T05:33",
+  "strategy_gen": "auto_gen_1788060646.py QUEUEFLOW (L2 queue-imb + spread-width grid, SMOKE PASS, mem 0.0009MB)",
+  "fleet": "tutti healthy, 0 kill-switch, tutte win/dd~0; mc2 load 0.42 RAM 9.6Gi",
+  "ds_plan": {
+    "deploy": [
+      {"node": "nuvola", "strategy_file": "auto_gen_1788060646.py", "config_patch": {"capital": 0.8, "base_spacing": 0.01, "levels": 5, "q_window": 50, "q_long": 0.55, "q_short": 0.45, "spread_k": 1.0, "max_spread_rel": 0.05, "bias_cap": 0.2, "risk_pct": 0.02, "fee": 0.001}},
+      {"node": "MARCODG1", "strategy_file": "auto_gen_1788060646.py", "config_patch": {"capital": 13.5, "base_spacing": 0.012, "levels": 6, "q_window": 60, "q_long": 0.55, "q_short": 0.45, "spread_k": 1.2, "max_spread_rel": 0.04, "bias_cap": 0.25, "risk_pct": 0.02, "fee": 0.001}}
+    ],
+    "adjust": [
+      {"node": "MARCODG1", "bot": "auto_gen_1788060646", "param": "base_spacing", "value": 0.012},
+      {"node": "MARCODG1", "bot": "auto_gen_1788060646", "param": "levels", "value": 6},
+      {"node": "MARCODG1", "bot": "auto_gen_1788060646", "param": "q_window", "value": 60},
+      {"node": "MARCODG1", "bot": "auto_gen_1788060646", "param": "spread_k", "value": 1.2},
+      {"node": "MARCODG1", "bot": "auto_gen_1788060646", "param": "max_spread_rel", "value": 0.04},
+      {"node": "MARCODG1", "bot": "auto_gen_1788060646", "param": "bias_cap", "value": 0.25}
+    ],
+    "skip": [
+      "mc2: orchestrator, no trading allowed per policy",
+      "auto_gen_1788060646: deploy su mc2 non consentito"
+    ]
+  },
+  "hermes_notes": [
+    "FASE1: QUEUEFLOW distinta dalla famiglia esplorata (L2 QI + spread-width scaling, veto book illiquido). SMOKE PASS su 3 casi (long/short/HOLD illiquido) + test config invalida rifiutata.",
+    "FASE2: fleet stabile, zero drawdown, zero kill-switch, nessun errore. DOGE mc2 pnl +0.0148, nuvola +0.0061, SOL MARCODG1 +0.3705 (13/13 win).",
+    "FASE3: DS rispetta policy mc2 orchestrator-only (skip corretto). Deploy proposto su nuvola+MARCODG1; deploy reale gestito dal framework denaro, qui solo piano salvato."
+  ],
+  "deploy_executed": false,
+  "reason": "orchestrazione: piani DS salvati, deploy reale richiede validazione risk e viene gestito dal framework denaro"
+}

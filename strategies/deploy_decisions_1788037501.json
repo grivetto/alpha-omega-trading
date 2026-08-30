@@ -1,0 +1,57 @@
+{
+  "ts": 1788037501.5622482,
+  "fase": "3",
+  "fleet": "2026-08-29 23:00 UTC",
+  "generated": "auto_gen_20260829_23031788037395.py CPAGrid (Cycle-Phase Adaptive Grid)",
+  "deepseek_json": {
+    "deploy": [
+      {
+        "node": "nuvola",
+        "strategy_file": "auto_gen_20260829_23031788037395.py",
+        "config_patch": {
+          "capital": 0.8,
+          "spacing": 0.018,
+          "levels": 8,
+          "pair": "DOGE/EUR",
+          "risk": 0.01
+        }
+      },
+      {
+        "node": "MARCODG1",
+        "strategy_file": "auto_gen_20260829_23031788037395.py",
+        "config_patch": {
+          "capital": 13.5,
+          "spacing": 0.012,
+          "levels": 12,
+          "pair": "SOL/EUR",
+          "risk": 0.015
+        }
+      }
+    ],
+    "adjust": [
+      {
+        "node": "MARCODG1",
+        "bot": "sol",
+        "param": "max_trades",
+        "value": 18
+      },
+      {
+        "node": "MARCODG1",
+        "bot": "sol",
+        "param": "stale_threshold",
+        "value": 300
+      },
+      {
+        "node": "nuvola",
+        "bot": "doge",
+        "param": "stale_threshold",
+        "value": 250
+      }
+    ],
+    "skip": [
+      "mc2: orchestrator-only, no trading units",
+      "auto_gen_1788035462.py HARS: already deployed",
+      "auto_gen_1788034600.py CACVR: already deployed"
+    ]
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "deploy": [
+    {
+      "node": "MARCODG1",
+      "strategy_file": "auto_gen_20260830_0946_voltrail.py",
+      "config_patch": {
+        "spacing_atr_mult": 1.2,
+        "trailing_atr_mult": 2.0,
+        "kelly_fraction": 0.25,
+        "regime_filter": "trend_follow"
+      }
+    }
+  ],
+  "adjust": [
+    {
+      "node": "mc2",
+      "action": "reduce_cap",
+      "target_cap": 2.5
+    },
+    {
+      "node": "nuvola",
+      "action": "hold"
+    }
+  ],
+  "skip": [
+    "basisgrid_to_mc2",
+    "depthgrid_to_nuvola",
+    "spreadkiller_to_MARCODG1",
+    "reason: voltrail sostituisce spreadkiller su MARCODG1; basis/depth non necessari con regime filter attivo"
+  ]
+}

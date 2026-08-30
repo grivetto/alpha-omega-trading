@@ -1,0 +1,44 @@
+{
+  "deploy": [
+    {
+      "node": "nuvola",
+      "strategy_file": "auto_gen_20260830_1045_spreadaug.py",
+      "config_patch": {
+        "capital": 0.8,
+        "spacing": 0.015,
+        "levels": 8,
+        "max_spread_mult": 2.5,
+        "vol_blend": 0.3
+      }
+    },
+    {
+      "node": "mc2",
+      "strategy_file": "auto_gen_20260830_1031_hurstgrid.py",
+      "config_patch": {
+        "capital": 3.7,
+        "spacing": 0.012,
+        "levels": 10,
+        "hurst_threshold": 0.55,
+        "trend_filter": true
+      }
+    }
+  ],
+  "adjust": [
+    {
+      "node": "MARCODG1",
+      "bot": "sol",
+      "param": "levels",
+      "value": 12
+    },
+    {
+      "node": "MARCODG1",
+      "bot": "sol",
+      "param": "spacing",
+      "value": 0.018
+    }
+  ],
+  "skip": [
+    "MARCODG1: real money, no new strategy deploy this cycle; only minor grid tuning to reduce churn",
+    "detidegrid/probskew/vospread/halo/flowgrid/atrailmom/volgridx/ramvo/spreadkiller/depthgrid/basisgrid/voltrail/deadzonegrid/regimefilter: not yet validated or redundant with HURSTGRID/SPREADAUG coverage"
+  ]
+}

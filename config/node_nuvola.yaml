@@ -66,11 +66,21 @@ bots:
   enabled: false
 - symbol: DOGE/EUR
   mode: okx
+  strategy: irmr
   capital: 0.8
   levels: 1
-  buy_distance: 0.02
-  profit_target: 0.03
-  fee: 0.001
+  ewma_window: 20
+  z_enter_mult: 1.8
+  z_exit: 0.3
+  max_inventory_pct: 0.5
+  risk_pct: 0.01
+  atr_period: 14
+  atr_stop_mult: 2.5
+  min_fee_capture_mult: 2.0
+  cooldown_ticks: 100
+  min_order_size: 0.001
+  max_spread_fraction: 0.002
+  fee_rate: 0.001
   tick_interval: 30
   env_prefix: ''
   health_path: /home/sergio/denaro/health/doge_nuvola.json

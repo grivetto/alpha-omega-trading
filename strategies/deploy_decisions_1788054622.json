@@ -1,0 +1,19 @@
+{
+  "ts": "2026-08-30 03:49",
+  "source": "deepseek reply_hermes",
+  "strategies": {
+    "LAPSE": "auto_gen_1788060315.py (stasis mini-fill anti-illiquidita, jitter anti-sync, kill-switch dd)",
+    "CEFR": "auto_gen_1788053563.py (allocazione capitale frazionale, Kelly, dd-throttle)"
+  },
+  "deploy": [
+    {"node": "denaro-node-mc2", "strategy_file": "auto_gen_1788060315.py", "config_patch": {"capital_allocation": 3.4, "spacing_bands": 0.0018, "levels": 8, "kill_switch_dd": 0.02, "jitter": 0.01}},
+    {"node": "denaro-node-nuvola", "strategy_file": "auto_gen_1788060315.py", "config_patch": {"capital_allocation": 0.8, "spacing_bands": 0.002, "levels": 3, "kill_switch_dd": 0.015, "jitter": 0.01}},
+    {"node": "denaro-node-trend-live", "strategy_file": "auto_gen_1788053563.py", "config_patch": {"capital_allocation": 12.0, "spacing_bands": 0.003, "levels": 6, "kelly_fraction": 0.25, "dd_throttle": 0.01}}
+  ],
+  "adjust": [
+    {"node": "denaro-node-mc2", "bot": "doge", "param": "capital", "value": 3.4},
+    {"node": "denaro-node-nuvola", "bot": "doge", "param": "capital", "value": 0.8},
+    {"node": "denaro-node-trend-live", "bot": "sol", "param": "capital", "value": 12.0}
+  ],
+  "skip": []
+}

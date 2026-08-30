@@ -1,0 +1,6 @@
+{
+  "deploy": [],
+  "adjust": [],
+  "skip": true,
+  "reason": "Nessuna azione richiesta: tutti gli agenti healthy, PnL positivo, drawdown sotto soglia, voladapt_grid gi\u00e0 attiva. Attendo prossimo ciclo."
+}

@@ -1,0 +1,57 @@
+{
+  "ts": 1788045598,
+  "fase": "3",
+  "fleet": "2026-08-30 01:15",
+  "generated": "auto_gen_1788045366.py MOM-ERL",
+  "deploy": [
+    {
+      "node": "mc2",
+      "strategy_file": "MOM-ERL_auto_gen_1788045366.py",
+      "config_patch": {
+        "capital": 1.5,
+        "spacing": 0.008,
+        "levels": 8,
+        "risk_ladder": [
+          0.02,
+          0.04,
+          0.06,
+          0.08,
+          0.1,
+          0.12,
+          0.14,
+          0.16
+        ]
+      }
+    },
+    {
+      "node": "nuvola",
+      "strategy_file": "MOM-ERL_auto_gen_1788045366.py",
+      "config_patch": {
+        "capital": 0.5,
+        "spacing": 0.012,
+        "levels": 5,
+        "risk_ladder": [
+          0.03,
+          0.05,
+          0.07,
+          0.09,
+          0.11
+        ]
+      }
+    }
+  ],
+  "adjust": [
+    {
+      "node": "marcodg1",
+      "bot": "SOL/EUR_grid",
+      "param": "capital",
+      "value": 14.0
+    },
+    {
+      "node": "marcodg1",
+      "bot": "SOL/EUR_grid",
+      "param": "spacing",
+      "value": 0.015
+    }
+  ]
+}

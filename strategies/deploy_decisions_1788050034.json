@@ -1,0 +1,65 @@
+{
+  "ts": 1788050034,
+  "fase": "3",
+  "fleet": "2026-08-30 02:33",
+  "generated": "auto_gen_1788050034.py VLAD Volume-Liquidity Adaptive Decay Grid",
+  "smoke": "PASSED",
+  "deepseek_json_raw": true,
+  "deepseek_json_corrected": {
+    "deploy": [
+      {
+        "node": "nuvola",
+        "strategy_file": "auto_gen_1788050034.py",
+        "config_patch": {
+          "capital": 1.0,
+          "base_spacing": 0.01,
+          "levels": 8,
+          "atr_window": 60,
+          "atr_mult": [
+            0.8,
+            1.6
+          ],
+          "vol_floor": 0.0008,
+          "kelly_fraction": 0.25,
+          "win_hist": 24
+        }
+      },
+      {
+        "node": "MARCODG1",
+        "strategy_file": "auto_gen_1788050034.py",
+        "config_patch": {
+          "capital": 13.5,
+          "base_spacing": 0.007,
+          "levels": 12,
+          "atr_window": 60,
+          "atr_mult": [
+            0.8,
+            1.6
+          ],
+          "vol_floor": 0.0008,
+          "kelly_fraction": 0.5,
+          "win_hist": 24
+        }
+      }
+    ],
+    "adjust": [
+      {
+        "node": "nuvola",
+        "bot": "DOGE/EUR grid",
+        "param": "capital",
+        "value": 1.0
+      },
+      {
+        "node": "MARCODG1",
+        "bot": "SOL/EUR grid",
+        "param": "spacing",
+        "value": 0.007
+      }
+    ],
+    "skip": [
+      "mc2 orchestrator-only no trading",
+      "VLAD su mc2 non necessario",
+      "nuvola con capital 0.8 troppo basso per 8 livelli (DeepSeek suggeriva 4; correzione a 8 con capital 1.0)"
+    ]
+  }
+}

@@ -241,7 +241,12 @@ class BotTask:
             self.portfolio.update(free, [])
         try:
             if self._price_source is not None:
-                price = float(self._price_source())
+                # price_source can be sync or async (hub.get_price is async)
+                price_val = self._price_source()
+                if asyncio.iscoroutine(price_val):
+                    price = float(await price_val)
+                else:
+                    price = float(price_val)
             else:
                 t = await asyncio.to_thread(self.ex.fetch_ticker, self.cfg.symbol)
                 price = float(t["last"])
@@ -249,6 +254,9 @@ class BotTask:
             self._last_error = f"ticker: {e}"
             self._write_health(equity, blocked=False)
             return
+
+        # DEBUG: log price fetch
+        log.info("TICK %s: price=%.6f free=%.4f equity=%.4f", self.cfg.symbol, price, free, equity)
 
         # 3) decisione (policy pura — idempotente)
         #    aggiorna prima lo storico della strategia (momentum/meanrev)
@@ -278,6 +286,23 @@ class BotTask:
             decision = self.policy.decide(price, self.state.open_buys,
                                           self.state.open_sells, free,
                                           risk_capital, free, now)
+
+        # DEBUG: log decision for VAGR and IRFMR
+        if hasattr(self.policy, 'regime') and hasattr(self.policy, 'atr'):
+            # VAGR policy
+            log.info("VAGR %s: price=%.6f regime=%s atr=%.6f std=%.6f reason=%s to_place=%d to_sell=%d",
+                     self.cfg.symbol, price, self.policy.regime, self.policy.atr, self.policy.std_tr,
+                     decision.reason, len(decision.to_place), len(decision.to_sell))
+        elif hasattr(self.policy, '_z') and hasattr(self.policy, '_inventory'):
+            # IRFMR policy
+            z_val = 0.0
+            if hasattr(self.policy._z, 'mean') and self.policy._z.count > 1:
+                std = (self.policy._z.var ** 0.5) if self.policy._z.var > 0 else 0
+                if std > 0:
+                    z_val = (price - self.policy._z.mean) / std
+            log.info("IRFMR %s: price=%.6f z=%.2f inv=%.4f reason=%s to_place=%d to_sell=%d",
+                     self.cfg.symbol, price, z_val, self.policy._inventory,
+                     decision.reason, len(decision.to_place), len(decision.to_sell))
 
         # 3a) SafeMode (TODO punto 3): nessun NUOVO trade se la RAM e' critica;
         #     le posizioni esistenti continuano a essere gestite (fill/exit)

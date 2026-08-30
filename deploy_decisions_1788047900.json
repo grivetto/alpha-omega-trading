@@ -1,0 +1,53 @@
+{
+  "ts": 1788047900,
+  "fase": 3,
+  "fleet_snapshot": "2026-08-30 01:45",
+  "source_strategy": "auto_gen_1788047900.py VOLTGT",
+  "deploy": [
+    {
+      "node": "marcodg1",
+      "strategy_file": "auto_gen_1788047900.py",
+      "config_patch": {
+        "market": "XRP/EUR",
+        "capital": 2.0,
+        "kelly_fraction": 0.25,
+        "vol_target": 0.02,
+        "z_enter": 1.6,
+        "z_exit": 0.4,
+        "z_max": 3.2,
+        "ewma_span": 14,
+        "levels": 4,
+        "spacing_pct": 0.004,
+        "exit_step_pct": 0.0045,
+        "kurt_high": 4.0,
+        "max_loss_pct": 0.03,
+        "max_deque": 4096,
+        "dry_run": true,
+        "port": 8913,
+        "rationale": "VOLTGT famiglia nuova (vol-targeting z-band MR), ortogonale a grid SOL/ADA. XRP/EUR libero su MARCODG1 (no conflitto). Paper-only dry_run, kelly_cap 25% (non 30% default) per promozione prudente. Capital 2.0 = smoke config. Validare ≥48h prima di qualsiasi live."
+      }
+    }
+  ],
+  "adjust": [
+    {
+      "node": "marcodg1",
+      "bot": "SOL/EUR_grid",
+      "param": "feed_alert_threshold_seconds",
+      "value": 7200,
+      "reason": "P&L 13/13 win su 12599s uptime = 3.5h, dd 0.0079: statisticamente irrilevante, pattern sospetto. Riduco threshold a 2h per intercettare prossimo stall."
+    },
+    {
+      "node": "marcodg1",
+      "bot": "ADA/EUR_grid",
+      "param": "feed_alert_threshold_seconds",
+      "value": 7200,
+      "reason": "Stesso nodo MARCODG1, applico threshold coerente per intercettazione uniforme feed-stale."
+    }
+  ],
+  "skip": [
+    "mc2 non esegue trading - solo orchestrazione (regola fissa denaro-fase3-dispatch)",
+    "nuvola cap bot reale 0.7565 EUR < smoke capital 2.0 richiesto da VOLTGT - inadeguato, attendere ricarica saldo",
+    "MARCODG1 SOL/EUR e ADA/EUR grid running - non deployare VOLTGT live sugli stessi symbol (conflitto directional)",
+    "VOLTGT famiglia nuova, gia' smoke PASSED su mc2 - non ridistribuire su simboli gia' coperti da grid live"
+  ]
+}

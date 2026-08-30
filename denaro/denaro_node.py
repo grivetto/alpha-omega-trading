@@ -46,6 +46,11 @@ _OVERRIDE_KEYS = frozenset({
     "stop_loss_pct", "daily_loss_limit", "max_drawdown_limit",
     "weekly_loss_limit", "max_slippage",
     "tick_interval", "fee", "entry_slip", "quote",
+    # VAGR specific
+    "atr_window", "vol_target_pct", "min_spacing_pct", "max_spacing_pct",
+    "max_grid_levels", "quiet_threshold", "active_threshold",
+    "base_position_pct", "min_position_pct", "mr_inventory_band_pct",
+    "max_daily_loss_pct", "kill_switch_drawdown_pct", "fee_rate",
 })
 
 
@@ -74,7 +79,7 @@ def build_grid_params(bot: dict) -> GridParams:
 
 def build_policy(bot: dict, exchange):
     """Costruisce la strategia del bot in base a `strategy`:
-    grid (default) | momentum | meanrev. I minimi dell'exchange vengono
+    grid (default) | momentum | meanrev | adaptive | irmr | vagr. I minimi dell'exchange vengono
     passati alla policy per scartare ordini non piazzabili."""
     strategy = bot.get("strategy", "grid")
     fn = getattr(exchange, "min_amount_for", None)
@@ -95,7 +100,6 @@ def build_policy(bot: dict, exchange):
                 entry_slip=float(bot.get("entry_slip", 0.001)),
             ),
             min_amount=min_amount)
-    # default: grid
     if strategy == "adaptive":
         from denaro.domain.adaptive import AdaptiveEngine, AdaptiveParams
         return AdaptiveEngine(
@@ -105,6 +109,49 @@ def build_policy(bot: dict, exchange):
                 profit_target=float(bot.get("profit_target", 0.015)),
             ),
             min_amount=min_amount)
+    if strategy == "irmr":
+        from denaro.domain.irmr_policy import IrmrPolicy, IrmrParams
+        return IrmrPolicy(
+            IrmrParams(
+                ewma_window=int(bot.get("ewma_window", 120)),
+                z_enter_mult=float(bot.get("z_enter_mult", 1.8)),
+                z_exit=float(bot.get("z_exit", 0.25)),
+                max_inventory_pct=float(bot.get("max_inventory_pct", 0.45)),
+                risk_pct=float(bot.get("risk_pct", 0.01)),
+                atr_period=int(bot.get("atr_period", 40)),
+                atr_stop_mult=float(bot.get("atr_stop_mult", 2.0)),
+                min_fee_capture_mult=float(bot.get("min_fee_capture_mult", 2.0)),
+                cooldown_ticks=int(bot.get("cooldown_ticks", 60)),
+                min_order_size=float(bot.get("min_order_size", 0.0)),
+                max_spread_fraction=float(bot.get("max_spread_fraction", 0.01)),
+                fee_rate=float(bot.get("fee_rate", 0.0016)),
+            ),
+            min_amount=min_amount,
+            base_capital=float(bot.get("capital", 100)),
+        )
+    if strategy == "vagr":
+        from denaro.domain.vagr import VagrPolicy, VagrConfig
+        return VagrPolicy(
+            VagrConfig(
+                symbol=bot["symbol"],
+                capital_eur=float(bot.get("capital", 100)),
+                atr_window=int(bot.get("atr_window", 120)),
+                vol_target_pct=float(bot.get("vol_target_pct", 0.08)),
+                min_spacing_pct=float(bot.get("min_spacing_pct", 0.002)),
+                max_spacing_pct=float(bot.get("max_spacing_pct", 0.06)),
+                max_grid_levels=int(bot.get("max_grid_levels", 12)),
+                quiet_threshold=float(bot.get("quiet_threshold", 0.003)),
+                active_threshold=float(bot.get("active_threshold", 0.012)),
+                base_position_pct=float(bot.get("base_position_pct", 0.92)),
+                min_position_pct=float(bot.get("min_position_pct", 0.35)),
+                mr_inventory_band_pct=float(bot.get("mr_inventory_band_pct", 0.5)),
+                max_daily_loss_pct=float(bot.get("max_daily_loss_pct", 0.10)),
+                kill_switch_drawdown_pct=float(bot.get("kill_switch_drawdown_pct", 0.15)),
+                fee_rate=float(bot.get("fee_rate", 0.0016)),
+            ),
+            min_amount=min_amount,
+        )
+    # default: grid
     return GridPolicy(build_grid_params(bot), min_amount=min_amount)
 
 
@@ -314,8 +361,10 @@ class NodeApp:
         return exchange.fetch_total_equity
 
     def _make_price_source(self, symbol: str):
-        def source() -> float:
-            return self.hub.price(symbol) or 0.0
+        async def source() -> float:
+            # Use get_price which does a one-shot REST fetch if cache is empty
+            price = await self.hub.get_price(symbol)
+            return price or 0.0
         return source
 
     @staticmethod

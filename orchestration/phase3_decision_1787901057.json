@@ -1,0 +1,96 @@
+{
+  "deploy": [
+    {
+      "node": "marcodg1",
+      "strategy_file": "auto_gen_1787887244.py",
+      "config_patch": {
+        "capital": 13.5,
+        "symbol": "SOL/EUR",
+        "levels": 4,
+        "atr_period": 14,
+        "atr_mult": 0.5,
+        "tp_atr_mult": 1.5,
+        "fee_rate": 0.0026,
+        "max_drawdown": 0.10,
+        "max_position_pct": 0.95,
+        "recenter_band_pct": 0.03,
+        "cooldown_ticks": 5,
+        "min_vol_ratio": 0.0005,
+        "max_vol_ratio": 0.10,
+        "max_tick_age": 60.0,
+        "csv_chunk_size": 10000,
+        "gc_interval": 5
+      }
+    },
+    {
+      "node": "marcodg1",
+      "strategy_file": "auto_gen_1787901057.py",
+      "config_patch": {
+        "capital": 13.5,
+        "symbol": "SOL/EUR",
+        "grid_levels": 10,
+        "spacing_pct": 0.005,
+        "momentum_window": 20,
+        "momentum_threshold": 0.002,
+        "max_position_pct": 0.8,
+        "min_spacing_pct": 0.002,
+        "max_spacing_pct": 0.02,
+        "volatility_window": 50,
+        "atr_multiplier": 1.5,
+        "chunk_size": 1000
+      }
+    },
+    {
+      "node": "mc2",
+      "strategy_file": "auto_gen_1787883142.py",
+      "config_patch": {
+        "capital": 3.7,
+        "symbol": "DOGE/EUR",
+        "risk_pct": 0.01,
+        "vol_filter_mult": 1.5,
+        "donchian_period": 20,
+        "atr_period": 14,
+        "fee_rate": 0.0026
+      }
+    },
+    {
+      "node": "nuvola",
+      "strategy_file": "auto_gen_1787883142.py",
+      "config_patch": {
+        "capital": 0.8,
+        "symbol": "DOGE/EUR",
+        "risk_pct": 0.005,
+        "vol_filter_mult": 1.2,
+        "donchian_period": 20,
+        "atr_period": 14,
+        "fee_rate": 0.0026
+      }
+    }
+  ],
+  "adjust": [
+    {
+      "node": "marcodg1",
+      "bot": "denaro-node-trend-live",
+      "param": "kill_switch_drawdown",
+      "value": 0.08
+    },
+    {
+      "node": "marcodg1",
+      "bot": "denaro-node-trend-live",
+      "param": "max_trades_per_hour",
+      "value": 6
+    },
+    {
+      "node": "mc2",
+      "bot": "denaro-feeder-mc2",
+      "param": "poll_interval_sec",
+      "value": 5
+    }
+  ],
+  "skip": [
+    "auto_gen_1787884354.py: AvellanedaStoikovMM already deployed on mc2 DOGE/EUR; capital 3.7 EUR at minimum viable for MM, do not duplicate",
+    "auto_gen_1787886062.py: ChandelierTrendRider valid but AdaptiveVolGrid has superior test results (7/7 win, +4.68 EUR) with same OOM-safety; deploy only after AdaptiveVolGrid paper validation on marcodg1",
+    "AdaptiveGridMomentum on mc2/nuvola: capital < 5 EUR, adaptive ATR spacing with 0.26% fees erodes PnL; prefer selective MomentumBreakout on small capital nodes",
+    "Promotion to live on marcodg1: requires 48h paper stability, min 20 trades, PnL >= 3-5%, win rate >= 55%, DD <= 10% — not yet met"
+  ]
+}

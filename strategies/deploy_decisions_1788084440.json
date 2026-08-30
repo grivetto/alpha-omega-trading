@@ -1,0 +1,39 @@
+{
+  "ts": 1788084440.0058532,
+  "strategy_gen": "auto_gen_20260830_1205_volprofile_grid.py",
+  "deploy": [
+    {
+      "node": "mc2",
+      "strategy_file": "volprofile_grid.py",
+      "config_patch": {
+        "symbol": "DOGE/EUR",
+        "capital": 3.7,
+        "levels": 20,
+        "recenter_every": 90,
+        "vprofile_buckets": 40
+      }
+    },
+    {
+      "node": "MARCODG1",
+      "strategy_file": "voladapt_grid.py",
+      "config_patch": {
+        "symbol": "SOL/EUR",
+        "capital": 13.5,
+        "levels": 30,
+        "adapt_factor": 1.5
+      }
+    }
+  ],
+  "adjust": [
+    {
+      "node": "nuvola",
+      "bot": "doge_grid",
+      "param": "capital",
+      "value": 1.0
+    }
+  ],
+  "skip": [
+    "nuvola auto-gen (cap limitata)",
+    "volprofile_grid su MARCODG1 (SOL high vol, preferire voladapt)"
+  ]
+}

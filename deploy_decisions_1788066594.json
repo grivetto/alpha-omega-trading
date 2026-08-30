@@ -1,0 +1,100 @@
+{
+  "ts": "2026-08-30 07:09",
+  "strategy": "auto_gen_20260830_0710_probskew.py (PROBSKEW) [new] + auto_gen_20260830_0650_detidegrid.py (nuvola)",
+  "deploy": [
+    {
+      "node": "mc2",
+      "strategy_file": "auto_gen_20260830_0710_probskew.py",
+      "config_patch": {
+        "capital": 3.5577,
+        "levels": 3,
+        "base_offset_pct": 0.002,
+        "offset_step_pct": 0.001,
+        "fee_pct": 0.001,
+        "edge_min_mult": 1.5,
+        "p_fill_alpha": 0.3,
+        "p_fill_min": 0.2,
+        "adverse_sel_alpha": 0.2,
+        "adverse_sel_max": 0.6,
+        "throttle_cooldown_s": 30,
+        "max_order_pct": 0.15
+      }
+    },
+    {
+      "node": "nuvola",
+      "strategy_file": "auto_gen_20260830_0650_detidegrid.py",
+      "config_patch": {
+        "capital": 0.7565,
+        "levels": 4,
+        "base_spacing_pct": 0.003,
+        "offset_step_pct": 0.0015,
+        "atr_lookback": 14,
+        "atr_mult": 1.2,
+        "decay_half_life_s": 900.0,
+        "inventory_skew": 0.3
+      }
+    }
+  ],
+  "adjust": [
+    {
+      "node": "mc2",
+      "bot": "doge",
+      "param": "capital",
+      "value": 3.5577
+    },
+    {
+      "node": "nuvola",
+      "bot": "doge",
+      "param": "capital",
+      "value": 0.7565
+    }
+  ],
+  "skip": [
+    "MARCODG1: real money SOL/EUR - solo skip o modifica minima; performance solida (pnl +0.3705, 13 wins) senza degrado di segnale",
+    "nuvola: PROBSKEW non deployata - capital 0.75 troppo basso per market making a livelli multipli"
+  ],
+  "hermes_reconcile": {
+    "note": "DeepSeek ha approvato PROBSKEW (ortogonale: P(fill)*edge market making con throttle adverse-selection, O(1), <1MB). Fix applicati da Hermes post-review: (1) condizione throttling corretta, (2) order_size proporzionale a p_fill*edge, (3) single idle decay per tick. Config DS per PROBSKEW mappata correttamente a ProbSkewConfig (base_offset_pct/base_spacing REALE). DetideGrid su nuvola: chiavi DS 'base_offset_pct/range_threshold' NON esistono in DetideConfig -> mappate a base_spacing_pct/trend_threshold (come da reconciling ciclo 06:50). MC2 deploy PROBSKEW con cap_available 3.5577 (max_order_pct 0.15 = ~0.53 EUR/ordine). Priorita MEDIA, backtest 5000+ tick reali prima di live.",
+    "action": "PENDING_APPLY_normalize_before_deploy"
+  },
+  "raw_deepseek": {
+    "deploy": [
+      {
+        "node": "mc2",
+        "strategy_file": "auto_gen_20260830_0710_probskew.py",
+        "config_patch": {
+          "capital": 3.7,
+          "base_offset_pct": 0.002,
+          "offset_step_pct": 0.001,
+          "fee_pct": 0.001,
+          "edge_min_mult": 1.5,
+          "p_fill_alpha": 0.3,
+          "p_fill_min": 0.2,
+          "adverse_sel_alpha": 0.2,
+          "adverse_sel_max": 0.6,
+          "throttle_cooldown_s": 30,
+          "max_order_pct": 0.15,
+          "levels": 3
+        }
+      },
+      {
+        "node": "nuvola",
+        "strategy_file": "auto_gen_20260830_0650_detidegrid.py",
+        "config_patch": {
+          "capital": 0.8,
+          "base_offset_pct": 0.003,
+          "offset_step_pct": 0.0015,
+          "atr_period": 14,
+          "atr_mult": 1.2,
+          "range_threshold": 0.004,
+          "trend_threshold": 0.008,
+          "inventory_skew": 0.3,
+          "levels": 4
+        }
+      }
+    ],
+    "skip": [
+      "MARCODG1: real money SOL/EUR - nessuna modifica, solo monitoraggio; TidalGrid non deployata (richiede pi\u00f9 capitale per spacing dinamico su nodi piccoli)"
+    ]
+  }
+}

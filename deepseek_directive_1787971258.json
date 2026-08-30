@@ -1,0 +1,18 @@
+{
+  "ts": "2026-08-29 04:41",
+  "phase1_strategy": "auto_gen_1787970600.py (VolumeProfile+VolatilityBreakout), TEST PASSED",
+  "phase3_directive": {
+    "deploy": [
+      {"node": "marcodg1", "strategy_file": "auto_gen_1787970600.py", "config_patch": {"symbol": "SOL/EUR", "capital": 13.5, "levels": 5, "buy_dist": 0.012, "profit": 0.025, "fee": 0.001, "stop_loss": 0.20, "trailing_stop": 0.015, "volatility_lookback": 20, "volume_profile_bins": 24}},
+      {"node": "mc2", "strategy_file": "auto_gen_1787970600.py", "config_patch": {"symbol": "DOGE/EUR", "capital": 3.7, "levels": 4, "buy_dist": 0.012, "profit": 0.018, "fee": 0.001, "stop_loss": 0.25, "trailing_stop": 0.01, "volatility_lookback": 20, "volume_profile_bins": 24}}
+    ],
+    "adjust": [
+      {"node": "nuvola", "bot": "doge", "param": "capital", "value": 1.2},
+      {"node": "nuvola", "bot": "doge", "param": "levels", "value": 2},
+      {"node": "nuvola", "bot": "doge", "param": "spacing", "value": 0.018},
+      {"node": "marcodg1", "bot": "sol", "param": "capital", "value": 15.0},
+      {"node": "marcodg1", "bot": "sol", "param": "levels", "value": 5}
+    ],
+    "skip": ["XRP e ADA su mc2: non attivi", "SOL/EUR su nuvola: kraken fee 0.0026 troppo alta"]
+  }
+}

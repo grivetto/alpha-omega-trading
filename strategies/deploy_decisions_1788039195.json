@@ -1,0 +1,54 @@
+{
+  "ts": 1788039195,
+  "fase": "3",
+  "fleet": "2026-08-29 23:30",
+  "generated": "auto_gen_1788039131.py VOLT-SR",
+  "deepseek_json_raw": true,
+  "deepseek_json_corrected": {
+    "deploy": [
+      {
+        "node": "MARCODG1",
+        "strategy_file": "auto_gen_1788039131.py",
+        "config_patch": {
+          "symbol": "SOL/EUR",
+          "capital": 2.0,
+          "base_spacing_pct": 0.015,
+          "levels": 8,
+          "risk_per_trade": 0.01,
+          "atr_period": 14,
+          "hurst_window": 64,
+          "of_window": 60,
+          "of_buy_threshold": 0.4,
+          "min_hurst_for_grid": 0.55,
+          "guard_fee_pct": 0.001
+        }
+      }
+    ],
+    "adjust": [
+      {
+        "node": "MC2",
+        "bot": "DOGE/EUR",
+        "param": "spacing",
+        "value": 0.022
+      },
+      {
+        "node": "MC2",
+        "bot": "DOGE/EUR",
+        "param": "levels",
+        "value": 6
+      },
+      {
+        "node": "MARCODG1",
+        "bot": "SOL/EUR",
+        "param": "max_trades",
+        "value": 15
+      }
+    ],
+    "skip": [
+      "NUVOLA: capital 0.8 troppo basso per VOLT-SR (richiede min 1.5)",
+      "MC2 deploy VOLT-SR: RIMOSSO - MC2 e orchestrator-only, mai trading",
+      "config_patch di DS usava chiavi LSMR-ARX (liquidity_scale/hurst/mrw/risk) NON esistenti in VSRConfig -> corretti a base_spacing_pct/risk_per_trade/urst_window/min_hurst_for_grid"
+    ],
+    "_note": "Correzione Hermes su risposta DeepSeek: MC2 non trade (solo orchestrazione); chiavi config VOLT-SR validate contro firma classe. deploy_limitato a MARCODG1 SOL (cap maggiore)."
+  }
+}

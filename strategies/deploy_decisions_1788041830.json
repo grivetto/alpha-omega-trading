@@ -1,0 +1,52 @@
+{
+  "ts": 1788041830,
+  "fase": "3",
+  "fleet": "2026-08-30 00:16",
+  "generated": "auto_gen_1788042000.py VTAG (vol-tilted adaptive trail grid)",
+  "deepseek_json_raw": true,
+  "deepseek_json_corrected": {
+    "deploy": [
+      {
+        "node": "mc2",
+        "strategy_file": "auto_gen_1788042000.py",
+        "config_patch": {
+          "market": "DOGE/EUR",
+          "capital": 1.5,
+          "strategy": "vtag",
+          "levels": 5,
+          "spacing": 0.012,
+          "trail_pct": 0.008,
+          "vol_lookback": 20,
+          "side": "buy_only",
+          "dry_run": false
+        }
+      },
+      {
+        "node": "nuvola",
+        "strategy_file": "auto_gen_1788041119.py",
+        "config_patch": {
+          "market": "DOGE/EUR",
+          "capital": 0.3,
+          "strategy": "rej-guard",
+          "side": "buy_only",
+          "rej_threshold_bps": 15,
+          "rebook_cooldown_s": 8,
+          "dry_run": true
+        }
+      }
+    ],
+    "adjust": [
+      {
+        "node": "MARCODG1",
+        "bot": "SOL/EUR",
+        "param": "levels",
+        "value": 10
+      }
+    ],
+    "skip": [
+      "auto_gen_1788041119.py REJ-GUARD e' overlay difensivo, non standalone bot; mc2 DOGE/EUR sano PnL+, no redeploy",
+      "nuvola: uptime 138196s grid stabile, non toccare spacing/levels",
+      "MARCODG1 SOL/EUR trend attivo, 13 win streak, no modifica strategia"
+    ]
+  }
+}

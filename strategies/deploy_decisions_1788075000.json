@@ -1,0 +1,71 @@
+```json
+{
+  "deploy": [
+    {
+      "node": "mc2",
+      "strategy_file": "auto_gen_20260830_0930_basisgrid.py",
+      "config_patch": {
+        "capital": 3.7,
+        "spacing": 0.012,
+        "levels": 18,
+        "max_pending": 3,
+        "ema_fast": 30,
+        "ema_slow": 240
+      }
+    },
+    {
+      "node": "nuvola",
+      "strategy_file": "auto_gen_20260830_0916_depthgrid.py",
+      "config_patch": {
+        "capital": 0.8,
+        "spacing": 0.008,
+        "levels": 10,
+        "depth_weight": 0.6,
+        "min_depth_ratio": 1.5
+      }
+    },
+    {
+      "node": "marcodg1",
+      "strategy_file": "auto_gen_20260830_0902_spreadkiller.py",
+      "config_patch": {
+        "capital": 13.5,
+        "spacing": 0.015,
+        "levels": 24,
+        "spread_threshold": 0.0008,
+        "throttle_factor": 0.7
+      }
+    }
+  ],
+  "adjust": [
+    {
+      "node": "mc2",
+      "bot": "doge_grid",
+      "param": "max_position_quote",
+      "value": 2.8
+    },
+    {
+      "node": "nuvola",
+      "bot": "doge_grid",
+      "param": "max_position_quote",
+      "value": 0.6
+    },
+    {
+      "node": "marcodg1",
+      "bot": "sol_grid",
+      "param": "max_position_quote",
+      "value": 10.5
+    },
+    {
+      "node": "marcodg1",
+      "bot": "sol_grid",
+      "param": "drawdown_max",
+      "value": 0.006
+    }
+  ],
+  "skip": [
+    "auto_gen_20260830_0850_ramvo.py: keep as fallback - not enough volatility signal on current pairs",
+    "auto_gen_20260830_0831_volgridx.py: redundant with basisgrid on mc2 - avoid over-parameterization",
+    "All nodes healthy, zero errors - no emergency redeploy needed"
+  ]
+}
+```

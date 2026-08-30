@@ -1,0 +1,20 @@
+{
+  "cycle_ts": 1788023755,
+  "strategy": "auto_gen_1788023755.py (RLTC-LW)",
+  "smoke_test": "PASS (buys=1, sells=0, mem_mb=0.5, O(1))",
+  "critique_fixes_applied": ["trend_persistence_gate>=2", "fee_in_liquidation_ward", "double_confirm_exit"],
+  "deepseek_deploy": [
+    {"node": "mc2", "strategy": "auto_gen_1788025200.py (FVBG-RVR)", "note": "paper first 6h, poi live cap 3.5 se Sharpe>1.0"},
+    {"node": "marcodg1", "strategy": "auto_gen_1788023755.py (RLTC-LW)", "note": "canary 24h, switch live solo se max_dd<5% e Sharpe>1.2"}
+  ],
+  "adjust_recommended": [
+    {"node": "nuvola", "bot": "doge_grid", "param": "capital", "value": ">=2.5 (0.8 troppo basso vs fee 0.16% roundtrip 0.32%)"},
+    {"node": "mc2", "bot": "doge_grid", "param": "grid_levels", "value": "6-7 invece di 10"}
+  ],
+  "skip": [
+    "nuvola: capital 0.8 insufficiente per qualsiasi auto-gen",
+    "deploy fisico ora: fleet healthy PnL positivo, restart=rischio downtime -> programmare in maintenance window",
+    "RLTC-LW su nuvola: sizing kelly sotto lotto minimo"
+  ],
+  "runtime_blocker": "denaro_node carica solo moduli da denaro.domain; nessun plugin-loader esterno -> promo richiede scrittura modulo + restart nodo (programmato, non a caldo)"
+}

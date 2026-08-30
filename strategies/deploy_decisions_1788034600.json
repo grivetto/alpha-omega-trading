@@ -1,0 +1,33 @@
+{
+  "ts": 1788034600,
+  "fase": "3",
+  "fleet": "2026-08-29 22:15 UTC",
+  "generated": "auto_gen_1788034600.py CACVR",
+  "deepseek_json": {
+    "deploy": [
+      {
+        "node": "nuvola",
+        "strategy_file": "auto_gen_1788034600.py",
+        "config_patch": {
+          "strategy": "CACVR",
+          "capital": 0.8,
+          "pair": "DOGE/EUR",
+          "risk_per_trade": 0.01
+        }
+      }
+    ],
+    "adjust": [
+      {
+        "node": "MARCODG1",
+        "bot": "trend-live",
+        "param": "max_trades",
+        "value": "15"
+      }
+    ],
+    "skip": [
+      {
+        "reason": "mc2 orchestrator, no trading; MARCODG1 ottimale"
+      }
+    ]
+  }
+}

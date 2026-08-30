@@ -1,0 +1,43 @@
+# Denaro Node — VAGR paper test (SOL/EUR) per MARCODG1
+# python -m denaro.denaro_node --config config/node_vagr_paper.yaml
+data_dir: node_data
+supervisor:
+  ram_critical_pct: 0.85
+  ram_throttle_pct: 0.70
+  cpu_critical_pct: 0.90
+  tick_max_factor: 5.0
+safemode:
+  caution_pct: 70.0
+  safe_pct: 85.0
+  emergency_pct: 95.0
+  interval_s: 10.0
+hub:
+  ws_enabled: true
+  poll_interval: 10
+  price_ttl: 30
+  ws_max_retries: 5
+  ws_retry_base_s: 2.0
+exchange_rest:
+  name: okx
+  eea: true
+bots:
+  - symbol: SOL/EUR
+    mode: paper
+    strategy: vagr
+    capital: 50
+    tick_interval: 30
+    fee: 0.0016
+    # VAGR specific params
+    atr_window: 120
+    vol_target_pct: 0.08
+    min_spacing_pct: 0.002
+    max_spacing_pct: 0.06
+    max_grid_levels: 12
+    quiet_threshold: 0.003
+    active_threshold: 0.012
+    base_position_pct: 0.92
+    min_position_pct: 0.35
+    mr_inventory_band_pct: 0.5
+    max_daily_loss_pct: 0.10
+    kill_switch_drawdown_pct: 0.15
+    fee_rate: 0.0016

@@ -1,0 +1,81 @@
+{
+  "ts": "2026-08-29T17:54:22Z",
+  "cycle": "19:51",
+  "new_strategy": "auto_gen_1788025859.py (RPVL-EGR)",
+  "deepseek": {
+    "deploy": [
+      {
+        "node": "mc2",
+        "strategy_file": "auto_gen_1788025859.py",
+        "mode": "paper_shadow",
+        "config_patch": {
+          "capital": 3.7,
+          "vol_fast_span": 7,
+          "vol_slow_span": 32,
+          "persist_floor": 1.0,
+          "persist_ceil": 2.2,
+          "regime_choppy_levels": 11,
+          "regime_sticky_levels": 5,
+          "regime_neutral_levels": 7,
+          "spacing_scale_choppy": 0.55,
+          "spacing_scale_sticky": 1.65,
+          "equity_drawdown_buffer": 0.045,
+          "fee": 0.0016,
+          "stop_loss": 0.1
+        }
+      }
+    ],
+    "adjust": [
+      {
+        "node": "mc2",
+        "bot": "DOGE_grid",
+        "param": "capital",
+        "value": 3.7
+      },
+      {
+        "node": "mc2",
+        "bot": "DOGE_grid",
+        "param": "max_levels",
+        "value": 11
+      },
+      {
+        "node": "mc2",
+        "bot": "DOGE_grid",
+        "param": "spacing_scale",
+        "value": 0.55
+      }
+    ],
+    "skip": [
+      "nuvola: HIGH RISK sub-1EUR, solo grid DOGE",
+      "MARCODG1: macchina di profitto, non toccare senza paper_shadow>=2h"
+    ]
+  },
+  "hermes_8642": {
+    "deploy": [
+      {
+        "node": "mc2",
+        "strategy_file": "auto_gen_1788025859.py",
+        "deploy_mode": "paper_shadow",
+        "config_patch": {
+          "capital": 3.7,
+          "persist_floor": 1.15,
+          "persist_ceil": 2.2,
+          "regime_levels": {
+            "choppy": 9,
+            "neutral": 6,
+            "sticky": 4
+          },
+          "equity_drawdown_buffer": 0.04,
+          "fee": 0.0016,
+          "stop_pct": 0.1,
+          "paper_shadow_min_hours": 2
+        }
+      }
+    ],
+    "skip": [
+      "MARCODG1",
+      "nuvola"
+    ]
+  },
+  "fleet_note": "tutti e 3 i nodi healthy; MARCODG1 SOL 13/13 win dd 0.79% frozen; RPVL-EGR deploy solo su mc2 paper_shadow >=2h prima di promozione"
+}

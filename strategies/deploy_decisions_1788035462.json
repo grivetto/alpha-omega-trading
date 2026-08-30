@@ -1,0 +1,46 @@
+{
+  "ts": 1788035785,
+  "fase": "3",
+  "fleet": "2026-08-29 22:30 UTC",
+  "generated": "auto_gen_1788035462.py HARS",
+  "deepseek_json": {
+    "deploy": [
+      {
+        "node": "nuvola",
+        "strategy_file": "auto_gen_1788035462.py",
+        "config_patch": {
+          "capital": 0.8,
+          "spacing": 0.02,
+          "levels": 8
+        }
+      },
+      {
+        "node": "MARCODG1",
+        "strategy_file": "auto_gen_1788035462.py",
+        "config_patch": {
+          "capital": 13.5,
+          "spacing": 0.015,
+          "levels": 10
+        }
+      }
+    ],
+    "adjust": [
+      {
+        "node": "MARCODG1",
+        "bot": "sol",
+        "param": "max_trades",
+        "value": 15
+      },
+      {
+        "node": "MARCODG1",
+        "bot": "sol",
+        "param": "stale_threshold_seconds",
+        "value": 300
+      }
+    ],
+    "skip": [
+      "mc2 orchestrator no trading",
+      "mc2 insufficient capital"
+    ]
+  }
+}

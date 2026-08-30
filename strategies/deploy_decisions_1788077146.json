@@ -1,0 +1,45 @@
+{
+  "deploy": [
+    {
+      "node": "mc2",
+      "strategy_file": "auto_gen_20260830_1003_deadzonegrid.py",
+      "config_patch": {
+        "cap": 3.7,
+        "spacing_atr_mult": 0.8,
+        "deadzone_atr_mult": 1.5,
+        "levels": 5,
+        "kelly_fraction": 0.15
+      }
+    },
+    {
+      "node": "nuvola",
+      "strategy_file": "auto_gen_20260830_1003_deadzonegrid.py",
+      "config_patch": {
+        "cap": 0.8,
+        "spacing_atr_mult": 0.8,
+        "deadzone_atr_mult": 1.5,
+        "levels": 4,
+        "kelly_fraction": 0.15
+      }
+    }
+  ],
+  "adjust": [
+    {
+      "node": "MARCODG1",
+      "bot": "sol",
+      "param": "spacing_atr_mult",
+      "value": 1.4
+    },
+    {
+      "node": "MARCODG1",
+      "bot": "sol",
+      "param": "trailing_atr_mult",
+      "value": 2.2
+    }
+  ],
+  "skip": [
+    "MARCODG1: gia' performante con voltrail, solo fine-tuning parametri",
+    "mc2: reduce_cap a 2.5 rimandato - deadzonegrid richiede capitale per espansione griglia",
+    "nuvola: hold confermato - cap minimo, nessuna riduzione necessaria"
+  ]
+}

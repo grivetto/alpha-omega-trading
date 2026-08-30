@@ -1,0 +1,56 @@
+{
+ "ts": "2026-08-30 08:47",
+ "cycle": "20260830_0850",
+ "generated_strategy": "auto_gen_20260830_0850_ramvo.py (RAMVO)",
+ "validation": "SELF-TEST PASSED 300tick",
+ "deepseek_deploy_decision": {
+  "deploy": [
+   {
+    "node": "MARCODG1",
+    "strategy_file": "auto_gen_20260830_0850_ramvo.py",
+    "config_patch": {
+     "capital": 3.0,
+     "spacing": 0.012,
+     "levels": 8,
+     "pair": "SOL/EUR",
+     "mode": "trend-live",
+     "stop_loss": true,
+     "atr_period": 14,
+     "vol_scale_min": 0.5,
+     "vol_scale_max": 2.0
+    }
+   },
+   {
+    "node": "mc2",
+    "strategy_file": "auto_gen_20260830_0850_ramvo.py",
+    "config_patch": {
+     "capital": 0.7,
+     "spacing": 0.008,
+     "levels": 6,
+     "pair": "DOGE/EUR",
+     "mode": "paper",
+     "stop_loss": false,
+     "atr_period": 14
+    }
+   }
+  ],
+  "adjust": [
+   {
+    "node": "MARCODG1",
+    "bot": "SOL/EUR grid trend-live",
+    "param": "capital",
+    "value": 10.5
+   },
+   {
+    "node": "MARCODG1",
+    "bot": "SOL/EUR grid trend-live",
+    "param": "spacing",
+    "value": 0.015
+   }
+  ],
+  "skip": [
+   "nuvola: uptime 168835s, errore vuoto ma capital troppo basso (0.8) per RAMVO - richiede min 1.0 per vol scaling; attendere capital top-up",
+   "MARCODG1 paper: già coperto da trend-live, evitare doppia esposizione stessa coppia"
+  ]
+ }
+}

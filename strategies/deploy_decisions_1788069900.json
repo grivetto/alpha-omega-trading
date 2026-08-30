@@ -1,0 +1,26 @@
+{
+  "ts": "2026-08-30 08:05",
+  "cycle": "20260830_0800",
+  "strategy": "auto_gen_20260830_0800_atrailmom.py ATrailMom (adaptive trailing momentum)",
+  "deepseek_deploy": [
+    {
+      "node": "MARCODG1",
+      "strategy_file": "auto_gen_20260830_0800_atrailmom.py",
+      "config_patch": {
+        "capital": 3.0, "levels": 6, "spacing": 0.015,
+        "atr_window": 20, "band_mult": 1.8, "accel_cap": 1.5,
+        "tp_mult": 3.2, "stop_pct": 0.03, "pos_pct": 0.9
+      }
+    }
+  ],
+  "adjust": [
+    {"node": "MARCODG1", "bot": "node-trend-live", "param": "capital", "value": 2.0},
+    {"node": "MARCODG1", "bot": "node-trend", "param": "capital", "value": 8.0},
+    {"node": "MARCODG1", "bot": "feeder", "param": "spacing", "value": 0.01}
+  ],
+  "skip": [
+    "mc2: no trend/momentum node per ATrailMom (solo grid DOGE paper)",
+    "nuvola: capitale troppo basso (0.8) per momentum live, rischio eccessivo",
+    "ATrailMom su grid DOGE: strategia momentum non adatta a range grid"
+  ]
+}

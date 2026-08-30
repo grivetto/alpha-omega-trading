@@ -1,0 +1,66 @@
+{
+  "deploy": [
+    {
+      "node": "mc2",
+      "strategy_file": "voladapt_grid.py",
+      "config_patch": {
+        "symbol": "DOGE/EUR",
+        "capital": 3.7,
+        "levels": 8,
+        "base_spacing": 0.003,
+        "vol_ewma_span": 24,
+        "vol_lookback": 200,
+        "vol_band_mult": 1.2,
+        "vol_ref": 0.008,
+        "vol_shutdown_threshold": 3.5,
+        "momentum_ewma_fast": 8,
+        "momentum_ewma_slow": 32,
+        "asym_factor": 0.4,
+        "min_spacing_pct": 0.0008,
+        "max_open_positions": 3,
+        "trail_ref_pct": 0.012,
+        "history_maxlen": 500
+      }
+    },
+    {
+      "node": "nuvola",
+      "strategy_file": "voladapt_grid.py",
+      "config_patch": {
+        "symbol": "DOGE/EUR",
+        "capital": 0.8,
+        "levels": 5,
+        "base_spacing": 0.004,
+        "vol_ewma_span": 20,
+        "vol_lookback": 150,
+        "vol_band_mult": 1.0,
+        "vol_ref": 0.01,
+        "vol_shutdown_threshold": 4.0,
+        "momentum_ewma_fast": 6,
+        "momentum_ewma_slow": 24,
+        "asym_factor": 0.3,
+        "min_spacing_pct": 0.001,
+        "max_open_positions": 2,
+        "trail_ref_pct": 0.01,
+        "history_maxlen": 400
+      }
+    }
+  ],
+  "adjust": [
+    {
+      "node": "MARCODG1",
+      "bot": "sol_grid_live",
+      "param": "drawdown_limit",
+      "value": 0.008
+    },
+    {
+      "node": "MARCODG1",
+      "bot": "sol_grid_live",
+      "param": "capital",
+      "value": 15.0
+    }
+  ],
+  "skip": [
+    "No new nodes needed \u2014 mc2 and nuvola already running VolProfileGrid; replace with voladapt_grid for better vol-adaptive behavior",
+    "MARCODG1 stays on sol grid-live (proven 13 wins, 0.79% dd) \u2014 only minor risk tightening applied"
+  ]
+}

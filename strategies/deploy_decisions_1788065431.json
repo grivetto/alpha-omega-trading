@@ -1,0 +1,126 @@
+{
+  "ts": "2026-08-30 06:50",
+  "strategy": "auto_gen_20260830_0650_detidegrid.py (DetideGrid) + auto_gen_20260830_063124 (TidalGrid nuvola)",
+  "deploy": [
+    {
+      "node": "mc2",
+      "strategy_file": "auto_gen_20260830_0650_detidegrid.py",
+      "config_patch": {
+        "capital": 3.7,
+        "base_spacing": 0.012,
+        "min_spacing": 0.008,
+        "max_spacing": 0.02,
+        "levels": 20,
+        "atr_period": 14,
+        "atr_multiplier": 1.5,
+        "range_mode": true,
+        "trend_mode": true,
+        "switch_threshold": 0.6,
+        "inventory_skew": 0.3
+      }
+    },
+    {
+      "node": "nuvola",
+      "strategy_file": "auto_gen_20260830_063124_tidalgrid.py",
+      "config_patch": {
+        "capital": 0.8,
+        "base_spacing": 0.01,
+        "min_spacing": 0.006,
+        "max_spacing": 0.015,
+        "levels": 15,
+        "ewma_span": 20,
+        "fill_boost": 0.5,
+        "decay_factor": 0.98
+      }
+    }
+  ],
+  "adjust": [
+    {
+      "node": "nuvola",
+      "bot": "doge",
+      "param": "base_spacing",
+      "value": 0.01
+    },
+    {
+      "node": "nuvola",
+      "bot": "doge",
+      "param": "min_spacing",
+      "value": 0.006
+    },
+    {
+      "node": "nuvola",
+      "bot": "doge",
+      "param": "max_spacing",
+      "value": 0.015
+    }
+  ],
+  "skip": [
+    "MARCODG1: real money, attuale trend-live performante (pnl +0.3705, 13 wins) - nessuna modifica senza forte giustificazione",
+    "mc2: TidalGrid non deployato - DetideGrid ha fit migliore per range+trend e gi\u00e0 testato",
+    "nuvola: DetideGrid non deployato - capital 0.8 troppo basso per gestire dual-mode con skew inventario"
+  ],
+  "hermes_reconcile": {
+    "note": "DeepSeek ha proposto chiavi config che NON esistono nell'interfaccia Detide/DetideConfig. Mappatura richiesta PRIMA del deploy: base_spacing->base_spacing_pct(0.012), atr_period->atr_lookback(14), atr_multiplier->atr_mult, switch_threshold->trend_threshold, inventory_skew->skew_max. range_mode/trend_mode sono flag runtime (abilita/disabilita modulo), NON campi DetideConfig. Config_patch TidalGrid su nuvola (ewma_span/fill_boost/decay_factor) gia mappato ciclo scorso a liq_alpha/ewma_fill_size/session_floor. MARCODG1 real-money correttamente SKIP. La risposta DS era troncata (skip array incompleto) - decisione salvata su payload valido.",
+    "action": "PENDING_APPLY_normalize_before_deploy"
+  },
+  "raw_deepseek": {
+    "deploy": [
+      {
+        "node": "mc2",
+        "strategy_file": "auto_gen_20260830_0650_detidegrid.py",
+        "config_patch": {
+          "capital": 3.7,
+          "base_spacing": 0.012,
+          "min_spacing": 0.008,
+          "max_spacing": 0.02,
+          "levels": 20,
+          "atr_period": 14,
+          "atr_multiplier": 1.5,
+          "range_mode": true,
+          "trend_mode": true,
+          "switch_threshold": 0.6,
+          "inventory_skew": 0.3
+        }
+      },
+      {
+        "node": "nuvola",
+        "strategy_file": "auto_gen_20260830_063124_tidalgrid.py",
+        "config_patch": {
+          "capital": 0.8,
+          "base_spacing": 0.01,
+          "min_spacing": 0.006,
+          "max_spacing": 0.015,
+          "levels": 15,
+          "ewma_span": 20,
+          "fill_boost": 0.5,
+          "decay_factor": 0.98
+        }
+      }
+    ],
+    "adjust": [
+      {
+        "node": "nuvola",
+        "bot": "doge",
+        "param": "base_spacing",
+        "value": 0.01
+      },
+      {
+        "node": "nuvola",
+        "bot": "doge",
+        "param": "min_spacing",
+        "value": 0.006
+      },
+      {
+        "node": "nuvola",
+        "bot": "doge",
+        "param": "max_spacing",
+        "value": 0.015
+      }
+    ],
+    "skip": [
+      "MARCODG1: real money, attuale trend-live performante (pnl +0.3705, 13 wins) - nessuna modifica senza forte giustificazione",
+      "mc2: TidalGrid non deployato - DetideGrid ha fit migliore per range+trend e gi\u00e0 testato",
+      "nuvola: DetideGrid non deployato - capital 0.8 troppo basso per gestire dual-mode con skew inventario"
+    ]
+  }
+}

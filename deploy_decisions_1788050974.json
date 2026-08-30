@@ -1,0 +1,56 @@
+{
+  "ts": 1788050974.5530834,
+  "generated_by": "hermes-orchestrator",
+  "strategy_gen": "1788050847",
+  "decision": {
+    "deploy": [
+      {
+        "node": "mc2",
+        "strategy_file": "auto_gen_1788050847.py",
+        "config_patch": {
+          "capital": 3.7,
+          "spacing": "atr",
+          "levels": 3,
+          "atr_period": 14,
+          "vol_target": 0.02,
+          "k_sigma": 3.0
+        }
+      },
+      {
+        "node": "nuvola",
+        "strategy_file": "auto_gen_1788050847.py",
+        "config_patch": {
+          "capital": 0.8,
+          "spacing": "atr",
+          "levels": 2,
+          "atr_period": 14,
+          "vol_target": 0.03,
+          "k_sigma": 3.0
+        }
+      }
+    ],
+    "adjust": [
+      {
+        "node": "marcodg1",
+        "bot": "SOL",
+        "param": "base_spacing_atr",
+        "value": 1.0
+      },
+      {
+        "node": "marcodg1",
+        "bot": "SOL",
+        "param": "vol_target",
+        "value": 0.02
+      },
+      {
+        "node": "marcodg1",
+        "bot": "SOL",
+        "param": "max_levels",
+        "value": 4
+      }
+    ],
+    "skip": [
+      "hybrid_grid_momentum_adaptive.py non deployato su mc2/nuvola: DOGE range-bound, GVAF con ATR-adaptive e shock reset \u00e8 pi\u00f9 adatto. Su marcodg1 mantengo hybrid per trend SOL, ma con vol-targeting ridotto per allineamento a GVAF."
+    ]
+  }
+}

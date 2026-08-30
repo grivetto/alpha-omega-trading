@@ -1,0 +1,29 @@
+{
+  "ts": 1788042732,
+  "fase": "3",
+  "fleet": "2026-08-30 00:30",
+  "generated": "auto_gen_1788042732.py VESG v2 (vol-expanded symmetric grid, anchored to last-fill)",
+  "deepseek_json_raw": true,
+  "deepseek_json_corrected": {
+    "deploy": [
+      {"node": "nuvola", "strategy_file": "auto_gen_1788042732.py",
+       "config_patch": {"market": "DOGE/EUR", "capital": 0.80, "levels": 8,
+         "base_spacing": 0.010, "spacing_min": 0.004, "spacing_max": 0.025,
+         "kelly_cap": 0.30, "vol_lookback": 25, "side": "both", "dry_run": true,
+         "port": 8913,
+         "rationale": "solo nodo con equity>0 stabile (0.7565, uptime 139k); VESG dry_run in parallelo, bande ancorate a last-fill complementano grid senza sommare risk"}}
+    ],
+    "adjust": [
+      {"node": "MARCODG1", "bot": "sol-grid", "param": "stale_feed_timeout", "value": 3600,
+       "reason": "bot_ts ~22h stale feed sospetto; timeout 1h intercetta prima del PnL fantasma"},
+      {"node": "nuvola", "bot": "doge-grid", "param": "spacing_pct", "value": 0.018,
+       "reason": "spacing 1.0% troppo stretto (1 buy/0 sell); 1.8% cattura range reale DOGE/EUR"}
+    ],
+    "skip": [
+      "mc2: zero trading, solo orchestrazione",
+      "MARCODG1: sol-grid feed stale 22h — VESG sopra layer malato = doppio rischio cieco",
+      "auto_gen_1788041119.py REJ-GUARD: overlay gia' attivo su nuvola",
+      "VTAG 1788042000: gia' deployato su mc2"
+    ]
+  }
+}

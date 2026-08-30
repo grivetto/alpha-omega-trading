@@ -1,0 +1,56 @@
+{
+  "ts": "2026-08-29T21:48:00Z",
+  "cycle": "21:46",
+  "new_strategy": "auto_gen_1788032760.py (QRSG: Quote-Reserve Standby Grid)",
+  "fleet": {
+    "all_3_healthy": true,
+    "okx_51008_crisis": "RESOLVED - zero errors last 30min, tick fluidi (XRP 1.20, SOL 91.18, ETH 2121, free 143-150)",
+    "marcodg1_bot_ts": "STALE 47h - sol-grid feed vecchio, escluso da live finche' non fresco",
+    "ram": "9.9G avail",
+    "load": 0.75
+  },
+  "deepseek": {
+    "fase1_reply": "OK - 3 ottimizzazioni QRSG (anti-whiplash sell, fee in loss_est, hysteresis)",
+    "fase3_json": "received 21:48, confirmed"
+  },
+  "deploy": [
+    {
+      "node": "mc2",
+      "strategy_file": "auto_gen_1788032760.py",
+      "config_patch": {
+        "mode": "in progress"
+      }
+    }
+  ],
+  "critical_adjust": [
+    {
+      "node": "MARCODG1",
+      "bot": "sol-grid",
+      "param": "bot_ts_fix",
+      "value": "restart_feed + refresh 15s + kill_switch stale>60s - FEED PRIORITY"
+    },
+    {
+      "node": "mc2",
+      "bot": "doge-grid",
+      "param": "reserve_frac",
+      "value": 0.18
+    },
+    {
+      "node": "mc2",
+      "bot": "doge-grid",
+      "param": "max_concurrent_buy_orders",
+      "value": 3
+    },
+    {
+      "node": "mc2",
+      "bot": "doge-grid",
+      "param": "spacing_bps",
+      "value": 40
+    }
+  ],
+  "skip": [
+    "MARCODG1 live fino feed fresco",
+    "nuvola live (sub-EUR HIGH RISK)",
+    "FRWG-CRA live su mc2 finche' paper 24h non valida"
+  ]
+}

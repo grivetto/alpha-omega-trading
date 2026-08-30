@@ -1,0 +1,199 @@
+#!/usr/bin/env python3
+"""Genera /var/www/denaro/data/combined.json da health file FRESCHI.
+Fix 2026-08-29: niente node_data stale; fonte = ~/denaro/health locale/remota.
+"""
+import json, subprocess, time, glob, os
+from pathlib import Path
+
+OUT_DIR = Path("/var/www/denaro/data")
+OUT_DIR.mkdir(parents=True, exist_ok=True)
+HISTORY = OUT_DIR / "history.json"
+STALE_S = 900
+
+SOURCES = [
+    ("mc2", None, "/home/sergio/denaro/health/*.json"),
+    ("nuvola", "nuvola", "/home/sergio/denaro/health/*.json"),
+    ("MARCODG1", "MARCODG1", "/home/marco/denaro/health/*.json"),
+]
+
+
+def iter_payloads_from_text(text: str, file_hint: str):
+    try:
+        d = json.loads(text)
+    except Exception:
+        return
+    if isinstance(d, dict) and d.get("symbol"):
+        d["_file"] = file_hint
+        yield d
+    elif isinstance(d, list):
+        for i, x in enumerate(d):
+            if isinstance(x, dict) and x.get("symbol"):
+                x["_file"] = f"{file_hint}[{i}]"
+                yield x
+    elif isinstance(d, dict):
+        # alcuni aggregati contengono liste/dict annidati di bot
+        for v in d.values():
+            if isinstance(v, dict) and v.get("symbol"):
+                v["_file"] = file_hint
+                yield v
+            elif isinstance(v, list):
+                for i, x in enumerate(v):
+                    if isinstance(x, dict) and x.get("symbol"):
+                        x["_file"] = f"{file_hint}[{i}]"
+                        yield x
+
+
+def local_health(pattern):
+    out = []
+    for p in glob.glob(pattern):
+        try:
+            out.extend(iter_payloads_from_text(Path(p).read_text(), p) or [])
+        except Exception:
+            pass
+    return out
+
+
+def ssh_health(host, pattern):
+    try:
+        cmd = f"for f in {pattern}; do [ -f \"$f\" ] || continue; printf '@@%s\\n' \"$f\"; python3 -c 'import json,sys; print(open(sys.argv[1]).read().replace(\"\\n\",\"\"))' \"$f\" 2>/dev/null; done"
+        r = subprocess.run(["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=8", host, cmd],
+                           capture_output=True, text=True, timeout=35)
+        out, cur = [], None
+        for line in r.stdout.splitlines():
+            if line.startswith("@@"):
+                cur = line[2:]
+            elif cur and line.strip():
+                out.extend(iter_payloads_from_text(line.strip(), cur) or [])
+        return out
+    except Exception:
+        return []
+
+
+def classify_mode(b):
+    f = (b.get("_file") or "").lower()
+    exch = str(b.get("exchange") or "").lower()
+    mode = str(b.get("mode") or "").lower()
+    if "paper" in f or exch == "paper" or mode == "paper":
+        return "PAPER"
+    return "LIVE"
+
+
+def normalize(b, node):
+    now = time.time()
+    b = dict(b)
+    b["_node"] = node
+    ts = float(b.get("timestamp") or b.get("ts") or 0)
+    age = now - ts if ts else 10**9
+    b["age_s"] = round(age, 1)
+    if age > STALE_S:
+        b["status"] = "stale"
+        b["error"] = (b.get("error") or "") + f" stale health age={int(age)}s"
+    if b.get("status") not in ("running", "stale", "blocked", "stopped", "error"):
+        b["status"] = b.get("status") or "unknown"
+    return b
+
+
+def fetch_portfolio():
+    import subprocess, json, time
+    cache = Path("/tmp/portfolio_cache.json")
+    now = time.time()
+    if cache.exists():
+        try:
+            c = json.loads(cache.read_text())
+            if now - c.get("ts", 0) < 300:
+                return c.get("data")
+        except Exception:
+            pass
+    try:
+        r = subprocess.run([
+            "ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=10", "MARCODG1",
+            "cd /home/marco/alpha-omega-trading && ./.venv/bin/python3 /home/marco/portfolio_fetch.py"
+        ], capture_output=True, text=True, timeout=90)
+        data = json.loads(r.stdout.strip().splitlines()[-1])
+        cache.write_text(json.dumps({"ts": now, "data": data}))
+        return data
+    except Exception as e:
+        # fallback: preserva cache anche scaduta, meglio dato vecchio dichiarato che None muto
+        if cache.exists():
+            try:
+                c = json.loads(cache.read_text()); d = c.get("data", {})
+                d["warning"] = f"portfolio cache stale; refresh error: {str(e)[:80]}"
+                return d
+            except Exception:
+                pass
+        return {"total_eur": None, "error": str(e)[:120]}
+
+
+def main():
+    now = time.time()
+    raw = []
+    for node, ssh, pattern in SOURCES:
+        data = ssh_health(ssh, pattern) if ssh else local_health(pattern)
+        for b in data:
+            raw.append(normalize(b, node))
+
+    # dedupe: preferisci record piu' fresco per node+symbol+mode+strategy
+    dedup = {}
+    for b in raw:
+        mode = classify_mode(b)
+        key = (b.get("_node"), b.get("symbol"), mode, b.get("strategy") or "")
+        old = dedup.get(key)
+        if old is None or float(b.get("timestamp") or 0) > float(old.get("timestamp") or 0):
+            dedup[key] = b
+
+    live, paper = [], []
+    for b in dedup.values():
+        (paper if classify_mode(b) == "PAPER" else live).append(b)
+    live.sort(key=lambda x: (x.get("_node") or "", x.get("symbol") or ""))
+    paper.sort(key=lambda x: (x.get("_node") or "", x.get("symbol") or ""))
+
+    history = {}
+    if HISTORY.exists():
+        try:
+            history = json.loads(HISTORY.read_text())
+        except Exception:
+            history = {}
+    for b in live + paper:
+        kind = classify_mode(b)
+        key = f"{b['_node']}:{b['symbol']}:{kind}"
+        entry = history.setdefault(key, {"points": []})
+        if b.get("status") == "running":
+            entry["points"].append({
+                "t": int(now),
+                "eq": round(float(b.get("total_equity", 0) or 0), 4),
+                "pnl": round(float(b.get("pnl", 0) or 0), 4),
+            })
+            entry["points"] = entry["points"][-240:]
+    HISTORY.write_text(json.dumps(history))
+
+    def slim(b, mode):
+        return {
+            "node": b.get("_node"), "symbol": b.get("symbol"), "mode": mode,
+            "status": b.get("status"), "capital": b.get("capital"),
+            "total_equity": b.get("total_equity"), "pnl": b.get("pnl"),
+            "trades": b.get("trades"), "wins": b.get("wins"), "losses": b.get("losses"),
+            "drawdown": b.get("drawdown"), "error": b.get("error", ""),
+            "timestamp": b.get("timestamp"), "age_s": b.get("age_s"),
+            "strategy": b.get("strategy"), "win_rate_pct": b.get("win_rate_pct"),
+            "profit_factor": b.get("profit_factor"), "volume": b.get("volume"),
+            "free_quote": b.get("free_quote"), "source": b.get("_file"),
+        }
+
+    payload = {
+        "generated_at": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
+        "live": [slim(b, "LIVE") for b in live],
+        "paper": [slim(b, "PAPER") for b in paper],
+        "history": history,
+        "counts": {"live": len(live), "paper": len(paper)},
+        "running_counts": {
+            "live": sum(1 for b in live if b.get("status") == "running"),
+            "paper": sum(1 for b in paper if b.get("status") == "running"),
+        },
+        "stale": [slim(b, classify_mode(b)) for b in live + paper if b.get("status") == "stale"],
+        "portfolio": fetch_portfolio(),
+    }
+    (OUT_DIR / "combined.json").write_text(json.dumps(payload, indent=1))
+    print(f"OK: {len(live)} live ({payload['running_counts']['live']} running), {len(paper)} paper ({payload['running_counts']['paper']} running), stale={len(payload['stale'])}")
+
+if __name__ == "__main__":
+    main()

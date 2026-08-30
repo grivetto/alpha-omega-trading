@@ -1,0 +1,26 @@
+{
+  "ts": 1788018834,
+  "utc": "2026-08-29 17:53",
+  "cycle": "orchestrator-17:46",
+  "fase1_strategy": "auto_gen_20260829_1746.py (VBMF)",
+  "deploy": [
+    {
+      "node": "mc2",
+      "strategy_file": "auto_gen_20260829_1746.py",
+      "config_patch": {"capital": 0.5, "spacing": 0.02, "levels": 3, "one_shot": true, "max_risk_per_trade": 0.01}
+    },
+    {
+      "node": "MARCODG1",
+      "strategy_file": "auto_gen_v2.py",
+      "config_patch": {"capital": 2.0, "spacing": 0.015, "levels": 5, "vol_regime": "adaptive", "kelly_fraction": 0.25}
+    }
+  ],
+  "adjust": [
+    {"node": "MARCODG1", "bot": "sol", "param": "stale_metric_threshold", "value": 3600}
+  ],
+  "skip": [
+    "auto_gen_20260829_1604.py - LGR-AKR: ridondante con VBMF su mc2, no alpha aggiuntivo",
+    "auto_gen_1788017588.py - CVD-Divergence: richiede data feed CVD non confermato su nuvola",
+    "nuvola: capitale troppo basso (0.8) per deploy aggiuntivo, mantenere solo grid DOGE"
+  ]
+}

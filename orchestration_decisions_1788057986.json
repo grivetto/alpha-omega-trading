@@ -1,0 +1,17 @@
+{
+  "ts": "2026-08-30 04:54",
+  "cycle": "auto every 10min",
+  "new_strategy": "auto_gen_1788057986.py (WICKFADOS) — verified deployable (DeepSeek review pass)",
+  "phase3_deepseek": "deploy WICKFADOS -> marcodg1 (SOL, cap 13.5, spacing 0.008, levels 8) + nuvola (DOGE, cap 0.8, spacing 0.015, levels 5); adjust mc2 keep_grid, marcodg1 spacing 0.006, nuvola levels 4; skip mc2 (paper-only)",
+  "hermes_overlay": "deploy WICKFADOS -> nuvola (DOGE cap 0.8) + marcodg1 (SOL cap 13.5); skip mc2 (no live trading)",
+  "orchestrator_adjustments": {
+    "note": "Config patch DS/Hermes usa parametri GRID (spacing/levels), non presenti in WICKFADOSConfig. Corretto il mapping ai campi reali.",
+    "marcodg1_deploy": {"strategy_file": "auto_gen_1788057986.py", "symbol": "SOL/EUR", "capital": 2.5, "wick_atr_mult": 1.4, "target_atr": 0.6, "stop_atr": 1.2, "body_to_wick_max": 0.30, "side": "both", "dry_run": true},
+    "nuvola_deploy": {"strategy_file": "auto_gen_1788057986.py", "symbol": "DOGE/EUR", "capital": 0.8, "wick_atr_mult": 1.4, "target_atr": 0.6, "stop_atr": 1.2, "side": "both", "dry_run": true},
+    "skip_reasons": [
+      "MC2: paper-only, vietato trading live",
+      "Nuvola cap 0.8 EUR: sotto sizing minimo per WICKFADOS reale => dry_run, non live",
+      "MARCODG1 gia trend-live SOL grid con 13 win/0 loss (pnl +0.37) => non sovrascrivere; WICKFADOS solo dry-run overlay"
+    ]
+  }
+}

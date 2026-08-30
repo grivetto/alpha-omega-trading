@@ -1,0 +1,15 @@
+{
+  "deploy": [
+    {"node": "mc2", "strategy_file": "auto_gen_1788082320_volprofile.py", "config_patch": {"capital": 3.7, "spacing": 0.003, "levels": 12, "bin_radius_pct": 0.02, "top_k_anchors": 3}},
+    {"node": "nuvola", "strategy_file": "auto_gen_1788082320_volprofile.py", "config_patch": {"capital": 0.8, "spacing": 0.002, "levels": 8, "bin_radius_pct": 0.015, "top_k_anchors": 2}}
+  ],
+  "adjust": [
+    {"node": "mc2", "bot": "denaro-node-mc2", "param": "spacing", "value": 0.0025},
+    {"node": "MARCODG1", "bot": "trend-live", "param": "drawdown_limit", "value": 0.01}
+  ],
+  "skip": [
+    "VolProfileGrid non deploy su MARCODG1: bot LIVE SOL/EUR, rischio alto per strategia volume-based non testata",
+    "REGIMEGRID su MARCODG1: gia' attivo, nessuna patch",
+    "HURSTGRID su mc2: keep as-is, VolProfileGrid lo complementa"
+  ]
+}

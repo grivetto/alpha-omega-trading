@@ -1,0 +1,47 @@
+{
+  "ts": "2026-08-30 09:04",
+  "hermes_strategy": "auto_gen_20260830_0902_spreadkiller.py",
+  "decision": {
+    "deploy": [
+      {
+        "node": "mc2",
+        "strategy_file": "auto_gen_20260830_0902_spreadkiller.py",
+        "pair": "DOGE/EUR",
+        "params": {
+          "spread_ema_alpha": 0.2,
+          "safety_multiplier": 1.5,
+          "min_levels": 4,
+          "max_levels": 10,
+          "grid_capital_eur": 2.0,
+          "order_size_eur": 0.25,
+          "max_position_eur": 3.0,
+          "stop_loss_pct": 5.0,
+          "cooldown_ms": 500
+        },
+        "risk": {
+          "kill_switch_drawdown_pct": 8.0,
+          "max_open_orders": 20
+        }
+      }
+    ],
+    "adjust": [
+      {
+        "node": "mc2",
+        "bot": "doge",
+        "param": "grid_capital_eur",
+        "value": 2.0
+      },
+      {
+        "node": "mc2",
+        "bot": "doge",
+        "param": "free_capital_reserve_eur",
+        "value": 1.7
+      }
+    ],
+    "skip": [
+      "nuvola: equity 0.80EUR insufficiente per SpreadKiller min-depth",
+      "MARCODG1: conflitto con trend SOL, skip per diversificazione pair"
+    ]
+  },
+  "verified": "test_inline_passed orders=400 mem_MB=0.0046"
+}

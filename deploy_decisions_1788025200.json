@@ -1,0 +1,64 @@
+{
+  "orchestrator": "hermes",
+  "timestamp": 1788025200,
+  "utc": "2026-08-29 18:50",
+  "strategy_generated": "auto_gen_1788025200.py",
+  "strategy_name": "FVBG-RVR (Fair-Value Basis Grid with Realised-Vol Rebalance)",
+  "novelty": "z-score lattice self-scaling spacing + mean-reversion velocity gate + realised-vol rebalance rake",
+  "inline_test": "PASSED (60000 ticks, 14088 buy signals, mem 0.0000 MB)",
+  "deepseek_reply": {
+    "deploy": [
+      {
+        "node": "marcodg1",
+        "strategy_file": "fvbgrvr_sol.py",
+        "config_patch": {
+          "symbol": "SOL/EUR",
+          "capital": 13.5,
+          "z_span": 2.5,
+          "z_levels": 7,
+          "ewm_span": 64,
+          "min_quote_step": 0.015,
+          "kelly_fraction": 0.3,
+          "velocity_ema": 12,
+          "stop_loss_frac": 0.06,
+          "fee": 0.0016
+        }
+      },
+      {
+        "node": "mc2",
+        "strategy_file": "fvbgrvr_doge.py",
+        "config_patch": {
+          "symbol": "DOGE/EUR",
+          "capital": 3.7,
+          "z_span": 3.0,
+          "z_levels": 9,
+          "ewm_span": 48,
+          "min_quote_step": 0.0001,
+          "kelly_fraction": 0.35,
+          "velocity_ema": 8,
+          "stop_loss_frac": 0.08,
+          "fee": 0.0016
+        }
+      }
+    ],
+    "adjust": [
+      {
+        "node": "marcodg1",
+        "bot": "sol",
+        "param": "capital",
+        "value": 13.5
+      },
+      {
+        "node": "mc2",
+        "bot": "doge",
+        "param": "capital",
+        "value": 3.7
+      }
+    ],
+    "skip": [
+      "nuvola: capital troppo basso (0.8 EUR) per grid multi-livello con fee 0.16%",
+      "FVBG-RVR non adatto a trend direzionali forti (mean-reversion pura)"
+    ]
+  },
+  "action_status": "REGISTRATO. Deploy runtime BLOCCATO: denaro_node carica solo moduli da denaro.domain (nessun plugin loader per file esterni). Promozione richiede scrittura modulo + restart nodo. Fleet tutto healthy (mc2/nuvola/marcodg1), MARCODG1 SOL 13 win, drawdown 0.79%. Candidata salvata per promozione codificata."
+}

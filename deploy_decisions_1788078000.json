@@ -1,0 +1,42 @@
+{
+  "deploy": [
+    {
+      "node": "marcodg1",
+      "strategy_file": "auto_gen_20260830_1016_regimefilter.py",
+      "config_patch": {
+        "capital": 13.5,
+        "levels": 6,
+        "spacing_pct": 0.8,
+        "min_tilt": 0.0002,
+        "vol_min": 20.0,
+        "vol_max": 100.0,
+        "bars_per_year": 187200.0
+      }
+    },
+    {
+      "node": "mc2",
+      "strategy_file": "auto_gen_20260830_1016_regimefilter.py",
+      "config_patch": {
+        "capital": 3.7,
+        "levels": 4,
+        "spacing_pct": 1.0,
+        "min_tilt": 0.0003,
+        "vol_min": 25.0,
+        "vol_max": 90.0,
+        "bars_per_year": 187200.0
+      }
+    }
+  ],
+  "adjust": [
+    {
+      "node": "marcodg1",
+      "bot": "sol-grid",
+      "param": "spacing_pct",
+      "value": 1.2
+    }
+  ],
+  "skip": [
+    "nuvola: node con capitale troppo basso (0.8) per grid multi-level efficace",
+    "marcodg1: mantenere sol-grid attivo come hedge, non sovrapporre con regimefilter sullo stesso asset"
+  ]
+}

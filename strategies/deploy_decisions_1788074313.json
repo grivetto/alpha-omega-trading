@@ -1,0 +1,13 @@
+{
+  "ts": "2026-08-30 09:20",
+  "hermes_strategy": "auto_gen_20260830_0916_depthgrid.py",
+  "deepseek_decision": {
+    "deploy": [
+      {"node": "mc2", "strategy_file": "auto_gen_20260830_0916_depthgrid.py", "config_patch": {"capital": 3.5, "spacing": "adaptive_book_depth", "levels": 8}},
+      {"node": "marcodg1", "strategy_file": "auto_gen_20260830_0916_depthgrid.py", "config_patch": {"capital": 10.0, "spacing": "adaptive_book_depth", "levels": 12}}
+    ],
+    "adjust": [{"node": "nuvola", "bot": "doge", "param": "capital", "value": 0.5}],
+    "skip": ["nuvola equity troppo bassa (0.76)", "marcodg1 mantenere trend SOL"]
+  },
+  "verified": "test_inline_passed orders=120 mem_MB=0.0039 harness_approved"
+}

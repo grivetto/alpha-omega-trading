@@ -1,0 +1,35 @@
+{
+  "deploy": [
+    {
+      "node": "MARCODG1",
+      "strategy_file": "auto_gen_20260830_1216_zmeanrev.py",
+      "config_patch": {
+        "capital": 5.0,
+        "z_entry": 2.1,
+        "z_exit": 0.0,
+        "max_open_positions": 3,
+        "reserve_pct": 0.15,
+        "pair": "SOL/EUR"
+      }
+    }
+  ],
+  "adjust": [
+    {
+      "node": "MARCODG1",
+      "bot": "sol",
+      "param": "capital",
+      "value": 5.0
+    },
+    {
+      "node": "MARCODG1",
+      "bot": "sol",
+      "param": "levels",
+      "value": 20
+    }
+  ],
+  "skip": [
+    "mc2: DOGE/EUR capital 3.7 insufficient for zmeanrev reserve 15% and z=2.1 sizing",
+    "nuvola: capital 0.8 too low, keep current grid",
+    "MARCODG1 existing grid: replace with zmeanrev, reduce levels from 30 to 20 to match new capital"
+  ]
+}

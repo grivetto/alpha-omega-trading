@@ -1,0 +1,51 @@
+{
+  "ts": 1788024837,
+  "utc": "2026-08-29 19:32",
+  "cycle": "orchestrator-19:30",
+  "fase1_strategy": "auto_gen_1788024687.py (SDVR)",
+  "inline_test": "PASSED 20k ticks 0.14s mem 0.078MB buy5444/sell5092 regime RANGE",
+  "deepseek_reply": {
+    "deploy": [
+      {
+        "node": "mc2",
+        "strategy_file": "auto_gen_1788024687.py",
+        "config_patch": {
+          "capital": 3.7,
+          "fee": 0.0016,
+          "ewm_span": 64,
+          "vol_span": 14,
+          "min_vol": 0.006,
+          "max_vol": 0.06,
+          "z_levels": 7,
+          "z_span": 2.5,
+          "kelly": 0.3,
+          "regime_start": "RANGE"
+        }
+      },
+      {
+        "node": "nuvola",
+        "strategy_file": "auto_gen_1788024687.py",
+        "config_patch": {
+          "capital": 0.8,
+          "fee": 0.0016,
+          "z_levels": 5,
+          "z_span": 2.2,
+          "kelly": 0.15,
+          "max_position_eur": 0.8
+        }
+      }
+    ],
+    "adjust": [
+      {
+        "node": "MARCODG1",
+        "bot": "trend-live",
+        "param": "no_change",
+        "value": "PROFIT_ENGINE_LOCKED 13/13 wr dd 0.79% paper_shadow<2h"
+      }
+    ],
+    "skip": [
+      "MC/SOL trend-live: SDVR mean-reversion incompatibile con nodo TREND; runtime deploy BLOCCATO (denaro.domain only, no plugin loader); nuvola rebalance su capital sub-1 EUR deferito; spacing MARCODG1 ottimale empiricamente, rivalutare solo dopo dd>1.5%"
+    ]
+  },
+  "action_status": "REGISTRATO. Deploy runtime BLOCCATO: denaro_node carica solo moduli da denaro.domain (nessun plugin loader). SDVR candidata A/B su mc2 (paper) e nuvola (paper) con paper_shadow 2h obbligatorio prima di qualunque kill dell incumbent. MARCODG1 SOL trend-live intoccato (profit engine, 13/13, dd 0.79%). Fleet tutto healthy, RAM 5.4/15GB, load 1.26, 0 systemd failed."
+}

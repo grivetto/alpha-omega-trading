@@ -1,0 +1,75 @@
+{
+  "ts": "2026-08-29T18:07:42Z",
+  "cycle": "20:04",
+  "new_strategy": "auto_gen_1788026645.py (VTK-GAR)",
+  "deepseek": {
+    "deploy": [
+      {
+        "node": "MARCODG1",
+        "strategy_file": "auto_gen_1788026645.py",
+        "mode": "paper_shadow",
+        "config_patch": {
+          "symbol": "SOL/EUR",
+          "capital": 13.5,
+          "base_spacing_pct": 0.01,
+          "max_levels": 9,
+          "vol_ewma_span": 24,
+          "target_vol": 0.012,
+          "min_vol_floor": 0.004,
+          "max_vol_ceil": 0.05,
+          "dd_gate": 0.06,
+          "dd_reentry_cool": 4,
+          "kelly_fraction": 0.3,
+          "win_prob_assumed": 0.55,
+          "fee": 0.0016,
+          "stop_loss_frac": 0.12,
+          "pending_cap": 20
+        }
+      }
+    ],
+    "adjust": [
+      {
+        "node": "MARCODG1",
+        "bot": "SOL_grid",
+        "param": "capital",
+        "value": 13.5
+      },
+      {
+        "node": "MARCODG1",
+        "bot": "SOL_grid",
+        "param": "vol_ewma_span",
+        "value": 24
+      },
+      {
+        "node": "MARCODG1",
+        "bot": "SOL_grid",
+        "param": "dd_gate",
+        "value": 0.06
+      }
+    ],
+    "skip": [
+      "nuvola: HIGH RISK sub-1EUR capital (0.8), solo grid DOGE, preserva capitale minimo",
+      "mc2 DOGE: gia' grid attivo profitable, aspetta paper_shadow VTK-GAR >=2h prima di promozione",
+      "RPVL-EGR auto_gen_1788025859.py: gia' in paper_shadow da 19:51, monitora prima di ulteriore deploy"
+    ]
+  },
+  "hermes_6866": {
+    "deploy": [
+      {
+        "node": "MARCODG1",
+        "strategy_file": "auto_gen_1788026645.py",
+        "deploy_mode": "paper_shadow",
+        "config_patch": {
+          "capital": 13.5,
+          "pending_cap": 20,
+          "paper_shadow_min_hours": 2
+        }
+      }
+    ],
+    "skip": [
+      "mc2",
+      "nuvola"
+    ]
+  },
+  "fleet_note": "Tutti 3 nodi healthy. VTK-GAR self-test ok (30k ticks, buy/sell attivi). DS raccomanda pending_deque cap=20 (sicurezza memoria in trend unidirezionali) + deploy paper su MARCODG1 SOL paper_shadow >=2h. MARCODG1 SOL bot timestamp stale ~4h (1787953312) - verificare feeder; already 13/13 win dd 0.79%."
+}
