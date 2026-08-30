@@ -1,0 +1,66 @@
+{
+  "ts": "2026-08-30 23:39:44",
+  "directive": "[FASE 3] FLEET CONTEXT + DIRETTIVA DISPATCH.\n\nStrategie auto-gen in coda in quest'ultimo ciclo (23:30):\n- auto_gen_1788125865_vwmr_regrid.py (VWMRGrid): griglia mean-reversion ancorata sul VWAP (fair price) non sull'ultimo tick; re-anchoring graduale; spacing adattivo su vol (ATR-like); bias direzionale (VWAP vs TWAP) -> -1/0/+1. Streaming puro (deque, sum incrementali), mem O(0.028MB), GC periodico. Test passato 240 e 1500 tick sintetici (tutti e 3 i bias), mem stabile 0.028MB.\n- auto_gen_1788124596_regimekelly_grid.py (RegimeKellyGrid) del ciclo precedente (23:20): regime detection ADX-like + volEWMA -> {trend_up,trend_dn,range}, livelli sbilanciati, sizing frazionario kelly anti-drawdown. Test passato, mem O(0.09MB).\n\n=== FLEET 2026-08-30 23:30 ===\nmc2 healthy - bot DOGE/EUR capital 3.7 pnl +0.0148 trades 2 (2w/0l) strategy grid uptime 4873s dd 0. RAM 8.5GB avail.\nnuvola healthy - bot DOGE/EUR capital 0.8 pnl +0.0061 trades 1 (1w/0l) strategy grid uptime 4781s dd 0.\nMARCODG1 degraded (paper) - denaro-node-paper active, trend/trend-live/brain INACTIVE; bot SOL/EUR capital 13.5 eq 13.207 pnl +0.3705 trades 13 (13w/0l) strategy grid dd 0.0079 uptime 12599s. trend-live spento per pausa live 7gg (28/08).\nTutti: PnL positivi, 0 drawdown significativo, 0 errori, kill-switch OFF, paper mode.\nNOTA INFRA: gateway Hermes 8642 lento/intermittente (heartbeat status=0 da 23:19) - canale DeepSeek webchat funzionante ma request bloccano ~180s.\n\nDirettiva: Analizza fleet status + strategie auto-gen. Quali strategie vanno deployate su quale nodo? Quali config aggiustare (capital, spacing, levels)? Considera paper mode attivo (pausa live 7gg): deploy SOLO su paper/nodi non live. Rispondi SOLO JSON:\n{deploy: [{node, strategy_file, config_patch}], adjust: [{node, bot, param, value}], skip: [reason]}\n",
+  "response": {
+    "deploy": [
+      {
+        "node": "MARCODG1",
+        "strategy_file": "auto_gen_1788125865_vwmr_regrid.py",
+        "config_patch": {
+          "capital": 13.5,
+          "spacing_atr_mult": 1.2,
+          "levels": 8,
+          "bias_mode": "vwap_twap",
+          "reanchor_ticks": 100,
+          "gc_interval": 500
+        }
+      },
+      {
+        "node": "nuvola",
+        "strategy_file": "auto_gen_1788124596_regimekelly_grid.py",
+        "config_patch": {
+          "capital": 0.8,
+          "kelly_fraction": 0.35,
+          "levels": 6,
+          "max_dd_pct": 0.05
+        }
+      },
+      {
+        "node": "mc2",
+        "strategy_file": "auto_gen_1788125865_vwmr_regrid.py",
+        "config_patch": {
+          "capital": 3.7,
+          "spacing_atr_mult": 1.0,
+          "levels": 10,
+          "bias_mode": "vwap_only",
+          "reanchor_ticks": 150
+        }
+      }
+    ],
+    "adjust": [
+      {
+        "node": "MARCODG1",
+        "bot": "denodo-sol",
+        "param": "max_spread_pct",
+        "value": 0.002
+      },
+      {
+        "node": "nuvola",
+        "bot": "denodo-doge",
+        "param": "min_trade_size",
+        "value": 0.0001
+      },
+      {
+        "node": "mc2",
+        "bot": "denodo-doge",
+        "param": "reanchor_vol_threshold",
+        "value": 0.15
+      }
+    ],
+    "skip": [
+      "Deploy su nodi live non permesso - pausa live 7gg attiva (28/08). Solo paper/MARCODG1.",
+      "Gateway Hermes 8642 lento: evitare deploy su mc2/nuvola se richiedono sync immediato; differire se heartbeat non torna entro 60s.",
+      "RegimeKellyGrid su MARCODG1: skip - VWMRGrid ha priorita' (mem 3x inferiore, bias direzionale piu' adatto a SOL/EUR vol alta)."
+    ]
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "ts": "2026-08-30 23:40",
+  "verdict": {
+    "deploy": [
+      {
+        "node": "MARCODG1",
+        "strategy_file": "auto_gen_1788125865_vwmr_regrid.py",
+        "config_patch": {
+          "capital": 13.5,
+          "spacing_atr_mult": 1.2,
+          "levels": 8,
+          "bias_mode": "vwap_twap",
+          "reanchor_ticks": 100,
+          "gc_interval": 500
+        }
+      },
+      {
+        "node": "nuvola",
+        "strategy_file": "auto_gen_1788124596_regimekelly_grid.py",
+        "config_patch": {
+          "capital": 0.8,
+          "kelly_fraction": 0.35,
+          "levels": 6,
+          "max_dd_pct": 0.05
+        }
+      },
+      {
+        "node": "mc2",
+        "strategy_file": "auto_gen_1788125865_vwmr_regrid.py",
+        "config_patch": {
+          "capital": 3.7,
+          "spacing_atr_mult": 1.0,
+          "levels": 10,
+          "bias_mode": "vwap_only",
+          "reanchor_ticks": 150
+        }
+      }
+    ],
+    "adjust": [
+      {
+        "node": "MARCODG1",
+        "bot": "denodo-sol",
+        "param": "max_spread_pct",
+        "value": 0.002
+      },
+      {
+        "node": "nuvola",
+        "bot": "denodo-doge",
+        "param": "min_trade_size",
+        "value": 0.0001
+      },
+      {
+        "node": "mc2",
+        "bot": "denodo-doge",
+        "param": "reanchor_vol_threshold",
+        "value": 0.15
+      }
+    ],
+    "skip": [
+      "Deploy su nodi live non permesso - pausa live 7gg attiva (28/08). Solo paper/MARCODG1.",
+      "Gateway Hermes 8642 lento: evitare deploy su mc2/nuvola se richiedono sync immediato; differire se heartbeat non torna entro 60s.",
+      "RegimeKellyGrid su MARCODG1: skip - VWMRGrid ha priorita' (mem 3x inferiore, bias direzionale piu' adatto a SOL/EUR vol alta)."
+    ]
+  }
+}
