@@ -1,0 +1,45 @@
+```json
+{
+  "deploy": [
+    {
+      "node": "marcodg1",
+      "strategy_file": "auto_gen_20260830_2030_volrail_scroll.py",
+      "config_patch": {
+        "capital": 13.5,
+        "spacing": "power_law",
+        "levels": 8,
+        "recovery_gate": true,
+        "atr_ratio": 1.5
+      }
+    },
+    {
+      "node": "mc2",
+      "strategy_file": "auto_gen_20260830_1935_swingprofiler_grid.py",
+      "config_patch": {
+        "capital": 3.7,
+        "spacing": "dynamic",
+        "levels": 6
+      }
+    }
+  ],
+  "adjust": [
+    {
+      "node": "nuvola",
+      "bot": "doge_grid",
+      "param": "capital",
+      "value": 1.0
+    },
+    {
+      "node": "nuvola",
+      "bot": "doge_grid",
+      "param": "spacing",
+      "value": "tighter"
+    }
+  ],
+  "skip": [
+    "adaptivegrid_hib: sovrapposto a volrail_scroll su marcodg1",
+    "voldetect_grid: performance non testata, priorita' bassa",
+    "volimbalance_grid: ridondante con swingprofiler su mc2"
+  ]
+}
+```

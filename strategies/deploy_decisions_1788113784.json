@@ -1,0 +1,21 @@
+{
+  "cycle": "2026-08-30 20:20",
+  "generated_strategy": "auto_gen_20260830_2016_adaptivegrid_hib.py",
+  "deepseek_decision": {
+    "deploy": [{
+      "node": "marcodg1",
+      "strategy_file": "auto_gen_20260830_2016_adaptivegrid_hib.py",
+      "config_patch": {"symbol": "SOL/EUR", "capital": 13.5, "spacing": "ATR_1.5x", "levels": 12, "inventory_guard": 0.3, "ema_regime": "enabled", "mode": "paper"}
+    }],
+    "adjust": [
+      {"node": "mc2", "bot": "DOGE/EUR grid", "param": "capital", "value": 3.7},
+      {"node": "nuvola", "bot": "DOGE/EUR grid", "param": "capital", "value": 0.8},
+      {"node": "marcodg1", "bot": "health_bot/SOL", "param": "heartbeat_interval", "value": 60}
+    ],
+    "skip": [
+      "PAUSA LIVE: nessun deploy su main OKX, solo paper",
+      "mc2/nuvola: strategie profittevoli + stabili, non modificare finche' non degradano",
+      "marcodg1: riavviare heartbeat_bot (heartbeat SOL stantio ~44h) PRIMA del deploy nuova strategia"
+    ]
+  }
+}

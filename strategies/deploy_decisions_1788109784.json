@@ -1,0 +1,24 @@
+{
+  "cycle": "2026-08-30 19:00",
+  "generated_strategy": "auto_gen_20260830_anchorladder.py",
+  "deepseek_decision": {
+    "deploy": [
+      {"node": "marcodg1", "strategy_file": "auto_gen_20260830_anchorladder.py",
+       "config_patch": {"symbol": "SOL/EUR", "capital": 3.0, "spacing_pct": 0.8, "levels": 8, "ema_period": 20, "vol_adapt_factor": 1.5, "throttle_threshold": 2.5}},
+      {"node": "nuvola", "strategy_file": "auto_gen_20260830_anchorladder.py",
+       "config_patch": {"symbol": "DOGE/EUR", "capital": 0.5, "spacing_pct": 1.2, "levels": 6, "ema_period": 15, "vol_adapt_factor": 1.2, "throttle_threshold": 2.0}}
+    ],
+    "adjust": [
+      {"node": "marcodg1", "bot": "sol", "param": "capital", "value": 3.0},
+      {"node": "marcodg1", "bot": "sol", "param": "spacing_pct", "value": 0.8},
+      {"node": "nuvola", "bot": "doge", "param": "capital", "value": 0.5},
+      {"node": "nuvola", "bot": "doge", "param": "spacing_pct", "value": 1.2}
+    ],
+    "skip": [
+      "mc2: gia deployato VolRegimeFade, non sovrapporre strategie su stesso nodo",
+      "marcodg1: timestamp_old stale ~24h, verificare sync prima di deploy",
+      "Tutti: volumi bassissimi, evitare HFT (latencygrid, inertiagrid)"
+    ]
+  },
+  "note": "CONFIG_MISMATCH: DeepSeek ha usato key (symbol, spacing_pct, ema_period, vol_adapt_factor, throttle_threshold) che NON corrispondono al contract reale AnchorLadder (pair, base_spacing_pct, anchor_alpha, spacing_vol_scale, drift_throttle, level_count_low/high, fade/impulse_side_notional). Da mappare prima di deploy reale. PAUSA LIVE attiva: nessun deploy su main OKX."
+}

@@ -1,0 +1,49 @@
+{
+  "cycle": "2026-08-30 18:16",
+  "decision": {
+    "deploy": [
+      {
+        "node": "mc2",
+        "strategy_file": "auto_gen_20260830_1811_momentumvoldrift.py",
+        "config_patch": {
+          "pair": "DOGE/EUR",
+          "capital": 3.7,
+          "base_size": 0.25,
+          "lookback": 60,
+          "drift_z": 1.5,
+          "trail_frac": 0.03
+        }
+      },
+      {
+        "node": "marcodg1",
+        "strategy_file": "auto_gen_20260830_1811_momentumvoldrift.py",
+        "config_patch": {
+          "pair": "SOL/EUR",
+          "capital": 13.5,
+          "base_size": 0.25,
+          "lookback": 60,
+          "drift_z": 1.5,
+          "trail_frac": 0.03
+        }
+      }
+    ],
+    "adjust": [
+      {
+        "node": "nuvola",
+        "bot": "doge",
+        "param": "capital",
+        "value": 2.0
+      },
+      {
+        "node": "marcodg1",
+        "bot": "sol",
+        "param": "health_check_interval",
+        "value": 300
+      }
+    ],
+    "skip": [
+      "nuvola capital too low (0.8 EUR) for meaningful deployment; recommend bump topping up to at least 2.0 EUR before activating strategies"
+    ]
+  },
+  "note": "DeepSeek orchestrator decision for MomentumVolDrift cycle. Confirmed marcodg1 SOL health stale. source=reply_hermes"
+}

@@ -1,0 +1,134 @@
+{
+  "ts": 1788152914,
+  "cycle": "2026-08-31 07:08",
+  "fase1_strategy": "auto_gen_1788152807_rvvol_grid.py (RealizedVolatilityScaledGrid, EWMA streaming O(1), 0.0156MB, selftest OK)",
+  "fase2_fleet": "mc2 healthy (doge grid pnl+0.0148/2w capital 3.7); nuvola healthy (doge pnl+0.0061/1w capital 0.8); MARCODG1 DEGRADED (sol stale 48.5h, pnl+0.3705 paper 13w/13, DD 0.0079, brain/trend-live INACTIVE)",
+  "reply": {
+    "deploy": [
+      {
+        "node": "marcodg1",
+        "strategy_file": "auto_gen_1788152807_rvvol_grid.py",
+        "config_patch": {
+          "mode": "mean_revert",
+          "capital": 3.7,
+          "spacing_baseline": 0.0059,
+          "levels_baseline": 16,
+          "vol_jump_killswitch": 4.0
+        }
+      },
+      {
+        "node": "mc2",
+        "strategy_file": "auto_gen_1788152807_rvvol_grid.py",
+        "config_patch": {
+          "mode": "momentum",
+          "capital": 0.8,
+          "spacing_baseline": 0.0059,
+          "levels_baseline": 16,
+          "vol_jump_killswitch": 4.0
+        }
+      }
+    ],
+    "adjust": [
+      {
+        "node": "marcodg1",
+        "bot": "stale_bot",
+        "param": "stop_loss_triggered",
+        "value": false
+      },
+      {
+        "node": "marcodg1",
+        "bot": "stale_bot",
+        "param": "capital",
+        "value": 3.7
+      }
+    ],
+    "skip": [
+      "denaro-node-paper: brain/trend-live INACTIVE - pausa live in corso, nessun deploy su main",
+      "nuvola: capital 0.8 troppo basso per RVSG con spacing minimo 0.004 (richiede min 2x)",
+      "mc2 doge: grid attuale PnL positivo, non toccare finche' non degrada",
+      "auto_gen su denaro-node-paper: solo paper, strategia gia' testata su marcodg1/mc2"
+    ]
+  },
+  "reply_hermes": {
+    "deploy": [
+      {
+        "node": "mc2-doge",
+        "strategy_file": "auto_gen_1788152807_rvvol_grid.py",
+        "config_patch": {
+          "mode": "mean_revert",
+          "spacing_min": 0.004,
+          "spacing_max": 0.04,
+          "levels": 12,
+          "vol_baseline_window": 120,
+          "vol_kill_switch_mult": 4.0,
+          "capital_pct": 0.6,
+          "rationale": "mc2 doge paper sano, capital 3.7, regime calm (selftest spacing 0.0059). RVSG mean_revert adatto a grid lenta. 60% capitale, 40% buffer per grid esistente."
+        }
+      },
+      {
+        "node": "nuvola-doge",
+        "strategy_file": "auto_gen_1788152807_rvvol_grid.py",
+        "config_patch": {
+          "mode": "momentum",
+          "spacing_min": 0.006,
+          "spacing_max": 0.06,
+          "levels": 8,
+          "vol_baseline_window": 90,
+          "vol_kill_switch_mult": 4.0,
+          "capital_pct": 0.5,
+          "rationale": "nuvola capital 0.8 piccolo, momentum con spacing ampio e 8 livelli evita grid frammentata. 50% capitale, finestra vol 90 per reattività spike."
+        }
+      }
+    ],
+    "adjust": [
+      {
+        "node": "mc2-doge",
+        "bot": "grid",
+        "param": "capital",
+        "value": 1.5,
+        "reason": "Ridurre grid esistente a 1.5 per liberare 2.2 a RVSG, mantenere copertura ridondante."
+      },
+      {
+        "node": "nuvola-doge",
+        "bot": "grid",
+        "param": "capital",
+        "value": 0.4,
+        "reason": "Ridurre grid esistente a 0.4 per liberare 0.4 a RVSG, evitare sovrapposizione su capital ridotto."
+      },
+      {
+        "node": "marcodg1",
+        "bot": "grid",
+        "param": "restart_protocol",
+        "value": "soft_restart_via_stale_check",
+        "reason": "sol stale 48.5h ma pnl +0.37 e stop_loss_triggered=false. Tentare soft-restart post-pausa prima di modifiche strategiche."
+      }
+    ],
+    "skip": [
+      {
+        "item": "deploy su marcodg1",
+        "reason": "bot sol stale 48.5h indica degradazione processo/connessione. DD 0.0079 e winrate 100% buoni ma insufficienti per RVSG su bot instabile. Prima fix degraded state, poi valutare migrazione."
+      },
+      {
+        "item": "deploy su main (denaro-node-paper, trend/trend-live/brain)",
+        "reason": "main intoccabile durante PAUSA LIVE. RVSG va validato su paper/doge prima di promozione su main."
+      },
+      {
+        "item": "deploy simultaneo su più di 2 nodi",
+        "reason": "RVSG nuova, non deployed in produzione. Limitare rollout a 2 istanze (mc2-doge, nuvola-doge) per osservare EWMA, vol-kill-switch, memory footprint. Rollout multi-fase: 48h osservazione, poi promozione paper se winrate>60% e nessun kill-switch anomalo, poi candidato main."
+      },
+      {
+        "item": "momentum mode su mc2-doge",
+        "reason": "mc2-doge capital 3.7 e regime calm favoriscono mean_revert. Momentum su nuvola-doge per capital piccolo e necessità segnali direzionali."
+      }
+    ],
+    "post_pausa_execution_queue": {
+      "step_1": "fix marcodg1: restart bot grid, verificare sol freshness < 5min, log health",
+      "step_2": "deploy RVSG mean_revert su mc2-doge con capital 60% (2.2 USDT)",
+      "step_3": "deploy RVSG momentum su nuvola-doge con capital 50% (0.4 USDT)",
+      "step_4": "ridurre capitale grid esistenti: mc2-doge a 1.5, nuvola-doge a 0.4",
+      "step_5": "monitoraggio 48h: winrate, kill-switch triggers, memory, PnL attribution per strategia"
+    }
+  },
+  "pausa_live": "ATTIVA - nessun deploy reale. Decisioni salvate per post-pausa.",
+  "note_verifica": "DeepSeek CONFABULA warning: valori config non verificati su API live (capital 3.7/0.8, spacing 0.0059, levels 16). Da validare con ccxt/health server prima di esecuzione post-pausa."
+}

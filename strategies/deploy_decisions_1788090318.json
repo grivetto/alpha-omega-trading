@@ -1,0 +1,19 @@
+{
+  "ts": 1788090318,
+  "cycle": "13:45",
+  "new_strategy": "auto_gen_1788090318_liqskewgrid.py",
+  "deepseek_deploy": [
+    {"node": "MARCODG1", "strategy_file": "auto_gen_1788090318_liqskewgrid.py", "config_patch": {"capital": 13.5, "spacing": "0.8x_current", "levels": 14, "slippage_ewma_alpha": 0.15, "max_orders_dynamic": true}},
+    {"node": "mc2", "strategy_file": "auto_gen_1788090318_liqskewgrid.py", "config_patch": {"capital": 3.7, "spacing": "1.2x_current", "levels": 8, "slippage_ewma_alpha": 0.1, "max_orders_dynamic": true}}
+  ],
+  "deepseek_adjust": [
+    {"node": "MARCODG1", "bot": "sol", "param": "capital", "value": 16.5},
+    {"node": "MARCODG1", "bot": "sol", "param": "levels", "value": 14},
+    {"node": "nuvola", "bot": "doge", "param": "capital", "value": 1.2},
+    {"node": "nuvola", "bot": "doge", "param": "spacing", "value": "1.5x_current"}
+  ],
+  "deepseek_skip": [
+    "nuvola: capital 0.8 troppo piccolo per grid-adattiva, rischio fees > pnl; mantieni grid semplice con spacing ampio",
+    "mc2: capital 3.7 ok ma non scalare oltre, paper edge; deploy liqskewgrid solo dopo 24h validazione su MARCODG1"
+  ]
+}

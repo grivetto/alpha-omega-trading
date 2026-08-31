@@ -1,0 +1,70 @@
+{
+  "ts": 1788087910,
+  "ts_human": "2026-08-30 13:05",
+  "strategy_new": "auto_gen_20260830_1305_bsmgrid.py",
+  "ds_deploy_decision": {
+    "deploy": [
+      {
+        "node": "marcodg1",
+        "strategy_file": "auto_gen_20260830_1305_bsmgrid.py",
+        "config_patch": {
+          "capital": 2.5,
+          "spacing": 0.02,
+          "levels": 5,
+          "pullback_max_dist": 0.015,
+          "breakout_timeout": 300
+        }
+      },
+      {
+        "node": "mc2",
+        "strategy_file": "chandelier_momentum_1230.py",
+        "config_patch": {
+          "capital": 1.5,
+          "spacing": 0.018,
+          "levels": 4,
+          "pullback_max_dist": 0.012,
+          "breakout_timeout": 240
+        }
+      },
+      {
+        "node": "nuvola",
+        "strategy_file": "voladapt_grid_1145.py",
+        "config_patch": {
+          "capital": 0.6,
+          "spacing": 0.025,
+          "levels": 3,
+          "pullback_max_dist": 0.02,
+          "breakout_timeout": 360
+        }
+      }
+    ],
+    "adjust": [
+      {
+        "node": "marcodg1",
+        "bot": "sol_grid",
+        "param": "spacing",
+        "value": 0.015
+      },
+      {
+        "node": "mc2",
+        "bot": "doge_grid",
+        "param": "capital",
+        "value": 4.0
+      },
+      {
+        "node": "nuvola",
+        "bot": "doge_grid",
+        "param": "spacing",
+        "value": 0.02
+      }
+    ],
+    "skip": [
+      "zmeanrev_1216: mean reversion risk in trending market",
+      "volprofile_grid_1205: unreliable on low-liquidity",
+      "volregime_grid_1245: redundant with voladapt on nuvola"
+    ]
+  },
+  "note_config_mismatch": "DS config_patch usa 'spacing', 'pullback_max_dist', 'breakout_timeout' NON presenti in DEFAULT_CONFIG di bsmgrid (usa 'pullback_spacing', 'pullback_levels', 'breakout_capital_ratio'; mancano pullback_max_dist/breakout_timeout = le 2 proposte di DS non ancora applicate). chandelier_momentum usa param 'spacing/levels' ma DEFAULT_CONFIG reale usa base_spacing/levels. voladapt_grid_1145 param simili. MAPPING richiesto prima del deploy: spacing->base_spacing/pullback_spacing; pullback_max_dist/breakout_timeout vanno AGGIUNTI a DEFAULT_CONFIG (patch consigliata da DS). 'capital' patch DS (2.5/1.5/0.6) NON ridurre capitale live nodi: usare solo paper o allocare dentro capitale attuale.",
+  "fleet_verdict": "TUTTI I NODI HEALTHY (mc2, nuvola, marcodg1). Nessun kill-switch. DD <= 0.8%. bsmgrid migliore candidata per marcodg1 (SOL trending, capital 13.5) con allocazione piccola (2.5).",
+  "sync_notes": "FASE1 dichiarata OK: /api/send HTTP 200 con reply. FASE3 dichiarata via /api/send HTTP 200 con reply JSON. Second send FASE1 (con codice pieno) ha fatto timeout 30s => async inbox path; prima send riuscita e sufficiente."
+}

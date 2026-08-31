@@ -1,0 +1,60 @@
+{
+  "cycle": "2026-08-30 18:45",
+  "strategy": "auto_gen_20260830_1845_volregime_fade.py",
+  "decision": {
+    "deploy": [
+      {
+        "node": "mc2",
+        "strategy_file": "auto_gen_20260830_1845_volregime_fade.py",
+        "config_patch": {
+          "pair": "DOGE/EUR",
+          "capital": 3.7,
+          "base_notional": 0.1,
+          "price_window": 500,
+          "vol_fast": 20,
+          "vol_slow": 80,
+          "base_spacing_pct": 0.15,
+          "spacing_vol_scale": 2.0,
+          "level_count_low": 6,
+          "level_count_high": 14,
+          "half_life_fast": 0.25,
+          "half_life_slow": 0.04,
+          "max_position_ratio": 0.8,
+          "fade_asymmetry": 0.35
+        }
+      },
+      {
+        "node": "nuvola",
+        "strategy_file": "auto_gen_20260830_1845_volregime_fade.py",
+        "config_patch": {
+          "pair": "DOGE/EUR",
+          "capital": 0.8,
+          "base_notional": 0.02,
+          "price_window": 500,
+          "vol_fast": 20,
+          "vol_slow": 80,
+          "base_spacing_pct": 0.15,
+          "spacing_vol_scale": 2.0,
+          "level_count_low": 6,
+          "level_count_high": 14,
+          "half_life_fast": 0.25,
+          "half_life_slow": 0.04,
+          "max_position_ratio": 0.8,
+          "fade_asymmetry": 0.35
+        }
+      }
+    ],
+    "adjust": [
+      {
+        "node": "marcodg1",
+        "bot": "sol",
+        "param": "health_check_interval",
+        "value": 3600
+      }
+    ],
+    "skip": [
+      "SOL grid performing well 13w/+0.37, no change"
+    ]
+  },
+  "note": "hermes-orchestrator decision for VolRegimeFade cycle. source=reply_hermes"
+}

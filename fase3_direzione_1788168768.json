@@ -1,0 +1,48 @@
+{
+  "deploy": [
+    {
+      "node": "nuvola",
+      "strategy_file": "auto_gen_1788168768_vaig_unlock.py",
+      "config_patch": {
+        "capital": 0.8,
+        "spacing": "adaptive",
+        "levels": 5,
+        "max_inventory_skew": 0.3,
+        "pnl_stop_loss": -0.15,
+        "unlock_budget": 0.1
+      }
+    },
+    {
+      "node": "marcodg1",
+      "strategy_file": "auto_gen_1788168768_vaig_unlock.py",
+      "config_patch": {
+        "capital": 2.0,
+        "spacing": "adaptive",
+        "levels": 7,
+        "max_inventory_skew": 0.3,
+        "pnl_stop_loss": -0.15,
+        "unlock_budget": 0.15
+      }
+    }
+  ],
+  "adjust": [
+    {
+      "node": "nuvola",
+      "bot": "doge_grid",
+      "param": "free_quote_release",
+      "value": 0.1
+    },
+    {
+      "node": "marcodg1",
+      "bot": "sol_grid",
+      "param": "capital_rebalance",
+      "value": 2.0
+    }
+  ],
+  "skip": [
+    "mc2: NO-TRADING policy - solo health monitor attivo",
+    "mc2: free_quote=0 e volume=0 - VAIG-UNLOCK non applicabile senza trading",
+    "Deploy su feeder/watchdog non consentito dai vincoli",
+    "marcodg1: timestamp stale 3.3h - verificare connettivita' prima di deploy"
+  ]
+}

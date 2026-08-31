@@ -1,0 +1,28 @@
+{
+  "ts": 1788101205,
+  "strategy": "auto_gen_1788101120_orderflow_rl.py",
+  "test": "PASSED (mem 0.001114mb)",
+  "fleet": "all healthy (mc2/nuvola/marcodg1), no kill-switch",
+  "deepseek_directive": {
+    "deploy": [
+      {"node": "mc2", "strategy_file": "auto_gen_1788101120_orderflow_rl.py",
+       "config_patch": {"capital": 3.7, "spacing": "atr_adaptive", "levels": 8,
+                        "floor_eur": 2.5, "kelly_bias": "asymmetric",
+                        "orderflow_bias_threshold": 0.05, "spacing_atr_multiplier": 1.2}},
+      {"node": "nuvola", "strategy_file": "auto_gen_1788101120_orderflow_rl.py",
+       "config_patch": {"capital": 0.8, "spacing": "atr_adaptive", "levels": 5,
+                        "floor_eur": 0.5, "kelly_bias": "asymmetric",
+                        "orderflow_bias_threshold": 0.03}},
+      {"node": "marcodg1", "strategy_file": "auto_gen_1788101120_orderflow_rl.py",
+       "config_patch": {"capital": 13.5, "spacing": "atr_1.5", "levels": 15,
+                        "orderflow_bias_threshold": 0.07, "pnl_reset": true}}
+    ],
+    "adjust": [
+      {"node": "marcodg1", "bot": "sol_grid", "param": "levels", "value": 15},
+      {"node": "marcodg1", "bot": "sol_grid", "param": "spacing", "value": "atr_1.5"},
+      {"node": "mc2", "bot": "doge_grid", "param": "stop_loss_pct", "value": 0.05}
+    ],
+    "skip": ["marcodg1: SOL volatile, richiede trend confirmation non orderflow puro",
+             "nessun kill-switch, nessun adjust su drawdown"]
+  }
+}

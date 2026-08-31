@@ -1,0 +1,7 @@
+{
+  "fase1_strategy": "auto_gen_1788168768_vaig_unlock.py",
+  "status": "SELFTEST PASS + FIX applicati da review DeepSeek",
+  "deepseek_review": "GO CONDIZIONATO (alpha 7/10, denaro 4/10): sbilanciamento inventario non gestito, winrate non ponderato, manca drawdown. FIX applicati: max_inventory_skew=0.30 blocca unlock nella direzione sbilanciata, PnL realizzato su costo medio ponderato, pnl_stop_loss=-0.15 congela allocazione, winrate con cost_band",
+  "test": "SELFTEST PASS mem=0.0497MB; bear-test: allocazione ferma a 0.00 (skew), SL congela a ratio -0.331",
+  "note": "VAIG-UNLOCK: spacing adattivo alla volatilita' + unlock budget anti grid-lock (free_quote=0). Candidata per sostituire grid bloccate DOGE (mc2/nuvola idle, volume 0)"
+}

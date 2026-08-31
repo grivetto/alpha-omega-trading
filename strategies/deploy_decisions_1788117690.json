@@ -1,0 +1,89 @@
+{
+  "deploy": [
+    {
+      "node": "marcodg1",
+      "strategy_file": "auto_gen_20260830_2115_regimeswitch_grid.py",
+      "config_patch": {
+        "capital": 13.5,
+        "trend_window": 24,
+        "co_window": 12,
+        "trend_score_thresh": 0.6,
+        "hysteresis": 0.05,
+        "min_dwell_ticks": 10,
+        "range_spacing_pct": 0.8,
+        "trend_spacing_pct": 1.2,
+        "range_levels": 40,
+        "trend_levels": 25,
+        "max_respace_per_tick": 2,
+        "max_inventory_skew": 0.3,
+        "atr_period": 14
+      }
+    },
+    {
+      "node": "nuvola",
+      "strategy_file": "auto_gen_20260830_2115_regimeswitch_grid.py",
+      "config_patch": {
+        "capital": 0.8,
+        "trend_window": 24,
+        "co_window": 12,
+        "trend_score_thresh": 0.6,
+        "hysteresis": 0.05,
+        "min_dwell_ticks": 10,
+        "range_spacing_pct": 0.8,
+        "trend_spacing_pct": 1.2,
+        "range_levels": 30,
+        "trend_levels": 20,
+        "max_respace_per_tick": 2,
+        "max_inventory_skew": 0.3,
+        "atr_period": 14
+      }
+    }
+  ],
+  "adjust": [
+    {
+      "node": "mc2",
+      "bot": "doge",
+      "param": "capital",
+      "value": 4.5
+    },
+    {
+      "node": "mc2",
+      "bot": "doge",
+      "param": "spacing",
+      "value": "flow_aware"
+    },
+    {
+      "node": "mc2",
+      "bot": "doge",
+      "param": "levels",
+      "value": 45
+    },
+    {
+      "node": "nuvola",
+      "bot": "doge",
+      "param": "capital",
+      "value": 1.2
+    },
+    {
+      "node": "nuvola",
+      "bot": "doge",
+      "param": "levels",
+      "value": 35
+    },
+    {
+      "node": "marcodg1",
+      "bot": "sol",
+      "param": "capital",
+      "value": 18
+    },
+    {
+      "node": "marcodg1",
+      "bot": "sol",
+      "param": "levels",
+      "value": 55
+    }
+  ],
+  "skip": [
+    "Pausa live 7gg attiva: deploy su paper/marcodg1 e paper mm, non su live"
+  ]
+}

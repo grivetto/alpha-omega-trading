@@ -1,0 +1,49 @@
+{
+  "deploy": [
+    {
+      "node": "nuvola",
+      "strategy_file": "auto_gen_1788111999_volimbalance_grid.py",
+      "config_patch": {
+        "capital": 0.8,
+        "spacing": "adaptive",
+        "levels": 5,
+        "paper": true
+      }
+    },
+    {
+      "node": "MARCODG1",
+      "strategy_file": "auto_gen_1788111999_volimbalance_grid.py",
+      "config_patch": {
+        "capital": 13.5,
+        "spacing": "adaptive",
+        "levels": 8,
+        "paper": true
+      }
+    }
+  ],
+  "adjust": [
+    {
+      "node": "mc2",
+      "bot": "doge",
+      "param": "capital",
+      "value": 3.7
+    },
+    {
+      "node": "mc2",
+      "bot": "doge",
+      "param": "spacing",
+      "value": "adaptive"
+    },
+    {
+      "node": "mc2",
+      "bot": "doge",
+      "param": "levels",
+      "value": 6
+    }
+  ],
+  "skip": [
+    "Deploy su mc2: nodo gia' saturo (RAM 15.7GB, load 0.62), attendere ottimizzazione",
+    "Nessun deploy reale: pausa live attiva, solo paper",
+    "Certbot failure su mc2 non blocca trading, monitorare"
+  ]
+}

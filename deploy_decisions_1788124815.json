@@ -1,0 +1,68 @@
+{
+  "deploy": [
+    {
+      "node": "mc2",
+      "strategy_file": "auto_gen_1788124596_regimekelly_grid.py",
+      "config_patch": {
+        "capital": 3.7,
+        "spacing_mode": "adaptive",
+        "levels": 12,
+        "regime_window": 120,
+        "vol_ewma_fast": 12,
+        "vol_ewma_slow": 48,
+        "kelly_fraction": 0.25,
+        "gc_interval": 300
+      }
+    },
+    {
+      "node": "nuvola",
+      "strategy_file": "auto_gen_1788124596_regimekelly_grid.py",
+      "config_patch": {
+        "capital": 0.8,
+        "spacing_mode": "adaptive",
+        "levels": 8,
+        "regime_window": 90,
+        "vol_ewma_fast": 10,
+        "vol_ewma_slow": 40,
+        "kelly_fraction": 0.2,
+        "gc_interval": 300
+      }
+    }
+  ],
+  "adjust": [
+    {
+      "node": "mc2",
+      "bot": "DOGE/EUR",
+      "param": "max_spacing_pct",
+      "value": 0.8
+    },
+    {
+      "node": "mc2",
+      "bot": "DOGE/EUR",
+      "param": "min_spacing_pct",
+      "value": 0.2
+    },
+    {
+      "node": "nuvola",
+      "bot": "DOGE/EUR",
+      "param": "max_spacing_pct",
+      "value": 1.0
+    },
+    {
+      "node": "nuvola",
+      "bot": "DOGE/EUR",
+      "param": "min_spacing_pct",
+      "value": 0.3
+    },
+    {
+      "node": "MARCODG1",
+      "bot": "SOL/EUR",
+      "param": "paper_mode",
+      "value": true
+    }
+  ],
+  "skip": [
+    "MARCODG1 in pausa live 7gg (28/08), trend-live spento; deploy su paper non prioritario finche non riprende live",
+    "Tutti i bot attuali PnL positivo e 0 dd; nessun intervento urgente oltre a spacing"
+  ]
+}

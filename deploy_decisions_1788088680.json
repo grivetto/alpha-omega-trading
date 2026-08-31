@@ -1,0 +1,26 @@
+{
+  "ts": 1788088680,
+  "ts_human": "2026-08-30 13:18",
+  "strategy_new": "auto_gen_20260830_1315_kellygrid.py",
+  "ds_deploy_decision": {
+    "deploy": [
+      {"node": "marcodg1", "strategy_file": "auto_gen_20260830_1315_kellygrid.py", "config_patch": {"capital": 13.5, "spacing": 0.02, "levels": 8, "warmup": 5, "idle_defensive": true}}
+    ],
+    "adjust": [
+      {"node": "mc2", "bot": "doge", "param": "spacing", "value": 0.025},
+      {"node": "nuvola", "bot": "doge", "param": "spacing", "value": 0.03}
+    ],
+    "skip": [
+      "bsmgrid_1305: non adatta a regime flat/choppy DOGE, no edge",
+      "volregime_grid_1245: non adatta a regime flat/choppy DOGE, no edge",
+      "chandelier_momentum_1230: non adatta a regime flat/choppy DOGE, no edge",
+      "zmeanrev_1216: non adatta a regime flat/choppy DOGE, no edge",
+      "volprofile_grid_1205: non adatta a regime flat/choppy DOGE, no edge",
+      "voladapt_grid_1145: non adatta a regime flat/choppy DOGE, no edge",
+      "hurstgrid_1031: non adatta a regime flat/choppy DOGE, no edge"
+    ]
+  },
+  "note_config_mismatch": "DS config_patch usa param names 'spacing/levels/warmup/idle_defensive' NON tutti presenti in DEFAULT_CONFIG di kellygrid (che usa grid_spacing, grid_levels, kelly_fraction, warmup_notional_frac, min_notional_floor, max_notional_frac). MAPPING: spacing->grid_spacing; levels->grid_levels; 'warmup'/'idle_defensive' sono flag concettuali gia' coperti da warmup_notional_frac e dall'idle difensivo su edge<=0 (no config aggiuntiva). capital patch (13.5) = capitale attuale marcodg1: allocare dentro capitale esistente, NON incrementare. Adatto solo a marcodg1 (SOL trending); DOGE flat/choppy esclude deploy su mc2/nuvola.",
+  "fleet_verdict": "TUTTI I NODI HEALTHY (mc2, nuvola, marcodg1). Nessun kill-switch. DD<=0.8%. SOL trending su marcodg1 (win 13/13) = nodo candidato per kellygrid. DOGE flat su mc2/nuvola => solo aggiustamenti spacing.",
+  "sync_notes": "FASE1 OK: /api/send HTTP 200 con reply DS positiva (anti-martingala corretto, halving geometrico confermato). FASE3 OK: /api/send HTTP 200 con reply JSON. Strategia validata: smoke test PASS (edge=0.422, halving 0.1125->0.05625 su losing streak), stress 500k tick rss 17MB, outcomes cap 60. py_compile+AST OK."
+}

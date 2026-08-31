@@ -1,0 +1,31 @@
+{
+  "ts": "2026-08-31 02:49",
+  "fase": 3,
+  "strategy_gen": "auto_gen_1788136649_liquidationgrid.py (LiquidationGrid v2, SELFTEST PASS, OOM-safe, skew da liquidation+funding)",
+  "fleet_snapshot": "2026-08-31 02:49",
+  "deepseek_reco": {
+    "deploy": [
+      {"node": "MARCODG1", "strategy_file": "auto_gen_1788136649_liquidationgrid.py", "config_patch": {"capital": 13.5, "max_risk": 0.0079, "enabled": true}},
+      {"node": "mc2", "strategy_file": "auto_gen_1788132853_gapguard_grid.py", "config_patch": {"capital": 3.7, "enabled": true, "drawdown_limit": 0.02}}
+    ],
+    "adjust": [
+      {"node": "MARCODG1", "bot": "sol grid", "param": "timestamp_sync", "value": "force_resync"},
+      {"node": "MARCODG1", "bot": "sol grid", "param": "restart_policy", "value": "backoff_5min_max3"},
+      {"node": "nuvola", "bot": "doge grid", "param": "capital_target", "value": 2.0}
+    ],
+    "skip": [
+      "vwapdrift: richiede VWAP bar, non su tick-stream",
+      "trend/trend-live MARCODG1: pausa live 7gg",
+      "mc2 liquidationgrid: policy no-trading",
+      "nuvola gapguard: capitale sotto soglia"
+    ]
+  },
+  "hermes_reco": {
+    "deploy": [{"node": "MARCODG1-paper", "strategy_file": "auto_gen_1788136649_liquidationgrid.py", "config_patch": "DEFERRED — valida solo paper/shadow dopo ripristino health; mai live entro PAUSA 7gg fino 04/09"}],
+    "adjust": [
+      {"node": "mc2", "bot": "doge", "param": "capital_replenishment", "value": "re-seed ~5 EUR OPPURE rotazione strategia (free_quote 0, 100% investito)"},
+      {"node": "nuvola", "bot": "doge", "param": "capital_below_threshold", "value": "0.8 EUR sotto soglia, non deployare"}
+    ]
+  },
+  "verdict": "Mc2 policy no-trading blocca gapguard su mc2. PAUSA LIVE 7gg (fino 04/09) blocca ogni deploy live. liquidationgrid = candidato paper/shadow su MARCODG1 SOLO dopo diagnosi degraded. Priorita' operativa: resync clock MARCODG1 (bot timestamp ~48h stale >120s). Nessun restart automatico su nodo degraded."
+}

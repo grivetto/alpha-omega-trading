@@ -1,0 +1,18 @@
+{
+  "ts": 1788091597,
+  "cycle": "14:06",
+  "new_strategy": "auto_gen_1788091597_asrgrid.py",
+  "smoke_test": "PASS (300 ticks, mem=0.103MB)",
+  "deepseek_deploy": [
+    {"node": "mc2", "strategy_file": "auto_gen_1788091597_asrgrid.py", "config_patch": {"capital": 3.7, "spacing": 0.008, "levels": 12}},
+    {"node": "nuvola", "strategy_file": "auto_gen_1788090318_liqskewgrid.py", "config_patch": {"capital": 0.8, "spacing": 0.01, "levels": 10}},
+    {"node": "MARCODG1", "strategy_file": "auto_gen_1788090318_liqskewgrid.py", "config_patch": {"capital": 13.5, "spacing": 0.006, "levels": 15}}
+  ],
+  "deepseek_adjust": [
+    {"node": "mc2", "bot": "doge", "param": "free_quote", "value": 2.7501},
+    {"node": "nuvola", "bot": "doge", "param": "free_quote", "value": 0.7565},
+    {"node": "MARCODG1", "bot": "sol", "param": "free_quote", "value": 2.6676}
+  ],
+  "deepseek_skip": ["All nodes healthy, zero errors, no kill-switch triggered. Proceed with deploy."],
+  "notes": "DeepSeek proposta config_patch con chiavi max_inventory/adverse_selection_threshold NON presenti in ASRGridConfig (dataclass) -> verrano ignorate dal costruttore; usare chiavi valide: inventory_influence, sofi_widen_thresh, sofi_aggression, spacing_atr_mult. Deploy su MARCODG1 (LIVE) richiede validazione paper 24h prima, come da policy."
+}

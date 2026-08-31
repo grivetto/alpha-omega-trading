@@ -1,0 +1,88 @@
+{
+  "ts": 1788127759,
+  "cycle": "2026-08-31 00:05",
+  "new_strategy": "auto_gen_1788127506_mzagrid.py",
+  "fleet_healthy": {
+    "mc2": true,
+    "nuvola": true,
+    "marcodg1": false
+  },
+  "note": "PAUSA LIVE 7gg -> deploy paper",
+  "verdict": {
+    "deploy": [
+      {
+        "node": "MARCODG1",
+        "strategy_file": "auto_gen_1788127506_mzagrid.py",
+        "config_patch": {
+          "symbol": "SOL/EUR",
+          "capital": 13.5,
+          "spacing": "tighter_momentum_wider_against",
+          "levels": 8,
+          "momentum_ewma_span": 20,
+          "vwap_anchor": true,
+          "zero_cross_hysteresis": 0.0015,
+          "de_risk_inventory": true
+        }
+      },
+      {
+        "node": "nuvola",
+        "strategy_file": "auto_gen_1788127506_mzagrid.py",
+        "config_patch": {
+          "symbol": "DOGE/EUR",
+          "capital": 0.8,
+          "spacing": "standard",
+          "levels": 5,
+          "momentum_ewma_span": 30,
+          "vwap_anchor": true,
+          "zero_cross_hysteresis": 0.001,
+          "de_risk_inventory": false
+        }
+      },
+      {
+        "node": "mc2",
+        "strategy_file": "auto_gen_1788127506_mzagrid.py",
+        "config_patch": {
+          "symbol": "DOGE/EUR",
+          "capital": 3.7,
+          "spacing": "standard",
+          "levels": 6,
+          "momentum_ewma_span": 25,
+          "vwap_anchor": true,
+          "zero_cross_hysteresis": 0.001,
+          "de_risk_inventory": true
+        }
+      }
+    ],
+    "adjust": [
+      {
+        "node": "MARCODG1",
+        "bot": "denaro-node-paper",
+        "param": "capital",
+        "value": 13.5
+      },
+      {
+        "node": "MARCODG1",
+        "bot": "denaro-node-paper",
+        "param": "max_spacing_pct",
+        "value": 0.02
+      },
+      {
+        "node": "nuvola",
+        "bot": "doge",
+        "param": "capital",
+        "value": 0.8
+      },
+      {
+        "node": "mc2",
+        "bot": "doge",
+        "param": "capital",
+        "value": 3.7
+      }
+    ],
+    "skip": [
+      "MARCODG1 stale timestamp: denaro-node-trend/trend-live/brain inattivi, pausa live 7gg attiva - nodo degraded ma paper attivo, deploy MZAGrid su paper OK",
+      "Gateway Hermes 8642 intermittente: non usare per deploy, solo file system locale",
+      "Kill-switch OFF: nessun intervento su main/live"
+    ]
+  }
+}

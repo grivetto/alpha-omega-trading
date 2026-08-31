@@ -1,0 +1,38 @@
+{
+ "cycle": "2026-08-30 19:18",
+ "generated_strategy": "auto_gen_20260830_191552_spreadmean_absorber.py",
+ "deepseek_decision": {
+  "deploy": [
+   {
+    "node": "mc2",
+    "strategy_file": "auto_gen_20260830_191552_spreadmean_absorber.py",
+    "config_patch": {
+     "symbol": "DOGE/EUR",
+     "capital": 3.7,
+     "params": {
+      "grid_adaptivity": "ATR+EMA",
+      "fade_mode": "mean-reversion",
+      "risk_limit": 0.02
+     }
+    }
+   }
+  ],
+  "adjust": [
+   {
+    "node": "marcodg1",
+    "bot": "sol",
+    "param": "restart",
+    "value": true
+   }
+  ],
+  "skip": [
+   "auto_gen_20260830_anchorladder.py: gia raccomandata, nessuna nuova azione",
+   "auto_gen_20260830_1845_volregime_fade.py: gia raccomandata, nessuna nuova azione",
+   "auto_gen_20260830_1831_voltargetgrid.py: gia raccomandata, nessuna nuova azione",
+   "auto_gen_20260830_1811_momentumvoldrift.py: non prioritaria, risk profile non adatto a paper-first",
+   "auto_gen_20260830_1747_invhedge.py: non prioritaria, nessun trigger di hedge attivo",
+   "nuvola/doge: capitale troppo basso (0.8) per nuove strategie, mantenere grid attuale",
+   "PAUSA LIVE: nessun deploy su main, solo paper/nodo test"
+  ]
+ }
+}

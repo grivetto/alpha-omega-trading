@@ -1,0 +1,25 @@
+{
+  "ts": 1788100380,
+  "strategy": "auto_gen_1788100320_regimeshift.py",
+  "test": "PASSED (mem 0.001373mb)",
+  "fleet": "all healthy (mc2/nuvola/marcodg1), no kill-switch",
+  "deepseek_directive": {
+    "deploy": [
+      {"node": "mc2", "strategy_file": "auto_gen_1788100320_regimeshift.py",
+       "config_patch": {"capital": 3.7, "spacing": "dynamic", "levels": "auto",
+                        "regime_thresholds": {"low": 0.3, "normal": 0.6, "high": 1.2}}},
+      {"node": "marcodg1", "strategy_file": "auto_gen_1788100320_regimeshift.py",
+       "config_patch": {"capital": 13.5, "spacing": "dynamic", "levels": "auto",
+                        "trend_anchor": "ema_50",
+                        "regime_thresholds": {"low": 0.25, "normal": 0.55, "high": 1.0}}}
+    ],
+    "adjust": [
+      {"node": "nuvola", "bot": "doge", "param": "capital", "value": 1.2},
+      {"node": "nuvola", "bot": "doge", "param": "spacing", "value": "0.8x"}
+    ],
+    "skip": [
+      "mc2: bassa liquidita DOGE, rischio slippage vol regime",
+      "nuvola: capitale troppo basso per regime-shift multi-livello"
+    ]
+  }
+}

@@ -1,0 +1,81 @@
+{
+  "ts": 1788098990,
+  "cycle": "16:05",
+  "new_strategy": "auto_gen_20260830_1605_exitgrid.py",
+  "smoke_test": "PASS (py_compile OK; all inline asserts OK; mem ~0.012MB; breakeven/time-decay/capacity-guard verified)",
+  "fase1_sent": true,
+  "deepseek_reply_deploy": [
+    {
+      "node": "mc2",
+      "strategy_file": "auto_gen_20260830_1605_exitgrid.py",
+      "config_patch": {
+        "r_target": 1.5,
+        "atr_span": 14,
+        "breakeven_fraction": 0.5,
+        "win_window": 20,
+        "attrition_floor": 0.4,
+        "attrition_widen": 0.2,
+        "max_hold_ticks": 100,
+        "time_decay_factor": 0.98,
+        "max_open_lots": 3,
+        "default_lot_size": 0.5
+      }
+    },
+    {
+      "node": "nuvola",
+      "strategy_file": "auto_gen_20260830_1605_exitgrid.py",
+      "config_patch": {
+        "r_target": 1.2,
+        "atr_span": 10,
+        "breakeven_fraction": 0.5,
+        "win_window": 15,
+        "attrition_floor": 0.35,
+        "attrition_widen": 0.15,
+        "max_hold_ticks": 80,
+        "time_decay_factor": 0.99,
+        "max_open_lots": 2,
+        "default_lot_size": 0.3
+      }
+    },
+    {
+      "node": "MARCODG1",
+      "strategy_file": "auto_gen_20260830_1605_exitgrid.py",
+      "config_patch": {
+        "r_target": 2.0,
+        "atr_span": 20,
+        "breakeven_fraction": 0.6,
+        "win_window": 25,
+        "attrition_floor": 0.45,
+        "attrition_widen": 0.25,
+        "max_hold_ticks": 120,
+        "time_decay_factor": 0.97,
+        "max_open_lots": 4,
+        "default_lot_size": 1.0
+      }
+    }
+  ],
+  "deepseek_adjust": [
+    {
+      "node": "mc2",
+      "bot": "doge",
+      "param": "max_open_lots",
+      "value": 3
+    },
+    {
+      "node": "nuvola",
+      "bot": "doge",
+      "param": "max_open_lots",
+      "value": 2
+    },
+    {
+      "node": "MARCODG1",
+      "bot": "sol",
+      "param": "max_open_lots",
+      "value": 4
+    }
+  ],
+  "deepseek_skip": [
+    "MARCODG1 paper window <24h - monitorare dopo 24h per validazione completa"
+  ],
+  "orchestrator_corrected_notes": "DeepSeek raw configs validi ma default_lot_size/max_open_lots non allineati al capitale reale (mc2 free 2.75, nuvola 0.76, MARCODG1 2.67). Adottati i valori corretti da risposta Hermes integrata (r_target 1.8/1.6/2.2, max_open_lots 8/4/12, default_lot_size 0.02/0.01/0.05) proporzionali al capitale. ExitGrid e OVERLAY EXIT: va attaccato ai grid esistenti (doge/sol), NON sostituisce il layer entry."
+}

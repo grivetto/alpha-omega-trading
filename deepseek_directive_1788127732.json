@@ -1,0 +1,14 @@
+Direttiva FASE 3 per DeepSeek Harness.
+
+FLEET STATUS 2026-08-31 00:05 (pre-run + fleet_status.sh):
+- mc2: healthy. Bot doge DOGE/EUR capital 3.7, pnl +0.0148, trades 2 (2w/0l), strategy grid, uptime 6859s, dd 0, cap_locked 0, cap_available 0. Unita: denaro-node-mc2 active, denaro-feeder-mc2 INACTIVE, denaro-health-mc2 active, atlas-watchdog INACTIVE.
+- nuvola: healthy. Bot doge DOGE/EUR capital 0.8, pnl +0.0061, trades 1 (1w/0l), strategy grid, dd 0.
+- MARCODG1: DEGRADED (atteso, pausa live 7gg attiva dal 28/08). denaro-node-paper active; denaro-node-trend/trend-live/brain INATTIVI. Bot sol SOL/EUR capital 13.5 eq 13.207, pnl +0.3705, trades 13 (13w/0l), strategy grid, dd 0.0079, uptime 12599s (timestamp dati vecchio 1787953312 = nodo non aggiorna da ore).
+
+NUOVA STRATEGIA questo ciclo: auto_gen_1788127506_mzagrid.py (MZAGrid). Momentum EWMA axis, griglia asimmetrica ancorata a VWAP (spacing tighter con momentum, wider contro), zero-cross con hysteresis, de-risk inventario. O(1) streaming, mem est 0.0005MB. Smoke test passato (240 tick, bias corretto +1 in uptrend).
+
+Contesto: PAUSA LIVE 7gg attiva (main intoccabile). Gateway Hermes 8642 lento/intermittente. Tutti i bot paper, PnL positivi, 0 errori, kill-switch OFF.
+
+Direttiva: analizza fleet status + strategia auto-gen. Quali strategie deployare su quale nodo? Quali config aggiustare (capital, spacing, levels)? Deploy SOLO su paper/nodi non live. Rispondi SOLO JSON:
+{deploy: [{node, strategy_file, config_patch}], adjust: [{node, bot, param, value}], skip: [reason]}
+Priorita' nodi per il nuovo MZAGrid: MARCODG1 (SOL/EUR vol alta, eq 13.2) vs nuvola/mc2 (DOGE/EUR piccolo 0.8-3.7). Indica anche se MARCODG1 degraded (stale timestamp) richiede intervento.

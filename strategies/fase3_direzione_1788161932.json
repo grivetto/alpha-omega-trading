@@ -1,0 +1,125 @@
+{
+  "directive": "FASE3 finale orchestrazione cron 10min 09:35",
+  "strategy_generated": "auto_gen_1788161723_asymregimegrid.py (AARG, APPROVATA dopo fix asimmetria)",
+  "reply_deepseek": {
+    "deploy": [
+      {
+        "node": "nuvola",
+        "strategy_file": "auto_gen_1788161723_asymregimegrid.py",
+        "config_patch": {
+          "capital": 0.8,
+          "spacing_buy": 0.02,
+          "spacing_sell": 0.015,
+          "levels": 5
+        }
+      },
+      {
+        "node": "MARCODG1",
+        "strategy_file": "auto_gen_1788161723_asymregimegrid.py",
+        "config_patch": {
+          "capital": 13.5,
+          "spacing_buy": 0.025,
+          "spacing_sell": 0.018,
+          "levels": 8
+        }
+      }
+    ],
+    "adjust": [
+      {
+        "node": "MARCODG1",
+        "bot": "denaro-node-trend-live",
+        "param": "feed_restart",
+        "value": "force_restart_with_port_release"
+      },
+      {
+        "node": "MARCODG1",
+        "bot": "denaro-brain",
+        "param": "status",
+        "value": "restart"
+      },
+      {
+        "node": "MARCODG1",
+        "bot": "denaro-node-trend",
+        "param": "status",
+        "value": "restart"
+      },
+      {
+        "node": "MARCODG1",
+        "bot": "health_server",
+        "param": "bind_port",
+        "value": 8912
+      }
+    ],
+    "skip": [
+      "mc2: feeder and watchdog inactive, not trading per rules",
+      "nuvola: capital too low for AARG full deployment, use minimal config",
+      "MARCODG1: main OKX untouchable, only paper deploy"
+    ]
+  },
+  "reply_hermes_review": {
+    "deploy": [
+      {
+        "node": "nuvola",
+        "strategy_file": "auto_gen_1788161723_asymregimegrid.py",
+        "config_patch": {
+          "mode": "paper",
+          "pair": "DOGE/EUR",
+          "capital_alloc": 0.5,
+          "spacing_buy_base": 0.0035,
+          "spacing_sell_base": 0.0045,
+          "hurst_window": 64,
+          "kelly_cap": 0.25,
+          "max_levels_per_side": 6,
+          "stale_feed_action": "halt_new_orders"
+        }
+      }
+    ],
+    "adjust": [
+      {
+        "node": "MARCODG1",
+        "bot": "denaro-node-trend-live",
+        "param": "restart_required",
+        "value": true
+      },
+      {
+        "node": "MARCODG1",
+        "bot": "denaro-brain",
+        "param": "restart_required",
+        "value": true
+      },
+      {
+        "node": "MARCODG1",
+        "bot": "health_server",
+        "param": "bind_port",
+        "value": 8912
+      },
+      {
+        "node": "MARCODG1",
+        "bot": "sol",
+        "param": "feed_stale_threshold_sec",
+        "value": 86400
+      },
+      {
+        "node": "nuvola",
+        "bot": "doge",
+        "param": "capital_alloc",
+        "value": 0.5
+      },
+      {
+        "node": "mc2",
+        "bot": "doge",
+        "param": "status",
+        "value": "no_change"
+      }
+    ],
+    "skip": [
+      "MARCODG1 AARG deploy BLOCCATO: feed trend-live INACTIVE da 14.5gg + denaro-brain INACTIVE + bind 8911 occupato. Priorita' assoluta: restart denaro-node-trend-live + denaro-brain + liberare porta 8911 PRIMA di copiare AARG.",
+      "AARG su MC2: violazione regola esplicita 'MC2 NON trading'. Skip.",
+      "AARG su main OKX: PAUSA LIVE 7gg attiva, main intoccabile fino al 04/09. Skip.",
+      "Capital deploy AARG simultaneo su nuvola+MARCODG1 = 0.8+13.0=13.8 EUR. Meglio phased: prima nuvola 48h paper, poi MARCODG1 post-feed-fix.",
+      "Hurst-like detector: validato solo in backtest/test offline. Deploy MARCODG1 condizionato a feed vivo."
+    ]
+  },
+  "note": "Hermes-review blocca MARCODG1 AARG fino a feed-fix (trend-live+stale+porta 8911). Deploy AARG solo su nuvola paper DOGE/EUR. Priorita' ops: restart denaro-node-trend-live, denaro-brain, health_server bind 8912, feed_stale_threshold 86400.",
+  "ts": "2026-08-31 09:37"
+}

@@ -1,0 +1,55 @@
+{
+  "timestamp": "2026-08-31 03:47",
+  "directive": {
+    "deploy": [
+      {
+        "node": "mc2",
+        "strategy_file": "auto_gen_1788140763_invrebal_grid.py",
+        "config_patch": {
+          "symbol": "DOGE/EUR",
+          "capital": 3.7,
+          "spacing_base": 0.008,
+          "levels": 3,
+          "quote_per_level_frac": 0.25,
+          "rebalance_window": 3600,
+          "target_inventory_ratio": 0.5,
+          "vol_lookback": 120,
+          "min_quote_per_level": 0.9
+        }
+      },
+      {
+        "node": "nuvola",
+        "strategy_file": "auto_gen_1788140763_invrebal_grid.py",
+        "config_patch": {
+          "symbol": "DOGE/EUR",
+          "capital": 0.8,
+          "spacing_base": 0.012,
+          "levels": 2,
+          "quote_per_level_frac": 0.3,
+          "rebalance_window": 3600,
+          "target_inventory_ratio": 0.5,
+          "vol_lookback": 120,
+          "min_quote_per_level": 0.4
+        }
+      }
+    ],
+    "adjust": [
+      {
+        "node": "mc2",
+        "bot": "denaro-feeder",
+        "param": "enabled",
+        "value": true
+      },
+      {
+        "node": "mc2",
+        "bot": "atlas-watchdog",
+        "param": "enabled",
+        "value": true
+      }
+    ],
+    "skip": [
+      "MARCODG1: clock stale >48h, no live deploy; paper 'sol' ok ma non toccare finche' non sincronizzato",
+      "MARCODG1: trend/brain inattivi, non attivare strategie live su quel nodo"
+    ]
+  }
+}

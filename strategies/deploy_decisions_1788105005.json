@@ -1,0 +1,25 @@
+{
+  "cycle": "2026-08-30 17:49",
+  "decision": {
+    "deploy": [
+      {
+        "node": "mc2",
+        "strategy_file": "auto_gen_20260830_1747_invhedge.py",
+        "config_patch": {"pair": "DOGE/EUR", "capital": 3.70, "base_spacing": 0.008, "levels": 6, "inventory_threshold": 0.2, "hedge_ratio": 0.6, "gap_stop_frac": 0.01}
+      },
+      {
+        "node": "marcodg1",
+        "strategy_file": "auto_gen_20260830_1747_invhedge.py",
+        "config_patch": {"pair": "SOL/EUR", "capital": 13.207, "base_spacing": 0.012, "levels": 8, "inventory_threshold": 0.15, "hedge_ratio": 0.4, "gap_stop_frac": 0.012}
+      }
+    ],
+    "adjust": [
+      {"node": "nuvola", "bot": "doge", "param": "capital", "value": 0.80}
+    ],
+    "skip": [
+      "nuvola capitale basso (0.80 EUR) -> hedge inventory inefficace, mantieni grid base/AtrTrailing gia attiva",
+      "invhedge deploy merita smoke+PAPER (non live diretto) prima di live su mc2/marcodg1"
+    ]
+  },
+  "note": "DeepSeek deployment decision 17:49. invhedge.py MATERIALIZZATO e validato (self-test PASS, py_compile OK, mem 0.006MB). DS produsse 'spacing' -> normalizzato a 'base_spacing' (chiave reale della strategia). Nuvola SKIP per capitale basso: preferenza bump capital. Attenzione: deploy in PAPER dapprima su mc2/marcodg1."
+}

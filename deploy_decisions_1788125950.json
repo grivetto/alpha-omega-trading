@@ -1,0 +1,73 @@
+{
+  "ts": 1788125950,
+  "fase": 3,
+  "fleet_snapshot": "2026-08-30 23:30",
+  "source_strategy": "auto_gen_1788125865_vwmr_regrid.py",
+  "deploy": [
+    {
+      "node": "marcodg1",
+      "strategy_file": "auto_gen_1788125865_vwmr_regrid.py",
+      "config_patch": {
+        "symbol": "SOL/EUR",
+        "market": "SOL/EUR",
+        "capital": 13.5,
+        "vwap_window": 60,
+        "twap_window": 30,
+        "vol_window": 20,
+        "spacing_base": 0.006,
+        "spacing_min": 0.003,
+        "spacing_max": 0.018,
+        "vol_spacing_gain": 3.0,
+        "anchoring_speed": 0.35,
+        "reanchor_threshold": 0.012,
+        "bias_threshold": 0.0025,
+        "levels_above": 5,
+        "levels_below": 5,
+        "max_exposure_quote": 0.55,
+        "max_drawdown": 0.08,
+        "dd_floor": 0.4,
+        "gc_interval": 500,
+        "dry_run": true,
+        "port": 8914,
+        "rationale": "VWMRGrid e mean-reversion pura ancorata al VWAP: complementare al grid esistente (non sostituzione) e al regimekelly_grid gia attivo su DOGE/EUR mc2/nuvola. Deploy SOL/EUR su MARCODG1 per evitare conflitto mean-revert vs regime-adaptive sullo stesso symbol. Paper mode (pausa live 7gg 28/08), capital = cap bot reale (13.5 EUR), kelly_cap implicito via max_exposure_quote=0.55 e max_drawdown=0.08 (conservative promotion gate)."
+      }
+    }
+  ],
+  "adjust": [
+    {
+      "node": "marcodg1",
+      "bot": "SOL/EUR",
+      "param": "feed_alert_threshold_seconds",
+      "value": 7200,
+      "reason": "trend/trend-live INACTIVE da 28/08 (pausa live 7gg) ma bot grid SOL/EUR attivo: aggiungere watchdog feed-stale 2h per intercettare prossimo stall prima che il PnL flat diventi invisibile (bot_ts uptime 12599s = 3.5h, finestra ancora ok ma trend-live feed assente)"
+    },
+    {
+      "node": "marcodg1",
+      "bot": "SOL/EUR",
+      "param": "max_spacing_pct",
+      "value": 1.8,
+      "reason": "VOL elevata su SOL (rel_vol tipico >1 in regime trend), spacing base 0.6% troppo stretto: allargare max per non saturare i livelli durante spike"
+    },
+    {
+      "node": "mc2",
+      "bot": "DOGE/EUR",
+      "param": "regimekelly_warmup_ticks",
+      "value": 120,
+      "reason": "regimekelly_grid deployato 23:20, warmup di regime_detection ADX-like ancora iniziale (bot uptime 4873s ~81min): dare 120 tick (~2min a 1Hz) per stabilizzare vol_ewma_fast/slow prima del primo sizing frazionario"
+    },
+    {
+      "node": "nuvola",
+      "bot": "DOGE/EUR",
+      "param": "regimekelly_warmup_ticks",
+      "value": 90,
+      "reason": "analogo su nuvola (bot uptime 4781s ~80min), 90 tick per warmup regime detection prima del primo sizing"
+    }
+  ],
+  "skip": [
+    "mc2 orchestrazione-only: NO deploy strategie trading (regola denaro-fase3-dispatch sez.1). Solo orchestration params ammessi.",
+    "RegimeKellyGrid (auto_gen_1788124596) gia deployato mc2+nuvola DOGE/EUR nel ciclo 23:20 (deploy_decisions_1788124815) - NON ridistribuire, NON sostituire, non deployare VWMRGrid sullo stesso symbol/nodo per evitare conflitto mean-revert vs regime-adaptive",
+    "nuvola Kraken live ma capital 0.8 EUR saturo (free=0.7565 vs cap=0.80, ratio 94%): nessun layer addizionale finche non rientra sotto kelly_cap 0.30 - margine insufficiente per nuova strategia",
+    "MARCODG1 trend/trend-live INACTIVE per pausa live 7gg (28/08): nessun deploy su unit live, solo paper su denaro-node-paper gia attivo",
+    "VWMRGrid richiede VWAP rolling su volumi attendibili: feed Kraken nuvola SOL feed esposto ma non in questo slot di pausa, attendere ripresa live per deploy multi-nodo"
+  ]
+}

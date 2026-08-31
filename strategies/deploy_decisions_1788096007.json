@@ -1,0 +1,63 @@
+{
+  "ts": 1788096007,
+  "cycle": "15:20",
+  "new_strategy": "auto_gen_20260830_1515_inertiagrid.py",
+  "smoke_test": "PASS (300 ticks fills=3 mem=0.0054MB; extended 1500-drift fills=0, 1500-chop fills=2)",
+  "deepseek_reply_deploy": [
+    {
+      "node": "mc2",
+      "strategy_file": "auto_gen_20260830_1515_inertiagrid.py",
+      "config_patch": {
+        "base_spacing": 0.012,
+        "max_spacing": 0.02,
+        "levels_per_side": 3,
+        "max_open_levels": 2,
+        "level_alloc": 0.25,
+        "vel_ema_len": 20,
+        "accel_ema_len": 30,
+        "gate_threshold": 0.0001,
+        "gate_velocity_ratio": 0.0005,
+        "cooldown_ticks": 15,
+        "av_shift_factor": 0.4,
+        "reserve_pct": 0.35
+      }
+    },
+    {
+      "node": "nuvola",
+      "strategy_file": "auto_gen_20260830_1515_inertiagrid.py",
+      "config_patch": {
+        "base_spacing": 0.015,
+        "max_spacing": 0.025,
+        "levels_per_side": 2,
+        "max_open_levels": 1,
+        "level_alloc": 0.4,
+        "vel_ema_len": 15,
+        "accel_ema_len": 25,
+        "gate_threshold": 0.00012,
+        "gate_velocity_ratio": 0.0008,
+        "cooldown_ticks": 20,
+        "av_shift_factor": 0.5,
+        "reserve_pct": 0.3
+      }
+    }
+  ],
+  "deepseek_adjust": [
+    {
+      "node": "mc2",
+      "bot": "denaro-node-mc2",
+      "param": "capital",
+      "value": 3.55
+    },
+    {
+      "node": "nuvola",
+      "bot": "denaro-node-nuvola",
+      "param": "capital",
+      "value": 0.75
+    }
+  ],
+  "deepseek_skip": [
+    "MARCODG1 SOL real money: policy 24h paper test prima di live (uptime 12599s < 86400s). Deploy inertiagrid su MARCODG1 rimandato.",
+    "inertiagrid e' strategia da range/chop (gate blocca trend) -> mc2/nuvola su DOGE range OK, non per SOL momentum su MARCODG1."
+  ],
+  "orchestrator_corrected_notes": "CORREZIONE orchestratore: gate_velocity_ratio proposto da DeepSeek (mc2 1.8, nuvola 2.0) era fuori scala per DOGE/EUR ~0.10: 1.8*0.10=0.18 EUR/tick > ogni step realistico -> gate sempre ATTIVO, griglia mai ri-quota. Corretto a 0.0005 (mc2) e 0.0008 (nuvola). gate_threshold ridotto in coerenza. Capital adeguati ai saldi reali (mc2 3.55 cap_available, nuvola 0.75 free_quote) per non sotto-utilizzare ne' sovra-impegnare. MARCODG1 SKIP per policy 24h paper. Tutti nodi healthy, zero errori, kill-switch OFF."
+}

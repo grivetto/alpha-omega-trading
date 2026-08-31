@@ -1,0 +1,80 @@
+{
+  "directive": "FASE3 direzione DeepSeek",
+  "reply": {
+    "deploy": [
+      {
+        "node": "marcodg1",
+        "strategy_file": "auto_gen_1788150830_driftdist_grid.py",
+        "config_patch": {
+          "capital": 2.5,
+          "spacing": 0.012,
+          "levels": 12,
+          "max_drift_pct": 0.03,
+          "kill_switch_drift_pct": 0.08
+        }
+      },
+      {
+        "node": "nuvola",
+        "strategy_file": "auto_gen_1788149753_vwapdev_grid.py",
+        "config_patch": {
+          "capital": 0.5,
+          "spacing": 0.008,
+          "levels": 8,
+          "vwap_window": 20,
+          "dev_band_pct": 0.015
+        }
+      },
+      {
+        "node": "mc2",
+        "strategy_file": "auto_gen_1788149458_kolmregime_grid.py",
+        "config_patch": {
+          "capital": 1.5,
+          "spacing": 0.01,
+          "levels": 10,
+          "regime_window": 50,
+          "min_regime_strength": 0.6
+        }
+      }
+    ],
+    "adjust": [
+      {
+        "node": "mc2",
+        "bot": "DOGE/EUR",
+        "param": "sl_trig",
+        "value": true
+      },
+      {
+        "node": "marcodg1",
+        "bot": "SOL/EUR",
+        "param": "capital",
+        "value": 10.0
+      },
+      {
+        "node": "marcodg1",
+        "bot": "SOL/EUR",
+        "param": "spacing",
+        "value": 0.015
+      },
+      {
+        "node": "marcodg1",
+        "bot": "SOL/EUR",
+        "param": "levels",
+        "value": 15
+      }
+    ],
+    "skip": [
+      "feeder-mc2 inattivo: non deployare nuove strategie su nodo incompleto",
+      "atlas-watchdog inattivo: monitoraggio assente, rischio operativo",
+      "auto_gen_1788147147_auction_depth_grid: richiede orderbook depth, volume=0 ovunque",
+      "auto_gen_1788145525_volbuffer_grid: buffer volatility inutile con volume zero",
+      "auto_gen_1788144488_volconf_mr_rau: mean-reversion non testabile senza dati live",
+      "auto_gen_1788143609_freshguard_grid: guardia freshness inutile su paper/soak",
+      "auto_gen_1788142411_liquidity_skew_grid: skew dipende da liquidity reale",
+      "auto_gen_1788140763_invrebal_grid: rebalancing richiede pi\u00f9 asset",
+      "auto_gen_1788140147_guillotine_grid: troppo aggressivo per capitali minuscoli",
+      "auto_gen_1788138768_rvregime_grid: regime volatility non rilevabile con volume 0",
+      "auto_gen_1788136649_liquidationgrid: solo per mercati con leva reale"
+    ]
+  },
+  "ts": "1788151162"
+}

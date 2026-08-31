@@ -1,0 +1,61 @@
+{
+  "ts": 1788127759,
+  "fase": 3,
+  "fleet_snapshot": "2026-08-31 00:05",
+  "source_strategy": "auto_gen_1788127506_mzagrid.py MZAGrid",
+  "deploy": [
+    {
+      "node": "MARCODG1",
+      "strategy_file": "auto_gen_1788127506_mzagrid.py",
+      "config_patch": {
+        "market": "SOL/EUR",
+        "capital": 13.5,
+        "levels": 8,
+        "mom_window": 20,
+        "vol_sample": 50,
+        "spacing_pct": 0.008,
+        "asym_factor": 0.5,
+        "hysteresis": 0.05,
+        "max_inv_skew": 0.4,
+        "kelly_cap": 0.25,
+        "dry_run": true,
+        "side": "both",
+        "port": 8921,
+        "mom_warmup_ticks": 120,
+        "rationale": "MZAGrid momentum-asimmetrico in dry_run parallelo al grid esistente su SOL/EUR. Capital = cap bot reale 13.5 (free 2.67). Mom warmup 120 ticks per stabilizzare EWMA prima del sizing frazionario. Feed-stale gestito da adjust dedicato; validazione paper non bloccata dallo stall."
+      }
+    }
+  ],
+  "adjust": [
+    {
+      "node": "MARCODG1",
+      "bot": "denodo-sol",
+      "param": "feed_alert_threshold_seconds",
+      "value": 7200,
+      "reason": "bot_ts 1787953312 stale ~174446s (48.5h) vs now 1788127759, PnL flat +0.37 13w/0l = pattern fantasma. Ridurre soglia alert per intercettare il prossimo stall prima che diventi invisibile."
+    },
+    {
+      "node": "MARCODG1",
+      "bot": "denodo-ada",
+      "param": "cooldown",
+      "value": "wait",
+      "reason": "CB OPEN weekly_loss_-94.2% dd 0.9392 stop_loss_triggered=true: kill-switch attivo, NON intervenire, attesa reset periodo."
+    },
+    {
+      "node": "nuvola",
+      "bot": "denaro-node-nuvola",
+      "param": "restart_required",
+      "value": true,
+      "reason": "systemctl --user is-active inactive su denaro-node/feeder/health-nuvola; health endpoint :8901 non risponde. Feed DOGE/EUR non gira. Verificare prima di qualsiasi deploy MZAGrid."
+    }
+  ],
+  "skip": [
+    "mc2 non esegue trading - solo orchestrazione (denaro-node/feeder/health/atlas). Mai book reali.",
+    "nuvola non deployabile: denaro-node-nuvola inactive + ssh intermittente, health :8901 non risponde. Feed DOGE/EUR non gira. Precondizioni non soddisfatte per MZAGrid.",
+    "MARCODG1 sol feed stale 48h: skip come layer primario live; MZAGrid entra SOLO come dry_run parallelo per validazione, NON sostituisce grid esistente.",
+    "RegimeKellyGrid (auto_gen_1788124596) gia deployato nuvola DOGE/EUR 23:40 - non replicare MZAGrid sullo stesso symbol (mean-revert vs regime side-bias si combattono).",
+    "VTAG/VESG/VWMRGrid (auto_gen precedenti) gia attivi come layer su mc2 DOGE, MARCODG1 SOL, nuvola DOGE - MZAGrid va solo dove c'e gap di coverage.",
+    "PAUSA LIVE 7gg attiva dal 28/08: main OKX intoccabile. Tutti i deploy sono dry_run o gia in stato paper.",
+    "Gateway Hermes 8642 intermittente: limitare deploy simultanei, attendere heartbeat stabile entro 60s prima di scp strategia su MARCODG1."
+  ]
+}

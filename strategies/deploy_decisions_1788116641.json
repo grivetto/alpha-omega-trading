@@ -1,0 +1,86 @@
+{
+  "deploy": [
+    {
+      "node": "nuvola",
+      "strategy_file": "auto_gen_20260830_2046_flowkong_grid.py",
+      "config_patch": {
+        "capital": 2.0,
+        "spacing": "power_law_atr",
+        "levels": 40,
+        "congestion_sigma": 2.2,
+        "cooldown_steps": 60,
+        "spike_gate_mult": 1.5
+      }
+    },
+    {
+      "node": "marcodg1",
+      "strategy_file": "auto_gen_20260830_2046_flowkong_grid.py",
+      "config_patch": {
+        "capital": 15.0,
+        "spacing": "power_law_atr",
+        "levels": 50,
+        "congestion_sigma": 2.0,
+        "cooldown_steps": 45,
+        "spike_gate_mult": 1.3
+      }
+    }
+  ],
+  "adjust": [
+    {
+      "node": "mc2",
+      "bot": "doge grid",
+      "param": "capital",
+      "value": 4.5
+    },
+    {
+      "node": "mc2",
+      "bot": "doge grid",
+      "param": "spacing",
+      "value": "flow_aware"
+    },
+    {
+      "node": "mc2",
+      "bot": "doge grid",
+      "param": "levels",
+      "value": 45
+    },
+    {
+      "node": "mc2",
+      "bot": "doge grid",
+      "param": "congestion_sigma",
+      "value": 2.2
+    },
+    {
+      "node": "nuvola",
+      "bot": "doge grid",
+      "param": "capital",
+      "value": 1.2
+    },
+    {
+      "node": "nuvola",
+      "bot": "doge grid",
+      "param": "levels",
+      "value": 35
+    },
+    {
+      "node": "marcodg1",
+      "bot": "sol grid PAPER",
+      "param": "capital",
+      "value": 18.0
+    },
+    {
+      "node": "marcodg1",
+      "bot": "sol grid PAPER",
+      "param": "levels",
+      "value": 55
+    }
+  ],
+  "skip": [
+    "mc2: load 7.97 HIGH - deploy solo dopo riduzione carico o su nodo dedicato",
+    "auto_gen_20260830_2030_volrail_scroll.py: non priority, flowkong copre congestion meglio",
+    "auto_gen_20260830_2016_adaptivegrid_hib.py: inventory-aware meno adatto a regime flow-driven",
+    "auto_gen_1788113116_voldetect_grid.py: volume detection ridondante con flowkong",
+    "auto_gen_1788111999_volimbalance_grid.py: imbalance gia' incorporato in flowkong press",
+    "auto_gen_20260830_1935_swingprofiler_grid.py: swing profiling non allineato a griglia intraday"
+  ]
+}

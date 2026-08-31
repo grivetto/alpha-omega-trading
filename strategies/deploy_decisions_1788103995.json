@@ -1,0 +1,13 @@
+{
+  "cycle": "2026-08-30 17:31",
+  "decision": {
+    "deploy": [
+      {"node": "mc2", "strategy_file": "auto_gen_20260830_1730_invhedge.py", "config_patch": {"pair": "DOGE/EUR", "capital": 1.0, "hedge_threshold": 0.45, "hedge_asymmetry": 0.6, "vol_scale": true, "gap_protection": true, "streaming": true, "max_inventory_ratio": 0.7}},
+      {"node": "nuvola", "strategy_file": "auto_gen_20260830_1730_invhedge.py", "config_patch": {"pair": "DOGE/EUR", "capital": 0.7565, "inventory_threshold": 0.1, "hedge_ratio": 0.6, "vol_scaling": true, "gap_protection": true, "levels": 6, "spacing": 0.004}},
+      {"node": "marcodg1", "strategy_file": "auto_gen_20260830_1730_invhedge.py", "config_patch": {"pair": "SOL/EUR", "capital": 13.207, "inventory_threshold": 0.2, "hedge_ratio": 0.8, "vol_scaling": true, "gap_protection": true, "levels": 10, "spacing": 0.0025}}
+    ],
+    "adjust": [],
+    "skip": ["atrtrailing gia attiva 17:15, smoke PASS", "volregimegrid/exitgrid/orderflow_rl/regimeshift/volcurvegrid/inertiagrid/asymgrid/ladderstack nessun vantaggio add vs invhedge", "nuvola capitale basso per hedge -> preference: bump capital su grid esistente"]
+  },
+  "note": "invhedge.py NON ancora scritto su disco (proposta FASE1 ciclo 17:30). Deploy BLOCCATO finche il file auto_gen_20260830_1730_invhedge.py non viene generato (FASE1 prossimo ciclo). atrtrailing gia materializzata e smoke PASS."
+}

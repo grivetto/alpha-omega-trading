@@ -1,0 +1,16 @@
+{
+  "ts": "2026-08-30 23:20:09",
+  "directive": "[FASE 3] FLEET CONTEXT + DIRETTIVA DISPATCH.
+
+Strategie auto-gen in coda quest'ultimo ciclo:
+- auto_gen_1788124596_regimekelly_grid.py (RegimeKellyGrid): regime detection ADX-like (DR window) + volEWMA fast/slow -> tre modi {trend_up, trend_dn, range}; livelli sblabilanciati e spacing allargato in trend, griglia simmetrica stretta in range; sizing frazionario kelly anti-drawdown (riduce esposizione lineare col drawdown fino a floor). Test passato su 120 e 900 tick sintetici (tutti e 3 i modi attivati), mem O(0.09MB) streaming deque, gc periodico. Config-driven completo.
+
+=== FLEET 2026-08-30 23:15 ===
+mc2 healthy - bot DOGE/EUR capital 3.7 pnl +0.0148 trades 2 (2w/0l) strategy grid uptime 4001s drawdown 0 - RAM 8.5GB avail load 0.59. nodo-mc2 riavviato 22:03-22:09 (ciclo iterativo deploy, corrente stabile dal 22:09). feeders/atlas inactive (gestito da altro scheduler).
+nuvola healthy - bot DOGE/EUR capital 0.8 pnl +0.0061 trades 1 (1w/0l) strategy grid uptime 3879s drawdown 0.
+MARCODG1 degraded (papelare) - denaro-node-paper active, trend/trend-live/brain INACTIVE; bot SOL/EUR capital 13.5 eq 13.207 pnl +0.3705 trades 13 (13w/0l) strategy grid drawdown 0.0079 uptime 12599s. trend-live spento per pausa live 7gg (28/08) come da direttiva.
+Tutti i nodi: PnL tutti positivi, 0 drawdown, 0 errori recenti, kill-switch OFF, paper mode (pausa live). RAM mc2 8.5GB available.
+
+Direttiva: Analizza fleet status + strategie auto-gen. Quali strategie vanno deployate su quale nodo? Quali config aggiustare (capital, spacing, levels)? Rispondi SOLO JSON:
+{deploy: [{node, strategy_file, config_patch}], adjust: [{node, bot, param, value}], skip: [reason]}"
+}

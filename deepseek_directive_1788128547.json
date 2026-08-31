@@ -1,0 +1,46 @@
+```json
+{
+  "deploy": [
+    {
+      "node": "nuvola",
+      "strategy_file": "auto_gen_1788128195_vapgrid.py",
+      "config_patch": {
+        "capital": 0.8,
+        "spacing": "ATR*1.2",
+        "levels": 6,
+        "atr_span": 20,
+        "max_window": 500,
+        "fill_cooldown": 30,
+        "skew_ratio": 0.6,
+        "dry_run": true
+      }
+    }
+  ],
+  "adjust": [
+    {
+      "node": "nuvola",
+      "bot": "doge",
+      "param": "restart_required",
+      "value": "restart_node"
+    },
+    {
+      "node": "marcodg1",
+      "bot": "sol",
+      "param": "stop_loss_triggered",
+      "value": "halt_new_entries"
+    },
+    {
+      "node": "marcodg1",
+      "bot": "sol",
+      "param": "stale_timestamp",
+      "value": "resync_clock"
+    }
+  ],
+  "skip": [
+    "mc2: policy no-trading, solo health check",
+    "marcodg1: stato degraded, bot stale 48.5h, stop_loss flagged - non deployare nuove strategie live/paper finche non risolto",
+    "VAPGRID su mc2: evitare, capital minimo e policy no-trading",
+    "VAPGRID su marcodg1: gap coverage esiste ma stato degraded blocca deploy"
+  ]
+}
+```

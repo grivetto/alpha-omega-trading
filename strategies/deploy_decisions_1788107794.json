@@ -1,0 +1,54 @@
+{
+  "cycle": "2026-08-30 18:36",
+  "strategy": "auto_gen_20260830_1831_voltargetgrid.py",
+  "decision": {
+    "deploy": [
+      {
+        "node": "mc2",
+        "strategy_file": "auto_gen_20260830_1831_voltargetgrid.py",
+        "config_patch": {
+          "pair": "DOGE/EUR",
+          "capital": 3.7,
+          "base_notional": 0.15,
+          "price_window": 90,
+          "vol_window": 45,
+          "atr_window": 14,
+          "base_spacing_pct": 0.012,
+          "level_count_low": 8,
+          "level_count_high": 16,
+          "max_position_ratio": 0.7,
+          "recenter_alpha": 0.05
+        }
+      },
+      {
+        "node": "nuvola",
+        "strategy_file": "auto_gen_20260830_1831_voltargetgrid.py",
+        "config_patch": {
+          "pair": "DOGE/EUR",
+          "capital": 0.8,
+          "base_notional": 0.1,
+          "price_window": 60,
+          "vol_window": 30,
+          "atr_window": 10,
+          "base_spacing_pct": 0.015,
+          "level_count_low": 6,
+          "level_count_high": 12,
+          "max_position_ratio": 0.75,
+          "recenter_alpha": 0.08
+        }
+      }
+    ],
+    "adjust": [
+      {
+        "node": "marcodg1",
+        "bot": "sol",
+        "param": "health_check_interval",
+        "value": 3600
+      }
+    ],
+    "skip": [
+      "marcodg1: SOL grid performing well (13 wins, +0.37 PnL), keep current strategy; only fix stale health timestamp"
+    ]
+  },
+  "note": "DeepSeek orchestrator decision for VolTargetGrid cycle. source=reply_hermes"
+}

@@ -1,0 +1,91 @@
+{
+  "ts": 1788129950,
+  "cycle": "2026-08-31 00:45",
+  "new_strategy": "auto_gen_1788129951_volgrid_ewma.py",
+  "verdict": {
+    "deploy": [
+      {
+        "node": "mc2",
+        "strategy_file": "auto_gen_1788129951_volgrid_ewma.py",
+        "config_patch": {
+          "capital": 2.5,
+          "spacing": 0.012,
+          "levels": 18,
+          "kappa": 0.6,
+          "momentum_guard": 0.004
+        }
+      },
+      {
+        "node": "nuvola",
+        "strategy_file": "auto_gen_1788129951_volgrid_ewma.py",
+        "config_patch": {
+          "capital": 0.8,
+          "spacing": 0.015,
+          "levels": 12,
+          "kappa": 0.5,
+          "momentum_guard": 0.006
+        }
+      },
+      {
+        "node": "marcodg1",
+        "strategy_file": "auto_gen_1788129951_volgrid_ewma.py",
+        "config_patch": {
+          "capital": 5.0,
+          "spacing": 0.018,
+          "levels": 15,
+          "kappa": 0.4,
+          "momentum_guard": 0.008
+        }
+      }
+    ],
+    "adjust": [
+      {
+        "node": "mc2",
+        "bot": "doge",
+        "param": "capital",
+        "value": 2.5
+      },
+      {
+        "node": "nuvola",
+        "bot": "doge",
+        "param": "capital",
+        "value": 0.8
+      },
+      {
+        "node": "marcodg1",
+        "bot": "sol",
+        "param": "capital",
+        "value": 5.0
+      },
+      {
+        "node": "marcodg1",
+        "bot": "sol",
+        "param": "spacing",
+        "value": 0.018
+      },
+      {
+        "node": "marcodg1",
+        "bot": "sol",
+        "param": "levels",
+        "value": 15
+      },
+      {
+        "node": "marcodg1",
+        "bot": "sol",
+        "param": "kappa",
+        "value": 0.4
+      },
+      {
+        "node": "marcodg1",
+        "bot": "sol",
+        "param": "momentum_guard",
+        "value": 0.008
+      }
+    ],
+    "skip": [
+      {
+        "reason": "trend-live e brain down su MARCODG1; volgrid_ewma autonomo quindi deployabile in paper"
+      }
+    ]
+  }
+}

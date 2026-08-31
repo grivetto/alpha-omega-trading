@@ -1,0 +1,22 @@
+{
+  "directive": "FASE3 direzione DeepSeek (orchestrazione cron 10min, 08:08)",
+  "strategy_generated": "auto_gen_1788156297_volregime_grid.py",
+  "reply": {
+    "deploy": [
+      {"node": "mc2", "strategy_file": "volregime_grid.py", "config_patch": {"symbol": "DOGE/EUR", "capital": 3.7, "vol_window": 20, "spacing_base": 0.05, "spacing_min": 0.02, "spacing_max": 0.12, "levels_base": 8, "levels_min": 4, "levels_max": 12, "bias": "neutral", "risk_per_trade": 0.01}},
+      {"node": "nuvola", "strategy_file": "volregime_grid.py", "config_patch": {"symbol": "DOGE/EUR", "capital": 0.8, "vol_window": 20, "spacing_base": 0.05, "spacing_min": 0.02, "spacing_max": 0.12, "levels_base": 8, "levels_min": 4, "levels_max": 12, "bias": "neutral", "risk_per_trade": 0.01}},
+      {"node": "MARCODG1", "strategy_file": "volregime_grid.py", "config_patch": {"symbol": "SOL/EUR", "capital": 13.5, "vol_window": 20, "spacing_base": 0.08, "spacing_min": 0.04, "spacing_max": 0.15, "levels_base": 6, "levels_min": 3, "levels_max": 10, "bias": "neutral", "risk_per_trade": 0.015}}
+    ],
+    "adjust": [
+      {"node": "MARCODG1", "bot": "sol_grid", "param": "capital", "value": 10.0},
+      {"node": "MARCODG1", "bot": "sol_grid", "param": "spacing", "value": 0.04}
+    ],
+    "skip": [
+      "feeder inactive: no strategy needed until reactivated",
+      "atlas-watchdog inactive: monitoring only, no strategy deploy",
+      "MARCODG1 trend/trend-live/brain inactive: focus on sol_grid optimization first"
+    ]
+  },
+  "note": "Azione differita: applicazione config richiede restart nodi denaro. Nodi PAPER (no rischio reale). Overfitting-flag storico DeepSeek: volregime è ~9° variante grid simile. Valutare paper test prima di insistire su deploy prod.",
+  "ts": "2026-08-31 08:12"
+}

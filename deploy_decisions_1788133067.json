@@ -1,0 +1,56 @@
+{
+  "ts": 1788133067,
+  "fase": 3,
+  "fleet_snapshot": "2026-08-31 01:37",
+  "strategy_gen": "auto_gen_1788132853_gapguard_grid.py (GapGuard Grid)",
+  "deploy": [
+    {
+      "node": "marcodg1-paper",
+      "strategy_file": "auto_gen_1788132853_gapguard_grid.py",
+      "config_patch": {
+        "mode": "paper",
+        "dry_run": true,
+        "base_spacing_pct": 0.012,
+        "levels_per_side": 6,
+        "gap_mult": 3.5,
+        "gap_decompress_ticks": 60,
+        "rsi_upper": 70.0,
+        "rsi_lower": 30.0,
+        "rsi_period": 14,
+        "fee_pct": 0.0016,
+        "min_profit_mult": 2.0,
+        "cooldown": 25,
+        "max_consec_loss": 3,
+        "max_drawdown": 0.08,
+        "dd_recover": 0.05,
+        "reason": "GapGuard: anti-gap/regime risk-layer robusto, pensato dopo crash stale-timestamp paper SOL. Solo dry-run paper, nuovo slot simbolo, niente leva."
+      }
+    }
+  ],
+  "adjust": [
+    {
+      "node": "marcodg1",
+      "bot": "SOL/EUR",
+      "param": "keep_current_grid",
+      "value": "13W/0L, pnl+0.371, dd 0.79% — NON toccare bot running"
+    },
+    {
+      "node": "marcodg1",
+      "bot": "SOL/EUR",
+      "param": "stale_timestamp_48.5h",
+      "value": "health timestamp 1787953312 NON aggiornato da ~48h — priorità intervento manuale, resync clock / riavvio"
+    },
+    {
+      "node": "mc2",
+      "bot": "DOGE/EUR",
+      "param": "capital_review",
+      "value": "free_quote=0.0, 100% invested, zero cushion — valutare cash buffer ~3.0"
+    }
+  ],
+  "skip": [
+    "nuvola: capital 0.8€ insufficiente per nuove strategie",
+    "mc2: policy no-trading (solo orchestrazione)",
+    "marcodg1 trend-live/brain inattivi: PAUSA LIVE 7gg dal 28/08, main intoccabile",
+    "Nessun restart auto di servizi MARCODG1 in cron (degraded non investigato, priorità manuale)"
+  ]
+}

@@ -1,0 +1,99 @@
+{
+  "deploy": [
+    {
+      "node": "mc2",
+      "strategy_file": "auto_gen_1788167782_kellycost_grid.py",
+      "config_patch": {
+        "capital": 3.7,
+        "spacing_pct": 0.02,
+        "cost_floor_pct": 0.0015,
+        "quote_reserve_pct": 0.25,
+        "levels": 8,
+        "reanchor_band_pct": 0.05,
+        "max_inventory_ratio": 0.6,
+        "kelly_cap": 0.3
+      }
+    },
+    {
+      "node": "nuvola",
+      "strategy_file": "auto_gen_1788167782_kellycost_grid.py",
+      "config_patch": {
+        "capital": 0.8,
+        "spacing_pct": 0.025,
+        "cost_floor_pct": 0.002,
+        "quote_reserve_pct": 0.25,
+        "levels": 5,
+        "reanchor_band_pct": 0.06,
+        "max_inventory_ratio": 0.5,
+        "kelly_cap": 0.25
+      }
+    }
+  ],
+  "adjust": [
+    {
+      "node": "marcodg1",
+      "bot": "denaro-node-trend-live",
+      "param": "feed_timeout_s",
+      "value": 300
+    },
+    {
+      "node": "marcodg1",
+      "bot": "denaro-node-trend-live",
+      "param": "capital",
+      "value": 13.5
+    },
+    {
+      "node": "marcodg1",
+      "bot": "denaro-node-trend-live",
+      "param": "spacing_pct",
+      "value": 0.015
+    },
+    {
+      "node": "marcodg1",
+      "bot": "denaro-node-trend-live",
+      "param": "cost_floor_pct",
+      "value": 0.001
+    },
+    {
+      "node": "marcodg1",
+      "bot": "denaro-node-trend-live",
+      "param": "quote_reserve_pct",
+      "value": 0.25
+    },
+    {
+      "node": "marcodg1",
+      "bot": "denaro-node-trend-live",
+      "param": "levels",
+      "value": 10
+    },
+    {
+      "node": "marcodg1",
+      "bot": "denaro-node-trend-live",
+      "param": "reanchor_band_pct",
+      "value": 0.04
+    },
+    {
+      "node": "marcodg1",
+      "bot": "denaro-node-trend-live",
+      "param": "max_inventory_ratio",
+      "value": 0.7
+    },
+    {
+      "node": "marcodg1",
+      "bot": "denaro-node-trend-live",
+      "param": "kelly_cap",
+      "value": 0.35
+    },
+    {
+      "node": "marcodg1",
+      "bot": "denaro-node-trend-live",
+      "param": "strategy",
+      "value": "auto_gen_1788167782_kellycost_grid.py"
+    }
+  ],
+  "skip": [
+    "MARCODG1: feed stale 59h - non deployare KLGC finche' il feed non e' ripristinato; riattivare denaro-node-trend/trend-live/brain prima",
+    "mc2 denaro-feeder: riattivare prima del deploy per evitare grid-lock persistente",
+    "atlas-watchdog: non correlato al grid-lock, skip per questa fase"
+  ]
+}

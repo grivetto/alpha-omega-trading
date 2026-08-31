@@ -1,0 +1,27 @@
+{
+  "cycle": "2026-08-30 19:33",
+  "generated_strategy": "auto_gen_20260830_1935_swingprofiler_grid.py",
+  "deepseek_decision": {
+    "deploy": [
+      {
+        "node": "marcodg1",
+        "strategy_file": "auto_gen_20260830_1935_swingprofiler_grid.py",
+        "config_patch": {"symbol": "SOL/EUR", "capital": 13.5, "spacing": "dynamic", "levels": 8, "inventory_threshold": 0.7, "mode": "paper"}
+      },
+      {
+        "node": "nuvola",
+        "strategy_file": "auto_gen_20260830_1935_swingprofiler_grid.py",
+        "config_patch": {"symbol": "DOGE/EUR", "capital": 3.0, "spacing": "dynamic", "levels": 6, "inventory_guard": true, "mode": "paper"}
+      }
+    ],
+    "adjust": [
+      {"node": "nuvola", "bot": "doge", "param": "capital", "value": 3.0},
+      {"node": "marcodg1", "bot": "sol", "param": "strategy", "value": "auto_gen_20260830_1935_swingprofiler_grid.py"}
+    ],
+    "skip": [
+      "PAUSA LIVE: nessun deploy live, solo paper/test, main OKX intoccabile",
+      "mc2 DOGE: grid classico performante, nessuna modifica",
+      "marcodg1 SOL trend-live paper: timestamp stantio, controllo restart prima di toccare"
+    ]
+  }
+}

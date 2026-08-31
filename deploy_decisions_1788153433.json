@@ -1,0 +1,45 @@
+{
+  "ts": 1788153433,
+  "fase": 3,
+  "cycle": "2026-08-31 07:2x",
+  "fleet_snapshot": "2026-08-31 07:2x",
+  "source_strategy": "auto_gen_1788153433_recovery_kelly_grid.py (ARKG - Asymmetric Recovery Kelly Grid)",
+  "deploy": [],
+  "adjust": [
+    {
+      "node": "marcodg1",
+      "bot": "sol-grid",
+      "param": "feed_alert_threshold_seconds",
+      "value": 7200,
+      "reason": "HEALTH=DEGRADED, trend/brain/live inactive, win-rate 13/13 flat-positive sospetto feed-stale, intercettare prima che PnL fantasma renda invisibile lo stall"
+    },
+    {
+      "node": "mc2-doge",
+      "bot": "grid",
+      "param": "feed_alert_threshold_seconds",
+      "value": 7200,
+      "reason": "coerenza fleet-wide alert feed-stale, mc2 cap 3.7 EUR basso = fail-fast critico"
+    },
+    {
+      "node": "nuvola-doge",
+      "bot": "grid",
+      "param": "feed_alert_threshold_seconds",
+      "value": 7200,
+      "reason": "coerenza fleet-wide, nuvola cap 0.8 EUR il piu basso = proteggere bootstrap"
+    }
+  ],
+  "skip": [
+    "ARKG (auto_gen_1788153433_recovery_kelly_grid.py) NON integrata in build_policy(): registry supporta solo grid|momentum|meanrev|adaptive|irmr|vagr. Senza branch esplicito per 'recovery_kelly_grid' o 'arkg' la strategia cadrebbe SILENZIOSAMENTE su GridPolicy - sizing Kelly frazionario perso, recovery_skew inerte, deploy 'riuscito' esegue grid base. Task integrazione: (a) denaro/domain/recovery_kelly_grid.py con adapter, (b) branch if strategy == 'recovery_kelly_grid' in denaro_node.py build_policy, (c) smoke paper >=48h.",
+    "mc2 non esegue trading - solo orchestrazione (denaro-node/feeder/health/atlas-watchdog). Tutti i deploy di strategie trading vanno skippati per mc2.",
+    "MARCODG1 PAUSA LIVE attiva 28/08 per 7gg (scadenza ~04/09): main trading intoccabile. trend/brain/live tutti inactive, HEALTH=DEGRADED. Anche paper MERCOLEDÌ 26/08 regredito a stale feed. Qualsiasi nuovo layer ARKG sarebbe sommato su dati fantasma.",
+    "Nuvola DOGE cap 0.8 EUR: ARKG richiede levels=10 con spacing 0.004 = ~0.08 EUR/level = 0.80 EUR giusto al limite. Con kelly_cap=0.25 il sizing scenderebbe a 0.04-0.20 EUR/level, sotto min_notional Kraken (0.5 EUR) - bot produrrebbe PRE-FLIGHT BLOCK continui. In attesa di bootstrap capital >=5 EUR su nuvola.",
+    "RVSG (auto_gen_1788152807_rvvol_grid.py) deployato mc2-doge (mean_revert) + nuvola-doge (momentum) in ciclo precedente 07:08 - queue post-pausa. ARKG (mean-reverting recovery) sullo stesso symbol/nodo = conflitto con RVSG mean_revert su mc2 e con RVSG momentum su nuvola. Attendere 48h monitoraggio RVSG prima di sovrapporre ARKG.",
+    "MARCODG1 trend/brain/live: PAUSA LIVE intoccabile, niente nuovi layer fino a scadenza pausa",
+    "Capital sufficiency ARKG: livelli=10 * base_spacing=0.004 * side richiede ~50 EUR minimo per catturare mean-reversion recovery senza fee+spread mangiare tutto. Capitali live attuali (mc2 3.7 / nuvola 0.8 / MARCODG1 13.5) inadeguati - tutti sotto soglia."
+  ],
+  "post_integration_queue": {
+    "step_1": "Hermes/DS: integrare ARKG in build_policy() + adapter domain/recovery_kelly_grid.py + smoke paper 48h su SOL/EUR (MARCODG1 paper post-pausa)",
+    "step_2": "Una volta integrata e validata: dispatch ARKG mean_revert su mc2-doge capital <=3.7 EUR, ARKG momentum su nuvola-doge capital <=0.8 EUR",
+    "step_3": "Monitor 48h: PnL attribution RVSG vs ARKG, kill-switch triggers, recovery_skew efficacia, kelly fraction evolution"
+  }
+}

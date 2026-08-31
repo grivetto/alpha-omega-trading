@@ -1,0 +1,73 @@
+{
+  "ts": 1788087000,
+  "ts_human": "2026-08-30 12:50",
+  "strategy_new": "auto_gen_20260830_1245_volregime_grid.py",
+  "ds_directive": {
+    "deploy": [
+      {
+        "node": "mc2",
+        "strategy_file": "auto_gen_20260830_1245_volregime_grid.py",
+        "config_patch": {
+          "capital": 0.95,
+          "spacing_pct": 0.8,
+          "levels": 10,
+          "vol_bandwidth": 1.5,
+          "trend_mode": "chandelier",
+          "chandelier_atr_mult": 3.0
+        }
+      },
+      {
+        "node": "nuvola",
+        "strategy_file": "auto_gen_20260830_1245_volregime_grid.py",
+        "config_patch": {
+          "capital": 0.3,
+          "spacing_pct": 1.2,
+          "levels": 6,
+          "vol_bandwidth": 1.2,
+          "trend_mode": "chandelier",
+          "chandelier_atr_mult": 2.5
+        }
+      },
+      {
+        "node": "marcodg1",
+        "strategy_file": "auto_gen_20260830_1245_volregime_grid.py",
+        "config_patch": {
+          "capital": 2.0,
+          "spacing_pct": 0.5,
+          "levels": 12,
+          "vol_bandwidth": 2.0,
+          "trend_mode": "chandelier",
+          "chandelier_atr_mult": 3.5
+        }
+      }
+    ],
+    "adjust": [
+      {
+        "node": "mc2",
+        "bot": "doge_grid",
+        "param": "cap_locked",
+        "value": 0.95
+      },
+      {
+        "node": "nuvola",
+        "bot": "doge_grid",
+        "param": "capital",
+        "value": 0.5
+      },
+      {
+        "node": "marcodg1",
+        "bot": "sol_grid",
+        "param": "capital",
+        "value": 11.5
+      }
+    ],
+    "skip": [
+      "chandelier_momentum_1230: troppo aggressivo per capital piccolo, skip su tutti i nodi",
+      "zmeanrev_1216: non adatto a trend regime attuale, skip",
+      "volprofile_grid_1205: spacing statico, superato da volregime_grid_1245",
+      "voladapt_grid_1145: manca band re-centering, superato da volregime_grid_1245"
+    ]
+  },
+  "note_config_mismatch": "DS config_patch usa param names (spacing_pct, vol_bandwidth, chandelier_atr_mult, trend_mode) NON presenti in DEFAULT_CONFIG di volregime_grid (che usa base_spacing, vol_scaling_min/max, atr_mult, mid_price). Mapping richiesto prima del deploy: spacing_pct->base_spacing, vol_bandwidth->vol_scaling_max, chandelier_atr_mult->atr_mult, trend_mode->(flag non config). 'capital' patch DS (0.95/0.3/2.0) piu' basso del capitale di nodo corrente: NON ridurre capitale live, usare solo per paper. 'mid_price' obbligatorio in config ma assente nella patch (ricavare da tick corrente al deploy).",
+  "fleet_verdict": "TUTTI I NODI HEALTHY (mc2, nuvola, marcodg1). Nessun kill-switch. DD <= 0.8%."
+}

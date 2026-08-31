@@ -1,0 +1,52 @@
+{
+  "decision": {
+    "deploy": [
+      {
+        "node": "mc2",
+        "strategy_file": "auto_gen_1788163639_dynaspacing.py",
+        "config_patch": {
+          "capital": 3.7,
+          "spacing": "atr_based",
+          "levels": 8
+        }
+      },
+      {
+        "node": "nuvola",
+        "strategy_file": "auto_gen_1788163639_dynaspacing.py",
+        "config_patch": {
+          "capital": 0.8,
+          "spacing": "atr_based",
+          "levels": 6
+        }
+      }
+    ],
+    "adjust": [
+      {
+        "node": "MARCODG1",
+        "bot": "sol",
+        "param": "capital",
+        "value": 13.5
+      },
+      {
+        "node": "MARCODG1",
+        "bot": "sol",
+        "param": "spacing",
+        "value": "atr_based"
+      },
+      {
+        "node": "MARCODG1",
+        "bot": "sol",
+        "param": "levels",
+        "value": 10
+      }
+    ],
+    "skip": [
+      "MARCODG1: mantieni grid attuale (profittevole, 13/13 win) — applica solo tuning minore, non deploy nuova strategia",
+      "mc2/nuvola: volume 0 e griglia bloccata — deploy dynaspacing per sbloccare con spacing adattivo",
+      "Nessun rischio di overfit: ATR spacing adatto a DOGE/EUR low-vol"
+    ]
+  },
+  "ts": "2026-08-31 10:0x",
+  "source": "deepseek",
+  "strategy": "auto_gen_1788163639_dynaspacing.py"
+}

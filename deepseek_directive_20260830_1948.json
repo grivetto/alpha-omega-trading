@@ -1,0 +1,7 @@
+{
+  "cycle": "2026-08-30 19:48",
+  "fase1_strategy": "auto_gen_1788111999_volimbalance_grid.py (VolatilityImbalanceGrid, validated prod 1000tick/0.018s, 0.0036MB)",
+  "fase2_fleet": "mc2 healthy, nuvola healthy, MARCODG1 healthy — tutti PnL positivi, 0 drawdown, paper mode (pausa live)",
+  "fase3_directive": "deploy_decisions_1788112134.json",
+  "result": "strategia generata e validata, decisione deploy salvata (paper only)"
+}

@@ -1,0 +1,7 @@
+{
+  "fase1_strategy": "auto_gen_1788163639_dynaspacing.py",
+  "status": "PASS con fix applicati",
+  "deepseek_review": "4 bug critici fixati (div0, budget, doppia esecuzione, ordine check quote) + deque memory-safe",
+  "test": "OK synthetic fills=23 buys=10 sells=13 eq=1034.51 levels=2; OK chunking 250 righe",
+  "note": "candidata per sostituire grid fisse DOGE (mc2/nuvola idle, volume 0)"
+}

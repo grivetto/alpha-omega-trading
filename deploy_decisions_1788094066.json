@@ -1,0 +1,10 @@
+{
+  "ts": "2026-08-30 14:47",
+  "cycle_fase1": "auto_gen_20260830_1446_sessionvolgrid.py — Session-aware Volatility-Scaled Rebalancing Grid, test PASS, OOM-safe",
+  "deploy": [
+    {"node": "nuvola", "strategy_file": "auto_gen_20260830_1446_sessionvolgrid.py", "config_patch": {"capital": 0.8, "spacing": "vol_scaled", "levels": 3}},
+    {"node": "MARCODG1", "strategy_file": "auto_gen_20260830_1446_sessionvolgrid.py", "config_patch": {"capital": 13.5, "spacing": "vol_scaled", "levels": "trend-live"}}
+  ],
+  "adjust": [],
+  "skip": []
+}

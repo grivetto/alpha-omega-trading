@@ -1,0 +1,86 @@
+{
+  "ts": 1788095100,
+  "cycle": "15:11",
+  "new_strategy": "auto_gen_20260830_1507_ladderstack.py",
+  "smoke_test": "PASS (300 ticks, fills=26, mem=0.0056MB; extended 3000 ticks peak_live<=6)",
+  "deepseek_reply_deploy": [
+    {
+      "node": "mc2",
+      "strategy_file": "auto_gen_20260830_1507_ladderstack.py",
+      "config_patch": {
+        "base_spacing": 0.003,
+        "max_spacing": 0.008,
+        "levels_per_side": 5,
+        "max_open_levels": 3,
+        "level_alloc": 0.15,
+        "inv_cap": 0.5,
+        "asym_sensitivity": 1.2,
+        "age_expire_ticks": 150,
+        "age_grow_factor": 1.15,
+        "age_max_spacing": 0.012,
+        "reserve_pct": 0.3
+      }
+    },
+    {
+      "node": "nuvola",
+      "strategy_file": "auto_gen_20260830_1507_ladderstack.py",
+      "config_patch": {
+        "base_spacing": 0.004,
+        "max_spacing": 0.010,
+        "levels_per_side": 4,
+        "max_open_levels": 2,
+        "level_alloc": 0.12,
+        "inv_cap": 0.4,
+        "asym_sensitivity": 1.0,
+        "age_expire_ticks": 200,
+        "age_grow_factor": 1.1,
+        "age_max_spacing": 0.015,
+        "reserve_pct": 0.4
+      }
+    }
+  ],
+  "deepseek_adjust": [
+    {"node": "mc2", "bot": "denaro-node-mc2", "param": "capital", "value": 5.0},
+    {"node": "nuvola", "bot": "denaro-node-nuvola", "param": "capital", "value": 1.2}
+  ],
+  "deepseek_skip": [
+    "MARCODG1 real money: ladderstack non ha 24h paper history su questo nodo, policy richiede paper 24h prima di live. Deploy su MARCODG1 rimandato a dopo validazione paper su mc2/nuvola."
+  ],
+  "orchestrator_corrected_deploy": [
+    {
+      "node": "mc2",
+      "strategy_file": "auto_gen_20260830_1507_ladderstack.py",
+      "config_patch": {
+        "base_spacing": 0.003,
+        "max_spacing": 0.008,
+        "levels_per_side": 3,
+        "max_open_levels": 3,
+        "level_alloc": 0.15,
+        "inv_cap": 0.4,
+        "asym_sensitivity": 0.6,
+        "age_expire_ticks": 180,
+        "age_grow_factor": 1.1,
+        "age_max_spacing": 0.012,
+        "reserve_pct": 0.25
+      }
+    },
+    {
+      "node": "nuvola",
+      "strategy_file": "auto_gen_20260830_1507_ladderstack.py",
+      "config_patch": {
+        "base_spacing": 0.004,
+        "max_spacing": 0.010,
+        "levels_per_side": 2,
+        "max_open_levels": 2,
+        "level_alloc": 0.12,
+        "inv_cap": 0.3,
+        "asym_sensitivity": 0.4,
+        "age_expire_ticks": 200,
+        "age_grow_factor": 1.1,
+        "age_max_spacing": 0.015,
+        "reserve_pct": 0.35
+      }
+    }
+  ],
+  "orchestrator_notes": "CORREZIONE aggiustamenti capital DeepSeek: proposto capital mc2=5.0 e nuvola=1.2, ma cap_available reale mc2=3.5577 e nuvola free_quote=0.7565. Applicare capital BLOCCATO ai saldi reali (mc2 3.55, nuvola 0.75) per non sovra-impegnare. levels_per_side ridotti (mc2 3, nuvola 2) e max_open_levels implicito per match capitale. asym_sensitivity temperata (mc2 0.6, nuvola 0.4) per evitare skew aggressivo su drawdown test. inv_cap ridotto. MARCODG1 SKIP (real money, policy paper 24h). Tutti nodi healthy, zero errori, kill-switch OFF. RAM mc2 6.48GB/15.7GB, load 0.91."
+}

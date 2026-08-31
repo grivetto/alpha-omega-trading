@@ -1,0 +1,54 @@
+{
+  "directive": "FASE3 finale orchestrazione cron 10min 08:31",
+  "strategy_generated": "auto_gen_1788157228_hurstliquidity_grid.py (v2 approvata da review)",
+  "reply": {
+    "deploy": [
+      {
+        "node": "marcodg1",
+        "strategy_file": "auto_gen_1788157228_hurstliquidity_grid.py",
+        "config_patch": {
+          "capital": 2.0,
+          "spacing_pct": 0.8,
+          "levels": 15,
+          "pair": "SOL/EUR",
+          "drift_lock": true,
+          "pause_on_dd_pct": 2.5
+        }
+      },
+      {
+        "node": "nuvola",
+        "strategy_file": "auto_gen_1788157228_hurstliquidity_grid.py",
+        "config_patch": {
+          "capital": 0.5,
+          "spacing_pct": 1.2,
+          "levels": 10,
+          "pair": "DOGE/EUR",
+          "drift_lock": true,
+          "pause_on_dd_pct": 3.0
+        }
+      }
+    ],
+    "adjust": [
+      {
+        "node": "marcodg1",
+        "bot": "sol_grid",
+        "param": "capital",
+        "value": 11.5
+      },
+      {
+        "node": "marcodg1",
+        "bot": "sol_grid",
+        "param": "grid_dd_limit",
+        "value": 0.02
+      }
+    ],
+    "skip": [
+      "mc2: gia' healthy con doge grid, non toccare per diversificare risk",
+      "marcodg1 trend/trend-live/brain: inattivi, non riattivare in paper mode",
+      "mc2 feeder/atlas-watchdog: non rilevanti per deploy strategie gen",
+      "deploy su main trading: VIETATO, solo paper test come da direttiva"
+    ]
+  },
+  "note": "Strategia v2 approvata da DeepSeek dopo fix R/S + drift-lock pause. Deploy solo PAPER (PAUSA LIVE, main intoccabile). Applicazione config richiede restart nodi.",
+  "ts": "2026-08-31 08:31"
+}

@@ -1,0 +1,48 @@
+{
+  "ts": "2026-08-31 03:44",
+  "fase": 3,
+  "strategy_gen": "auto_gen_1788140147_guillotine_grid.py",
+  "fleet_snapshot": "2026-08-31 03:30",
+  "deepseek_reco": {
+    "deploy": [
+      {
+        "node": "mc2",
+        "strategy_file": "doge_grid_adaptive.py",
+        "config_patch": {
+          "capital": 3.7,
+          "spacing": 0.02,
+          "levels": 8
+        }
+      },
+      {
+        "node": "nuvola",
+        "strategy_file": "doge_grid_adaptive.py",
+        "config_patch": {
+          "capital": 0.8,
+          "spacing": 0.03,
+          "levels": 5
+        }
+      }
+    ],
+    "adjust": [
+      {
+        "node": "marcodg1",
+        "bot": "sol",
+        "param": "spacing",
+        "value": 0.015
+      },
+      {
+        "node": "marcodg1",
+        "bot": "sol",
+        "param": "levels",
+        "value": 10
+      }
+    ],
+    "skip": [
+      "marcodg1: denaro-node-trend e denaro-node-trend-live INACTIVE - non deployare trend finche' non risolto",
+      "marcodg1: denaro-brain INACTIVE - strategie auto-gen richiedono brain attivo",
+      "mc2: feeder INACTIVE - verificare feed dati prima di nuove strategie"
+    ]
+  },
+  "verdict": "PAUSA LIVE 7gg fino 04/09 blocca ogni deploy live. GuillotineGrid candidata SHADOW su MARCODG1 (capital 2.67 free, book reale) e mc2 (capital 0.5). Direzione: resync clock MARCODG1 (51h stale) PRIMA di ogni validazione shadow. feed/watchdog mc2 inattivi da monitorare."
+}

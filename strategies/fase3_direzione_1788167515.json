@@ -1,0 +1,70 @@
+{
+  "deploy": [
+    {
+      "node": "MARCODG1",
+      "strategy_file": "auto_gen_1788167371_reservoir_grid.py",
+      "config_patch": {
+        "mid_price": "solar_dynamic",
+        "capital": 13.5,
+        "levels": 10,
+        "spacing_pct": 0.005,
+        "quote_reserve_pct": 0.25,
+        "reanchor_band_pct": 0.015,
+        "max_inventory_ratio": 0.35,
+        "vol_decay": 0.85,
+        "min_spacing_pct": 0.003
+      }
+    },
+    {
+      "node": "nuvola",
+      "strategy_file": "auto_gen_1788167371_reservoir_grid.py",
+      "config_patch": {
+        "mid_price": "doge_dynamic",
+        "capital": 0.8,
+        "levels": 6,
+        "spacing_pct": 0.006,
+        "quote_reserve_pct": 0.3,
+        "reanchor_band_pct": 0.018,
+        "max_inventory_ratio": 0.3,
+        "vol_decay": 0.8,
+        "min_spacing_pct": 0.003
+      }
+    }
+  ],
+  "adjust": [
+    {
+      "node": "MARCODG1",
+      "bot": "sol_grid",
+      "param": "quote_reserve_pct",
+      "value": 0.25
+    },
+    {
+      "node": "MARCODG1",
+      "bot": "sol_grid",
+      "param": "reanchor_band_pct",
+      "value": 0.015
+    },
+    {
+      "node": "MARCODG1",
+      "bot": "sol_grid",
+      "param": "max_inventory_ratio",
+      "value": 0.35
+    },
+    {
+      "node": "nuvola",
+      "bot": "doge_grid",
+      "param": "quote_reserve_pct",
+      "value": 0.3
+    },
+    {
+      "node": "nuvola",
+      "bot": "doge_grid",
+      "param": "reanchor_band_pct",
+      "value": 0.018
+    }
+  ],
+  "skip": [
+    "mc2: orchestration-only, non usato per trading per direttiva",
+    "MARCODG1: feed STALE (timestamp 1787953312) - richiede refresh feed PRIMA del deploy IRG, altrimenti mid_price dinamico degradato; considerare restart denaro-node-paper se feed non si aggiorna entro 60s"
+  ]
+}

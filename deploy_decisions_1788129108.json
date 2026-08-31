@@ -1,0 +1,63 @@
+{
+  "ts": 1788129108,
+  "fase": 3,
+  "source": "auto_gen_1788129110_volregime_grid.py",
+  "deepseek_decisions": {
+    "deploy": [
+      {
+        "node": "MARCODG1",
+        "strategy_file": "auto_gen_1788129110_volregime_grid.py",
+        "config_patch": {
+          "capital": 2.0,
+          "spacing": "adaptive_vol",
+          "levels": 8,
+          "dry_run": true,
+          "max_drawdown": 0.02
+        }
+      }
+    ],
+    "adjust": [
+      {
+        "node": "mc2",
+        "bot": "denaro-feeder-mc2",
+        "param": "state",
+        "value": "restart"
+      },
+      {
+        "node": "mc2",
+        "bot": "atlas-watchdog",
+        "param": "state",
+        "value": "restart"
+      },
+      {
+        "node": "MARCODG1",
+        "bot": "denaro-node-trend",
+        "param": "state",
+        "value": "restart"
+      },
+      {
+        "node": "MARCODG1",
+        "bot": "denaro-node-trend-live",
+        "param": "state",
+        "value": "restart"
+      },
+      {
+        "node": "MARCODG1",
+        "bot": "denaro-brain",
+        "param": "state",
+        "value": "restart"
+      },
+      {
+        "node": "MARCODG1",
+        "bot": "denaro-node-paper",
+        "param": "timestamp_check",
+        "value": "force_sync"
+      }
+    ],
+    "skip": [
+      "Deploy su mc2: RAM al 46% e policy no-trading attiva, rischio OOM con nuovo bot",
+      "Deploy su nuvola: nodo healthy, nessuna necessita di nuovi bot grid su DOGE",
+      "Fidarsi PnL MARCODG1 SOL: timestamp stale 48.8h, ignorare finche non sincronizzato"
+    ]
+  }
+}

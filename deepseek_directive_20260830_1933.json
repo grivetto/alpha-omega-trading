@@ -1,0 +1,6 @@
+{
+  "cycle": "2026-08-30 19:33",
+  "result": "strategie generata e validata (test inline OK), dict deploy salvata",
+  "strategy": "auto_gen_20260830_1935_swingprofiler_grid.py",
+  "decision_file": "deploy_decisions_1788111282.json"
+}

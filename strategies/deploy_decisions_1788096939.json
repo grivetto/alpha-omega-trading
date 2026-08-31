@@ -1,0 +1,43 @@
+{
+  "ts": 1788096939,
+  "cycle": "15:34",
+  "new_strategy": "auto_gen_20260830_1531_asymgrid.py",
+  "smoke_test": "PASS (py_compile OK; calm>=wide spacing 0.005->0.02 vol-scaling verified; gap-freeze triggers; mem ~0.006MB; inline self-test all asserts OK)",
+  "fase1_sent": true,
+  "deepseek_reply_deploy": [
+    {
+      "node": "mc2",
+      "strategy_file": "auto_gen_20260830_1531_asymgrid.py",
+      "config_patch": {
+        "capital": 3.55,
+        "spacing_base": 0.005,
+        "levels": 20,
+        "gate_velocity_ratio.buy": 0.0005,
+        "gate_velocity_ratio.sell": 0.0008
+      }
+    },
+    {
+      "node": "nuvola",
+      "strategy_file": "auto_gen_20260830_1531_asymgrid.py",
+      "config_patch": {
+        "capital": 0.75,
+        "spacing_base": 0.005,
+        "levels": 15,
+        "gate_velocity_ratio.buy": 0.0005,
+        "gate_velocity_ratio.sell": 0.0008
+      }
+    }
+  ],
+  "deepseek_adjust": [
+    {
+      "node": "MARCODG1",
+      "bot": "trend-live",
+      "param": "data_refresh_interval",
+      "value": 30
+    }
+  ],
+  "deepseek_skip": [
+    "MARCODG1 SOL paper rimane paper-mode per policy 24h (uptime 3.5h < 24h)"
+  ],
+  "orchestrator_corrected_notes": "DeepSeek ha proposto chiavi config INESISTENTI in asymgrid (spacing_initial,vol_scaling_min/max,bias_directional,gap_freeze_threshold,recenter_interval) e capital 0.5/0.3 sotto-utilizzati: NON deployabile come-da-tale. Corretto: remap su schema reale AsymGrid (base_spacing,max_spacing,momentum_bias_band,gap_stop_frac,reversion_ema_len,semaforo EMA) e capital reali (mc2 3.55 cap_available, nuvola 0.75 free_quote). Param data_staleness_check inventato NON esiste nello schema strategia - ignorato. ALLARME: MARCODG1 SOL trend-live stampa health ts ~32h vecchio (nuvola doge_nuvola ~32h anche) - health file CACHED, fleet_status legge snapshot stale, non live. Binding: trend-live NON ha fatto heartbeat da ~32h. Serve verifica manuale (SSH servono chiavi)."
+}
