@@ -1,5 +1,5 @@
 [Unit]
-Description=Denaro Node — trading engine unificato (paper + live, config node.yaml)
+Description=Denaro Node — paper bots (M6/M7, in parallelo ai live)
 After=network-online.target
 Wants=network-online.target
 

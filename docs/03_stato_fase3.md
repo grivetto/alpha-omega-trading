@@ -1,33 +1,36 @@
-# DENARO — Stato Fase 3 e Runbook Cutover (aggiornato round 8 — 3 NODI ATTIVI)
+# DENARO — Stato Fase 3 e Runbook Cutover (aggiornato round 9 — CAPITALE +25×2, SERVIZI ZABBIX)
 
 > La Fase 3 (implementazione modulare) e' in corso. Questo documento traccia
 > lo stato di ogni modulo, l'evidenza di verifica e il runbook del cutover live.
 
 ---
 
-## 0. Stato operativo round 8 — 3 nodi Denaro attivi (2026-08-24)
+## 0. Stato operativo round 9 — capitale aumentato, servizi su Zabbix (2026-08-24)
 
 | Nodo | Host | Unit | Bot | Stato |
 |------|------|------|-----|-------|
-| MARCODG1 | 87.106.222.123 | `denaro-node-paper` | 3 paper (ADA/SOL/XRP 300/100/100) + 3 live (OKX ADA 20€, OKX SOL 5€, Kraken SOL 25€) | ✅ active |
+| MARCODG1 | 87.106.222.123 | `denaro-node-paper` | 3 paper (ADA/SOL/XRP 300/100/100) + 3 live (OKX ADA 20€, **OKX SOL 25€**, **Kraken SOL 50€**) | ✅ active |
 | nuvola | 87.106.3.15 | `denaro-node-nuvola` | 3 paper (ADA/SOL/XRP 300/100/100) | ✅ active |
 | mc2 | 192.168.1.99 (via tunnel 2222) | `denaro-node-mc2` | 3 paper (ADA/SOL/XRP 300/100/100) | ✅ active |
 
-- Equity reale totale ≈ 55€ (OKX main + marcosub1 + Kraken); Node paper +7.99€
-  (9 trade, WR 100% a round 7) — marcodg1 mostra 11.52€/14 trade a round 8.
-- **Scoperta chiavi**: tutte le coppie Kraken valide su nuvola/MARCODG1
-  (FSb6rd, OuA8bY, /IGUnb, Sc0lGC) puntano allo **stesso account** (SOL 0.303,
-  ADA 0.064, EUR 0.83, USD 0.41). Il "conto ATLAS" da 26€ non esiste come
-  conto separato → il bot ex-ATLAS resta **disabilitato** nei config di nuvola
-  (regola: mai due engine sullo stesso account). Attivazione live su nuvola
-  solo quando ci sara' capitale su un conto Kraken/OKX separato.
-- Monitoraggio: aggregator (8912) legge le health dei 3 nodi via SSH
-  (nuvola porta 22, mc2 porta 2222 via tunnel inverso) → `node_totals` nella
-  dashboard; Zabbix host nuovi `alpha-omega-node-nuvola` (10698) e
-  `alpha-omega-node-mc2` (10699) con 18 item trapper ciascuno + auto-heal
-  remoto via SSH in `push_metrics.py`.
-- Cron MARCODG1: `push_metrics.py` e `infra_snapshot.py` ogni minuto (133
-  valori/min pushati a Zabbix).
+- **Capitale round 9**: l'utente ha depositato +25€ su OKX main e +25€ su Kraken
+  ("55 + 25 + 25 e stop" = ~105€ totali). Verificato sui saldi reali:
+  OKX main EUR 30.08 (prima ~5€), Kraken EUR 25.83 (prima 0.83€),
+  marcosub1 INVARIATO (105.95 ADA × 0.1882 = 19.9€, nessun deposito — il delta
+  ADA segnalato al round 8 era solo il conteggio del bot). Capital aggiornati
+  nel config: OKX SOL 5→25€, Kraken SOL 25→50€ (SOL 0.303≈25€ + EUR 25.83).
+  Ordini verificati dopo restart: OKX SOL 3 buy (1.67+8.33+8.33€), Kraken
+  ri-griglia in corso, ADA 3 sell TP aperti. Total equity snapshot 80.62€.
+- **Servizi su Zabbix per macchina**: 10 item trapper `svc.<unit>` creati
+  (MARCODG1 6: node-paper, health, aggregator, paper-ada/sol/xrp; nuvola 2:
+  node-nuvola, zabbix-tunnel; mc2 2: node-mc2, zabbix-tunnel-reverse),
+  alimentati ogni minuto da `push_metrics.py` via systemctl is-active
+  (locale + SSH) → tutti = 1 active. Item 53796 (systemd.unit.info) era
+  "Unsupported item key" (plugin agent non abilitato) — sostituito dal trapper.
+  Trigger Zabbix NON creabili via API (risoluzione nominale rotta, vedi §4);
+  l'auto-heal cron copre i servizi critici.
+- **Dashboard**: nuova card **SERVIZI DENARO (per macchina)** con pill verdi/rosse
+  per ogni unit + stato "TUTTI ATTIVI / QUALCUNO GIU'".
 
 ---
 

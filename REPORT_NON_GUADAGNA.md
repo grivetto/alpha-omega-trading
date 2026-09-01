@@ -28,8 +28,8 @@
 ## 0. CORREZIONE IMPORTANTE (2026-08-23)
 
 **Le chiavi API sono VALIDE.** La causa del "balance fetch fallito" su OKX era l'**hostname errato**:
-- Chiave OKX conto denaro (`53473d67...`): con hostname globale `okx.com` → `50119 API key doesn't exist`; con hostname **`eea.okx.com`** → ✅ saldo letto: EUR 5.0, ETH 0.000998, SOL 0.00998, DOGE 9.98.
-- Chiave OKX conto alpha (`77dc2d2f...`): con `eea.okx.com` → ✅ saldo letto: XRP 9.98, EUR 8.91378 (free EUR 0.53 — 8.4€ risultano bloccati in ordini/posizioni).
+- Chiave OKX conto denaro (`[REDACTED-OKX]...`): con hostname globale `okx.com` → `50119 API key doesn't exist`; con hostname **`eea.okx.com`** → ✅ saldo letto: EUR 5.0, ETH 0.000998, SOL 0.00998, DOGE 9.98.
+- Chiave OKX conto alpha (`[REDACTED-OKX]...`): con `eea.okx.com` → ✅ saldo letto: XRP 9.98, EUR 8.91378 (free EUR 0.53 — 8.4€ risultano bloccati in ordini/posizioni).
 - Chiavi **Kraken su MARCODG1** risultano invalide (`EAPI:Invalid key`) — non usare Kraken lì.
 - Su **nuvola** il balance Kraken si legge correttamente (EUR 0.50 liberi, SOL 0.19, ADA 0.064, BTC 0.00015) — le chiavi Kraken di nuvola sono valide.
 
@@ -74,7 +74,7 @@
    ```
    OKX BALANCE FAIL: ExchangeError okx {"msg":"API key doesn't exist","code":"50119"}
    ```
-   La chiave `53473d67...` (OKX_API_KEY nel coordinator) non esiste su OKX. Il `fetch_balance` fallisce → equity 0 → fallback a `state.equity = config.capital` (4.17€), che è ciò che l'health mostra (valore di configurazione, non saldo reale).
+   La chiave `[REDACTED-OKX]...` (OKX_API_KEY nel coordinator) non esiste su OKX. Il `fetch_balance` fallisce → equity 0 → fallback a `state.equity = config.capital` (4.17€), che è ciò che l'health mostra (valore di configurazione, non saldo reale).
 
 2. **Il motore della fleet non esegue trading.** `alpha_omega/core/engine_minimal.py` (`MinimalTradingEngine`), usato dal coordinator (`from ..core.engine_minimal import MinimalTradingEngine as UnifiedTradingEngine`):
    ```python
@@ -405,8 +405,8 @@ Con capitale attuale ~30€ il guadagno è proporzionato ma reale; la macchina �
 ### Verifica chiavi API (tutte VALIDE)
 | Conto | Chiave | Saldo verificato |
 |---|---|---|
-| OKX main (MARCODG1) | `53473d67` | ✅ EUR 5.0 + cripto |
-| OKX marcosub1 (MARCODG1) | `77dc2d2f` | ✅ ADA 105.95 |
+| OKX main (MARCODG1) | `[REDACTED-OKX]` | ✅ EUR 5.0 + cripto |
+| OKX marcosub1 (MARCODG1) | `[REDACTED-OKX]` | ✅ ADA 105.95 |
 | Kraken nuvola (`alpha-omega-trading/.env`) | `/IGUnbcs` | ✅ SOL + EUR 10.30 |
 | Kraken `~/.env` (6AHOWRXC) | vecchia | ❌ ignorata (non usata) |
 

@@ -1,0 +1,484 @@
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787599344.0073273, "order_id": "paper-4eba02c3a9", "amount": 540.30105575, "price": 0.185082, "level": 0}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787599344.009001, "order_id": "paper-57dfd1a3de", "amount": 543.05916086, "price": 0.184142, "level": 1}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787599344.0102148, "order_id": "paper-0f338394ae", "amount": 545.84258991, "price": 0.183203, "level": 2}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787599869.1892326, "order_id": "paper-4eba02c3a9", "entry": 0.185082, "amount": 540.30105575, "sell_target": 0.188784}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787599869.190885, "order_id": "paper-57dfd1a3de", "entry": 0.184142, "amount": 543.05916086, "sell_target": 0.187825}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787599869.1923242, "order_id": "paper-0f338394ae", "entry": 0.183203, "amount": 545.84258991, "sell_target": 0.186867}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787599899.1959064, "order_id": "paper-cf207e8353", "amount": 539.44124676, "price": 0.185377, "level": 0}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787599899.1967711, "order_id": "paper-3e76eb6ea4", "amount": 542.19349802, "price": 0.184436, "level": 1}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787599899.1974368, "order_id": "paper-826c6ddf04", "amount": 544.97397749, "price": 0.183495, "level": 2}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787599899.1990888, "order_id": "paper-23aaec4e11", "amount": 543.05916086, "entry": 0.184142, "exit": 0.187825, "profit": 1.79808680255978, "total_pnl": 1.79808680255978}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787599899.20009, "order_id": "paper-88eb53d9a3", "amount": 545.84258991, "entry": 0.183203, "exit": 0.186867, "profit": 1.797967282182256, "total_pnl": 3.596054084742036}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787600270.891302, "order_id": "paper-49fde50f67", "amount": 540.30105575, "entry": 0.185082, "exit": 0.188784, "profit": 1.798194313877488, "total_pnl": 5.394248398619524}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787600499.7174017, "order_id": "paper-c67f033bea", "amount": 538.58416993, "price": 0.185672, "level": 0}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787600499.7189658, "order_id": "paper-f1e56a8516", "amount": 541.33059059, "price": 0.18473, "level": 1}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787600499.719796, "order_id": "paper-e238307e84", "amount": 544.10812517, "price": 0.183787, "level": 2}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787601129.8517365, "order_id": "paper-c67f033bea", "entry": 0.185672, "amount": 538.58416993, "sell_target": 0.189385}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787601129.853715, "order_id": "paper-f1e56a8516", "entry": 0.18473, "amount": 541.33059059, "sell_target": 0.188425}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787601129.855019, "order_id": "paper-e238307e84", "entry": 0.183787, "amount": 544.10812517, "sell_target": 0.187463}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787601159.8590457, "order_id": "paper-e1eade9e1b", "amount": 541.74409093, "price": 0.184589, "level": 0}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787601159.8600392, "order_id": "paper-58cfb26a18", "amount": 544.50809139, "price": 0.183652, "level": 1}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787601159.8609304, "order_id": "paper-344e4b39e0", "amount": 547.30044058, "price": 0.182715, "level": 2}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787601159.8633235, "order_id": "paper-da5942045d", "amount": 544.10812517, "entry": 0.183787, "exit": 0.187463, "profit": 1.7981413266555535, "total_pnl": 7.192389725275078}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787601770.732799, "order_id": "paper-4b257a545e", "amount": 542.03186063, "price": 0.184491, "level": 0}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787601770.7338915, "order_id": "paper-270e766910", "amount": 544.7988058, "price": 0.183554, "level": 1}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787601770.7352555, "order_id": "paper-1c9599ccba", "amount": 547.59414512, "price": 0.182617, "level": 2}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787603836.325886, "order_id": "paper-4b257a545e", "entry": 0.184491, "amount": 542.03186063, "sell_target": 0.188181}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787603836.3279285, "order_id": "paper-270e766910", "entry": 0.183554, "amount": 544.7988058, "sell_target": 0.187225}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787603836.3292184, "order_id": "paper-1c9599ccba", "entry": 0.182617, "amount": 547.59414512, "sell_target": 0.186269}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787603866.332476, "order_id": "paper-bec3f2081b", "amount": 539.44124676, "price": 0.185377, "level": 0}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787603866.3340893, "order_id": "paper-870bf9bac5", "amount": 542.19349802, "price": 0.184436, "level": 1}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787603866.3353183, "order_id": "paper-75be54ce98", "amount": 544.97397749, "price": 0.183495, "level": 2}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787603866.3368673, "order_id": "paper-9d6fb72069", "amount": 542.03186063, "entry": 0.184491, "exit": 0.188181, "profit": 1.7980974681600088, "total_pnl": 8.990487193435087}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787603866.3373144, "order_id": "paper-f999a62595", "amount": 544.7988058, "entry": 0.183554, "exit": 0.187225, "profit": 1.7979564596760866, "total_pnl": 10.788443653111173}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787603866.3380353, "order_id": "paper-a0d692aa8d", "amount": 547.59414512, "entry": 0.182617, "exit": 0.186269, "profit": 1.7978140041615092, "total_pnl": 12.586257657272682}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1787605564.6056519, "order_id": "paper-bec3f2081b"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787605564.6070867, "order_id": "paper-b3aacf5ae2", "amount": 540.6662089, "price": 0.184957, "level": 2}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1787607078.85622, "order_id": "paper-870bf9bac5"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787607078.857462, "order_id": "paper-0844d857aa", "amount": 539.81106613, "price": 0.18525, "level": 2}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787609076.269673, "order_id": "paper-73c57b43c5", "amount": 535.73915932, "price": 0.186658, "level": 0}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787609076.2706068, "order_id": "paper-0987efc389", "amount": 538.47396478, "price": 0.18571, "level": 1}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787609076.271265, "order_id": "paper-d4999b3d61", "amount": 541.23683441, "price": 0.184762, "level": 2}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787609169.2361794, "order_id": "paper-73c57b43c5", "entry": 0.186658, "amount": 535.73915932, "sell_target": 0.190391}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787609169.238473, "order_id": "paper-0987efc389", "entry": 0.18571, "amount": 538.47396478, "sell_target": 0.189424}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787609169.2393775, "order_id": "paper-d4999b3d61", "entry": 0.184762, "amount": 541.23683441, "sell_target": 0.188457}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787609199.2435431, "order_id": "paper-0e61fb6a36", "amount": 214.06973322, "price": 0.186855, "level": 0}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787609199.2447314, "order_id": "paper-3c33baaf52", "amount": 215.16250148, "price": 0.185906, "level": 1}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787609199.246166, "order_id": "paper-4f3536c27d", "amount": 216.26648356, "price": 0.184957, "level": 2}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787609199.2474816, "order_id": "paper-46c3e2593e", "amount": 217.3806716, "price": 0.184009, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787609199.2484307, "order_id": "paper-7ad7a193e4", "amount": 218.50639951, "price": 0.183061, "level": 4}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787609199.2501426, "order_id": "paper-4ed4f2b731", "amount": 538.47396478, "entry": 0.18571, "exit": 0.189424, "profit": 1.797892412889155, "total_pnl": 14.384150070161837}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787609199.251147, "order_id": "paper-88c3efc77b", "amount": 541.23683441, "entry": 0.184762, "exit": 0.188457, "profit": 1.797870233043298, "total_pnl": 16.182020303205135}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787609413.5080094, "order_id": "paper-2920dc098e", "amount": 214.29566373, "price": 0.186658, "level": 0}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787609413.509357, "order_id": "paper-ce75706cc4", "amount": 215.38958591, "price": 0.18571, "level": 1}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787609413.5098596, "order_id": "paper-f68955270e", "amount": 216.49473377, "price": 0.184762, "level": 2}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787609413.5106342, "order_id": "paper-65d0eef306", "amount": 217.61009711, "price": 0.183815, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787609413.5112534, "order_id": "paper-06f205dbbc", "amount": 218.73820864, "price": 0.182867, "level": 4}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787609560.4863298, "order_id": "paper-2920dc098e", "entry": 0.186658, "amount": 214.29566373, "sell_target": 0.190391}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787609560.4882152, "order_id": "paper-ce75706cc4", "entry": 0.18571, "amount": 215.38958591, "sell_target": 0.189424}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787609560.4892654, "order_id": "paper-f68955270e", "entry": 0.184762, "amount": 216.49473377, "sell_target": 0.188457}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787609560.4901102, "order_id": "paper-65d0eef306", "entry": 0.183815, "amount": 217.61009711, "sell_target": 0.187491}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787609560.4909265, "order_id": "paper-06f205dbbc", "entry": 0.182867, "amount": 218.73820864, "sell_target": 0.186524}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787609590.4940596, "order_id": "paper-4f5b3a1c46", "amount": 214.52207164, "price": 0.186461, "level": 0}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787609590.4949744, "order_id": "paper-4a14405db8", "amount": 215.61715019, "price": 0.185514, "level": 1}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787609590.496004, "order_id": "paper-22bb4aa888", "amount": 216.72346628, "price": 0.184567, "level": 2}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787609590.4968135, "order_id": "paper-06bd5a64da", "amount": 217.84000741, "price": 0.183621, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787609590.4976943, "order_id": "paper-edda88a9fb", "amount": 218.96931145, "price": 0.182674, "level": 4}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787609590.4999447, "order_id": "paper-ffdc35fefb", "amount": 216.49473377, "entry": 0.184762, "exit": 0.188457, "profit": 0.7191480932372443, "total_pnl": 16.90116839644238}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787609590.5006516, "order_id": "paper-2b4e354617", "amount": 217.61009711, "entry": 0.183815, "exit": 0.187491, "profit": 0.7191347822588341, "total_pnl": 17.620303178701214}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787609590.5014637, "order_id": "paper-538ff0b0da", "amount": 218.73820864, "entry": 0.182867, "exit": 0.186524, "profit": 0.7191257033687393, "total_pnl": 18.339428882069953}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787609717.5351808, "order_id": "paper-9a5521abb4", "amount": 214.52207164, "price": 0.186461, "level": 0}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787609717.5366793, "order_id": "paper-747637e6dc", "amount": 215.61715019, "price": 0.185514, "level": 1}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787609717.5376055, "order_id": "paper-04a064b3c2", "amount": 216.72346628, "price": 0.184567, "level": 2}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787609717.5383863, "order_id": "paper-e9500722ba", "amount": 217.84000741, "price": 0.183621, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787609717.5394707, "order_id": "paper-ce2c0b12c3", "amount": 218.96931145, "price": 0.182674, "level": 4}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787609879.0002882, "order_id": "paper-9a5521abb4", "entry": 0.186461, "amount": 214.52207164, "sell_target": 0.19019}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787609879.0022275, "order_id": "paper-747637e6dc", "entry": 0.185514, "amount": 215.61715019, "sell_target": 0.189224}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787609879.0036368, "order_id": "paper-04a064b3c2", "entry": 0.184567, "amount": 216.72346628, "sell_target": 0.188258}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787609879.0047407, "order_id": "paper-e9500722ba", "entry": 0.183621, "amount": 217.84000741, "sell_target": 0.187293}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787609879.0066907, "order_id": "paper-ce2c0b12c3", "entry": 0.182674, "amount": 218.96931145, "sell_target": 0.186327}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787609909.0103416, "order_id": "paper-c6b9f27f1b", "amount": 214.18321232, "price": 0.186756, "level": 0}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787609909.0113513, "order_id": "paper-5e9ac3a356", "amount": 215.27598381, "price": 0.185808, "level": 1}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787609909.0120356, "order_id": "paper-c12c91f9d8", "amount": 216.37996322, "price": 0.18486, "level": 2}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787609909.0126984, "order_id": "paper-cbe7bda135", "amount": 217.49532385, "price": 0.183912, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787609909.0132964, "order_id": "paper-7483d31f16", "amount": 218.62224263, "price": 0.182964, "level": 4}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787609909.014654, "order_id": "paper-b7c61c557a", "amount": 215.61715019, "entry": 0.185514, "exit": 0.189224, "profit": 0.7191396875770053, "total_pnl": 19.05856856964696}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787609909.0152607, "order_id": "paper-6e3707415e", "amount": 216.72346628, "entry": 0.184567, "exit": 0.188258, "profit": 0.719126387723648, "total_pnl": 19.777694957370606}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787609909.015814, "order_id": "paper-2c154861b2", "amount": 217.84000741, "entry": 0.183621, "exit": 0.187293, "profit": 0.7191085987010482, "total_pnl": 20.496803556071654}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787609909.0164316, "order_id": "paper-dc50174ddf", "amount": 218.96931145, "entry": 0.182674, "exit": 0.186327, "profit": 0.7190949998324854, "total_pnl": 21.21589855590414}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787610059.154423, "order_id": "paper-a2fc09bc85", "amount": 214.52207164, "price": 0.186461, "level": 0}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787610059.1561582, "order_id": "paper-688c89537e", "amount": 215.61715019, "price": 0.185514, "level": 1}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787610059.1573238, "order_id": "paper-22251cb8fe", "amount": 216.72346628, "price": 0.184567, "level": 2}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787610059.1582336, "order_id": "paper-df60163520", "amount": 217.84000741, "price": 0.183621, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787610059.1590524, "order_id": "paper-db57d11ddc", "amount": 218.96931145, "price": 0.182674, "level": 4}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787610165.418277, "order_id": "paper-a2fc09bc85", "entry": 0.186461, "amount": 214.52207164, "sell_target": 0.19019}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787610165.4198706, "order_id": "paper-688c89537e", "entry": 0.185514, "amount": 215.61715019, "sell_target": 0.189224}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787610165.4208217, "order_id": "paper-22251cb8fe", "entry": 0.184567, "amount": 216.72346628, "sell_target": 0.188258}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787610165.4219003, "order_id": "paper-df60163520", "entry": 0.183621, "amount": 217.84000741, "sell_target": 0.187293}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787610165.4228826, "order_id": "paper-db57d11ddc", "entry": 0.182674, "amount": 218.96931145, "sell_target": 0.186327}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787610195.4261446, "order_id": "paper-ff4943416b", "amount": 214.52207164, "price": 0.186461, "level": 0}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787610195.4272563, "order_id": "paper-34293013b8", "amount": 215.61715019, "price": 0.185514, "level": 1}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787610195.4280028, "order_id": "paper-90b1088501", "amount": 216.72346628, "price": 0.184567, "level": 2}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787610195.4286246, "order_id": "paper-fd258797ac", "amount": 217.84000741, "price": 0.183621, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787610195.4294312, "order_id": "paper-57824e4680", "amount": 218.96931145, "price": 0.182674, "level": 4}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787610195.4319956, "order_id": "paper-154af7f5ee", "amount": 215.61715019, "entry": 0.185514, "exit": 0.189224, "profit": 0.7191396875770053, "total_pnl": 21.935038243481145}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787610195.4326122, "order_id": "paper-77553f6029", "amount": 216.72346628, "entry": 0.184567, "exit": 0.188258, "profit": 0.719126387723648, "total_pnl": 22.654164631204793}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787610195.4331608, "order_id": "paper-69fa3a8fba", "amount": 217.84000741, "entry": 0.183621, "exit": 0.187293, "profit": 0.7191085987010482, "total_pnl": 23.37327322990584}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787610195.4336689, "order_id": "paper-2d8f4f7c0b", "amount": 218.96931145, "entry": 0.182674, "exit": 0.186327, "profit": 0.7190949998324854, "total_pnl": 24.092368229738327}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787615481.585221, "order_id": "paper-2281933e7b", "amount": 214.40938255, "price": 0.186559, "level": 0}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787615481.5875206, "order_id": "paper-ade456ff3c", "amount": 215.50330798, "price": 0.185612, "level": 1}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787615481.5886817, "order_id": "paper-3e98834d91", "amount": 216.60845314, "price": 0.184665, "level": 2}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787615481.5900419, "order_id": "paper-dc322a98d5", "amount": 217.72499156, "price": 0.183718, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787615481.5916743, "order_id": "paper-57d23cd45a", "amount": 218.85310033, "price": 0.182771, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1787618151.855301, "order_id": "paper-2281933e7b"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787618151.856526, "order_id": "paper-07a52e904d", "amount": 217.1340477, "price": 0.184218, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1787618211.8640916, "order_id": "paper-ade456ff3c"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787618211.8654249, "order_id": "paper-6b2fd6dc6f", "amount": 216.79276779, "price": 0.184508, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1787618451.8898146, "order_id": "paper-3e98834d91"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787618451.890969, "order_id": "paper-8300134a3b", "amount": 216.34017329, "price": 0.184894, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1787618601.907101, "order_id": "paper-dc322a98d5"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787618601.9082026, "order_id": "paper-63a3815708", "amount": 215.7776627, "price": 0.185376, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1787618751.9220073, "order_id": "paper-57d23cd45a"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787618751.922933, "order_id": "paper-cfc2a6e80c", "amount": 215.21691174, "price": 0.185859, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1787624362.401282, "order_id": "paper-07a52e904d"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787624362.402001, "order_id": "paper-ef62cb28b0", "amount": 213.77456403, "price": 0.187113, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1787624422.4072208, "order_id": "paper-6b2fd6dc6f"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787624422.4083583, "order_id": "paper-7ba76d3ec6", "amount": 213.11396802, "price": 0.187693, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1787624722.4338326, "order_id": "paper-8300134a3b"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787624722.4350188, "order_id": "paper-5de7d3cc7b", "amount": 212.67771882, "price": 0.188078, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1787624902.452625, "order_id": "paper-63a3815708"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787624902.4538848, "order_id": "paper-f2b3fee17d", "amount": 211.91603887, "price": 0.188754, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1787624932.4570725, "order_id": "paper-cfc2a6e80c"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787624932.4576957, "order_id": "paper-2d82b80f1c", "amount": 211.59207165, "price": 0.189043, "level": 4}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787644194.250891, "order_id": "paper-2d82b80f1c", "entry": 0.189043, "amount": 211.59207165, "sell_target": 0.192824}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787644224.253256, "order_id": "paper-9ad84d1140", "amount": 218.73820864, "price": 0.182867, "level": 4}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787644284.2619119, "order_id": "paper-5de7d3cc7b", "entry": 0.188078, "amount": 212.67771882, "sell_target": 0.19184}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787644284.262979, "order_id": "paper-f2b3fee17d", "entry": 0.188754, "amount": 211.91603887, "sell_target": 0.192529}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787644314.265424, "order_id": "paper-8a31f1d3df", "amount": 219.34634788, "price": 0.18236, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787644314.2657583, "order_id": "paper-bac9a0cb59", "amount": 220.48285746, "price": 0.18142, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1787646234.4629226, "order_id": "paper-8a31f1d3df"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787646234.4637668, "order_id": "paper-1f8a03026b", "amount": 217.1340477, "price": 0.184218, "level": 4}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787651604.9235284, "order_id": "paper-7ba76d3ec6", "entry": 0.187693, "amount": 213.11396802, "sell_target": 0.191447}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787651634.9256122, "order_id": "paper-ef62cb28b0", "entry": 0.187113, "amount": 213.77456403, "sell_target": 0.190855}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787664056.2700684, "order_id": "paper-1f8a03026b", "entry": 0.184218, "amount": 217.1340477, "sell_target": 0.187902}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787665886.4757683, "order_id": "paper-9ad84d1140", "entry": 0.182867, "amount": 218.73820864, "sell_target": 0.186524}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787665886.4768343, "order_id": "paper-bac9a0cb59", "entry": 0.18142, "amount": 220.48285746, "sell_target": 0.185048}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787667926.7106884, "order_id": "paper-56e9c6ea98", "amount": 220.48285746, "entry": 0.18142, "exit": 0.185048, "profit": 0.7191118950572317, "total_pnl": 24.81148012479556}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787677490.145969, "order_id": "paper-adbeb4a775", "amount": 211.59207165, "entry": 0.189043, "exit": 0.192824, "profit": 0.7192295932838846, "total_pnl": 25.530709718079443}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787677490.14676, "order_id": "paper-b3c3be1933", "amount": 212.67771882, "entry": 0.188078, "exit": 0.19184, "profit": 0.7192934846221917, "total_pnl": 26.250003202701635}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787677490.1478958, "order_id": "paper-4d567c73a8", "amount": 211.91603887, "entry": 0.188754, "exit": 0.192529, "profit": 0.719183063685783, "total_pnl": 26.969186266387418}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787677490.14844, "order_id": "paper-4510919d2d", "amount": 213.11396802, "entry": 0.187693, "exit": 0.191447, "profit": 0.7192298061119828, "total_pnl": 27.6884160724994}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787677490.149111, "order_id": "paper-7763e6fbfa", "amount": 213.77456403, "entry": 0.187113, "exit": 0.190855, "profit": 0.7191444741829685, "total_pnl": 28.40756054668237}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787677490.1499777, "order_id": "paper-15fe090903", "amount": 217.1340477, "entry": 0.184218, "exit": 0.187902, "profit": 0.7191219098966783, "total_pnl": 29.126682456579047}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787677490.1511986, "order_id": "paper-aab09d8de8", "amount": 218.73820864, "entry": 0.182867, "exit": 0.186524, "profit": 0.7191257033687393, "total_pnl": 29.845808159947786}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787677520.1525753, "order_id": "paper-d65e9b4a38", "amount": 220.58134213, "price": 0.181339, "level": 0}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787677520.1530416, "order_id": "paper-ff3860f428", "amount": 221.70736844, "price": 0.180418, "level": 1}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787677520.1532936, "order_id": "paper-2a596d35d5", "amount": 222.84370856, "price": 0.179498, "level": 2}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787677520.1535778, "order_id": "paper-26d84a266f", "amount": 223.99301142, "price": 0.178577, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787677520.1538212, "order_id": "paper-6a8b827790", "amount": 225.15423065, "price": 0.177656, "level": 4}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787677763.6038668, "order_id": "paper-9e0a1a666c", "amount": 221.1826637, "price": 0.180846, "level": 0}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787677763.605599, "order_id": "paper-5a26592885", "amount": 222.31114668, "price": 0.179928, "level": 1}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787677763.606253, "order_id": "paper-7375b4144c", "amount": 223.45120384, "price": 0.17901, "level": 2}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787677763.6069405, "order_id": "paper-8ca4e1cf15", "amount": 224.60301417, "price": 0.178092, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787677763.6077738, "order_id": "paper-71fbe92394", "amount": 225.76676036, "price": 0.177174, "level": 4}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787677817.0120215, "order_id": "paper-9e0a1a666c", "entry": 0.180846, "amount": 221.1826637, "sell_target": 0.184463}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787677817.0136611, "order_id": "paper-5a26592885", "entry": 0.179928, "amount": 222.31114668, "sell_target": 0.183527}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787677817.014777, "order_id": "paper-7375b4144c", "entry": 0.17901, "amount": 223.45120384, "sell_target": 0.18259}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787677817.0159986, "order_id": "paper-8ca4e1cf15", "entry": 0.178092, "amount": 224.60301417, "sell_target": 0.181654}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787677817.017979, "order_id": "paper-71fbe92394", "entry": 0.177174, "amount": 225.76676036, "sell_target": 0.180717}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787677847.0247414, "order_id": "paper-62b2c43d30", "amount": 221.54527832, "price": 0.18055, "level": 0}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787677847.0258906, "order_id": "paper-9ba9b92019", "amount": 222.67499471, "price": 0.179634, "level": 1}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787677847.0267944, "order_id": "paper-9f9b41ca21", "amount": 223.81754394, "price": 0.178717, "level": 2}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787677847.027833, "order_id": "paper-1d8fb3b30d", "amount": 224.97061321, "price": 0.177801, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787677847.0286365, "order_id": "paper-c86bb25dd4", "amount": 226.13690328, "price": 0.176884, "level": 4}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787677847.029907, "order_id": "paper-344d1d6399", "amount": 222.31114668, "entry": 0.179928, "exit": 0.183527, "profit": 0.7192977190847429, "total_pnl": 30.56510587903253}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787677847.0310068, "order_id": "paper-08da4dd04f", "amount": 223.45120384, "entry": 0.17901, "exit": 0.18259, "profit": 0.7191553544386551, "total_pnl": 31.284261233471184}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787677847.031698, "order_id": "paper-6d1471a845", "amount": 224.60301417, "entry": 0.178092, "exit": 0.181654, "profit": 0.7192359005379458, "total_pnl": 32.00349713400913}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787677847.032511, "order_id": "paper-41406b007a", "amount": 225.76676036, "entry": 0.177174, "exit": 0.180717, "profit": 0.7190917403234849, "total_pnl": 32.722588874332615}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787678010.0518727, "order_id": "paper-c7df0deb62", "amount": 221.1826637, "price": 0.180846, "level": 0}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787678010.05359, "order_id": "paper-350da2a71a", "amount": 222.31114668, "price": 0.179928, "level": 1}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787678010.0549312, "order_id": "paper-1b2589a3bc", "amount": 223.45120384, "price": 0.17901, "level": 2}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787678010.0560772, "order_id": "paper-7d3bf52a9e", "amount": 224.60301417, "price": 0.178092, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787678010.0572484, "order_id": "paper-82200a694d", "amount": 225.76676036, "price": 0.177174, "level": 4}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787678097.057849, "order_id": "paper-c7df0deb62", "entry": 0.180846, "amount": 221.1826637, "sell_target": 0.184463}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787678097.0591512, "order_id": "paper-350da2a71a", "entry": 0.179928, "amount": 222.31114668, "sell_target": 0.183527}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787678097.059901, "order_id": "paper-1b2589a3bc", "entry": 0.17901, "amount": 223.45120384, "sell_target": 0.18259}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787678097.0607204, "order_id": "paper-7d3bf52a9e", "entry": 0.178092, "amount": 224.60301417, "sell_target": 0.181654}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787678097.0615726, "order_id": "paper-82200a694d", "entry": 0.177174, "amount": 225.76676036, "sell_target": 0.180717}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787678127.065325, "order_id": "paper-289b5b7603", "amount": 221.06164857, "price": 0.180945, "level": 0}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787678127.0664182, "order_id": "paper-2feec50ec8", "amount": 222.19012809, "price": 0.180026, "level": 1}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787678127.0671575, "order_id": "paper-17bbdd984d", "amount": 223.3289412, "price": 0.179108, "level": 2}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787678127.0679145, "order_id": "paper-c9f91a5939", "amount": 224.48074797, "price": 0.178189, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787678127.0686302, "order_id": "paper-a1cc0a9bf3", "amount": 225.64449709, "price": 0.17727, "level": 4}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787678127.0702186, "order_id": "paper-cfb54b11e1", "amount": 222.31114668, "entry": 0.179928, "exit": 0.183527, "profit": 0.7192977190847429, "total_pnl": 33.44188659341736}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787678127.0710797, "order_id": "paper-488f74babf", "amount": 223.45120384, "entry": 0.17901, "exit": 0.18259, "profit": 0.7191553544386551, "total_pnl": 34.16104194785601}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787678127.0721204, "order_id": "paper-181b46aa91", "amount": 224.60301417, "entry": 0.178092, "exit": 0.181654, "profit": 0.7192359005379458, "total_pnl": 34.88027784839396}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787678127.0733447, "order_id": "paper-35f5acd982", "amount": 225.76676036, "entry": 0.177174, "exit": 0.180717, "profit": 0.7190917403234849, "total_pnl": 35.599369588717444}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787678272.862159, "order_id": "paper-7ce444eae4", "amount": 221.06164857, "price": 0.180945, "level": 0}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787678272.8641272, "order_id": "paper-3f54706508", "amount": 222.19012809, "price": 0.180026, "level": 1}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787678272.8653193, "order_id": "paper-3a9bc9ef76", "amount": 223.3289412, "price": 0.179108, "level": 2}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787678272.8665087, "order_id": "paper-1e77dad83c", "amount": 224.48074797, "price": 0.178189, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787678272.8675132, "order_id": "paper-bef0a68610", "amount": 225.64449709, "price": 0.17727, "level": 4}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787678400.5143235, "order_id": "paper-7ce444eae4", "entry": 0.180945, "amount": 221.06164857, "sell_target": 0.184564}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787678400.5158048, "order_id": "paper-3f54706508", "entry": 0.180026, "amount": 222.19012809, "sell_target": 0.183627}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787678400.5169091, "order_id": "paper-3a9bc9ef76", "entry": 0.179108, "amount": 223.3289412, "sell_target": 0.18269}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787678400.518322, "order_id": "paper-1e77dad83c", "entry": 0.178189, "amount": 224.48074797, "sell_target": 0.181753}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787678400.5191915, "order_id": "paper-bef0a68610", "entry": 0.17727, "amount": 225.64449709, "sell_target": 0.180815}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787678430.5218382, "order_id": "paper-d9ea340889", "amount": 220.94198616, "price": 0.181043, "level": 0}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787678430.5228758, "order_id": "paper-1c67378703", "amount": 222.06924119, "price": 0.180124, "level": 1}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787678430.524124, "order_id": "paper-a4525e0d95", "amount": 223.20805781, "price": 0.179205, "level": 2}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787678430.5251963, "order_id": "paper-ae31604959", "amount": 224.35861481, "price": 0.178286, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787678430.5259612, "order_id": "paper-c1e6e763e1", "amount": 225.52109468, "price": 0.177367, "level": 4}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787678430.5280344, "order_id": "paper-d527486bc9", "amount": 222.19012809, "entry": 0.180026, "exit": 0.183627, "profit": 0.7193065446017854, "total_pnl": 36.31867613331923}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787678430.5289216, "order_id": "paper-c58eb634d3", "amount": 223.3289412, "entry": 0.179108, "exit": 0.18269, "profit": 0.7191643031101265, "total_pnl": 37.037840436429356}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787678430.530072, "order_id": "paper-2f8ad2c83f", "amount": 224.48074797, "entry": 0.178189, "exit": 0.181753, "profit": 0.7192493363792707, "total_pnl": 37.75708977280863}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787678430.531318, "order_id": "paper-2b93b8b2fb", "amount": 225.64449709, "entry": 0.17727, "exit": 0.180815, "profit": 0.7191098324435785, "total_pnl": 38.476199605252205}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787681640.841368, "order_id": "paper-e8542fc083", "amount": 221.06164857, "entry": 0.180945, "exit": 0.184564, "profit": 0.7192220840676669, "total_pnl": 39.19542168931987}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787690581.6973083, "order_id": "paper-d9ea340889", "entry": 0.181043, "amount": 220.94198616, "sell_target": 0.184664}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787690611.7011275, "order_id": "paper-7b935712d8", "amount": 228.631526, "price": 0.174954, "level": 4}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787690941.7366138, "order_id": "paper-1c67378703", "entry": 0.180124, "amount": 222.06924119, "sell_target": 0.183726}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787690971.7422776, "order_id": "paper-4ea9f1f183", "amount": 230.02651056, "price": 0.173893, "level": 4}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787692051.848174, "order_id": "paper-a4525e0d95", "entry": 0.179205, "amount": 223.20805781, "sell_target": 0.182789}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787692081.8510394, "order_id": "paper-33dda8749f", "amount": 232.08721838, "price": 0.172349, "level": 4}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787692081.8515773, "order_id": "paper-ae31604959", "entry": 0.178286, "amount": 224.35861481, "sell_target": 0.181852}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787692111.8551474, "order_id": "paper-16a3e392e3", "amount": 233.13148033, "price": 0.171577, "level": 4}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787692111.855845, "order_id": "paper-c1e6e763e1", "entry": 0.177367, "amount": 225.52109468, "sell_target": 0.180914}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787692141.861319, "order_id": "paper-16d35b8397", "amount": 232.99975535, "price": 0.171674, "level": 4}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787694838.136974, "order_id": "paper-06de0aeb26", "amount": 226.36085315, "price": 0.176709, "level": 0}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787694838.13906, "order_id": "paper-143a053479", "amount": 227.51575547, "price": 0.175812, "level": 1}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787694838.1403222, "order_id": "paper-ea8d4ed40d", "amount": 228.68250293, "price": 0.174915, "level": 2}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787694838.1414864, "order_id": "paper-94a14bdf9d", "amount": 229.86127872, "price": 0.174018, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787694838.1424365, "order_id": "paper-331b91d1fe", "amount": 231.0522698, "price": 0.173121, "level": 4}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787694954.9050066, "order_id": "paper-06de0aeb26", "entry": 0.176709, "amount": 226.36085315, "sell_target": 0.180243}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787694954.9076145, "order_id": "paper-143a053479", "entry": 0.175812, "amount": 227.51575547, "sell_target": 0.179328}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787694954.9091141, "order_id": "paper-ea8d4ed40d", "entry": 0.174915, "amount": 228.68250293, "sell_target": 0.178413}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787694954.9110575, "order_id": "paper-94a14bdf9d", "entry": 0.174018, "amount": 229.86127872, "sell_target": 0.177498}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787694954.9121695, "order_id": "paper-331b91d1fe", "entry": 0.173121, "amount": 231.0522698, "sell_target": 0.176583}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787694984.9151788, "order_id": "paper-5c2fcc2aeb", "amount": 226.48774135, "price": 0.17661, "level": 0}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787694984.9162862, "order_id": "paper-10d4751c6c", "amount": 227.64264657, "price": 0.175714, "level": 1}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787694984.9173346, "order_id": "paper-05973139d6", "amount": 228.81069919, "price": 0.174817, "level": 2}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787694984.9182956, "order_id": "paper-ae3c4e02e3", "amount": 229.98947798, "price": 0.173921, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787694984.9192522, "order_id": "paper-0eb07e10ab", "amount": 231.18180137, "price": 0.173024, "level": 4}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787694984.9211204, "order_id": "paper-ffe60420e4", "amount": 228.68250293, "entry": 0.174915, "exit": 0.178413, "profit": 0.7191314638538913, "total_pnl": 39.91455315317376}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787694984.9220402, "order_id": "paper-ac7c4bce4b", "amount": 229.86127872, "entry": 0.174018, "exit": 0.177498, "profit": 0.7191173326950633, "total_pnl": 40.63367048586883}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787694984.92324, "order_id": "paper-da211c0430", "amount": 231.0522698, "entry": 0.173121, "exit": 0.176583, "profit": 0.7191030550894624, "total_pnl": 41.35277354095829}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787695044.9298112, "order_id": "paper-53736b19aa", "amount": 227.51575547, "entry": 0.175812, "exit": 0.179328, "profit": 0.7191454508349011, "total_pnl": 42.07191899179319}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787695125.5516198, "order_id": "paper-d154ab67cd", "amount": 225.8572695, "price": 0.177103, "level": 0}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787695125.5535064, "order_id": "paper-336694bec5", "amount": 227.00960251, "price": 0.176204, "level": 1}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787695125.5544977, "order_id": "paper-f878a02001", "amount": 228.17375431, "price": 0.175305, "level": 2}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787695125.5552912, "order_id": "paper-d711fa3751", "amount": 229.34990769, "price": 0.174406, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787695125.5566905, "order_id": "paper-aa53973eeb", "amount": 230.53824918, "price": 0.173507, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1787696085.652568, "order_id": "paper-d154ab67cd"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787696085.653516, "order_id": "paper-f0fbcc813f", "amount": 228.88270906, "price": 0.174762, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1787698425.886418, "order_id": "paper-336694bec5"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787698425.8874218, "order_id": "paper-abe7acbfe4", "amount": 228.25317843, "price": 0.175244, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1787699175.9637666, "order_id": "paper-f878a02001"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787699175.9647796, "order_id": "paper-cad1ac6cdb", "amount": 227.87608099, "price": 0.175534, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1787711297.0028517, "order_id": "paper-d711fa3751"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787711297.0043566, "order_id": "paper-d7f79ed365", "amount": 227.37737254, "price": 0.175919, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1787738329.6519291, "order_id": "paper-aa53973eeb"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787738329.6529963, "order_id": "paper-38da6047ed", "amount": 231.56858772, "price": 0.172735, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1787739289.7544763, "order_id": "paper-f0fbcc813f"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787739289.75523, "order_id": "paper-3fa8759724", "amount": 230.92421645, "price": 0.173217, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1787741629.985294, "order_id": "paper-abe7acbfe4"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787741629.9863799, "order_id": "paper-918febad48", "amount": 228.12820805, "price": 0.17534, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1787742230.0437443, "order_id": "paper-38da6047ed"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787742230.0452802, "order_id": "paper-f19b828789", "amount": 227.87608099, "price": 0.175534, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1787742380.0602672, "order_id": "paper-cad1ac6cdb"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787742380.0615568, "order_id": "paper-6ef7753ea4", "amount": 227.75152309, "price": 0.17563, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1787754501.224019, "order_id": "paper-d7f79ed365"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787754501.2250674, "order_id": "paper-9a86626df8", "amount": 233.26335433, "price": 0.17148, "level": 4}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787756391.4058955, "order_id": "paper-6ef7753ea4", "entry": 0.17563, "amount": 227.75152309, "sell_target": 0.179143}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787756421.408675, "order_id": "paper-b80bb3b986", "amount": 236.18746199, "price": 0.169357, "level": 4}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787756421.4100971, "order_id": "paper-f19b828789", "entry": 0.175534, "amount": 227.87608099, "sell_target": 0.179045}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787756451.4131675, "order_id": "paper-73b9f79d50", "amount": 235.91860808, "price": 0.16955, "level": 4}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787756541.4214654, "order_id": "paper-918febad48", "entry": 0.17534, "amount": 228.12820805, "sell_target": 0.178847}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787756571.424343, "order_id": "paper-646e69e2f8", "amount": 237.13259269, "price": 0.168682, "level": 4}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787767334.6964848, "order_id": "paper-3fa8759724", "entry": 0.173217, "amount": 230.92421645, "sell_target": 0.176681}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787767334.697894, "order_id": "paper-9a86626df8", "entry": 0.17148, "amount": 233.26335433, "sell_target": 0.17491}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787767334.6989284, "order_id": "paper-b80bb3b986", "entry": 0.169357, "amount": 236.18746199, "sell_target": 0.172744}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787767334.7003672, "order_id": "paper-73b9f79d50", "entry": 0.16955, "amount": 235.91860808, "sell_target": 0.172941}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787767334.7017534, "order_id": "paper-646e69e2f8", "entry": 0.168682, "amount": 237.13259269, "sell_target": 0.172056}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787767334.7022781, "order_id": "paper-6b947d64fb", "amount": 227.75152309, "entry": 0.17563, "exit": 0.179143, "profit": 0.7192910095139666, "total_pnl": 42.79121000130716}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787767334.702979, "order_id": "paper-82c40b6662", "amount": 227.87608099, "entry": 0.175534, "exit": 0.179045, "profit": 0.7192728474345458, "total_pnl": 43.5104828487417}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787767334.7033129, "order_id": "paper-f30c5f6e7d", "amount": 228.12820805, "entry": 0.17534, "exit": 0.178847, "profit": 0.7192455800067492, "total_pnl": 44.22972842874845}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787767364.70659, "order_id": "paper-d15a8ae0fd", "amount": 230.60204429, "price": 0.173459, "level": 0}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787767364.707104, "order_id": "paper-80e16f2673", "amount": 231.77925344, "price": 0.172578, "level": 1}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787767364.7075107, "order_id": "paper-0239128cb3", "amount": 232.96718657, "price": 0.171698, "level": 2}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787767364.707968, "order_id": "paper-3ea875318a", "amount": 234.16873028, "price": 0.170817, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787767364.7086408, "order_id": "paper-053b338443", "amount": 235.38273232, "price": 0.169936, "level": 4}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787767364.7106218, "order_id": "paper-c5dcfef8ad", "amount": 233.26335433, "entry": 0.17148, "exit": 0.17491, "profit": 0.7192932120455353, "total_pnl": 44.94902164079399}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787767364.711075, "order_id": "paper-7eeed696ba", "amount": 236.18746199, "entry": 0.169357, "exit": 0.172744, "profit": 0.7191669668258953, "total_pnl": 45.66818860761988}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787767364.711743, "order_id": "paper-229cc92873", "amount": 235.91860808, "entry": 0.16955, "exit": 0.172941, "profit": 0.7191999999993612, "total_pnl": 46.38738860761924}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787767364.7121696, "order_id": "paper-2aecd71b18", "amount": 237.13259269, "entry": 0.168682, "exit": 0.172056, "profit": 0.7192852823680624, "total_pnl": 47.106673889987306}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787768504.8363013, "order_id": "paper-6ac2a24cbe", "amount": 230.92421645, "entry": 0.173217, "exit": 0.176681, "profit": 0.7191215642953779, "total_pnl": 47.825795454282684}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1787772465.220658, "order_id": "paper-d15a8ae0fd"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787772465.2213898, "order_id": "paper-b591b5e6b5", "amount": 233.65714319, "price": 0.171191, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1787778555.7713885, "order_id": "paper-80e16f2673"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787778555.7725415, "order_id": "paper-6e2ab2137d", "amount": 232.99975535, "price": 0.171674, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1787778615.7787, "order_id": "paper-0239128cb3"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787778615.7795901, "order_id": "paper-04040653d1", "amount": 232.47839404, "price": 0.172059, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1787779215.829795, "order_id": "paper-3ea875318a"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787779215.8308983, "order_id": "paper-41acadfbc5", "amount": 232.08721838, "price": 0.172349, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1787779305.8396223, "order_id": "paper-053b338443"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787779305.8411968, "order_id": "paper-7f9e9fa0f2", "amount": 231.69735691, "price": 0.172639, "level": 4}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787782458.44031, "order_id": "paper-8d034e45dd", "amount": 226.10878093, "price": 0.176906, "level": 0}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787782458.4422047, "order_id": "paper-bbb9c89046", "amount": 227.26239716, "price": 0.176008, "level": 1}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787782458.4431906, "order_id": "paper-db07857660", "amount": 228.42784535, "price": 0.17511, "level": 2}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787782458.444125, "order_id": "paper-bb6f239f16", "amount": 229.60530847, "price": 0.174212, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787782458.4449575, "order_id": "paper-9e4a82418e", "amount": 230.79497329, "price": 0.173314, "level": 4}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787782607.5272932, "order_id": "paper-8d034e45dd", "entry": 0.176906, "amount": 226.10878093, "sell_target": 0.180444}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787782607.528772, "order_id": "paper-bbb9c89046", "entry": 0.176008, "amount": 227.26239716, "sell_target": 0.179528}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787782607.5296218, "order_id": "paper-db07857660", "entry": 0.17511, "amount": 228.42784535, "sell_target": 0.178612}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787782607.530611, "order_id": "paper-bb6f239f16", "entry": 0.174212, "amount": 229.60530847, "sell_target": 0.177696}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787782607.5319335, "order_id": "paper-9e4a82418e", "entry": 0.173314, "amount": 230.79497329, "sell_target": 0.17678}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787782637.5354366, "order_id": "paper-5b7d84e0b5", "amount": 225.10608124, "price": 0.177694, "level": 0}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787782637.5368273, "order_id": "paper-7d5a8c00ea", "amount": 226.25458166, "price": 0.176792, "level": 1}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787782637.5376363, "order_id": "paper-b198d498f9", "amount": 227.41486156, "price": 0.17589, "level": 2}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787782637.5384254, "order_id": "paper-3999501a1c", "amount": 228.58710312, "price": 0.174988, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787782637.5392954, "order_id": "paper-9c68f26878", "amount": 229.77149225, "price": 0.174086, "level": 4}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787782637.541488, "order_id": "paper-fb559d7211", "amount": 227.26239716, "entry": 0.176008, "exit": 0.179528, "profit": 0.7191636743665271, "total_pnl": 48.54495912864921}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787782637.5423558, "order_id": "paper-e78c434909", "amount": 228.42784535, "entry": 0.17511, "exit": 0.178612, "profit": 0.719154360102813, "total_pnl": 49.264113488752024}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787782637.5431843, "order_id": "paper-464cfe879b", "amount": 229.60530847, "entry": 0.174212, "exit": 0.177696, "profit": 0.7191449498164246, "total_pnl": 49.98325843856845}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787782637.543891, "order_id": "paper-6cf6868d58", "amount": 230.79497329, "entry": 0.173314, "exit": 0.17678, "profit": 0.7191354420441556, "total_pnl": 50.702393880612604}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787782667.545596, "order_id": "paper-9b3ee30ca3", "amount": 226.10878093, "entry": 0.176906, "exit": 0.180444, "profit": 0.7191728940650108, "total_pnl": 51.421566774677615}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787783485.0884542, "order_id": "paper-90ef40fca1", "amount": 224.23535743, "price": 0.178384, "level": 0}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787783485.0903332, "order_id": "paper-9df6435ab2", "amount": 225.3800471, "price": 0.177478, "level": 1}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787783485.0911934, "order_id": "paper-ee940c293f", "amount": 226.5364837, "price": 0.176572, "level": 2}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787783485.091943, "order_id": "paper-22359ae627", "amount": 227.70355274, "price": 0.175667, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787783485.0928245, "order_id": "paper-8c3fc4c9da", "amount": 228.88270906, "price": 0.174762, "level": 4}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787784621.3197744, "order_id": "paper-90ef40fca1", "entry": 0.178384, "amount": 224.23535743, "sell_target": 0.181952}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787784621.3208263, "order_id": "paper-9df6435ab2", "entry": 0.177478, "amount": 225.3800471, "sell_target": 0.181028}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787784621.3217645, "order_id": "paper-ee940c293f", "entry": 0.176572, "amount": 226.5364837, "sell_target": 0.180103}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787784621.3225162, "order_id": "paper-22359ae627", "entry": 0.175667, "amount": 227.70355274, "sell_target": 0.17918}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787784621.3235445, "order_id": "paper-8c3fc4c9da", "entry": 0.174762, "amount": 228.88270906, "sell_target": 0.178257}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787784651.3264089, "order_id": "paper-3576ae1513", "amount": 224.98200144, "price": 0.177792, "level": 0}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787784651.3274753, "order_id": "paper-19bfea4e9a", "amount": 226.12923286, "price": 0.17689, "level": 1}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787784651.32846, "order_id": "paper-d76efcc1d6", "amount": 227.2895157, "price": 0.175987, "level": 2}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787784651.3292344, "order_id": "paper-e431ffb14b", "amount": 228.46046206, "price": 0.175085, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787784651.330198, "order_id": "paper-9e7b455525", "amount": 229.64485423, "price": 0.174182, "level": 4}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787784651.331774, "order_id": "paper-facfa7cbbe", "amount": 226.5364837, "entry": 0.176572, "exit": 0.180103, "profit": 0.7191004236210077, "total_pnl": 52.14066719829862}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787784651.3324254, "order_id": "paper-276d214f30", "amount": 227.70355274, "entry": 0.175667, "exit": 0.17918, "profit": 0.7191226581964969, "total_pnl": 52.85978985649512}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787784651.3334959, "order_id": "paper-ffccbc3e94", "amount": 228.88270906, "entry": 0.174762, "exit": 0.178257, "profit": 0.7191451230950534, "total_pnl": 53.57893497959017}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787785497.1869183, "order_id": "paper-7d9b942bbf", "amount": 224.73298912, "price": 0.177989, "level": 0}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787785497.1882274, "order_id": "paper-794e8e5623", "amount": 225.87895147, "price": 0.177086, "level": 1}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787785497.1891232, "order_id": "paper-18b72c6ac8", "amount": 227.03794939, "price": 0.176182, "level": 2}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787785497.1898825, "order_id": "paper-a0cfa01ca4", "amount": 228.20760045, "price": 0.175279, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787785497.1904688, "order_id": "paper-cefe474d48", "amount": 229.390681, "price": 0.174375, "level": 4}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787785945.2797742, "order_id": "paper-7d9b942bbf", "entry": 0.177989, "amount": 224.73298912, "sell_target": 0.181549}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787785945.281537, "order_id": "paper-794e8e5623", "entry": 0.177086, "amount": 225.87895147, "sell_target": 0.180628}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787785945.2824867, "order_id": "paper-18b72c6ac8", "entry": 0.176182, "amount": 227.03794939, "sell_target": 0.179706}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787785945.2834656, "order_id": "paper-a0cfa01ca4", "entry": 0.175279, "amount": 228.20760045, "sell_target": 0.178785}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787785945.2843657, "order_id": "paper-cefe474d48", "entry": 0.174375, "amount": 229.390681, "sell_target": 0.177863}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787785975.287595, "order_id": "paper-2b1b5daa52", "amount": 224.98200144, "price": 0.177792, "level": 0}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787785975.2886283, "order_id": "paper-3eace8f57a", "amount": 226.12923286, "price": 0.17689, "level": 1}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787785975.2893422, "order_id": "paper-a70779ddb6", "amount": 227.2895157, "price": 0.175987, "level": 2}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787785975.2900221, "order_id": "paper-f475950dad", "amount": 228.46046206, "price": 0.175085, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787785975.290985, "order_id": "paper-2c840fa6bc", "amount": 229.64485423, "price": 0.174182, "level": 4}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787785975.2937148, "order_id": "paper-62704f45dc", "amount": 227.03794939, "entry": 0.176182, "exit": 0.179706, "profit": 0.7192816519178535, "total_pnl": 54.298216631508026}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787785975.2944937, "order_id": "paper-250b98c035", "amount": 228.20760045, "entry": 0.175279, "exit": 0.178785, "profit": 0.719295751331984, "total_pnl": 55.01751238284001}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787785975.2949667, "order_id": "paper-53c524a930", "amount": 229.390681, "entry": 0.174375, "exit": 0.177863, "profit": 0.7193145806339203, "total_pnl": 55.73682696347393}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787786245.324641, "order_id": "paper-7dc7e643f1", "amount": 225.87895147, "entry": 0.177086, "exit": 0.180628, "profit": 0.7192631828606082, "total_pnl": 56.45609014633454}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787786347.290108, "order_id": "paper-3bbf5310af", "amount": 224.60805894, "price": 0.178088, "level": 0}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787786347.2922869, "order_id": "paper-b9f4d69678", "amount": 225.75401842, "price": 0.177184, "level": 1}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787786347.2933092, "order_id": "paper-2701252142", "amount": 226.91173134, "price": 0.17628, "level": 2}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787786347.2941644, "order_id": "paper-6e259777b2", "amount": 228.08137944, "price": 0.175376, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787786347.2953932, "order_id": "paper-ef1f73a439", "amount": 229.26314824, "price": 0.174472, "level": 4}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787786388.7473829, "order_id": "paper-3bbf5310af", "entry": 0.178088, "amount": 224.60805894, "sell_target": 0.18165}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787786388.749055, "order_id": "paper-b9f4d69678", "entry": 0.177184, "amount": 225.75401842, "sell_target": 0.180728}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787786388.7501812, "order_id": "paper-2701252142", "entry": 0.17628, "amount": 226.91173134, "sell_target": 0.179806}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787786388.7512903, "order_id": "paper-6e259777b2", "entry": 0.175376, "amount": 228.08137944, "sell_target": 0.178884}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787786388.7525709, "order_id": "paper-ef1f73a439", "entry": 0.174472, "amount": 229.26314824, "sell_target": 0.177961}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787786418.7568383, "order_id": "paper-711f8d9f10", "amount": 224.35987324, "price": 0.178285, "level": 0}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787786418.7582557, "order_id": "paper-554b8e0024", "amount": 225.50456647, "price": 0.17738, "level": 1}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787786418.759174, "order_id": "paper-906f3336e8", "amount": 226.66100014, "price": 0.176475, "level": 2}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787786418.7602456, "order_id": "paper-6705969b4f", "amount": 227.82935581, "price": 0.17557, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787786418.7610397, "order_id": "paper-6d095ff8c0", "amount": 229.0098188, "price": 0.174665, "level": 4}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787786418.7626152, "order_id": "paper-cb18183b77", "amount": 225.75401842, "entry": 0.177184, "exit": 0.180728, "profit": 0.7192721690397406, "total_pnl": 57.17536231537428}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787786418.763529, "order_id": "paper-9653860067", "amount": 226.91173134, "entry": 0.17628, "exit": 0.179806, "profit": 0.7192906739389073, "total_pnl": 57.89465298931319}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787786418.7643409, "order_id": "paper-458be33a4f", "amount": 228.08137944, "entry": 0.175376, "exit": 0.178884, "profit": 0.719309369595102, "total_pnl": 58.61396235890829}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787786418.7651303, "order_id": "paper-8fc5d398ba", "amount": 229.26314824, "entry": 0.174472, "exit": 0.177961, "profit": 0.7190992250856993, "total_pnl": 59.33306158399399}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787786595.57402, "order_id": "paper-989d537a14", "amount": 224.23535743, "price": 0.178384, "level": 0}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787786595.576598, "order_id": "paper-fd0947e895", "amount": 225.3800471, "price": 0.177478, "level": 1}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787786595.5780892, "order_id": "paper-a9bca001b0", "amount": 226.5364837, "price": 0.176572, "level": 2}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787786595.5793674, "order_id": "paper-bde7f621ec", "amount": 227.70355274, "price": 0.175667, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787786595.580461, "order_id": "paper-e1ef7ace0f", "amount": 228.88270906, "price": 0.174762, "level": 4}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787786735.3806324, "order_id": "paper-fc71dcdbd2", "amount": 223.61859612, "price": 0.178876, "level": 0}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787786735.381903, "order_id": "paper-663153939f", "amount": 224.75950733, "price": 0.177968, "level": 1}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787786735.382771, "order_id": "paper-9a905f1c5f", "amount": 225.91212019, "price": 0.17706, "level": 2}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787786735.383349, "order_id": "paper-fe245058e7", "amount": 227.07661565, "price": 0.176152, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787786735.3845823, "order_id": "paper-4ea69dd404", "amount": 228.25317843, "price": 0.175244, "level": 4}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787786842.365977, "order_id": "paper-fc71dcdbd2", "entry": 0.178876, "amount": 223.61859612, "sell_target": 0.182454}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787786842.368045, "order_id": "paper-663153939f", "entry": 0.177968, "amount": 224.75950733, "sell_target": 0.181527}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787786842.3690224, "order_id": "paper-9a905f1c5f", "entry": 0.17706, "amount": 225.91212019, "sell_target": 0.180601}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787786842.3696525, "order_id": "paper-fe245058e7", "entry": 0.176152, "amount": 227.07661565, "sell_target": 0.179675}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787786842.3703063, "order_id": "paper-4ea69dd404", "entry": 0.175244, "amount": 228.25317843, "sell_target": 0.178749}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787786872.3727467, "order_id": "paper-510ca9bc69", "amount": 223.74117621, "price": 0.178778, "level": 0}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787786872.3731961, "order_id": "paper-9b70e02df8", "amount": 224.88334177, "price": 0.17787, "level": 1}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787786872.3737323, "order_id": "paper-dfdc25ad58", "amount": 226.03722833, "price": 0.176962, "level": 2}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787786872.3743057, "order_id": "paper-12af7530ce", "amount": 227.20172673, "price": 0.176055, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787786872.37482, "order_id": "paper-5a19cb1221", "amount": 228.37958972, "price": 0.175147, "level": 4}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787786872.3761697, "order_id": "paper-c0cbbd3247", "amount": 224.75950733, "entry": 0.177968, "exit": 0.181527, "profit": 0.7191191674998763, "total_pnl": 60.052180751493864}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787786872.376758, "order_id": "paper-225afc5b5d", "amount": 225.91212019, "entry": 0.17706, "exit": 0.180601, "profit": 0.7191548627735287, "total_pnl": 60.77133561426739}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787786872.3774247, "order_id": "paper-dc9bc4b727", "amount": 227.07661565, "entry": 0.176152, "exit": 0.179675, "profit": 0.7191909260180509, "total_pnl": 61.490526540285444}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787786872.3779192, "order_id": "paper-e90fd624d5", "amount": 228.25317843, "entry": 0.175244, "exit": 0.178749, "profit": 0.7192273630051815, "total_pnl": 62.209753903290625}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787786922.715603, "order_id": "paper-f6ab90e100", "amount": 223.74117621, "price": 0.178778, "level": 0}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787786922.7170856, "order_id": "paper-e01e4212cf", "amount": 224.88334177, "price": 0.17787, "level": 1}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787786922.717833, "order_id": "paper-a4ae0d4f90", "amount": 226.03722833, "price": 0.176962, "level": 2}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787786922.7183795, "order_id": "paper-dcb5a3ae4a", "amount": 227.20172673, "price": 0.176055, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787786922.719297, "order_id": "paper-aee5fc57d6", "amount": 228.37958972, "price": 0.175147, "level": 4}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787791280.2866967, "order_id": "paper-f6ab90e100", "entry": 0.178778, "amount": 223.74117621, "sell_target": 0.182354}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787791280.2881458, "order_id": "paper-e01e4212cf", "entry": 0.17787, "amount": 224.88334177, "sell_target": 0.181427}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787791280.2886758, "order_id": "paper-a4ae0d4f90", "entry": 0.176962, "amount": 226.03722833, "sell_target": 0.180501}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787791280.289249, "order_id": "paper-dcb5a3ae4a", "entry": 0.176055, "amount": 227.20172673, "sell_target": 0.179576}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787791280.2897666, "order_id": "paper-aee5fc57d6", "entry": 0.175147, "amount": 228.37958972, "sell_target": 0.17865}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787791310.2945912, "order_id": "paper-c0e3781ca9", "amount": 224.35987324, "price": 0.178285, "level": 0}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787791310.2958226, "order_id": "paper-c90f401f7c", "amount": 225.50456647, "price": 0.17738, "level": 1}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787791310.2972665, "order_id": "paper-f8d69726f8", "amount": 226.66100014, "price": 0.176475, "level": 2}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787791310.2985303, "order_id": "paper-985ff9da9c", "amount": 227.82935581, "price": 0.17557, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787791310.299197, "order_id": "paper-d183dcbaeb", "amount": 229.0098188, "price": 0.174665, "level": 4}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787791310.3013587, "order_id": "paper-76fd56d7cb", "amount": 226.03722833, "entry": 0.176962, "exit": 0.180501, "profit": 0.7191458053093456, "total_pnl": 62.92889970859997}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787791310.3020825, "order_id": "paper-adec504e5b", "amount": 227.20172673, "entry": 0.176055, "exit": 0.179576, "profit": 0.7191773025376236, "total_pnl": 63.648077011137595}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787791310.302988, "order_id": "paper-5622133232", "amount": 228.37958972, "entry": 0.175147, "exit": 0.17865, "profit": 0.7192136890850023, "total_pnl": 64.3672907002226}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787791358.9242377, "order_id": "paper-a993ddaece", "amount": 224.35987324, "price": 0.178285, "level": 0}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787791358.9266331, "order_id": "paper-b837f33d38", "amount": 225.50456647, "price": 0.17738, "level": 1}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787791358.9280112, "order_id": "paper-0ed3ee639d", "amount": 226.66100014, "price": 0.176475, "level": 2}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787791358.9287992, "order_id": "paper-8236842257", "amount": 227.82935581, "price": 0.17557, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787791358.9302318, "order_id": "paper-99f877d883", "amount": 229.0098188, "price": 0.174665, "level": 4}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787808790.4709623, "order_id": "paper-a993ddaece", "entry": 0.178285, "amount": 224.35987324, "sell_target": 0.181851}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787808820.473966, "order_id": "paper-5371c767c4", "amount": 232.60817734, "price": 0.171963, "level": 4}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787812975.740798, "order_id": "paper-b837f33d38", "entry": 0.17738, "amount": 225.50456647, "sell_target": 0.180928}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787812975.7422888, "order_id": "paper-0ed3ee639d", "entry": 0.176475, "amount": 226.66100014, "sell_target": 0.180004}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787812975.7430334, "order_id": "paper-8236842257", "entry": 0.17557, "amount": 227.82935581, "sell_target": 0.179081}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787812975.7437553, "order_id": "paper-99f877d883", "entry": 0.174665, "amount": 229.0098188, "sell_target": 0.178158}
+{"event": "buy_filled", "symbol": "ADA/EUR", "ts": 1787812975.7446067, "order_id": "paper-5371c767c4", "entry": 0.171963, "amount": 232.60817734, "sell_target": 0.175402}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787812975.7452846, "order_id": "paper-784e4b08be", "amount": 224.35987324, "entry": 0.178285, "exit": 0.181851, "profit": 0.719267240664685, "total_pnl": 65.08655794088727}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787813005.7490249, "order_id": "paper-63534acdce", "amount": 225.8572695, "price": 0.177103, "level": 0}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787813005.7497382, "order_id": "paper-a63b24eb23", "amount": 227.00960251, "price": 0.176204, "level": 1}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787813005.7513661, "order_id": "paper-ad8ac20490", "amount": 228.17375431, "price": 0.175305, "level": 2}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787813005.752547, "order_id": "paper-1f73c3176b", "amount": 229.34990769, "price": 0.174406, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787813005.753261, "order_id": "paper-4477e2769c", "amount": 230.53824918, "price": 0.173507, "level": 4}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787813005.755838, "order_id": "paper-85196c4aa8", "amount": 227.82935581, "entry": 0.17557, "exit": 0.179081, "profit": 0.7191089593815363, "total_pnl": 65.80566690026882}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787813005.7564127, "order_id": "paper-b4ef62ae7b", "amount": 229.0098188, "entry": 0.174665, "exit": 0.178158, "profit": 0.7191313657699467, "total_pnl": 66.52479826603877}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787813005.7574012, "order_id": "paper-304d3e2f42", "amount": 232.60817734, "entry": 0.171963, "exit": 0.175402, "profit": 0.7191395823505502, "total_pnl": 67.24393784838932}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787813125.7693224, "order_id": "paper-3583bdea71", "amount": 226.66100014, "entry": 0.176475, "exit": 0.180004, "profit": 0.7190867828251655, "total_pnl": 67.9630246312145}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1787815225.932676, "order_id": "paper-240f67a55f", "amount": 225.50456647, "entry": 0.17738, "exit": 0.180928, "profit": 0.7192901116328301, "total_pnl": 68.68231474284732}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1787817296.1073823, "order_id": "paper-63534acdce"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787817296.1084836, "order_id": "paper-48f67ad609", "amount": 343.13557286, "price": 0.174858, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1787817386.1186836, "order_id": "paper-a63b24eb23"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787817386.119583, "order_id": "paper-70cecaacc1", "amount": 342.56938457, "price": 0.175147, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1787817836.1526055, "order_id": "paper-ad8ac20490"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1787817836.153452, "order_id": "paper-1f73c3176b"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787817836.1538975, "order_id": "paper-37a2ad1e79", "amount": 339.30702196, "price": 0.176831, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787817836.15441, "order_id": "paper-98173543a6", "amount": 341.06605881, "price": 0.175919, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1787817896.15982, "order_id": "paper-4477e2769c"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787817896.161082, "order_id": "paper-ae4dfe29a3", "amount": 339.94526881, "price": 0.176499, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1787819426.269409, "order_id": "paper-48f67ad609"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1787819426.2701445, "order_id": "paper-70cecaacc1"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1787819426.2708757, "order_id": "paper-37a2ad1e79"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787819426.2713168, "order_id": "paper-5338c655da", "amount": 333.000333, "price": 0.18018, "level": 2}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787819426.272226, "order_id": "paper-2ff3ce6705", "amount": 334.71682956, "price": 0.179256, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787819426.2728176, "order_id": "paper-4301e4eb7d", "amount": 336.45111365, "price": 0.178332, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1787820086.320804, "order_id": "paper-98173543a6"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787820086.32204, "order_id": "paper-afabff624b", "amount": 335.72443738, "price": 0.178718, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1787822756.5771973, "order_id": "paper-ae4dfe29a3"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787822756.5779688, "order_id": "paper-a2e9f72212", "amount": 334.45934647, "price": 0.179394, "level": 4}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787834610.3343587, "order_id": "paper-2efaffd469", "amount": 223.61859612, "price": 0.178876, "level": 0}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787834610.3366237, "order_id": "paper-b3b345147e", "amount": 224.75950733, "price": 0.177968, "level": 1}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787834610.3378885, "order_id": "paper-48c2cdd87e", "amount": 225.91212019, "price": 0.17706, "level": 2}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787834610.3394144, "order_id": "paper-9b721bea35", "amount": 227.07661565, "price": 0.176152, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787834610.3406918, "order_id": "paper-67febb7db7", "amount": 228.25317843, "price": 0.175244, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1787839200.6738136, "order_id": "paper-2efaffd469"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787839200.6745973, "order_id": "paper-d883293509", "amount": 226.50697925, "price": 0.176595, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1787839410.6889188, "order_id": "paper-b3b345147e"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787839410.6898186, "order_id": "paper-92da202219", "amount": 226.01296184, "price": 0.176981, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1787839530.7022188, "order_id": "paper-48c2cdd87e"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787839530.703265, "order_id": "paper-6b2bb4c830", "amount": 225.39909728, "price": 0.177463, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1787840430.7769263, "order_id": "paper-9b721bea35"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787840430.77848, "order_id": "paper-c261c527f3", "amount": 225.03136375, "price": 0.177753, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1787840580.793037, "order_id": "paper-67febb7db7"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787840580.7946148, "order_id": "paper-6d906c1892", "amount": 224.66609002, "price": 0.178042, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1787841900.9125545, "order_id": "paper-d883293509"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787841900.913833, "order_id": "paper-a9623f6a42", "amount": 222.61427069, "price": 0.179683, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1787849101.6158538, "order_id": "paper-92da202219"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787849101.6173542, "order_id": "paper-7f107738d4", "amount": 222.37541417, "price": 0.179876, "level": 4}

@@ -9,17 +9,7 @@
     "sell_step": 0.01,
     "stop_loss_pct": 0.1
   },
-  "okx:SOL/EUR": {
-    "strategy": "grid",
-    "buy_distance": 0.005,
-    "profit_target": 0.01,
-    "levels": 2,
-    "sell_levels": 3,
-    "sell_distance": 0.02,
-    "sell_step": 0.01,
-    "stop_loss_pct": 0.1
-  },
-  "okx:ETH/EUR": {
+  "paper:ETH/EUR": {
     "strategy": "grid",
     "buy_distance": 0.02,
     "profit_target": 0.01,

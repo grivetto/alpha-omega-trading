@@ -190,7 +190,7 @@ footer { margin-top: 30px; text-align: center; color: var(--dim); font-size: 11p
 
   <div class="hero">
     <div>
-      <div class="eq-label">// EQUITY TOTALE</div>
+      <div class="eq-label">// CAPITALE TOTALE (live)</div>
       <div class="eq-value"><span class="cur">€</span><span id="totaleq">—</span></div>
       <div class="eq-break" id="eqbreak">—</div>
     </div>
@@ -213,6 +213,7 @@ footer { margin-top: 30px; text-align: center; color: var(--dim); font-size: 11p
   <div class="grid" style="margin-top:20px">
     <div class="card" style="grid-column:1/-1"><h2><span class="ico">█</span> NODE ENGINE — TUTTI I BOT (paper + live)</h2><div id="nodebots"></div></div>
     <div class="card" style="grid-column:1/-1"><h2><span class="ico">⛶</span> NODI DENARO (3 macchine)</h2><div id="nodes"></div></div>
+    <div class="card" style="grid-column:1/-1"><h2><span class="ico">⚙</span> SERVIZI DENARO (per macchina)</h2><div id="services"></div></div>
     <div class="card" style="grid-column:1/-1"><h2><span class="ico">∿</span> TREND EQUITY (ultime 4h)</h2><div id="trend"></div></div>
     <div class="card" style="grid-column:1/-1"><h2><span class="ico">✖</span> ERRORI BOT</h2><div id="errors"></div></div>
   </div>
@@ -249,7 +250,7 @@ function render(d) {
   const te = d.total_equity || 0;
   $('totaleq').textContent = fmt(te);
   const be = d.bot_equity ?? 0, ke = d.kraken_equity ?? 0;
-  $('eqbreak').innerHTML = `OKX BOT <b>€${fmt(be)}</b> + KRAKEN <b>€${fmt(ke)}</b>`;
+  $('eqbreak').innerHTML = `OKX LIVE <b>€${fmt(be)}</b> + KRAKEN LIVE <b>€${fmt(ke)}</b>`;
   const bal = d.balances || {};
   const labels = Object.keys(bal).filter(k => bal[k] && bal[k].ok);
   $('eqdetail').innerHTML = 'CHANNELS: ' + labels.map(esc).join(' ⏺ ');
@@ -347,8 +348,33 @@ function render(d) {
   // ── NODE ENGINE: tutti i bot (paper + live) ──
   renderNodeBots(d);
   renderNodes(d);
+  renderServices(d);
   renderTrend(d);
   renderErrors(d);
+}
+
+function renderServices(d) {
+  const sv = d.services || {};
+  const wrap = $('services');
+  wrap.innerHTML = '';
+  if (!Object.keys(sv).length) { wrap.innerHTML = '<div class="skeleton">NESSUN SERVIZIO</div>'; return; }
+  const colors = { marcodg1: '#00f3ff', nuvola: '#ff2bd6', mc2: '#b026ff' };
+  for (const [name, s] of Object.entries(sv)) {
+    const div = document.createElement('div');
+    div.className = 'row';
+    div.style.borderLeft = `3px solid ${colors[name] || '#00f3ff'}`;
+    div.style.paddingLeft = '8px';
+    const units = Object.entries(s.units || {})
+      .map(([u, v]) => `<span class="pill ${v ? 'ok' : 'bad'}">${esc(u.replace(/^denaro-/, ''))}</span>`)
+      .join(' ');
+    div.innerHTML = `
+      <span class="k" style="display:flex;align-items:center;gap:10px">
+        <b style="color:${colors[name] || '#00f3ff'}">${esc(name)}</b>
+        <span class="pill ${s.all_active ? 'ok' : 'bad'}">${s.all_active ? 'TUTTI ATTIVI' : 'QUALCUNO GIU'}</span>
+      </span>
+      <span class="v" style="display:flex;gap:8px;flex-wrap:wrap">${units}</span>`;
+    wrap.appendChild(div);
+  }
 }
 
 function renderNodes(d) {
@@ -403,15 +429,26 @@ function renderNodeBots(d) {
     div.className = 'row';
     div.style.borderLeft = `3px solid ${color}`;
     div.style.paddingLeft = '8px';
+    // ATLAS v6: regime + ADX/ATR + strategia (se presenti nell'health)
+    const regimeMap = {range: 'RANGE', trend_bull: 'TREND ▲', trend_bear: 'TREND ▼'};
+    const regimeTxt = b.regime ? (regimeMap[b.regime] || esc(b.regime)) : null;
+    const regimePill = regimeTxt
+      ? `<span class="pill ${b.regime === 'trend_bear' ? 'bad' : (b.regime === 'trend_bull' ? 'ok' : 'warn')}">${regimeTxt}</span>`
+      : '';
+    const atlasInfo = (b.adx != null)
+      ? ` · ADX <b>${fmt(b.adx,1)}</b> · ATR <b>${fmt(b.atr_pct,2)}%</b>${b.rsi != null ? ` · RSI <b>${fmt(b.rsi,0)}</b>` : ''}${b.strategy ? ` · ${esc(b.strategy.toUpperCase())}` : ''}`
+      : '';
+    const slPill = b.stop_loss_triggered ? '<span class="pill bad">STOP LOSS</span>' : '';
     div.innerHTML = `
       <span class="k" style="display:flex;align-items:center;gap:10px">
-        <b style="color:${color}">${esc(sym)}</b> ${st}
+        <b style="color:${color}">${esc(sym)}</b> ${st} ${regimePill} ${slPill}
         <span style="color:var(--dim);font-size:10px">B:${b.buys??0} S:${b.sells??0} · UP ${Math.round(b.uptime||0)}s</span>
       </span>
       <span class="v" style="display:flex;gap:14px">
         <span>EQ <b>${fmt(b.total_equity)}€</b></span>
         <span>PNL <b style="color:${pnl>=0?'var(--neon-green)':'var(--neon-red)'}">${pnl>=0?'+':''}${fmt(pnl,3)}</b></span>
         <span>TR <b>${b.trades??0}</b></span>
+        <span style="color:var(--dim);font-size:11px">${atlasInfo}</span>
         ${b.error ? `<span class="pill warn">ERR</span>` : ''}
       </span>`;
     wrap.appendChild(div);
@@ -435,7 +472,7 @@ function renderTrend(d) {
   const last = t[t.length - 1];
   wrap.innerHTML = `
     <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--dim);margin-bottom:6px">
-      <span>EQUITY TOTALE (€) — min ${fmt(lo,1)} · max ${fmt(hi,1)}</span>
+      <span>CAPITALE TOTALE (€) — min ${fmt(lo,1)} · max ${fmt(hi,1)}</span>
       <span>ULTIMO: <b style="color:var(--neon-cyan)">${fmt(last.equity,1)}€</b> · PnL Node ${fmt(last.node_pnl,2)}€</span>
     </div>
     <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="width:100%;height:110px;background:rgba(0,243,255,0.03);border:1px solid rgba(0,243,255,0.15)">

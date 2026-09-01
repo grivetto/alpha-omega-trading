@@ -194,5 +194,43 @@ class TestLiveConfig(unittest.TestCase):
             build_exchange({"mode": "bybit", "symbol": "X/EUR"}, Path("."))
 
 
+class TestBuildPolicy(unittest.TestCase):
+    """Selezione della strategia dal config (grid | momentum | meanrev)."""
+
+    def _ex(self):
+        class FakeEx:
+            def min_amount_for(self, symbol):
+                return 0.01
+        return FakeEx()
+
+    def test_default_grid(self):
+        from denaro.denaro_node import build_policy
+        from denaro.domain.grid import GridPolicy
+        pol = build_policy({"symbol": "SOL/EUR", "levels": 3}, self._ex())
+        self.assertIsInstance(pol, GridPolicy)
+
+    def test_momentum(self):
+        from denaro.denaro_node import build_policy
+        from denaro.domain.momentum import MomentumPolicy
+        pol = build_policy({"symbol": "SOL/EUR", "strategy": "momentum"},
+                           self._ex())
+        self.assertIsInstance(pol, MomentumPolicy)
+        self.assertEqual(pol.min_amount, 0.01)
+
+    def test_meanrev(self):
+        from denaro.denaro_node import build_policy
+        from denaro.domain.meanrev import MeanReversionPolicy
+        pol = build_policy({"symbol": "ADA/EUR", "strategy": "meanrev"},
+                           self._ex())
+        self.assertIsInstance(pol, MeanReversionPolicy)
+
+    def test_adaptive(self):
+        from denaro.denaro_node import build_policy
+        from denaro.domain.adaptive import AdaptiveEngine
+        pol = build_policy({"symbol": "SOL/EUR", "strategy": "adaptive",
+                            "levels": 5}, self._ex())
+        self.assertIsInstance(pol, AdaptiveEngine)
+
+
 if __name__ == "__main__":
     unittest.main()

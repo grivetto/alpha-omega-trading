@@ -40,16 +40,16 @@ bots:
   # levels 4 → per_level = 40/4 = 10 <= free 12.04 (fix preflight, S1 tranche 1)
   - symbol: SOL/EUR
     mode: kraken
-    capital: 54.0
+    capital: 40.0
     levels: 4
     strategy: momentum
-    profit_target: 0.015
+    profit_target: 0.03
     entry_slip: 0.002
     fee: 0.0025
     tick_interval: 30
     env_prefix: TRENDSUB_
     health_path: /home/marco/denaro/health/trend_sol_kraken.json
-    stop_loss_pct: 0.05
+    stop_loss_pct: 0.10
     daily_loss_limit: 0.05
     max_drawdown_limit: 0.15
     enabled: true

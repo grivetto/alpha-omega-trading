@@ -1,0 +1,80 @@
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787603560.1275446, "order_id": "O3QQ7L-R4LRB-R75RB6", "amount": 0.10230321, "price": 81.4572, "level": 0}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787603560.1730118, "order_id": "OLN362-DVNF2-PX7EBR", "amount": 0.10282252, "price": 81.0458, "level": 1}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787603560.210798, "order_id": "OBBZAV-H64N6-WWVVCL", "amount": 0.10334712, "price": 80.6344, "level": 2}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787603849.6884565, "order_id": "O3QQ7L-R4LRB-R75RB6"}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787603849.7335567, "order_id": "OLN362-DVNF2-PX7EBR"}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787603849.771885, "order_id": "OBBZAV-H64N6-WWVVCL"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787603890.867053, "order_id": "OQY52H-6RM2P-35VILJ", "amount": 0.20327236, "price": 81.9918, "level": 0}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787608044.8741171, "order_id": "OQY52H-6RM2P-35VILJ"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787608085.951505, "order_id": "OY5BTX-6JB5R-FNJA36", "amount": 0.20214958, "price": 82.4472, "level": 0}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787608978.5644338, "order_id": "OY5BTX-6JB5R-FNJA36"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787609019.6448388, "order_id": "OZOBMJ-BBKBH-SQTPPA", "amount": 0.20089519, "price": 82.962, "level": 0}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787677507.7926867, "order_id": "OZOBMJ-BBKBH-SQTPPA", "entry": 82.96, "amount": 0.20089519, "sell_target": 84.2044}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787681022.2409592, "order_id": "OJKIOL-OZFRW-NUIXC6", "amount": 0.20089519, "entry": 83.358, "exit": 84.2, "profit": 0.0816335997403499, "total_pnl": 0.0816335997403499}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787694815.490255, "order_id": "OQQSNS-KQQZE-AEQC75", "amount": 0.06071048, "price": 82.3581, "level": 0}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787694815.5263584, "order_id": "OAPFU5-G7RXY-HPL753", "amount": 0.06101866, "price": 81.94215, "level": 1}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787694815.5616727, "order_id": "O6F3CR-NN65O-TAYROP", "amount": 0.06132998, "price": 81.5262, "level": 2}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787694962.2354765, "order_id": "OAPFU5-G7RXY-HPL753"}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787694962.2697284, "order_id": "O6F3CR-NN65O-TAYROP"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787694962.3070326, "order_id": "ONYAOQ-RAWNM-YHU6JE", "amount": 0.06096736, "price": 82.0111, "level": 1}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787694962.3393106, "order_id": "O7F4VS-I3Q2S-U6DENA", "amount": 0.06127841, "price": 81.5948, "level": 2}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787695102.9303775, "order_id": "ONYAOQ-RAWNM-YHU6JE"}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787695102.9641664, "order_id": "O7F4VS-I3Q2S-U6DENA"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787695103.004763, "order_id": "OYOJZG-LZ5EM-QXYGHR", "amount": 0.06095272, "price": 82.0308, "level": 1}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787695103.04008, "order_id": "OEJ5AO-ITK2Z-DJNNSY", "amount": 0.0612637, "price": 81.6144, "level": 2}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787696056.1320546, "order_id": "OQQSNS-KQQZE-AEQC75"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787696056.1662266, "order_id": "OYFQBQ-QPBO4-JZJ4JV", "amount": 0.0610219, "price": 81.9378, "level": 2}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787738330.804751, "order_id": "OYOJZG-LZ5EM-QXYGHR"}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787738330.8430834, "order_id": "OEJ5AO-ITK2Z-DJNNSY"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787738330.8827932, "order_id": "OQRRNL-U22OV-EQCMZB", "amount": 0.06158872, "price": 81.1837, "level": 1}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787738330.9295354, "order_id": "O6RDIL-U3EQK-H7WGGF", "amount": 0.06190295, "price": 80.7716, "level": 2}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787739284.2178175, "order_id": "OYFQBQ-QPBO4-JZJ4JV"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787739284.258757, "order_id": "OROWJO-GZA2P-XARU5A", "amount": 0.06190295, "price": 80.7716, "level": 2}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787740686.3633933, "order_id": "OQRRNL-U22OV-EQCMZB"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787740686.4506896, "order_id": "OW72MD-TTC2I-XWHFOB", "amount": 0.06143336, "price": 81.389, "level": 2}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787740798.6119897, "order_id": "O6RDIL-U3EQK-H7WGGF"}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787740798.6576052, "order_id": "OROWJO-GZA2P-XARU5A"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787740798.702864, "order_id": "ORVN7X-A6XVP-5OIL5Z", "amount": 0.06088692, "price": 82.11945, "level": 1}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787740798.7492568, "order_id": "O3FVFS-AFFOE-PISWF6", "amount": 0.06119756, "price": 81.7026, "level": 2}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787741471.6677718, "order_id": "OW72MD-TTC2I-XWHFOB"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787741471.7118347, "order_id": "OCYYZL-CNV5P-2R3P5L", "amount": 0.06081098, "price": 82.222, "level": 2}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787754938.220802, "order_id": "OCYYZL-CNV5P-2R3P5L", "entry": 82.222, "amount": 0.06081098, "sell_target": 83.45533}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787754988.309571, "order_id": "OM4FZT-X3MA3-4DKQAG", "amount": 0.06203843, "price": 80.5952, "level": 2}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787755345.8227193, "order_id": "ORVN7X-A6XVP-5OIL5Z", "entry": 82.11945, "amount": 0.06088692, "sell_target": 83.351242}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787755404.9111316, "order_id": "OFNJOD-V3FM6-4ARR2T", "amount": 0.06206862, "price": 80.556, "level": 2}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787765348.9340236, "order_id": "OM4FZT-X3MA3-4DKQAG"}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787765348.9701684, "order_id": "OFNJOD-V3FM6-4ARR2T"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787765349.0057838, "order_id": "OFNTXK-5PRV2-NGTLXU", "amount": 0.06084313, "price": 82.17855, "level": 1}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787765349.1375625, "order_id": "OYX6J7-66CJK-WIITVF", "amount": 0.06115355, "price": 81.7614, "level": 2}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787765352.1061723, "order_id": "O3FVFS-AFFOE-PISWF6", "entry": 81.7026, "amount": 0.06119756, "sell_target": 82.928139}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787765376.133411, "order_id": "OPS2EM-6CBIM-DL7YNT", "amount": 0.06088692, "entry": 82.11945, "exit": 83.351242, "profit": 0.048805018916653786, "total_pnl": 0.13043861865700368}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787765379.1317801, "order_id": "O2U6GY-QDMAP-42OWJE", "amount": 0.06119756, "entry": 81.7026, "exit": 82.928139, "profit": 0.048804997712569076, "total_pnl": 0.17924361636957276}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787765414.2104352, "order_id": "O4F22Z-C2ILO-6XJPNX", "amount": 0.06122694, "price": 81.6634, "level": 2}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787767342.0846195, "order_id": "OYX6J7-66CJK-WIITVF"}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787767342.1257658, "order_id": "O4F22Z-C2ILO-6XJPNX"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787767342.1633408, "order_id": "O2PL3N-YE4RV-KIBWT3", "amount": 0.06108474, "price": 81.8535, "level": 1}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787767342.202655, "order_id": "OSYFE4-L47JR-FBLKQW", "amount": 0.0613964, "price": 81.438, "level": 2}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787778447.1894727, "order_id": "OFNTXK-5PRV2-NGTLXU"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787778447.2312667, "order_id": "OV5ZPO-PTB62-SHLDP4", "amount": 0.06114622, "price": 81.7712, "level": 2}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787778530.331838, "order_id": "OLBLTU-WGCJH-SXT6JZ", "amount": 0.06081098, "entry": 82.6254, "exit": 83.46, "profit": 0.024493322470000578, "total_pnl": 0.20373693883957333}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787778957.8832395, "order_id": "O2PL3N-YE4RV-KIBWT3"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787778957.9353206, "order_id": "OAUWEU-3RKZN-H6SUPR", "amount": 0.06091262, "price": 82.0848, "level": 2}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787779070.088429, "order_id": "OSYFE4-L47JR-FBLKQW"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787779070.1296248, "order_id": "OGT63Y-BJPF7-VX7ZNW", "amount": 0.060782, "price": 82.2612, "level": 2}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787781200.6248424, "order_id": "OV5ZPO-PTB62-SHLDP4"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787781200.662135, "order_id": "OYLRVC-WNUCP-V5OSZI", "amount": 0.06048655, "price": 82.663, "level": 2}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787782266.165604, "order_id": "OAUWEU-3RKZN-H6SUPR"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787782266.2056773, "order_id": "OH7MU5-ZSEZ6-RDFBL7", "amount": 0.06025084, "price": 82.9864, "level": 2}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787782435.8114839, "order_id": "OGT63Y-BJPF7-VX7ZNW"}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787782435.8492684, "order_id": "OYLRVC-WNUCP-V5OSZI"}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787782435.878924, "order_id": "OH7MU5-ZSEZ6-RDFBL7"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787782435.9712267, "order_id": "OINSVS-NF23T-QGAZ6F", "amount": 0.06007348, "price": 83.2314, "level": 2}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787782486.092343, "order_id": "OP7QBQ-R32DI-KFK24C", "amount": 0.06011595, "price": 83.1726, "level": 2}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787782539.1959617, "order_id": "OG46A5-QT22Y-4WIDRG", "amount": 0.06002401, "price": 83.3, "level": 2}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787782614.927375, "order_id": "OINSVS-NF23T-QGAZ6F"}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787782615.3306544, "order_id": "OP7QBQ-R32DI-KFK24C"}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787782615.372126, "order_id": "OG46A5-QT22Y-4WIDRG"}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787782618.5270772, "order_id": "ODXKDQ-3EGCP-I6U3PR", "amount": 0.07584383, "entry": 84.4173, "exit": 85.27, "profit": 0.03121072353166543, "total_pnl": 0.23494766237123876}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787782754.0814166, "order_id": "OWWLXI-EDANJ-2LI5IJ", "amount": 0.07584383, "entry": 85.24889999999999, "exit": 86.11, "profit": 0.031518182283473806, "total_pnl": 0.26646584465471257}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787787891.4368188, "order_id": "O2AIZW-HU6SW-H5TAN3", "amount": 0.07584383, "entry": 86.0706, "exit": 86.94, "profit": 0.03182198081204479, "total_pnl": 0.29828782546675736}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787788581.6274607, "order_id": "OCYWQX-GUAI2-3HQATS", "amount": 0.07584383, "entry": 86.9022, "exit": 87.78, "profit": 0.03212943956385317, "total_pnl": 0.33041726503061053}

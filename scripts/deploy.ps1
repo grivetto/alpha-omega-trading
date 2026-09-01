@@ -70,7 +70,7 @@ Run-Ssh mc2 "sudo cp /tmp/denaro_heal.sh /home/sergio/zabbix-docker/alertscripts
 Write-Host "-- 7. unit systemd"
 Copy-ViaScp "$ROOT\systemd\denaro-node-paper.service" "MARCODG1:/tmp/denaro-node-paper.service"
 Run-Ssh MARCODG1 "sudo cp /tmp/denaro-node-paper.service /etc/systemd/system/ && sudo systemctl daemon-reload && sudo systemctl restart denaro-node-paper"
-Copy-ViaScp "$ROOT\systemd\zabbix-tunnel-reverse-mc2.service" "mc2:/tmp/zabbix-tunnel-reverse.service"
+Copy-ViaScp "$ROOT\systemd\zabbix-tunnel-reverse.service" "mc2:/tmp/zabbix-tunnel-reverse.service"
 Run-Ssh mc2 "sudo cp /tmp/zabbix-tunnel-reverse.service /etc/systemd/system/zabbix-tunnel-reverse.service && sudo systemctl daemon-reload && sudo systemctl restart zabbix-tunnel-reverse"
 Copy-ViaScp "$ROOT\systemd\denaro-health-marcodg1.service" "MARCODG1:/tmp/h.service"
 Copy-ViaScp "$ROOT\systemd\denaro-aggregator-marcodg1.service" "MARCODG1:/tmp/a.service"

@@ -1,0 +1,14 @@
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787791988.5444026, "order_id": "O3YCZM-W2CHN-MBSPIP", "amount": 0.46233891, "price": 86.51662, "level": 0}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787860338.7341118, "order_id": "O3YCZM-W2CHN-MBSPIP", "entry": 86.51662, "amount": 0.46233891, "sell_target": 89.112119}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787860341.7620397, "order_id": "OKOXBU-TXTI7-TQA2ZL", "amount": 0.46233891, "entry": 86.51662, "exit": 89.112119, "profit": 0.9970001791812564, "total_pnl": 0.9970001791812564}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787861813.9382777, "order_id": "OHL2LU-ZPRD2-XLTETV", "amount": 0.42788684, "price": 93.48266, "level": 0}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787862575.3784769, "order_id": "OHL2LU-ZPRD2-XLTETV"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787863486.67611, "order_id": "ONEDLJ-2FJ65-JXK57W", "amount": 0.42738495, "price": 93.59244, "level": 0}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787863836.655796, "order_id": "ONEDLJ-2FJ65-JXK57W", "entry": 93.59244, "amount": 0.42738495, "sell_target": 96.400213}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787863874.7621918, "order_id": "OOB5CV-YPIKH-67BYEL", "amount": 0.15934013, "price": 93.52258, "level": 0}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787877641.7182577, "order_id": "OUJBKU-OE4GR-T47XAH", "amount": 0.57318026, "price": 94.2112, "level": 0}
+{"event": "stop_loss_sell", "symbol": "SOL/EUR", "ts": 1787886263.2524576, "amount": 0.5731802669, "drawdown": 0.0517, "price": 91.03}
+{"event": "stop_loss", "symbol": "SOL/EUR", "ts": 1787886263.2536113, "drawdown": 0.0517, "equity": 52.68323884080477}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1788097424.7191854, "order_id": "OQPSIO-AIPXP-DDHBDW", "amount": 0.56610573, "price": 92.32498, "level": 0}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1788105066.831858, "order_id": "OQPSIO-AIPXP-DDHBDW"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1788106554.5660517, "order_id": "ONQEO5-ONW3R-6H35SB", "amount": 0.55654583, "price": 92.3649, "level": 0}

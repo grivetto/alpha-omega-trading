@@ -234,10 +234,24 @@ def collect_node_bots():
                 continue
     except Exception:
         pass
+    # istanza TREND paper (MARCODG1): node_data_trend/paper_default_*
+    try:
+        trend_dir = NODE_DIR.parent / "node_data_trend"
+        for p in sorted(trend_dir.glob("*_health.json")):
+            try:
+                h = json.loads(p.read_text())
+                bots[f"trend:{h.get('symbol', p.stem)}"] = h
+            except Exception:
+                continue
+    except Exception:
+        pass
     live = {
         "okx:ADA/EUR": HEALTH_DIR / "ada.json",
         "okx:SOL/EUR": HEALTH_DIR / "sol.json",
+        "okx:DOGE/EUR": HEALTH_DIR / "doge.json",
+        "okx:ETH/EUR": HEALTH_DIR / "eth.json",
         "kraken:SOL/EUR": HEALTH_DIR / "sol_kraken.json",
+        "trend-live:SOL/EUR": HEALTH_DIR / "trend_sol_kraken.json",
     }
     for key, p in live.items():
         try:
@@ -282,6 +296,25 @@ def fetch_remote_node_bots(node_name):
                     bots[sym] = h
                 except Exception:
                     continue
+        # istanza TREND paper sul remoto: node_data_trend/*_health.json
+        trend_dir = data_dir.rsplit("/", 1)[0] + "/node_data_trend"
+        cmd2 = (f"ssh -o BatchMode=yes -o ConnectTimeout=5 {ssh_args} "
+                f"'for f in {trend_dir}/*_health.json; do echo ===FILE===; cat \"$f\"; echo; done'")
+        try:
+            r2 = subprocess.run(["bash", "-c", cmd2], capture_output=True,
+                                text=True, timeout=20)
+            if r2.returncode == 0 and r2.stdout.strip():
+                for block in r2.stdout.split("===FILE===")[1:]:
+                    lines = block.strip().splitlines()
+                    if not lines:
+                        continue
+                    try:
+                        h = json.loads(lines[-1])
+                        bots[f"trend:{h.get('symbol', 'unknown')}"] = h
+                    except Exception:
+                        continue
+        except Exception:
+            pass
         _remote_cache[cache_key] = (now, bots)
         return bots
     except Exception:
@@ -294,6 +327,64 @@ def read_trend():
         return json.loads((HEALTH_DIR / "trend.json").read_text())
     except Exception:
         return []
+
+
+# Servizi Denaro per macchina (stesso set di push_metrics.py) → dashboard
+SERVICE_UNITS = {
+    "marcodg1": {
+        "ssh": [],
+        "units": [
+            "denaro-node-paper", "denaro-node-trend", "denaro-node-trend-live",
+            "denaro-health-marcodg1", "denaro-aggregator-marcodg1",
+            "denaro-brain", "zabbix-agent",
+        ],
+    },
+    "nuvola": {
+        "ssh": ["sergio@87.106.3.15", "-p", "22"],
+        "units": ["denaro-node-nuvola", "denaro-health-nuvola",
+                  "zabbix-agent", "zabbix-tunnel"],
+    },
+    "mc2": {
+        "ssh": ["sergio@127.0.0.1", "-p", "2222"],  # tunnel inverso
+        "units": ["denaro-node-mc2", "denaro-feeder-mc2", "denaro-health-mc2",
+                  "zabbix-agent", "zabbix-tunnel-reverse"],
+    },
+}
+
+
+def collect_services():
+    """Stato dei servizi Denaro per macchina (systemctl is-active)."""
+    out = {}
+    for node_name, cfg in SERVICE_UNITS.items():
+        units = cfg["units"]
+        if cfg["ssh"]:
+            ssh_args = " ".join(cfg["ssh"])
+            cmd = (f"ssh -o BatchMode=yes -o ConnectTimeout=5 {ssh_args} "
+                   f"'for u in {' '.join(units)}; do s=$(systemctl is-active $u 2>/dev/null); echo $u=$s; done'")
+            try:
+                r = subprocess.run(["bash", "-c", cmd], capture_output=True,
+                                   text=True, timeout=20)
+                states = {}
+                for line in r.stdout.splitlines():
+                    if "=" in line:
+                        u, s = line.split("=", 1)
+                        states[u.strip()] = s.strip()
+            except Exception:
+                states = {}
+        else:
+            states = {}
+            for u in units:
+                try:
+                    r = subprocess.run(["systemctl", "is-active", u],
+                                       capture_output=True, text=True, timeout=10)
+                    states[u] = r.stdout.strip()
+                except Exception:
+                    states[u] = ""
+        out[node_name] = {
+            "units": {u: (1 if states.get(u) == "active" else 0) for u in units},
+            "all_active": all(states.get(u) == "active" for u in units),
+        }
+    return out
 
 
 def write_trend(points):
@@ -371,23 +462,22 @@ def collect():
     # 6) Sistema
     data["system"] = system_state()
 
-    # 7) Totali — somma bot OKX + saldo Kraken (per riflettere tutto il capitale)
-    bot_eq = 0.0
-    for name, b in bots.items():
-        if name == "sol_kraken":
-            continue
-        if b.get("status") == "running":
-            bot_eq += b.get("total_equity", 0)
-    kraken_eur = 0.0
-    if balances.get("kraken (nuvola)") and balances["kraken (nuvola)"].get("total_eur"):
-        kraken_eur = balances["kraken (nuvola)"]["total_eur"]
-    data["bot_equity"] = round(bot_eq, 2)
-    data["kraken_equity"] = round(kraken_eur, 2)
-    data["total_equity"] = round(bot_eq + kraken_eur, 2)
-
     # 8) Node (Fase 3) — tutti i bot (paper + live) + aggregati
     node_bots = collect_node_bots()
     data["node_bots"] = node_bots
+
+    # 7) CAPITALE TOTALE REALE = somma dei bot LIVE del Node (okx:* + kraken:*),
+    #    escludendo i paper virtuali (ADA/EUR, SOL/EUR, XRP/EUR locali e remoti).
+    #    NB: i vecchi health file (health/sol.json ecc.) e il kraken_snapshot.json
+    #    da nuvola sono obsoleti — il Node scrive i valori live aggiornati.
+    okx_eq = sum(b.get("total_equity", 0) for k, b in node_bots.items()
+                 if k.startswith("okx:") and b.get("status") == "running")
+    kraken_eq = sum(b.get("total_equity", 0) for k, b in node_bots.items()
+                    if k.startswith("kraken:") and b.get("status") == "running")
+    data["bot_equity"] = round(okx_eq, 2)
+    data["kraken_equity"] = round(kraken_eq, 2)
+    data["total_equity"] = round(okx_eq + kraken_eq, 2)
+
     node_running = [b for b in node_bots.values() if b.get("status") == "running"]
     data["node_total_pnl"] = round(sum(b.get("pnl", 0) for b in node_running), 4)
     data["node_total_trades"] = sum(b.get("trades", 0) for b in node_running)
@@ -419,6 +509,7 @@ def collect():
                           or any(h.get("timestamp") for h in nb.values())),
         }
     data["node_totals"] = node_totals
+    data["services"] = collect_services()
     data["trend"] = read_trend()[-240:]
     return data
 

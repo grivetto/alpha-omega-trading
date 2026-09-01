@@ -25,10 +25,6 @@ from ..domain.risk import RiskManager
 from ..domain.types import CBState, CoreState
 from ..infrastructure.storage import AtomicFile, Journal, StateStore
 from .portfolio import PortfolioManager
-try:
-    from ..infrastructure.exchanges.kraken import KrakenPermanentError
-except ImportError:  # adapter non caricato (test/fake): nessun match permanente
-    KrakenPermanentError = Exception
 
 log = logging.getLogger("denaro.bot")
 
@@ -316,11 +312,6 @@ class BotTask:
         #     cancellabili); dedup degli ordini speculari (buy sopra il mercato).
         min_notional = self._min_notional()
         per_level = risk_capital / max(1, self.cfg.levels)
-        # S1-T1: sizing dinamico anti-block — adatta per_level al free
-        # reale (min 90% del free diviso livelli) invece di bloccare.
-        if free is not None and free > 0:
-            per_level_dyn = (free * 0.90) / max(1, self.cfg.levels)
-            per_level = max(min(per_level, per_level_dyn), 1.0)
         if decision.to_place or min_notional > 0:
             ok, reason, speculative = self.portfolio.preflight(
                 self.cfg.symbol, min_notional, per_level, price, free)

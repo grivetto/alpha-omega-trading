@@ -1,0 +1,18 @@
+# DENARO — config del Data Feeder Centralizzato (ATLAS v6, requisito 1).
+# Gira su MC2 (coordinatore): UNA WS per exchange, distribuisce via ZeroMQ.
+# I nodi (MARCODG1, nuvola) si sottoscrivono con zmq_market_source.py.
+symbols:
+  - SOL/EUR
+  - ADA/EUR
+  - XRP/EUR
+  - DOGE/EUR
+  - ETH/EUR
+exchanges:
+  - okx
+  - kraken
+zeromq:
+  ticker_port: 5557
+  ohlcv_port: 5558
+  ohlcv_timeframe: 1h
+  ohlcv_limit: 200
+  ohlcv_refresh_s: 60

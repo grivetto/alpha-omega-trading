@@ -85,36 +85,17 @@ def build_policy(bot: dict, exchange):
             MomentumParams(
                 profit_target=float(bot.get("profit_target", 0.02)),
                 entry_slip=float(bot.get("entry_slip", 0.002)),
-            ))
+            ),
+            min_amount=min_amount)
     if strategy == "meanrev":
         from denaro.domain.meanrev import MeanReversionParams, MeanReversionPolicy
         return MeanReversionPolicy(
             MeanReversionParams(
                 profit_target=float(bot.get("profit_target", 0.015)),
                 entry_slip=float(bot.get("entry_slip", 0.001)),
-            ))
-    # adaptive_vol_grid: griglia mean-reversion a spacing ATR adattivo
-    if strategy == "adaptive_vol_grid":
-        from denaro.domain.adaptive_vol_grid import AdaptiveVolGrid, GridConfig
-        return AdaptiveVolGrid(
-            GridConfig(
-                symbol=bot.get("symbol", "SOL/EUR"),
-                capital=float(bot.get("capital", 13.5)),
-                levels=int(bot.get("levels", 4)),
-                atr_period=int(bot.get("atr_period", 14)),
-                atr_mult=float(bot.get("atr_mult", 0.5)),
-                tp_atr_mult=float(bot.get("tp_atr_mult", 1.5)),
-                fee_rate=float(bot.get("fee_rate", 0.0026)),
-                max_drawdown=float(bot.get("max_drawdown", 0.10)),
-                max_position_pct=float(bot.get("max_position_pct", 0.95)),
-                recenter_band_pct=float(bot.get("recenter_band_pct", 0.03)),
-                cooldown_ticks=int(bot.get("cooldown_ticks", 5)),
-                min_vol_ratio=float(bot.get("min_vol_ratio", 0.0005)),
-                max_vol_ratio=float(bot.get("max_vol_ratio", 0.10)),
-                max_tick_age=float(bot.get("max_tick_age", 60.0)),
-            ))
-
-    # adaptive: engine generico ADX/ATR
+            ),
+            min_amount=min_amount)
+    # default: grid
     if strategy == "adaptive":
         from denaro.domain.adaptive import AdaptiveEngine, AdaptiveParams
         return AdaptiveEngine(
@@ -122,8 +103,8 @@ def build_policy(bot: dict, exchange):
                 levels=int(bot.get("levels", 5)),
                 base_buy_distance=float(bot.get("buy_distance", 0.01)),
                 profit_target=float(bot.get("profit_target", 0.015)),
-            ))
-    # default: grid
+            ),
+            min_amount=min_amount)
     return GridPolicy(build_grid_params(bot), min_amount=min_amount)
 
 

@@ -1,0 +1,20 @@
+# Nota: stessa unit 'denaro-node-trend' deployata su MARCODG1 (User=marco),
+# nuvola e mc2 (User=sergio). Su nuvola/mc2 cambia solo User=.
+[Unit]
+Description=Denaro Node — istanza TREND (momentum + adaptive scalper, paper)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=marco
+ExecStart=/home/marco/denaro/venv/bin/python -m denaro.denaro_node --config config/node_trend.yaml
+WorkingDirectory=/home/marco/denaro_node_app
+EnvironmentFile=/home/marco/denaro_node_app/.env
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

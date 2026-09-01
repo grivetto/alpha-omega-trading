@@ -50,7 +50,7 @@ def main():
                         "name": f"node.{sym}.{key} ({host})",
                         "key_": k,
                         "type": 2,          # trapper
-                        "value_type": 3,    # float
+                        "value_type": 0,    # float
                         "history": "7d",
                         "trends": "30d",
                     })
@@ -66,3 +66,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

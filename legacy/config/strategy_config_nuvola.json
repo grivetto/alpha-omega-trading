@@ -12,7 +12,7 @@
     "stop_loss_pct": 2.5,
     "take_profit_pct": 5.0,
     "grid_levels": 10,
-    "grid_spread_pct": 1.5,
+    "grid_spread_pct": 2.0,
     "dca_orders": 5,
     "dca_interval_hours": 4,
     "scalp_timeframe_minutes": 5,

@@ -1,11 +1,8 @@
-# DENARO — config del Node su NUVOLA (87.106.3.15).
-# Bot: paper (validazione parita') + LIVE Kraken ex-ATLAS (SOL/EUR, chiavi ATLAS_).
-# Le chiavi arrivano da EnvironmentFile (/home/sergio/denaro_node_app/.env), MAI dal config.
 data_dir: node_data
 supervisor:
   ram_critical_pct: 0.85
-  ram_throttle_pct: 0.70
-  cpu_critical_pct: 0.90
+  ram_throttle_pct: 0.7
+  cpu_critical_pct: 0.9
   tick_max_factor: 5.0
 safemode:
   caution_pct: 70.0
@@ -22,45 +19,76 @@ exchange_rest:
   name: okx
   eea: true
 bots:
-  # ── PAPER (500€ virtuali — validazione parita') ──
-  - symbol: ADA/EUR
-    mode: paper
-    capital: 300
-    levels: 3
-    buy_distance: 0.015
-    profit_target: 0.02
-    fee: 0.001
-    tick_interval: 30
-  - symbol: SOL/EUR
-    mode: paper
-    capital: 100
-    levels: 3
-    buy_distance: 0.01
-    profit_target: 0.015
-    fee: 0.001
-    tick_interval: 30
-  - symbol: XRP/EUR
-    mode: paper
-    capital: 100
-    levels: 3
-    buy_distance: 0.01
-    profit_target: 0.015
-    fee: 0.001
-    tick_interval: 30
-
-  # ── LIVE KRAKEN ex-ATLAS ──
-  # VERIFICA 2026-08: le chiavi ATLAS_ (/IGUnb, Sc0lGC) puntano allo STESSO
-  # account Kraken del bot live su MARCODG1 (SOL 0.303 / ADA 0.064 / EUR 0.83).
-  # Niente secondo account = niente secondo engine sullo stesso conto (regola).
-  # Resta DISABILITATO finche' non c'e' capitale separato.
-  - symbol: SOL/EUR
-    mode: kraken
-    capital: 26.0
-    levels: 3
-    buy_distance: 0.008
-    profit_target: 0.008
-    fee: 0.0026
-    tick_interval: 30
-    env_prefix: ATLAS_
-    health_path: /home/sergio/denaro/health/sol_atlas.json
-    enabled: false
+- symbol: ADA/EUR
+  mode: okx
+  capital: 20.0
+  levels: 3
+  buy_distance: 0.02
+  profit_target: 0.02
+  fee: 0.001
+  tick_interval: 30
+  min_notional: 1.0
+  slippage: 0.001
+  stop_loss_pct: 0.1
+  sell_levels: 2
+  sell_distance: 0.02
+  sell_step: 0.01
+  enabled: false
+- symbol: SOL/EUR
+  mode: okx
+  capital: 20.0
+  levels: 3
+  buy_distance: 0.02
+  profit_target: 0.02
+  fee: 0.001
+  tick_interval: 30
+  min_notional: 1.0
+  slippage: 0.001
+  stop_loss_pct: 0.1
+  sell_levels: 2
+  sell_distance: 0.02
+  sell_step: 0.01
+  enabled: false
+- symbol: XRP/EUR
+  mode: okx
+  capital: 20.0
+  levels: 3
+  buy_distance: 0.02
+  profit_target: 0.02
+  fee: 0.001
+  tick_interval: 30
+  min_notional: 1.0
+  slippage: 0.001
+  stop_loss_pct: 0.1
+  sell_levels: 2
+  sell_distance: 0.02
+  sell_step: 0.01
+  enabled: false
+- symbol: DOGE/EUR
+  mode: okx
+  capital: 0.8
+  levels: 1
+  buy_distance: 0.02
+  profit_target: 0.03
+  fee: 0.001
+  tick_interval: 30
+  env_prefix: ''
+  health_path: /home/sergio/denaro/health/doge_nuvola.json
+  stop_loss_pct: 0.3
+  daily_loss_limit: 0.2
+  max_drawdown_limit: 0.3
+  sell_levels: 1
+  sell_distance: 0.02
+  sell_step: 0.01
+  enabled: true
+- symbol: SOL/EUR
+  mode: kraken
+  capital: 26.0
+  levels: 3
+  buy_distance: 0.008
+  profit_target: 0.008
+  fee: 0.0026
+  tick_interval: 30
+  env_prefix: ATLAS_
+  health_path: /home/sergio/denaro/health/sol_atlas.json
+  enabled: false

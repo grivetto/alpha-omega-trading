@@ -15,7 +15,6 @@ from pathlib import Path
 
 BASE = Path("/home/marco/denaro")
 HEALTH_DIR = BASE / "health"
-PAPER_DIR = BASE / "paper_state"
 NODE_DIR = Path("/home/marco/denaro_node_app/node_data")
 API = "http://127.0.0.1:1080/api_jsonrpc.php"
 USER = "Admin"
@@ -24,6 +23,8 @@ PASS = "zabbix"
 BOTS = {
     "sol": ("alpha-omega-bot-sol-eur", "bot.sol"),
     "ada": ("alpha-omega-bot-ada-eur", "bot.ada"),
+    "doge": ("alpha-omega-bot-doge-eur", "bot.doge"),
+    "eth": ("alpha-omega-bot-eth-eur", "bot.eth"),
 }
 
 # Node paper (M7): health scritti dal Node asincrono in node_data/
@@ -31,7 +32,20 @@ NODE_BOTS = {
     "ADA": ("ADA/EUR", "alpha-omega-node-paper", "node.ada", "paper_default_ADA_EUR_health.json"),
     "SOL": ("SOL/EUR", "alpha-omega-node-paper", "node.sol", "paper_default_SOL_EUR_health.json"),
     "XRP": ("XRP/EUR", "alpha-omega-node-paper", "node.xrp", "paper_default_XRP_EUR_health.json"),
+    "DOGE": ("DOGE/EUR", "alpha-omega-node-paper", "node.doge", "paper_default_DOGE_EUR_health.json"),
+    "ETH": ("ETH/EUR", "alpha-omega-node-paper", "node.eth", "paper_default_ETH_EUR_health.json"),
 }
+
+# istanza TREND paper (MARCODG1): node_data_trend/paper_default_*_health.json
+TREND_BOTS = {
+    "SOL": ("SOL/EUR", "alpha-omega-node-trend", "trend.sol", "paper_default_SOL_EUR_health.json"),
+    "ETH": ("ETH/EUR", "alpha-omega-node-trend", "trend.eth", "paper_default_ETH_EUR_health.json"),
+    "ADA": ("ADA/EUR", "alpha-omega-node-trend", "trend.ada", "paper_default_ADA_EUR_health.json"),
+    "XRP": ("XRP/EUR", "alpha-omega-node-trend", "trend.xrp", "paper_default_XRP_EUR_health.json"),
+}
+# TREND LIVE su Kraken (swap): health/trend_sol_kraken.json
+TREND_LIVE = ("alpha-omega-bot-trend-live", "bot.trend_live",
+              HEALTH_DIR / "trend_sol_kraken.json")
 
 # Nodi Denaro remoti (nuvola, mc2): health letti via SSH, push su host dedicati
 # + auto-heal remoto (systemctl restart via SSH se health stale).
@@ -39,17 +53,47 @@ REMOTE_NODES = {
     "nuvola": {
         "ssh": ["sergio@87.106.3.15", "-p", "22"],
         "data_dir": "/home/sergio/denaro_node_app/node_data",
+        "live_dir": "/home/sergio/denaro/health",
         "host": "alpha-omega-node-nuvola",
         "unit": "denaro-node-nuvola",
     },
     "mc2": {
         "ssh": ["sergio@127.0.0.1", "-p", "2222"],  # tunnel inverso
         "data_dir": "/home/sergio/denaro_node_app/node_data",
+        "live_dir": "/home/sergio/denaro/health",
         "host": "alpha-omega-node-mc2",
         "unit": "denaro-node-mc2",
     },
 }
-REMOTE_SYMS = {"ADA": "node.ada", "SOL": "node.sol", "XRP": "node.xrp"}
+# paper (node_data) + live DOGE (health dir, health_path dal config del node)
+REMOTE_SYMS = {"ADA": "node.ada", "SOL": "node.sol",
+               "XRP": "node.xrp", "DOGE": "node.doge"}
+
+# Servizi Denaro per macchina → item trapper svc.<unit> sugli host macchina
+# (MARCODG1, nuvola, mc2). Stato letto con systemctl is-active:
+# localmente su MARCODG1, via SSH su nuvola/mc2.
+SERVICES = {
+    "marcodg1": {
+        "host": "MARCODG1",
+        "ssh": [],  # locale
+        "units": [
+            "denaro-node-paper", "denaro-health-marcodg1", "denaro-aggregator-marcodg1",
+            "denaro-brain", "zabbix-agent",
+        ],
+    },
+    "nuvola": {
+        "host": "nuvola",
+        "ssh": ["sergio@87.106.3.15", "-p", "22"],
+        "units": ["denaro-node-nuvola", "denaro-health-nuvola",
+                  "zabbix-agent", "zabbix-tunnel"],
+    },
+    "mc2": {
+        "host": "mc2",
+        "ssh": ["sergio@127.0.0.1", "-p", "2222"],  # tunnel inverso
+        "units": ["denaro-node-mc2", "denaro-feeder-mc2", "denaro-health-mc2",
+                  "zabbix-agent", "zabbix-tunnel-reverse"],
+    },
+}
 
 
 def rpc(method, params, auth=None):
@@ -101,10 +145,14 @@ def fetch_remote_health(node_name):
         return {}
     ssh_args = " ".join(cfg["ssh"])
     data_dir = cfg["data_dir"]
+    live_dir = cfg.get("live_dir")
+    globs = f"{data_dir}/*_health.json"
+    if live_dir:
+        globs += f" {live_dir}/*.json"
     cmd = (f"ssh -o BatchMode=yes -o ConnectTimeout=5 {ssh_args} "
-           f"'for f in {data_dir}/*_health.json; do echo ===FILE===; cat \"$f\"; echo; done'")
+           f"'for f in {globs}; do echo ===FILE===; cat \"$f\" 2>/dev/null; echo; done'")
     try:
-        r = subprocess.run(["bash", "-c", cmd], capture_output=True, text=True, timeout=20)
+        r = subprocess.run(["bash", "-c", cmd], capture_output=True, text=True, timeout=25)
         bots = {}
         if r.returncode == 0 and r.stdout.strip():
             for block in r.stdout.split("===FILE===")[1:]:
@@ -113,12 +161,52 @@ def fetch_remote_health(node_name):
                     continue
                 try:
                     h = json.loads(lines[-1])
-                    bots[h.get("symbol", "unknown")] = h
+                    sym = h.get("symbol")
+                    if sym:
+                        # health live (doge_nuvola.json) hanno symbol "DOGE/EUR":
+                        # stessa chiave dei paper -> merge con priorita' al piu' fresco
+                        if sym in bots and h.get("timestamp", 0) <= bots[sym].get("timestamp", 0):
+                            continue
+                        bots[sym] = h
                 except Exception:
                     continue
         return bots
     except Exception:
         return {}
+
+
+def push_services(data):
+    """Pusha lo stato dei servizi Denaro per macchina (systemctl is-active).
+    MARCODG1: locale. nuvola/mc2: via SSH. 1 = active, 0 = non attivo."""
+    for node_name, cfg in SERVICES.items():
+        host = cfg["host"]
+        units = cfg["units"]
+        if cfg["ssh"]:
+            ssh_args = " ".join(cfg["ssh"])
+            cmd = (f"ssh -o BatchMode=yes -o ConnectTimeout=5 {ssh_args} "
+                   f"'for u in {' '.join(units)}; do s=$(systemctl is-active $u 2>/dev/null); echo $u=$s; done'")
+            try:
+                r = subprocess.run(["bash", "-c", cmd], capture_output=True,
+                                   text=True, timeout=20)
+                states = {}
+                for line in r.stdout.splitlines():
+                    if "=" in line:
+                        u, s = line.split("=", 1)
+                        states[u.strip()] = s.strip()
+            except Exception:
+                states = {}
+        else:
+            states = {}
+            for u in units:
+                try:
+                    r = subprocess.run(["systemctl", "is-active", u],
+                                       capture_output=True, text=True, timeout=10)
+                    states[u] = r.stdout.strip()
+                except Exception:
+                    states[u] = ""
+        for u in units:
+            val = 1 if states.get(u) == "active" else 0
+            data.append({"host": host, "key": f"svc.{u}", "value": val})
 
 
 def push_remote_nodes(data, auth):
@@ -144,12 +232,45 @@ def push_remote_nodes(data, auth):
                 {"host": host, "key": f"{keybase}.pnl", "value": h.get("pnl", 0)},
                 {"host": host, "key": f"{keybase}.trades", "value": h.get("trades", 0)},
             ]
+            _push_atlas_metrics(data, host, keybase, h)
         # Auto-heal remoto: nodo intero morto -> systemctl restart via SSH
         if all_stale:
             _heal_remote(node_name, cfg)
         # Stato aggregato del nodo (comodita' dashboard/Zabbix)
         data.append({"host": host, "key": f"{prefix}.status",
                      "value": 1 if (bots and not all_stale) else 0})
+
+
+def _push_atlas_metrics(data, host, keybase, h):
+    """Pusha le metriche ATLAS v6 da un health dict (regime, adx, atr, risk).
+    Usata per bot live, node paper locale e nodi remoti — keybase es.
+    'node.ada' o 'bot.sol'."""
+    if not h:
+        return
+    regime_map = {"range": 0, "trend_bull": 1, "trend_bear": 2}
+    strat = (h.get("strategy") or "").lower()
+    strat_val = {"grid": 0, "momentum": 1, "meanrev": 2, "meanreversion": 2,
+                 "adaptive": 3, "adaptiveengine": 3}.get(strat, -1)
+    data += [
+        {"host": host, "key": f"{keybase}.regime",
+         "value": regime_map.get(h.get("regime", ""), -1)},
+        {"host": host, "key": f"{keybase}.adx", "value": h.get("adx", 0)},
+        {"host": host, "key": f"{keybase}.atr_pct", "value": h.get("atr_pct", 0)},
+        {"host": host, "key": f"{keybase}.rsi", "value": h.get("rsi", 0)},
+        {"host": host, "key": f"{keybase}.ema200", "value": h.get("ema200", 0)},
+        {"host": host, "key": f"{keybase}.strategy", "value": strat_val},
+        {"host": host, "key": f"{keybase}.stop_loss", "value": int(bool(h.get("stop_loss_triggered")))},
+        {"host": host, "key": f"{keybase}.cap_locked", "value": h.get("cap_locked", 0)},
+        {"host": host, "key": f"{keybase}.cap_available", "value": h.get("cap_available", 0)},
+        # P5 — telemetria performance (value_type float)
+        {"host": host, "key": f"{keybase}.sharpe", "value": h.get("sharpe", 0)},
+        {"host": host, "key": f"{keybase}.sortino", "value": h.get("sortino", 0)},
+        {"host": host, "key": f"{keybase}.calmar", "value": h.get("calmar", 0)},
+        {"host": host, "key": f"{keybase}.profit_factor", "value": h.get("profit_factor", 0)},
+        {"host": host, "key": f"{keybase}.win_rate", "value": h.get("win_rate_pct", 0)},
+        {"host": host, "key": f"{keybase}.kelly", "value": h.get("kelly", 0)},
+        {"host": host, "key": f"{keybase}.hurst", "value": h.get("hurst", 0.5)},
+    ]
 
 
 _HEAL_STATE = {}
@@ -185,7 +306,7 @@ HEAL_UNITS = {
     # sono congelati e NON vanno referenziati (falsi riavvii).
     HEALTH_DIR / "ada.json": "denaro-node-paper",
     HEALTH_DIR / "sol.json": "denaro-node-paper",
-    HEALTH_DIR / "sol_kraken.json": "denaro-node-paper",
+    HEALTH_DIR / "trend_sol_kraken.json": "denaro-node-trend-live",
     NODE_DIR / "paper_default_ADA_EUR_health.json": "denaro-node-paper",
     NODE_DIR / "paper_default_SOL_EUR_health.json": "denaro-node-paper",
     NODE_DIR / "paper_default_XRP_EUR_health.json": "denaro-node-paper",
@@ -260,9 +381,12 @@ def main():
             {"host": host, "key": f"{prefix}.uptime", "value": h.get("uptime", 0)},
         ]
 
-    # ── 2. Bot Kraken (ora LOCALE nel Node: health/sol_kraken.json;
-    #      fallback retro-compatibile allo snapshot da nuvola) ──
-    kraken_h = read_json(HEALTH_DIR / "sol_kraken.json")
+    # ── 2. Bot Kraken (ora LOCALE in denaro-node-trend-live: il bot live
+    #      scrive health/trend_sol_kraken.json; sol_kraken.json è il residuo
+    #      della griglia precedente, in PAUSA) ──
+    kraken_h = read_json(HEALTH_DIR / "trend_sol_kraken.json")
+    if kraken_h is None:
+        kraken_h = read_json(HEALTH_DIR / "sol_kraken.json")
     if kraken_h is None:
         snap = read_json(HEALTH_DIR / "kraken_snapshot.json")
         if snap and snap.get("bot"):
@@ -321,33 +445,9 @@ def main():
             {"host": host, "key": "project.win_rate", "value": wr},
         ]
 
-    # ── 4. Paper bot (da paper_state; staleness via mtime del file) ──
-    # Equity reale = cash + asset × prezzo corrente (prezzi da infra_snapshot,
-    # definito nella sezione 3; senza prezzo si usa solo cash)
-    paper_prices = (infra or {}).get("prices", {})
-    for pair in ("ada", "sol", "xrp"):
-        p = PAPER_DIR / f"{pair.upper()}_EUR_paper.json"
-        st = read_json(p)
-        host = f"alpha-omega-paper-{pair}"
-        prefix = f"paper.{pair}"
-        if not st or is_stale(file_mtime(p)):
-            data.append({"host": host, "key": f"{prefix}.status", "value": 0})
-            continue
-        t = paper_prices.get(f"{pair.upper()}/EUR") or {}
-        last = t.get("last") or 0
-        equity = st.get("cash", 0) + st.get("asset", 0) * last
-        data += [
-            {"host": host, "key": f"{prefix}.status", "value": 1},
-            {"host": host, "key": f"{prefix}.equity", "value": round(equity, 2)},
-            {"host": host, "key": f"{prefix}.cash", "value": round(st.get("cash", 0), 2)},
-            {"host": host, "key": f"{prefix}.buys", "value": len(st.get("buys", []))},
-            {"host": host, "key": f"{prefix}.sells", "value": len(st.get("sells", []))},
-            {"host": host, "key": f"{prefix}.pnl", "value": round(st.get("total_pnl", 0), 4)},
-            {"host": host, "key": f"{prefix}.trades", "value": st.get("trades", 0)},
-            {"host": host, "key": f"{prefix}.wins", "value": st.get("wins", 0)},
-            {"host": host, "key": f"{prefix}.losses", "value": st.get("losses", 0)},
-        ]
-
+    # ── 4. Paper bot v3.3 (RIMOSSO 2026-08-25): i motori paper v3.3 sono stati
+    #     fermati/disabilitati (ridondanti) — i paper girano nel Node e sono
+    #     pushati nella sezione 5 (node.*). I file paper_state sono congelati.
     # ── 5. Node paper (M7 — da node_data health; staleness via timestamp) ──
     for name, (symbol, host, prefix, fname) in NODE_BOTS.items():
         h = read_json(NODE_DIR / fname)
@@ -363,9 +463,58 @@ def main():
             {"host": host, "key": f"{prefix}.pnl", "value": h.get("pnl", 0)},
             {"host": host, "key": f"{prefix}.trades", "value": h.get("trades", 0)},
         ]
+        # ATLAS v6: regime/ADX/ATR/risk
+        _push_atlas_metrics(data, host, prefix, h)
+
+    # ── 5b. Bot LIVE (da health_path v3.3: health/ada.json ecc.) — ATLAS v6 ──
+    for name, (host, prefix) in BOTS.items():
+        h = read_json(HEALTH_DIR / f"{name}.json")
+        if h and not is_stale(h.get("timestamp", 0)):
+            _push_atlas_metrics(data, host, prefix, h)
+    kraken_h = read_json(HEALTH_DIR / "trend_sol_kraken.json")
+    if kraken_h is None:
+        kraken_h = read_json(HEALTH_DIR / "sol_kraken.json")
+    if kraken_h and not is_stale(kraken_h.get("timestamp", 0)):
+        _push_atlas_metrics(data, "alpha-omega-bot-kraken", "bot.kraken", kraken_h)
+
+    # ── 5c. istanza TREND paper (MARCODG1) + TREND LIVE Kraken ──
+    for name, (symbol, host, prefix, fname) in TREND_BOTS.items():
+        h = read_json(NODE_DIR.parent / "node_data_trend" / fname)
+        if not h or is_stale(h.get("timestamp", 0)):
+            data.append({"host": host, "key": f"{prefix}.status", "value": 0})
+            continue
+        running = 1 if h.get("status") == "running" else 0
+        data += [
+            {"host": host, "key": f"{prefix}.status", "value": running},
+            {"host": host, "key": f"{prefix}.equity", "value": h.get("total_equity", 0)},
+            {"host": host, "key": f"{prefix}.buys", "value": h.get("buys", 0)},
+            {"host": host, "key": f"{prefix}.sells", "value": h.get("sells", 0)},
+            {"host": host, "key": f"{prefix}.pnl", "value": h.get("pnl", 0)},
+            {"host": host, "key": f"{prefix}.trades", "value": h.get("trades", 0)},
+        ]
+        _push_atlas_metrics(data, host, prefix, h)
+    tl_host, tl_prefix, tl_path = TREND_LIVE
+    tl_h = read_json(tl_path)
+    if tl_h and not is_stale(tl_h.get("timestamp", 0)):
+        data += [
+            {"host": tl_host, "key": f"{tl_prefix}.status",
+             "value": 1 if tl_h.get("status") == "running" else 0},
+            {"host": tl_host, "key": f"{tl_prefix}.equity",
+             "value": tl_h.get("total_equity", 0)},
+            {"host": tl_host, "key": f"{tl_prefix}.buys", "value": tl_h.get("buys", 0)},
+            {"host": tl_host, "key": f"{tl_prefix}.sells", "value": tl_h.get("sells", 0)},
+            {"host": tl_host, "key": f"{tl_prefix}.pnl", "value": tl_h.get("pnl", 0)},
+            {"host": tl_host, "key": f"{tl_prefix}.trades", "value": tl_h.get("trades", 0)},
+        ]
+        _push_atlas_metrics(data, tl_host, tl_prefix, tl_h)
+    else:
+        data.append({"host": tl_host, "key": f"{tl_prefix}.status", "value": 0})
 
     # ── 6. Nodi Denaro remoti (nuvola, mc2) + auto-heal remoto ──
     push_remote_nodes(data, auth)
+
+    # ── 7. Servizi Denaro per macchina (systemctl is-active) ──
+    push_services(data)
 
     # Push
     clock = int(time.time())

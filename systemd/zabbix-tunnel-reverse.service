@@ -1,5 +1,5 @@
 [Unit]
-Description=Denaro — reverse tunnel mc2 -> MARCODG1 (trapper 10051, web 1080, ssh 2222)
+Description=Zabbix reverse tunnel mc2 -> MARCODG1 (trapper 10051 + web 1080)
 After=network-online.target
 Wants=network-online.target
 

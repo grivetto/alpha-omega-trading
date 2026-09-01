@@ -23,25 +23,17 @@ OUT = HEALTH_DIR / "infra_snapshot.json"
 def build():
     data = {"generated": time.time(), "ts_iso": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}
 
-    bots = {}
-    for name in ("sol", "ada"):
-        p = HEALTH_DIR / f"{name}.json"
-        if p.exists():
-            try:
-                bots[name] = json.loads(p.read_text())
-            except Exception:
-                bots[name] = {"status": "error"}
-        else:
-            bots[name] = {"status": "no_file"}
+    # TUTTI i bot (live + paper + trend, locali e remoti) dall'aggregator —
+    # stessa fonte di /infra.json: un unico set di verita'.
+    bots = agg.collect_node_bots()
+    data["bots"] = bots
     snap_path = HEALTH_DIR / "kraken_snapshot.json"
+    snap = None
     if snap_path.exists():
         try:
             snap = json.loads(snap_path.read_text())
-            if snap.get("bot"):
-                bots["sol_kraken"] = snap["bot"]
         except Exception:
             snap = None
-    data["bots"] = bots
 
     balances = {}
     for label, path in agg.ENV_FILES.items():
@@ -63,22 +55,20 @@ def build():
     data["docker"] = agg.docker_state()
     data["system"] = agg.system_state()
 
-    bot_eq = 0.0
-    for name, b in bots.items():
-        if name == "sol_kraken":
-            continue
-        if b.get("status") == "running":
-            bot_eq += b.get("total_equity", 0)
-    kraken_eur = 0.0
-    if balances.get("kraken (nuvola)") and balances["kraken (nuvola)"].get("total_eur"):
-        kraken_eur = balances["kraken (nuvola)"]["total_eur"]
-    data["bot_equity"] = round(bot_eq, 2)
-    data["kraken_equity"] = round(kraken_eur, 2)
-    data["total_equity"] = round(bot_eq + kraken_eur, 2)
-
     # Node (Fase 3) — stessa logica dell'aggregator
     node_bots = agg.collect_node_bots()
     data["node_bots"] = node_bots
+
+    # CAPITALE TOTALE REALE = bot LIVE del Node (okx:* + kraken:* + trend-live:*)
+    okx_eq = sum(b.get("total_equity", 0) for k, b in node_bots.items()
+                 if k.startswith("okx:") and b.get("status") == "running")
+    kraken_eq = sum(b.get("total_equity", 0) for k, b in node_bots.items()
+                    if (k.startswith("kraken:") or k.startswith("trend-live:"))
+                    and b.get("status") == "running")
+    data["bot_equity"] = round(okx_eq, 2)
+    data["kraken_equity"] = round(kraken_eq, 2)
+    data["total_equity"] = round(okx_eq + kraken_eq, 2)
+
     node_running = [b for b in node_bots.values() if b.get("status") == "running"]
     data["node_total_pnl"] = round(sum(b.get("pnl", 0) for b in node_running), 4)
     data["node_total_trades"] = sum(b.get("trades", 0) for b in node_running)
@@ -110,6 +100,7 @@ def build():
                           or any(h.get("timestamp") for h in nb.values())),
         }
     data["node_totals"] = node_totals
+    data["services"] = agg.collect_services()
 
     # Trend storico (append, max 240 punti)
     trend = agg.read_trend()

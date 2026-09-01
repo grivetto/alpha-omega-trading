@@ -1,0 +1,534 @@
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787599344.0083287, "order_id": "paper-8050ada782", "amount": 0.41020996, "price": 81.2592, "level": 0}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787599344.0095642, "order_id": "paper-cb38365c0a", "amount": 0.41229225, "price": 80.8488, "level": 1}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787599344.0105996, "order_id": "paper-2acd6f9517", "amount": 0.41439578, "price": 80.4384, "level": 2}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787599869.1900835, "order_id": "paper-8050ada782", "entry": 81.2592, "amount": 0.41020996, "sell_target": 82.478088}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787599869.1911473, "order_id": "paper-cb38365c0a", "entry": 80.8488, "amount": 0.41229225, "sell_target": 82.061532}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787599869.1919253, "order_id": "paper-2acd6f9517", "entry": 80.4384, "amount": 0.41439578, "sell_target": 81.644976}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787599899.195104, "order_id": "paper-97bda771e7", "amount": 0.40936211, "price": 81.4275, "level": 0}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787599899.1965356, "order_id": "paper-c7271ecbce", "amount": 0.41144009, "price": 81.01625, "level": 1}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787599899.1972198, "order_id": "paper-12c0e48bb1", "amount": 0.41353928, "price": 80.605, "level": 2}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787599899.1988542, "order_id": "paper-dd2d5c89fd", "amount": 0.41229225, "entry": 80.8488, "exit": 82.061532, "profit": 0.4328333375984812, "total_pnl": 0.4328333375984812}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787599899.1995077, "order_id": "paper-f6c27c6adf", "amount": 0.41439578, "entry": 80.4384, "exit": 81.644976, "profit": 0.4328333356267251, "total_pnl": 0.8656666732252063}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787600240.8892093, "order_id": "paper-e58d8bb573", "amount": 0.41020996, "entry": 81.2592, "exit": 82.478088, "profit": 0.43283333136349, "total_pnl": 1.2985000045886963}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787600334.0094392, "order_id": "paper-97bda771e7"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787600334.0103283, "order_id": "paper-92f4d03f33", "amount": 0.41084195, "price": 81.1342, "level": 2}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787600499.7186902, "order_id": "paper-60152e39b7", "amount": 0.40802271, "price": 81.6948, "level": 0}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787600499.719531, "order_id": "paper-6959286f9b", "amount": 0.41009389, "price": 81.2822, "level": 1}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787600499.7203047, "order_id": "paper-7e0c9f138a", "amount": 0.4121862, "price": 80.8696, "level": 2}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787601129.8525927, "order_id": "paper-60152e39b7", "entry": 81.6948, "amount": 0.40802271, "sell_target": 82.920222}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787601129.853394, "order_id": "paper-6959286f9b", "entry": 81.2822, "amount": 0.41009389, "sell_target": 82.501433}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787601129.8543925, "order_id": "paper-7e0c9f138a", "entry": 80.8696, "amount": 0.4121862, "sell_target": 82.082644}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787601159.8580115, "order_id": "paper-8abdcb97dd", "amount": 0.4081711, "price": 81.6651, "level": 0}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787601159.8594549, "order_id": "paper-16d094560a", "amount": 0.41024303, "price": 81.25265, "level": 1}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787601159.860406, "order_id": "paper-f40decb796", "amount": 0.41233611, "price": 80.8402, "level": 2}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787601159.8616984, "order_id": "paper-492ce5ace0", "amount": 0.41009389, "entry": 81.2822, "exit": 82.501433, "profit": 0.4328333366110755, "total_pnl": 1.7313333411997718}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787601159.8620164, "order_id": "paper-917b64fde3", "amount": 0.4121862, "entry": 80.8696, "exit": 82.082644, "profit": 0.43283333055696716, "total_pnl": 2.164166671756739}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787601770.731876, "order_id": "paper-512dc15fec", "amount": 0.40807216, "price": 81.6849, "level": 0}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787601770.7335474, "order_id": "paper-933feabd2f", "amount": 0.41014359, "price": 81.27235, "level": 1}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787601770.7348564, "order_id": "paper-4c452f44a6", "amount": 0.41223616, "price": 80.8598, "level": 2}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787603836.3268678, "order_id": "paper-512dc15fec", "entry": 81.6849, "amount": 0.40807216, "sell_target": 82.910173}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787603836.328275, "order_id": "paper-933feabd2f", "entry": 81.27235, "amount": 0.41014359, "sell_target": 82.491435}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787603836.3295968, "order_id": "paper-4c452f44a6", "entry": 80.8598, "amount": 0.41223616, "sell_target": 82.072697}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787603866.3336208, "order_id": "paper-1035be0b63", "amount": 0.40703619, "price": 81.8928, "level": 0}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787603866.3349254, "order_id": "paper-e392f57920", "amount": 0.40910236, "price": 81.4792, "level": 1}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787603866.3358932, "order_id": "paper-39151b39d2", "amount": 0.41118962, "price": 81.0656, "level": 2}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787603866.3376498, "order_id": "paper-6e24ca8550", "amount": 0.41014359, "entry": 81.27235, "exit": 82.491435, "profit": 0.43283323172326504, "total_pnl": 2.596999903480004}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787603866.338851, "order_id": "paper-68e476f94c", "amount": 0.41223616, "entry": 80.8598, "exit": 82.072697, "profit": 0.43283333485303643, "total_pnl": 3.0298332383330404}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787603926.3436973, "order_id": "paper-06d15696d0", "amount": 0.40807216, "entry": 81.6849, "exit": 82.910173, "profit": 0.43283313273521173, "total_pnl": 3.462666371068252}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787605959.349098, "order_id": "paper-1035be0b63"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787605959.3502192, "order_id": "paper-693837a3cb", "amount": 0.40896484, "price": 81.5066, "level": 2}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787608108.5794444, "order_id": "paper-e392f57920"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787608108.580478, "order_id": "paper-8c3e8fc414", "amount": 0.40813061, "price": 81.6732, "level": 2}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787608685.9892497, "order_id": "paper-39151b39d2"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787608685.9912412, "order_id": "paper-27b7e1f560", "amount": 0.40715352, "price": 81.8692, "level": 2}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787609076.2709138, "order_id": "paper-f23f5013e1", "amount": 0.40308911, "price": 82.6947, "level": 0}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787609076.2715259, "order_id": "paper-0e0ff1dbc9", "amount": 0.40513525, "price": 82.27705, "level": 1}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787609076.272009, "order_id": "paper-82fd718d3f", "amount": 0.40720227, "price": 81.8594, "level": 2}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787609169.2372267, "order_id": "paper-f23f5013e1", "entry": 82.6947, "amount": 0.40308911, "sell_target": 83.93512}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787609169.2381842, "order_id": "paper-0e0ff1dbc9", "entry": 82.27705, "amount": 0.40513525, "sell_target": 83.511206}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787609169.2390497, "order_id": "paper-82fd718d3f", "entry": 81.8594, "amount": 0.40720227, "sell_target": 83.087291}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787609199.2430959, "order_id": "paper-b6c6030b95", "amount": 0.24113178, "price": 82.9422, "level": 0}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787609199.2444415, "order_id": "paper-86fdd7be08", "amount": 0.2423558, "price": 82.5233, "level": 1}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787609199.2458339, "order_id": "paper-26f405ca5c", "amount": 0.2435923, "price": 82.1044, "level": 2}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787609199.247184, "order_id": "paper-dda4cf2692", "amount": 0.2448415, "price": 81.6855, "level": 3}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787609199.2481854, "order_id": "paper-eeb94d5292", "amount": 0.24610357, "price": 81.2666, "level": 4}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787609199.2498236, "order_id": "paper-cabf234e5f", "amount": 0.40513525, "entry": 82.27705, "exit": 83.511206, "profit": 0.4328334330573824, "total_pnl": 3.8954998041256346}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787609199.2504911, "order_id": "paper-c7199fd029", "amount": 0.40720227, "entry": 81.8594, "exit": 83.087291, "profit": 0.4328333355083842, "total_pnl": 4.328333139634019}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787609413.5090046, "order_id": "paper-526e598692", "amount": 0.24165096, "price": 82.764, "level": 0}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787609413.5095582, "order_id": "paper-6b6f468274", "amount": 0.24287761, "price": 82.346, "level": 1}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787609413.5101228, "order_id": "paper-5f807860fe", "amount": 0.24411679, "price": 81.928, "level": 2}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787609413.5107915, "order_id": "paper-9db797592e", "amount": 0.24536867, "price": 81.51, "level": 3}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787609413.511442, "order_id": "paper-2b807cf04b", "amount": 0.24663345, "price": 81.092, "level": 4}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787609560.4870608, "order_id": "paper-526e598692", "entry": 82.764, "amount": 0.24165096, "sell_target": 84.00546}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787609560.488587, "order_id": "paper-6b6f468274", "entry": 82.346, "amount": 0.24287761, "sell_target": 83.58119}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787609560.4895613, "order_id": "paper-5f807860fe", "entry": 81.928, "amount": 0.24411679, "sell_target": 83.15692}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787609560.4903183, "order_id": "paper-9db797592e", "entry": 81.51, "amount": 0.24536867, "sell_target": 82.73265}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787609560.4912212, "order_id": "paper-2b807cf04b", "entry": 81.092, "amount": 0.24663345, "sell_target": 82.30838}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787609590.494627, "order_id": "paper-4acc368d4f", "amount": 0.24179557, "price": 82.7145, "level": 0}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787609590.495703, "order_id": "paper-1f08358421", "amount": 0.24302296, "price": 82.29675, "level": 1}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787609590.4965794, "order_id": "paper-d1a0dd7a89", "amount": 0.24426288, "price": 81.879, "level": 2}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787609590.4974523, "order_id": "paper-6626b2e30b", "amount": 0.24551551, "price": 81.46125, "level": 3}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787609590.4983556, "order_id": "paper-53f998b3bd", "amount": 0.24678105, "price": 81.0435, "level": 4}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787609590.50026, "order_id": "paper-e743e14d3d", "amount": 0.24411679, "entry": 81.928, "exit": 83.15692, "profit": 0.259700004818999, "total_pnl": 4.588033144453018}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787609590.501149, "order_id": "paper-1a7f057eb7", "amount": 0.24536867, "entry": 81.51, "exit": 82.73265, "profit": 0.25970000378772795, "total_pnl": 4.847733148240746}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787609590.5022922, "order_id": "paper-f1dddace38", "amount": 0.24663345, "entry": 81.092, "exit": 82.30838, "profit": 0.25969999646029507, "total_pnl": 5.107433144701041}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787609650.506343, "order_id": "paper-3e7083abdf", "amount": 0.24287761, "entry": 82.346, "exit": 83.58119, "profit": 0.25969999575468705, "total_pnl": 5.367133140455728}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787609717.5360498, "order_id": "paper-164f54b079", "amount": 0.24185347, "price": 82.6947, "level": 0}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787609717.537064, "order_id": "paper-5cb6bd408a", "amount": 0.24308115, "price": 82.27705, "level": 1}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787609717.5379093, "order_id": "paper-7f4ee0b54b", "amount": 0.24432136, "price": 81.8594, "level": 2}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787609717.5387037, "order_id": "paper-fa78a45992", "amount": 0.24557429, "price": 81.44175, "level": 3}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787609717.539721, "order_id": "paper-b9c8f3ee6d", "amount": 0.24684014, "price": 81.0241, "level": 4}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787609879.001055, "order_id": "paper-164f54b079", "entry": 82.6947, "amount": 0.24185347, "sell_target": 83.93512}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787609879.0026379, "order_id": "paper-5cb6bd408a", "entry": 82.27705, "amount": 0.24308115, "sell_target": 83.511206}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787609879.0039306, "order_id": "paper-7f4ee0b54b", "entry": 81.8594, "amount": 0.24432136, "sell_target": 83.087291}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787609879.0050323, "order_id": "paper-fa78a45992", "entry": 81.44175, "amount": 0.24557429, "sell_target": 82.663376}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787609879.0071537, "order_id": "paper-b9c8f3ee6d", "entry": 81.0241, "amount": 0.24684014, "sell_target": 82.239461}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787609909.0107415, "order_id": "paper-5363acf8fc", "amount": 0.24156427, "price": 82.7937, "level": 0}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787609909.011583, "order_id": "paper-3948b4fefa", "amount": 0.24279049, "price": 82.37555, "level": 1}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787609909.0122626, "order_id": "paper-c1da78a822", "amount": 0.24402922, "price": 81.9574, "level": 2}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787609909.0129006, "order_id": "paper-3ce4bff4ca", "amount": 0.24528065, "price": 81.53925, "level": 3}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787609909.0135493, "order_id": "paper-58fa0eaa9d", "amount": 0.24654498, "price": 81.1211, "level": 4}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787609909.0148747, "order_id": "paper-b9ea09a991", "amount": 0.24308115, "entry": 82.27705, "exit": 83.511206, "profit": 0.2597000598344259, "total_pnl": 5.626833200290154}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787609909.015456, "order_id": "paper-9775c72143", "amount": 0.24432136, "entry": 81.8594, "exit": 83.087291, "profit": 0.25969999917914066, "total_pnl": 5.886533199469294}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787609909.016008, "order_id": "paper-ceb220dea6", "amount": 0.24557429, "entry": 81.44175, "exit": 82.663376, "profit": 0.25969993779272826, "total_pnl": 6.146233137262023}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787609909.0168924, "order_id": "paper-4237d4c4be", "amount": 0.24684014, "entry": 81.0241, "exit": 82.239461, "profit": 0.25969987913640225, "total_pnl": 6.405933016398425}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787610059.1556904, "order_id": "paper-8731c65074", "amount": 0.24185347, "price": 82.6947, "level": 0}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787610059.156801, "order_id": "paper-ab9e207be1", "amount": 0.24308115, "price": 82.27705, "level": 1}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787610059.1578915, "order_id": "paper-02b331685f", "amount": 0.24432136, "price": 81.8594, "level": 2}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787610059.1587355, "order_id": "paper-8363c043b2", "amount": 0.24557429, "price": 81.44175, "level": 3}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787610059.159607, "order_id": "paper-8e9610e344", "amount": 0.24684014, "price": 81.0241, "level": 4}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787610165.4189014, "order_id": "paper-8731c65074", "entry": 82.6947, "amount": 0.24185347, "sell_target": 83.93512}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787610165.4201517, "order_id": "paper-ab9e207be1", "entry": 82.27705, "amount": 0.24308115, "sell_target": 83.511206}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787610165.4212725, "order_id": "paper-02b331685f", "entry": 81.8594, "amount": 0.24432136, "sell_target": 83.087291}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787610165.4221199, "order_id": "paper-8363c043b2", "entry": 81.44175, "amount": 0.24557429, "sell_target": 82.663376}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787610165.423152, "order_id": "paper-8e9610e344", "entry": 81.0241, "amount": 0.24684014, "sell_target": 82.239461}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787610195.4266608, "order_id": "paper-32e359a705", "amount": 0.24173771, "price": 82.7343, "level": 0}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787610195.4275305, "order_id": "paper-1c53d31fa7", "amount": 0.2429648, "price": 82.31645, "level": 1}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787610195.4282594, "order_id": "paper-cc86d33d78", "amount": 0.24420442, "price": 81.8986, "level": 2}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787610195.4289412, "order_id": "paper-7eccc1a96e", "amount": 0.24545675, "price": 81.48075, "level": 3}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787610195.4298406, "order_id": "paper-2d8344808c", "amount": 0.24672199, "price": 81.0629, "level": 4}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787610195.4323318, "order_id": "paper-280304d8ca", "amount": 0.24308115, "entry": 82.27705, "exit": 83.511206, "profit": 0.2597000598344259, "total_pnl": 6.665633076232851}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787610195.4328313, "order_id": "paper-41021a8334", "amount": 0.24432136, "entry": 81.8594, "exit": 83.087291, "profit": 0.25969999917914066, "total_pnl": 6.9253330754119915}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787610195.4333835, "order_id": "paper-d2b0ce5ace", "amount": 0.24557429, "entry": 81.44175, "exit": 82.663376, "profit": 0.25969993779272826, "total_pnl": 7.18503301320472}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787610195.4342349, "order_id": "paper-af691e9829", "amount": 0.24684014, "entry": 81.0241, "exit": 82.239461, "profit": 0.25969987913640225, "total_pnl": 7.444732892341122}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787610885.503392, "order_id": "paper-32e359a705"}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787610885.5043502, "order_id": "paper-1c53d31fa7"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787610885.505005, "order_id": "paper-c8809de3cf", "amount": 0.24353343, "price": 82.12425, "level": 3}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787610885.505556, "order_id": "paper-77a529d17b", "amount": 0.24478875, "price": 81.7031, "level": 4}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787610885.507209, "order_id": "paper-e97ab72ede", "amount": 0.24185347, "entry": 82.6947, "exit": 83.93512, "profit": 0.25969988108492714, "total_pnl": 7.704432773426049}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787611035.5191147, "order_id": "paper-cc86d33d78"}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787611035.520162, "order_id": "paper-7eccc1a96e"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787611035.5205956, "order_id": "paper-f4a8e579b7", "amount": 0.24252566, "price": 82.4655, "level": 3}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787611035.5211084, "order_id": "paper-b49e74fbad", "amount": 0.24377579, "price": 82.0426, "level": 4}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787615481.5861924, "order_id": "paper-5831ed763c", "amount": 0.23907716, "price": 83.655, "level": 0}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787615481.5877914, "order_id": "paper-ed884b2033", "amount": 0.24029075, "price": 83.2325, "level": 1}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787615481.5890183, "order_id": "paper-940e96a26f", "amount": 0.24151673, "price": 82.81, "level": 2}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787615481.5904124, "order_id": "paper-09d5c6eed3", "amount": 0.24275527, "price": 82.3875, "level": 3}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787615481.5920877, "order_id": "paper-2bca8236ae", "amount": 0.24400659, "price": 81.965, "level": 4}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787616441.685161, "order_id": "paper-5831ed763c"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787616441.6862223, "order_id": "paper-e6bea3e3fe", "amount": 0.24254272, "price": 82.4597, "level": 4}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787616471.6889167, "order_id": "paper-ed884b2033"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787616471.6905193, "order_id": "paper-ead9a07423", "amount": 0.24225775, "price": 82.5567, "level": 4}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787616531.6957157, "order_id": "paper-940e96a26f"}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787616531.6967273, "order_id": "paper-09d5c6eed3"}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787616531.6972382, "order_id": "paper-2bca8236ae"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787616531.6976266, "order_id": "paper-b41519f613", "amount": 0.23807937, "price": 84.0056, "level": 2}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787616531.6988595, "order_id": "paper-11573733e2", "amount": 0.23930029, "price": 83.577, "level": 3}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787616531.6993105, "order_id": "paper-0e45b4151d", "amount": 0.24053379, "price": 83.1484, "level": 4}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787616711.714787, "order_id": "paper-e6bea3e3fe"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787616711.7161827, "order_id": "paper-0092519dc3", "amount": 0.23911118, "price": 83.6431, "level": 4}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787616741.720361, "order_id": "paper-ead9a07423"}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787616741.721516, "order_id": "paper-b41519f613"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787616741.722183, "order_id": "paper-383d2047a7", "amount": 0.23700544, "price": 84.38625, "level": 3}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787616741.7227757, "order_id": "paper-569880d119", "amount": 0.23822711, "price": 83.9535, "level": 4}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787616801.7285295, "order_id": "paper-11573733e2"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787616801.729582, "order_id": "paper-007abce96c", "amount": 0.23756835, "price": 84.1863, "level": 4}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787618601.9063487, "order_id": "paper-0e45b4151d"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787618601.9079776, "order_id": "paper-9c9498e548", "amount": 0.2369949, "price": 84.39, "level": 4}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787618751.9210947, "order_id": "paper-0092519dc3"}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787618751.9227161, "order_id": "paper-383d2047a7"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787618751.9236698, "order_id": "paper-c8a2e01cd8", "amount": 0.23381763, "price": 85.53675, "level": 3}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787618751.923956, "order_id": "paper-57fe440f22", "amount": 0.23502287, "price": 85.0981, "level": 4}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787618781.9279842, "order_id": "paper-569880d119"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787618781.92844, "order_id": "paper-bff9cc1ba3", "amount": 0.23486225, "price": 85.1563, "level": 4}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787635793.4710197, "order_id": "paper-007abce96c"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787635793.4720054, "order_id": "paper-026026391f", "amount": 0.23422193, "price": 85.3891, "level": 4}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787644314.2637055, "order_id": "paper-c8a2e01cd8", "entry": 85.53675, "amount": 0.23381763, "sell_target": 86.819801}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787644314.2650933, "order_id": "paper-026026391f", "entry": 85.3891, "amount": 0.23422193, "sell_target": 86.669936}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787644344.2674077, "order_id": "paper-2d0b6eb560", "amount": 0.23865992, "price": 83.80125, "level": 3}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787644344.2685006, "order_id": "paper-d001e5192b", "amount": 0.23989013, "price": 83.3715, "level": 4}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787646624.4946167, "order_id": "paper-9c04a2f795", "amount": 0.23422193, "entry": 85.3891, "exit": 86.669936, "profit": 0.25969988044762005, "total_pnl": 7.964132653873669}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787651664.929711, "order_id": "paper-57fe440f22", "entry": 85.0981, "amount": 0.23502287, "sell_target": 86.374571}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787651664.9307528, "order_id": "paper-bff9cc1ba3", "entry": 85.1563, "amount": 0.23486225, "sell_target": 86.433644}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787651694.9329317, "order_id": "paper-77a35fee6d", "amount": 0.24005641, "price": 83.31375, "level": 3}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787651694.9343796, "order_id": "paper-f24dc98f69", "amount": 0.24129382, "price": 82.8865, "level": 4}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787659405.76123, "order_id": "paper-9c9498e548", "entry": 84.39, "amount": 0.2369949, "sell_target": 85.65585}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787659435.7657042, "order_id": "paper-b6b66336a6", "amount": 0.24394885, "price": 81.9844, "level": 4}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787660605.8941622, "order_id": "paper-2d0b6eb560", "entry": 83.80125, "amount": 0.23865992, "sell_target": 85.058269}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787664476.3162518, "order_id": "paper-d001e5192b", "entry": 83.3715, "amount": 0.23989013, "sell_target": 84.622072}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787664476.317228, "order_id": "paper-77a35fee6d", "entry": 83.31375, "amount": 0.24005641, "sell_target": 84.563456}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787664476.3178616, "order_id": "paper-f24dc98f69", "entry": 82.8865, "amount": 0.24129382, "sell_target": 84.129797}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787668346.758605, "order_id": "paper-2ec355f7bd", "amount": 0.24129382, "entry": 82.8865, "exit": 84.129797, "profit": 0.25969988221915585, "total_pnl": 8.223832536092825}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787677490.147187, "order_id": "paper-b6b66336a6", "entry": 81.9844, "amount": 0.24394885, "sell_target": 83.214166}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787677490.1481323, "order_id": "paper-f541c8620a", "amount": 0.23381763, "entry": 85.53675, "exit": 86.819801, "profit": 0.25969994371934035, "total_pnl": 8.483532479812165}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787677490.148664, "order_id": "paper-4b3bb08f5a", "amount": 0.23502287, "entry": 85.0981, "exit": 86.374571, "profit": 0.2596998786267868, "total_pnl": 8.743232358438952}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787677490.1493273, "order_id": "paper-75fe57c5b6", "amount": 0.23486225, "entry": 85.1563, "exit": 86.433644, "profit": 0.25969988553878665, "total_pnl": 9.002932243977739}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787677490.150269, "order_id": "paper-6eed158723", "amount": 0.2369949, "entry": 84.39, "exit": 85.65585, "profit": 0.2596999949488392, "total_pnl": 9.262632238926578}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787677490.151774, "order_id": "paper-17ff684ac2", "amount": 0.23865992, "entry": 83.80125, "exit": 85.058269, "profit": 0.2597000546827033, "total_pnl": 9.522332293609281}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787677490.1528492, "order_id": "paper-24289f473a", "amount": 0.23989013, "entry": 83.3715, "exit": 84.622072, "profit": 0.25969987982811915, "total_pnl": 9.7820321734374}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787677490.153513, "order_id": "paper-7303a4ecca", "amount": 0.24005641, "entry": 83.31375, "exit": 84.563456, "profit": 0.25969993652227075, "total_pnl": 10.041732109959671}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787677520.154706, "order_id": "paper-23b5ab204a", "amount": 0.24095921, "price": 83.0016, "level": 0}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787677520.1550863, "order_id": "paper-469fde5727", "amount": 0.24218235, "price": 82.5824, "level": 1}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787677520.155384, "order_id": "paper-12ce94bbc1", "amount": 0.24341798, "price": 82.1632, "level": 2}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787677520.1557612, "order_id": "paper-adf25f6ade", "amount": 0.24466628, "price": 81.744, "level": 3}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787677520.156149, "order_id": "paper-52ae3988f4", "amount": 0.24592744, "price": 81.3248, "level": 4}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787677520.1581798, "order_id": "paper-0b5919c71a", "amount": 0.24394885, "entry": 81.9844, "exit": 83.214166, "profit": 0.2597000012717565, "total_pnl": 10.301432111231428}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787677763.6051643, "order_id": "paper-2d46a93ee0", "amount": 0.24165096, "price": 82.764, "level": 0}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787677763.606009, "order_id": "paper-4443af6504", "amount": 0.24287761, "price": 82.346, "level": 1}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787677763.6067047, "order_id": "paper-26b2601926", "amount": 0.24411679, "price": 81.928, "level": 2}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787677763.6073928, "order_id": "paper-2913839df4", "amount": 0.24536867, "price": 81.51, "level": 3}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787677763.6083472, "order_id": "paper-98b26ba6c5", "amount": 0.24663345, "price": 81.092, "level": 4}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787677817.0128288, "order_id": "paper-2d46a93ee0", "entry": 82.764, "amount": 0.24165096, "sell_target": 84.00546}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787677817.0140595, "order_id": "paper-4443af6504", "entry": 82.346, "amount": 0.24287761, "sell_target": 83.58119}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787677817.015227, "order_id": "paper-26b2601926", "entry": 81.928, "amount": 0.24411679, "sell_target": 83.15692}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787677817.0163546, "order_id": "paper-2913839df4", "entry": 81.51, "amount": 0.24536867, "sell_target": 82.73265}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787677817.0182571, "order_id": "paper-98b26ba6c5", "entry": 81.092, "amount": 0.24663345, "sell_target": 82.30838}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787677847.0252519, "order_id": "paper-6ccdacfa3f", "amount": 0.24133342, "price": 82.8729, "level": 0}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787677847.0261676, "order_id": "paper-1ea224f5b8", "amount": 0.24255846, "price": 82.45435, "level": 1}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787677847.0271573, "order_id": "paper-6fb0096fa2", "amount": 0.243796, "price": 82.0358, "level": 2}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787677847.0282018, "order_id": "paper-e4322830ec", "amount": 0.24504624, "price": 81.61725, "level": 3}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787677847.0288699, "order_id": "paper-bf9ebf4d3d", "amount": 0.24630936, "price": 81.1987, "level": 4}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787677847.0301821, "order_id": "paper-40a2de249b", "amount": 0.24287761, "entry": 82.346, "exit": 83.58119, "profit": 0.25969999575468705, "total_pnl": 10.561132106986115}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787677847.03127, "order_id": "paper-c399d6a574", "amount": 0.24411679, "entry": 81.928, "exit": 83.15692, "profit": 0.259700004818999, "total_pnl": 10.820832111805114}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787677847.031936, "order_id": "paper-3f91b33618", "amount": 0.24536867, "entry": 81.51, "exit": 82.73265, "profit": 0.25970000378772795, "total_pnl": 11.080532115592842}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787677847.0331004, "order_id": "paper-c69dbde89b", "amount": 0.24663345, "entry": 81.092, "exit": 82.30838, "profit": 0.25969999646029507, "total_pnl": 11.340232112053137}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787678010.0528605, "order_id": "paper-6f0daaf3bf", "amount": 0.24144879, "price": 82.8333, "level": 0}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787678010.0540671, "order_id": "paper-abd6b3a348", "amount": 0.24267442, "price": 82.41495, "level": 1}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787678010.055345, "order_id": "paper-9156fe16c5", "amount": 0.24391255, "price": 81.9966, "level": 2}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787678010.0563354, "order_id": "paper-80319085f5", "amount": 0.24516339, "price": 81.57825, "level": 3}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787678010.0575724, "order_id": "paper-14fcf3ec5c", "amount": 0.24642711, "price": 81.1599, "level": 4}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787678097.0585265, "order_id": "paper-6f0daaf3bf", "entry": 82.8333, "amount": 0.24144879, "sell_target": 84.075799}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787678097.059373, "order_id": "paper-abd6b3a348", "entry": 82.41495, "amount": 0.24267442, "sell_target": 83.651174}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787678097.0601103, "order_id": "paper-9156fe16c5", "entry": 81.9966, "amount": 0.24391255, "sell_target": 83.226549}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787678097.0609908, "order_id": "paper-80319085f5", "entry": 81.57825, "amount": 0.24516339, "sell_target": 82.801924}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787678097.061763, "order_id": "paper-14fcf3ec5c", "entry": 81.1599, "amount": 0.24642711, "sell_target": 82.377298}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787678127.0648706, "order_id": "paper-71055e2e3c", "amount": 0.24136225, "price": 82.863, "level": 0}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787678127.0656993, "order_id": "paper-5933604087", "amount": 0.24258744, "price": 82.4445, "level": 1}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787678127.066692, "order_id": "paper-3514cf4fd3", "amount": 0.24382513, "price": 82.026, "level": 2}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787678127.0674691, "order_id": "paper-a4e67886ff", "amount": 0.24507551, "price": 81.6075, "level": 3}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787678127.0681427, "order_id": "paper-456799f17b", "amount": 0.24633879, "price": 81.189, "level": 4}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787678127.0697982, "order_id": "paper-ea54baa127", "amount": 0.24267442, "entry": 82.41495, "exit": 83.651174, "profit": 0.2596999418667316, "total_pnl": 11.599932053919868}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787678127.0704718, "order_id": "paper-ffd34c58d3", "amount": 0.24391255, "entry": 81.9966, "exit": 83.226549, "profit": 0.25969999736833316, "total_pnl": 11.859632051288202}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787678127.0714817, "order_id": "paper-9e50474bbf", "amount": 0.24516339, "entry": 81.57825, "exit": 82.801924, "profit": 0.2597000653882304, "total_pnl": 12.119332116676432}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787678127.072404, "order_id": "paper-110a3ff863", "amount": 0.24642711, "entry": 81.1599, "exit": 82.377298, "profit": 0.25969987177914433, "total_pnl": 12.379031988455576}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787678272.8630013, "order_id": "paper-a5a0b6f335", "amount": 0.24095921, "price": 83.0016, "level": 0}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787678272.8644457, "order_id": "paper-ff3856d9a4", "amount": 0.24218235, "price": 82.5824, "level": 1}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787678272.8656044, "order_id": "paper-abcda40c75", "amount": 0.24341798, "price": 82.1632, "level": 2}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787678272.8668356, "order_id": "paper-93d47c59f9", "amount": 0.24466628, "price": 81.744, "level": 3}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787678272.8678236, "order_id": "paper-c6666555a0", "amount": 0.24592744, "price": 81.3248, "level": 4}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787678400.5149307, "order_id": "paper-a5a0b6f335", "entry": 83.0016, "amount": 0.24095921, "sell_target": 84.246624}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787678400.516086, "order_id": "paper-ff3856d9a4", "entry": 82.5824, "amount": 0.24218235, "sell_target": 83.821136}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787678400.5173328, "order_id": "paper-abcda40c75", "entry": 82.1632, "amount": 0.24341798, "sell_target": 83.395648}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787678400.518563, "order_id": "paper-93d47c59f9", "entry": 81.744, "amount": 0.24466628, "sell_target": 82.97016}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787678400.5194263, "order_id": "paper-c6666555a0", "entry": 81.3248, "amount": 0.24592744, "sell_target": 82.544672}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787678430.522404, "order_id": "paper-a28054e3f2", "amount": 0.24081559, "price": 83.0511, "level": 0}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787678430.5236106, "order_id": "paper-4dcb5a8ef5", "amount": 0.24203801, "price": 82.63165, "level": 1}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787678430.5248168, "order_id": "paper-195d18d528", "amount": 0.2432729, "price": 82.2122, "level": 2}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787678430.5256722, "order_id": "paper-57dca82408", "amount": 0.24452045, "price": 81.79275, "level": 3}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787678430.5267344, "order_id": "paper-dd0f7cab17", "amount": 0.24578086, "price": 81.3733, "level": 4}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787678430.528464, "order_id": "paper-ab2065693c", "amount": 0.24218235, "entry": 82.5824, "exit": 83.821136, "profit": 0.25969999611281125, "total_pnl": 12.638731984568388}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787678430.5295665, "order_id": "paper-89e757caf4", "amount": 0.24341798, "entry": 82.1632, "exit": 83.395648, "profit": 0.2597000022637488, "total_pnl": 12.898431986832136}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787678430.5308828, "order_id": "paper-4ba17e58e9", "amount": 0.24466628, "entry": 81.744, "exit": 82.97016, "profit": 0.2597000050942775, "total_pnl": 13.158131991926414}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787678430.5323243, "order_id": "paper-820cd0422e", "amount": 0.24592744, "entry": 81.3248, "exit": 82.544672, "profit": 0.2596999983445727, "total_pnl": 13.417831990270987}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787681460.8265302, "order_id": "paper-6140d5a274", "amount": 0.24095921, "entry": 83.0016, "exit": 84.246624, "profit": 0.2596999995421001, "total_pnl": 13.677531989813087}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787681550.833327, "order_id": "paper-a28054e3f2"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787681550.8341317, "order_id": "paper-224511f1b0", "amount": 0.24438256, "price": 81.8389, "level": 4}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787682090.879203, "order_id": "paper-4dcb5a8ef5"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787682090.8799994, "order_id": "paper-dc5215ad26", "amount": 0.24374698, "price": 82.0523, "level": 4}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787692111.8510551, "order_id": "paper-195d18d528", "entry": 82.2122, "amount": 0.2432729, "sell_target": 83.445383}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787692111.8521893, "order_id": "paper-57dca82408", "entry": 81.79275, "amount": 0.24452045, "sell_target": 83.019641}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787692111.8528318, "order_id": "paper-224511f1b0", "entry": 81.8389, "amount": 0.24438256, "sell_target": 83.066483}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787692111.853381, "order_id": "paper-dc5215ad26", "entry": 82.0523, "amount": 0.24374698, "sell_target": 83.283085}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787692141.8571682, "order_id": "paper-1eb75e47f3", "amount": 0.2466841, "price": 81.07535, "level": 1}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787692141.8594384, "order_id": "paper-54589aeae3", "amount": 0.2479427, "price": 80.6638, "level": 2}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787692141.8602552, "order_id": "paper-7750e4ffe5", "amount": 0.2492142, "price": 80.25225, "level": 3}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787692141.8608935, "order_id": "paper-e1d3cb81df", "amount": 0.25049881, "price": 79.8407, "level": 4}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787693462.0178835, "order_id": "paper-1eb75e47f3"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787693462.0189805, "order_id": "paper-92d0bc13e8", "amount": 0.24850617, "price": 80.4809, "level": 4}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787693732.0488327, "order_id": "paper-2c1d160639", "amount": 0.24452045, "entry": 81.79275, "exit": 83.019641, "profit": 0.2596999394080548, "total_pnl": 13.937231929221142}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787693792.0543675, "order_id": "paper-54589aeae3"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787693792.0556211, "order_id": "paper-35ac9d94d0", "amount": 0.24799804, "price": 80.6458, "level": 4}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787693792.0581393, "order_id": "paper-69517047f9", "amount": 0.24438256, "entry": 81.8389, "exit": 83.066483, "profit": 0.2596998764971623, "total_pnl": 14.196931805718304}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787694838.1380844, "order_id": "paper-273fe969eb", "amount": 0.24287113, "price": 82.3482, "level": 0}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787694838.1393313, "order_id": "paper-75f6522d88", "amount": 0.24410397, "price": 81.9323, "level": 1}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787694838.1405735, "order_id": "paper-bd29ace60e", "amount": 0.2453494, "price": 81.5164, "level": 2}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787694838.141696, "order_id": "paper-d2a9c67a86", "amount": 0.2466076, "price": 81.1005, "level": 3}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787694838.1427033, "order_id": "paper-8b453947e5", "amount": 0.24787878, "price": 80.6846, "level": 4}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787694954.9060142, "order_id": "paper-273fe969eb", "entry": 82.3482, "amount": 0.24287113, "sell_target": 83.583423}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787694954.9081423, "order_id": "paper-75f6522d88", "entry": 81.9323, "amount": 0.24410397, "sell_target": 83.161284}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787694954.9094536, "order_id": "paper-bd29ace60e", "entry": 81.5164, "amount": 0.2453494, "sell_target": 82.739146}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787694954.9114947, "order_id": "paper-d2a9c67a86", "entry": 81.1005, "amount": 0.2466076, "sell_target": 82.317007}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787694954.9125016, "order_id": "paper-8b453947e5", "entry": 80.6846, "amount": 0.24787878, "sell_target": 81.894869}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787694984.9158115, "order_id": "paper-1bcc962bea", "amount": 0.24278356, "price": 82.3779, "level": 0}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787694984.9166825, "order_id": "paper-21ea376886", "amount": 0.24401597, "price": 81.96185, "level": 1}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787694984.9177756, "order_id": "paper-67c87c7dd2", "amount": 0.24526095, "price": 81.5458, "level": 2}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787694984.9185987, "order_id": "paper-81f182aa4d", "amount": 0.24651869, "price": 81.12975, "level": 3}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787694984.9195266, "order_id": "paper-785c610524", "amount": 0.24778941, "price": 80.7137, "level": 4}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787694984.9207904, "order_id": "paper-a42fe5f563", "amount": 0.24410397, "entry": 81.9323, "exit": 83.161284, "profit": 0.2596998741905523, "total_pnl": 14.456631679908856}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787694984.921712, "order_id": "paper-b80bd3e319", "amount": 0.2453494, "entry": 81.5164, "exit": 82.739146, "profit": 0.2596999977946268, "total_pnl": 14.716331677703483}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787694984.9226422, "order_id": "paper-06b82aa245", "amount": 0.2466076, "entry": 81.1005, "exit": 82.317007, "profit": 0.2596998724539503, "total_pnl": 14.976031550157433}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787694984.923868, "order_id": "paper-aadeea40b4", "amount": 0.24787878, "entry": 80.6846, "exit": 81.894869, "profit": 0.25970000276305427, "total_pnl": 15.235731552920488}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787695125.5526571, "order_id": "paper-3dc6feffa1", "amount": 0.24255037, "price": 82.4571, "level": 0}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787695125.55386, "order_id": "paper-20e727e02e", "amount": 0.24378159, "price": 82.04065, "level": 1}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787695125.554722, "order_id": "paper-f04c5ac771", "amount": 0.24502537, "price": 81.6242, "level": 2}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787695125.555642, "order_id": "paper-082611fe66", "amount": 0.24628191, "price": 81.20775, "level": 3}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787695125.5571156, "order_id": "paper-394b2deec0", "amount": 0.24755141, "price": 80.7913, "level": 4}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787696385.6819828, "order_id": "paper-3dc6feffa1"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787696385.683074, "order_id": "paper-56eb6f7e8f", "amount": 0.24633879, "price": 81.189, "level": 4}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787738329.650932, "order_id": "paper-20e727e02e"}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787738329.652716, "order_id": "paper-f04c5ac771"}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787738329.653502, "order_id": "paper-082611fe66"}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787738329.6541526, "order_id": "paper-394b2deec0"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787738329.6546645, "order_id": "paper-21b68a9a11", "amount": 0.24635487, "price": 81.1837, "level": 1}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787738329.6550627, "order_id": "paper-6a7e9ad612", "amount": 0.24761178, "price": 80.7716, "level": 2}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787738329.655401, "order_id": "paper-93edd4d30c", "amount": 0.24888159, "price": 80.3595, "level": 3}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787738329.6561534, "order_id": "paper-1d42597452", "amount": 0.25016448, "price": 79.9474, "level": 4}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787739589.7845724, "order_id": "paper-56eb6f7e8f"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787739589.7855513, "order_id": "paper-dd69d6cfc6", "amount": 0.24910664, "price": 80.2869, "level": 4}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787740699.890751, "order_id": "paper-21b68a9a11"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787740699.8917294, "order_id": "paper-b05e5e1fdc", "amount": 0.2482369, "price": 80.5682, "level": 4}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787740759.8967183, "order_id": "paper-6a7e9ad612"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787740759.8982382, "order_id": "paper-1098ae000f", "amount": 0.24767035, "price": 80.7525, "level": 4}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787740789.9019096, "order_id": "paper-93edd4d30c"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787740789.9028614, "order_id": "paper-1d5cafa1ed", "amount": 0.2469584, "price": 80.9853, "level": 4}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787741149.936188, "order_id": "paper-1d42597452"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787741149.9373167, "order_id": "paper-720f1722ca", "amount": 0.24675152, "price": 81.0532, "level": 4}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787741479.9698887, "order_id": "paper-dd69d6cfc6"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787741479.97115, "order_id": "paper-8396ca5c4a", "amount": 0.24575157, "price": 81.383, "level": 4}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787767334.697044, "order_id": "paper-b05e5e1fdc", "entry": 80.5682, "amount": 0.2482369, "sell_target": 81.776723}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787767334.6981456, "order_id": "paper-1098ae000f", "entry": 80.7525, "amount": 0.24767035, "sell_target": 81.963787}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787767334.6992157, "order_id": "paper-1d5cafa1ed", "entry": 80.9853, "amount": 0.2469584, "sell_target": 82.200079}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787767334.7005901, "order_id": "paper-720f1722ca", "entry": 81.0532, "amount": 0.24675152, "sell_target": 82.268998}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787767334.7019885, "order_id": "paper-8396ca5c4a", "entry": 81.383, "amount": 0.24575157, "sell_target": 82.603745}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787767364.7058742, "order_id": "paper-11da28444b", "amount": 0.24298797, "price": 82.3086, "level": 0}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787767364.7063212, "order_id": "paper-87ae8b88ec", "amount": 0.24422142, "price": 81.8929, "level": 1}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787767364.706868, "order_id": "paper-4e1fb145bd", "amount": 0.24546744, "price": 81.4772, "level": 2}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787767364.7073321, "order_id": "paper-387c1933be", "amount": 0.24672625, "price": 81.0615, "level": 3}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787767364.7077663, "order_id": "paper-365d5e9825", "amount": 0.24799804, "price": 80.6458, "level": 4}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787767364.7097526, "order_id": "paper-c92ff2d402", "amount": 0.2482369, "entry": 80.5682, "exit": 81.776723, "profit": 0.2597000026824432, "total_pnl": 15.49543155560293}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787767364.710154, "order_id": "paper-a70ffaa424", "amount": 0.24767035, "entry": 80.7525, "exit": 81.963787, "profit": 0.2596998754884581, "total_pnl": 15.755131431091389}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787767364.7104447, "order_id": "paper-b29d3a91e0", "amount": 0.2469584, "entry": 80.9853, "exit": 82.200079, "profit": 0.25969987809236983, "total_pnl": 16.01483130918376}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787767364.7108622, "order_id": "paper-8d80664986", "amount": 0.24675152, "entry": 81.0532, "exit": 82.268998, "profit": 0.259700003906719, "total_pnl": 16.274531313090478}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787767364.7112575, "order_id": "paper-02502512c3", "amount": 0.24575157, "entry": 81.383, "exit": 82.603745, "profit": 0.2597000002767089, "total_pnl": 16.534231313367187}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787778585.7756875, "order_id": "paper-11da28444b"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787778585.7767472, "order_id": "paper-1718c27637", "amount": 0.24675152, "price": 81.0532, "level": 4}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787778945.8010933, "order_id": "paper-87ae8b88ec"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787778945.802633, "order_id": "paper-adee0cf5f5", "amount": 0.24595678, "price": 81.3151, "level": 4}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787779125.8190117, "order_id": "paper-4e1fb145bd"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787779125.820342, "order_id": "paper-de2312302b", "amount": 0.2456052, "price": 81.4315, "level": 4}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787781136.0111804, "order_id": "paper-387c1933be"}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787781136.012054, "order_id": "paper-365d5e9825"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787781136.0127082, "order_id": "paper-4bacfc7a95", "amount": 0.24338895, "price": 82.173, "level": 3}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787781136.0132964, "order_id": "paper-cc8286cec9", "amount": 0.24464353, "price": 81.7516, "level": 4}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787782396.1337817, "order_id": "paper-1718c27637"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787782396.1375735, "order_id": "paper-581a97a1bb", "amount": 0.24308603, "price": 82.2754, "level": 4}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787782458.4415152, "order_id": "paper-ae926e2859", "amount": 0.23800684, "price": 84.0312, "level": 0}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787782458.4425938, "order_id": "paper-9e17126e89", "amount": 0.23921499, "price": 83.6068, "level": 1}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787782458.4435499, "order_id": "paper-d159e97227", "amount": 0.24043548, "price": 83.1824, "level": 2}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787782458.4444726, "order_id": "paper-6c7fa05d30", "amount": 0.24166848, "price": 82.758, "level": 3}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787782458.445354, "order_id": "paper-bc0ece93e7", "amount": 0.24291419, "price": 82.3336, "level": 4}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787782578.4592116, "order_id": "paper-ae926e2859"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787782578.4600534, "order_id": "paper-c2274dcc67", "amount": 0.24149165, "price": 82.8186, "level": 4}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787782607.527882, "order_id": "paper-9e17126e89", "entry": 83.6068, "amount": 0.23921499, "sell_target": 84.860902}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787782607.528979, "order_id": "paper-d159e97227", "entry": 83.1824, "amount": 0.24043548, "sell_target": 84.430136}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787782607.5298276, "order_id": "paper-6c7fa05d30", "entry": 82.758, "amount": 0.24166848, "sell_target": 83.99937}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787782607.5310268, "order_id": "paper-bc0ece93e7", "entry": 82.3336, "amount": 0.24291419, "sell_target": 83.568604}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787782607.532226, "order_id": "paper-c2274dcc67", "entry": 82.8186, "amount": 0.24149165, "sell_target": 84.060879}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787782637.5361266, "order_id": "paper-ed1751a495", "amount": 0.23639153, "price": 84.6054, "level": 0}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787782637.5371056, "order_id": "paper-4a78d14006", "amount": 0.23759149, "price": 84.1781, "level": 1}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787782637.5378895, "order_id": "paper-13d0c0ec74", "amount": 0.23880369, "price": 83.7508, "level": 2}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787782637.5387897, "order_id": "paper-aa70ae8f4e", "amount": 0.24002832, "price": 83.3235, "level": 3}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787782637.5397258, "order_id": "paper-0a5b982eaa", "amount": 0.24126558, "price": 82.8962, "level": 4}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787782637.54107, "order_id": "paper-cd5d29596c", "amount": 0.23921499, "entry": 83.6068, "exit": 84.860902, "profit": 0.2596999977397232, "total_pnl": 16.79393131110691}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787782637.5417528, "order_id": "paper-561f40c295", "amount": 0.24043548, "entry": 83.1824, "exit": 84.430136, "profit": 0.2597000035261061, "total_pnl": 17.053631314633016}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787782637.542622, "order_id": "paper-c763bda82a", "amount": 0.24166848, "entry": 82.758, "exit": 83.99937, "profit": 0.2597000008809047, "total_pnl": 17.31333131551392}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787782637.543414, "order_id": "paper-459c327bb3", "amount": 0.24291419, "entry": 82.3336, "exit": 83.568604, "profit": 0.2596999968028868, "total_pnl": 17.573031312316807}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787782637.5444095, "order_id": "paper-f069a6d384", "amount": 0.24149165, "entry": 82.8186, "exit": 84.060879, "profit": 0.2597000047354996, "total_pnl": 17.832731317052307}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787782757.5556629, "order_id": "paper-ed1751a495"}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787782757.5568485, "order_id": "paper-4a78d14006"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787782757.5580606, "order_id": "paper-640f51b590", "amount": 0.23816116, "price": 83.97675, "level": 3}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787782757.5591464, "order_id": "paper-33c1cccb0f", "amount": 0.23938879, "price": 83.5461, "level": 4}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787782877.5727324, "order_id": "paper-13d0c0ec74"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787782877.5735655, "order_id": "paper-2c530d81e6", "amount": 0.23875124, "price": 83.7692, "level": 4}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787782907.575838, "order_id": "paper-aa70ae8f4e"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787782907.57667, "order_id": "paper-dc761e40c2", "amount": 0.23819959, "price": 83.9632, "level": 4}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787783485.0894227, "order_id": "paper-65aa0fa05a", "amount": 0.23512593, "price": 85.0608, "level": 0}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787783485.0906963, "order_id": "paper-afe0f7e2b7", "amount": 0.23631947, "price": 84.6312, "level": 1}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787783485.0914264, "order_id": "paper-ee0a3d0119", "amount": 0.23752518, "price": 84.2016, "level": 2}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787783485.092215, "order_id": "paper-16eca51781", "amount": 0.23874326, "price": 83.772, "level": 3}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787783485.0932298, "order_id": "paper-69c3074cca", "amount": 0.23997389, "price": 83.3424, "level": 4}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787784621.3192372, "order_id": "paper-65aa0fa05a", "entry": 85.0608, "amount": 0.23512593, "sell_target": 86.336712}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787784621.3205657, "order_id": "paper-afe0f7e2b7", "entry": 84.6312, "amount": 0.23631947, "sell_target": 85.900668}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787784621.3214185, "order_id": "paper-ee0a3d0119", "entry": 84.2016, "amount": 0.23752518, "sell_target": 85.464624}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787784621.322731, "order_id": "paper-16eca51781", "entry": 83.772, "amount": 0.23874326, "sell_target": 85.02858}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787784621.3237844, "order_id": "paper-69c3074cca", "entry": 83.3424, "amount": 0.23997389, "sell_target": 84.592536}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787784651.3268304, "order_id": "paper-ca3424d2d9", "amount": 0.23553714, "price": 84.9123, "level": 0}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787784651.3276916, "order_id": "paper-fb2862238b", "amount": 0.23673276, "price": 84.48345, "level": 1}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787784651.3286839, "order_id": "paper-e08446f507", "amount": 0.23794058, "price": 84.0546, "level": 2}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787784651.3294764, "order_id": "paper-190d25a3ad", "amount": 0.23916078, "price": 83.62575, "level": 3}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787784651.3304923, "order_id": "paper-587e45c0c6", "amount": 0.24039357, "price": 83.1969, "level": 4}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787784651.3321152, "order_id": "paper-3cf40c7363", "amount": 0.23752518, "entry": 84.2016, "exit": 85.464624, "profit": 0.2597000025488043, "total_pnl": 18.09243131960111}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787784651.3329284, "order_id": "paper-5f810939e0", "amount": 0.23874326, "entry": 83.772, "exit": 85.02858, "profit": 0.25970000489170886, "total_pnl": 18.35213132449282}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787784651.334003, "order_id": "paper-2472092408", "amount": 0.23997389, "entry": 83.3424, "exit": 84.592536, "profit": 0.25969999909022334, "total_pnl": 18.611831323583043}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787785401.4451048, "order_id": "paper-e5ea71e79b", "amount": 0.23631947, "entry": 84.6312, "exit": 85.900668, "profit": 0.25970000427809126, "total_pnl": 18.871531327861135}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787785431.4470937, "order_id": "paper-ca3424d2d9"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787785431.4476917, "order_id": "paper-785b450519", "amount": 0.23913891, "price": 83.6334, "level": 4}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787785497.1877306, "order_id": "paper-8735fc39bb", "amount": 0.23460713, "price": 85.2489, "level": 0}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787785497.1885505, "order_id": "paper-eb8a76412c", "amount": 0.23579803, "price": 84.81835, "level": 1}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787785497.1893954, "order_id": "paper-8bc59b832a", "amount": 0.23700108, "price": 84.3878, "level": 2}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787785497.1900892, "order_id": "paper-11412e28cd", "amount": 0.23821647, "price": 83.95725, "level": 3}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787785497.190666, "order_id": "paper-6472332145", "amount": 0.23944439, "price": 83.5267, "level": 4}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787785945.2805085, "order_id": "paper-8735fc39bb", "entry": 85.2489, "amount": 0.23460713, "sell_target": 86.527633}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787785945.2817435, "order_id": "paper-eb8a76412c", "entry": 84.81835, "amount": 0.23579803, "sell_target": 86.090625}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787785945.2827425, "order_id": "paper-8bc59b832a", "entry": 84.3878, "amount": 0.23700108, "sell_target": 85.653617}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787785945.2836723, "order_id": "paper-11412e28cd", "entry": 83.95725, "amount": 0.23821647, "sell_target": 85.216609}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787785945.284585, "order_id": "paper-6472332145", "entry": 83.5267, "amount": 0.23944439, "sell_target": 84.779601}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787785975.288206, "order_id": "paper-ec1188b4bc", "amount": 0.23455266, "price": 85.2687, "level": 0}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787785975.2889726, "order_id": "paper-d13c7c696f", "amount": 0.23574328, "price": 84.83805, "level": 1}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787785975.2897031, "order_id": "paper-1f50707262", "amount": 0.23694605, "price": 84.4074, "level": 2}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787785975.290346, "order_id": "paper-8378cbe778", "amount": 0.23816116, "price": 83.97675, "level": 3}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787785975.2912335, "order_id": "paper-6478400d11", "amount": 0.23938879, "price": 83.5461, "level": 4}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787785975.2933028, "order_id": "paper-df250819e7", "amount": 0.23579803, "entry": 84.81835, "exit": 86.090625, "profit": 0.2596999390039336, "total_pnl": 19.13123126686507}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787785975.2940373, "order_id": "paper-ded1fe81cf", "amount": 0.23700108, "entry": 84.3878, "exit": 85.653617, "profit": 0.2596999966086351, "total_pnl": 19.390931263473703}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787785975.2946973, "order_id": "paper-e824fc39d9", "amount": 0.23821647, "entry": 83.95725, "exit": 85.216609, "profit": 0.25970005593547896, "total_pnl": 19.650631319409182}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787785975.2954702, "order_id": "paper-6e8d1a8ac4", "amount": 0.23944439, "entry": 83.5267, "exit": 84.779601, "profit": 0.2597001160992889, "total_pnl": 19.91033143550847}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787786347.2918525, "order_id": "paper-2356c770d2", "amount": 0.23403638, "price": 85.4568, "level": 0}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787786347.2929795, "order_id": "paper-e21e8996b4", "amount": 0.23522438, "price": 85.0252, "level": 1}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787786347.2938368, "order_id": "paper-5a27aae5a1", "amount": 0.2364245, "price": 84.5936, "level": 2}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787786347.2951567, "order_id": "paper-af6f88425a", "amount": 0.23763694, "price": 84.162, "level": 3}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787786347.2959802, "order_id": "paper-d0f8cac898", "amount": 0.23886187, "price": 83.7304, "level": 4}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787786388.74809, "order_id": "paper-2356c770d2", "entry": 85.4568, "amount": 0.23403638, "sell_target": 86.738652}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787786388.749589, "order_id": "paper-e21e8996b4", "entry": 85.0252, "amount": 0.23522438, "sell_target": 86.300578}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787786388.75094, "order_id": "paper-5a27aae5a1", "entry": 84.5936, "amount": 0.2364245, "sell_target": 85.862504}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787786388.7516966, "order_id": "paper-af6f88425a", "entry": 84.162, "amount": 0.23763694, "sell_target": 85.42443}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787786388.7530153, "order_id": "paper-d0f8cac898", "entry": 83.7304, "amount": 0.23886187, "sell_target": 84.986356}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787786418.7574995, "order_id": "paper-8f6c6d72e8", "amount": 0.23419917, "price": 85.3974, "level": 0}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787786418.7586055, "order_id": "paper-315cdb893c", "amount": 0.235388, "price": 84.9661, "level": 1}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787786418.759588, "order_id": "paper-ba46d47f9b", "amount": 0.23658896, "price": 84.5348, "level": 2}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787786418.7605352, "order_id": "paper-0cf1da4d5a", "amount": 0.23780223, "price": 84.1035, "level": 3}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787786418.7613828, "order_id": "paper-d44e7fc0ed", "amount": 0.23902802, "price": 83.6722, "level": 4}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787786418.7629614, "order_id": "paper-3ba2a95db7", "amount": 0.23522438, "entry": 85.0252, "exit": 86.300578, "profit": 0.2596999994075766, "total_pnl": 20.170031434916048}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787786418.763788, "order_id": "paper-8566bbf69e", "amount": 0.2364245, "entry": 84.5936, "exit": 85.862504, "profit": 0.25969999458785153, "total_pnl": 20.4297314295039}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787786418.76459, "order_id": "paper-1a00a9f4d2", "amount": 0.23763694, "entry": 84.162, "exit": 85.42443, "profit": 0.25970000187347253, "total_pnl": 20.689431431377372}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787786418.765773, "order_id": "paper-df83b40dfa", "amount": 0.23886187, "entry": 83.7304, "exit": 84.986356, "profit": 0.2596999989592277, "total_pnl": 20.9491314303366}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787786595.5747843, "order_id": "paper-7056bdafe4", "amount": 0.23414488, "price": 85.4172, "level": 0}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787786595.5768428, "order_id": "paper-c5ad72767c", "amount": 0.23533343, "price": 84.9858, "level": 1}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787786595.5782979, "order_id": "paper-db97c4e9a0", "amount": 0.23653411, "price": 84.5544, "level": 2}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787786595.5795624, "order_id": "paper-2e43cda14e", "amount": 0.23774711, "price": 84.123, "level": 3}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787786595.5807002, "order_id": "paper-b6cf7d999f", "amount": 0.23897261, "price": 83.6916, "level": 4}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787786735.3814805, "order_id": "paper-6d403db7cc", "amount": 0.58067086, "price": 86.1073, "level": 0}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787786735.3824713, "order_id": "paper-664166584e", "amount": 0.58360354, "price": 85.6746, "level": 1}
+{"event": "stop_loss", "symbol": "SOL/EUR", "ts": 1787786842.3666177, "drawdown": 0.6969, "equity": 120.94913143033659}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787786922.7164426, "order_id": "paper-3ca6a6aba4", "amount": 0.58033556, "price": 86.15705, "level": 0}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787786922.7173574, "order_id": "paper-3eb7325d89", "amount": 0.58326655, "price": 85.7241, "level": 1}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787787822.785473, "order_id": "paper-3ca6a6aba4"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787787822.786465, "order_id": "paper-bc64de9bed", "amount": 0.58178839, "price": 85.9419, "level": 1}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787787882.790782, "order_id": "paper-3eb7325d89"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787787882.791618, "order_id": "paper-82e0314d67", "amount": 0.57991791, "price": 86.2191, "level": 1}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787788212.8123202, "order_id": "paper-bc64de9bed"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787788212.8131647, "order_id": "paper-ba64a01a12", "amount": 0.57845665, "price": 86.4369, "level": 1}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787788512.8350403, "order_id": "paper-82e0314d67"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787788512.836016, "order_id": "paper-8b5a484c6e", "amount": 0.57706868, "price": 86.6448, "level": 1}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787788572.839318, "order_id": "paper-ba64a01a12"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787788572.8402102, "order_id": "paper-6efc6c7026", "amount": 0.57542498, "price": 86.8923, "level": 1}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787789472.8987606, "order_id": "paper-6efc6c7026", "entry": 86.8923, "amount": 0.57542498, "sell_target": 87.761223}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787789502.9009235, "order_id": "paper-5e0330f9fd", "amount": 0.58212368, "price": 85.8924, "level": 1}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787790072.9385624, "order_id": "paper-5e0330f9fd"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787790072.9397964, "order_id": "paper-186e31806a", "amount": 0.57911995, "price": 86.3379, "level": 1}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787790792.9877737, "order_id": "paper-8b5a484c6e", "entry": 86.6448, "amount": 0.57706868, "sell_target": 87.511248}
+{"event": "stop_loss", "symbol": "SOL/EUR", "ts": 1787791280.2870812, "drawdown": 0.6998, "equity": 120.94913143033659}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787791358.9254782, "order_id": "paper-704f967783", "amount": 0.57986679, "price": 86.2267, "level": 0}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787791358.9271483, "order_id": "paper-ead347d944", "amount": 0.58279541, "price": 85.7934, "level": 1}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787794089.1332662, "order_id": "paper-704f967783"}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787794089.1341147, "order_id": "paper-ead347d944"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787794089.1347544, "order_id": "paper-596b0619f1", "amount": 0.57640808, "price": 86.7441, "level": 0}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787794089.1353173, "order_id": "paper-e740b8ad42", "amount": 0.57931923, "price": 86.3082, "level": 1}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787795559.230222, "order_id": "paper-596b0619f1"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787795559.2308602, "order_id": "paper-944af9826c", "amount": 0.57766271, "price": 86.5557, "level": 1}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787798769.4767857, "order_id": "paper-944af9826c", "entry": 86.5557, "amount": 0.57766271, "sell_target": 87.421257}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787798799.4786243, "order_id": "paper-feda1bacca", "amount": 0.58172138, "price": 85.9518, "level": 1}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787801079.6472166, "order_id": "paper-feda1bacca"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787801079.6479177, "order_id": "paper-da201488ee", "amount": 0.57865548, "price": 86.4072, "level": 1}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787805519.9514658, "order_id": "paper-da201488ee", "entry": 86.4072, "amount": 0.57865548, "sell_target": 87.271272}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787809900.2499907, "order_id": "paper-019ff40fd5", "amount": 0.57832418, "price": 86.4567, "level": 1}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787809900.2509139, "order_id": "paper-e5df55bc65", "amount": 0.57865548, "entry": 86.4072, "exit": 87.271272, "profit": 0.39949999833373084, "total_pnl": 21.34863142867033}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787809960.2542546, "order_id": "paper-5dc7daf3e1", "amount": 0.57766271, "entry": 86.5557, "exit": 87.421257, "profit": 0.39950000182129486, "total_pnl": 21.748131430491625}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787810350.2798662, "order_id": "paper-e740b8ad42"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787810350.2805629, "order_id": "paper-c586579bce", "amount": 0.57647586, "price": 86.7339, "level": 1}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787811370.3594182, "order_id": "paper-c586579bce", "entry": 86.7339, "amount": 0.57647586, "sell_target": 87.601239}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787811400.3614933, "order_id": "paper-e4485ee1fa", "amount": 0.58272817, "price": 85.8033, "level": 1}
+{"event": "stop_loss", "symbol": "SOL/EUR", "ts": 1787812975.7416916, "drawdown": 0.7585, "equity": 121.74813143049163}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787834610.335305, "order_id": "paper-d80babac5d", "amount": 0.56058965, "price": 89.1918, "level": 0}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787834610.3368533, "order_id": "paper-b2a4980b43", "amount": 0.56342091, "price": 88.7436, "level": 1}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787835000.3658352, "order_id": "paper-d80babac5d"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787835000.366771, "order_id": "paper-86af58f880", "amount": 0.56179144, "price": 89.001, "level": 1}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787838390.6145513, "order_id": "paper-b2a4980b43"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787838390.6153393, "order_id": "paper-c957ad5e45", "amount": 0.5605444, "price": 89.199, "level": 1}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787838930.6504993, "order_id": "paper-86af58f880"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787838930.6513457, "order_id": "paper-b950c53ba9", "amount": 0.55812853, "price": 89.5851, "level": 1}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787838990.6551018, "order_id": "paper-c957ad5e45"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787838990.6560054, "order_id": "paper-d9330053d8", "amount": 0.55702052, "price": 89.7633, "level": 1}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787839050.65939, "order_id": "paper-b950c53ba9"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787839050.6602874, "order_id": "paper-9a0bba2864", "amount": 0.55542781, "price": 90.0207, "level": 1}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787839470.6842368, "order_id": "paper-d9330053d8"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787839470.6849446, "order_id": "paper-e58e22d7a9", "amount": 0.55348001, "price": 90.3375, "level": 1}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787840070.7273118, "order_id": "paper-e58e22d7a9", "entry": 90.3375, "amount": 0.55348001, "sell_target": 91.240875}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787840100.7297301, "order_id": "paper-15aa9326da", "amount": 0.5580052, "price": 89.6049, "level": 1}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787840370.7462578, "order_id": "paper-15aa9326da"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787840370.746874, "order_id": "paper-7dcb7fb4da", "amount": 0.55524462, "price": 90.0504, "level": 1}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787841150.800316, "order_id": "paper-df9e7b809d", "amount": 0.55348001, "entry": 90.3375, "exit": 91.240875, "profit": 0.3995000032229683, "total_pnl": 22.147631433714594}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787841330.8138843, "order_id": "paper-9a0bba2864"}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787841330.8147128, "order_id": "paper-7dcb7fb4da"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787841330.8154397, "order_id": "paper-45088f3a33", "amount": 0.54961453, "price": 90.97285, "level": 0}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787841330.8159354, "order_id": "paper-c41c4af97a", "amount": 0.55239036, "price": 90.5157, "level": 1}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787841420.8214004, "order_id": "paper-45088f3a33"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787841420.8222818, "order_id": "paper-84495c03ac", "amount": 0.55088406, "price": 90.7632, "level": 1}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787841510.827828, "order_id": "paper-c41c4af97a"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787841510.828566, "order_id": "paper-1ccc7614a0", "amount": 0.54890828, "price": 91.0899, "level": 1}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787841690.8383083, "order_id": "paper-84495c03ac"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787841690.839155, "order_id": "paper-f96494d9b6", "amount": 0.54653231, "price": 91.4859, "level": 1}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787841750.843026, "order_id": "paper-1ccc7614a0"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787841750.8440793, "order_id": "paper-0a6d228293", "amount": 0.54611863, "price": 91.5552, "level": 1}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787842530.8972192, "order_id": "paper-0a6d228293", "entry": 91.5552, "amount": 0.54611863, "sell_target": 92.470752}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787842560.898568, "order_id": "paper-dee389ae60", "amount": 0.55154582, "price": 90.6543, "level": 1}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787842860.9187121, "order_id": "paper-dee389ae60"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787842860.9193614, "order_id": "paper-f2d6743649", "amount": 0.54884863, "price": 91.0998, "level": 1}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787843580.9687984, "order_id": "paper-f2d6743649"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787843580.9694073, "order_id": "paper-8c4a1ace33", "amount": 0.54600055, "price": 91.575, "level": 1}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787843580.9698904, "order_id": "paper-b73dbdb590", "amount": 0.54611863, "entry": 91.5552, "exit": 92.470752, "profit": 0.3995000031430891, "total_pnl": 22.547131436857683}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787844871.057749, "order_id": "paper-f96494d9b6", "entry": 91.4859, "amount": 0.54653231, "sell_target": 92.400759}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787844871.0585978, "order_id": "paper-8c4a1ace33", "entry": 91.575, "amount": 0.54600055, "sell_target": 92.49075}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787847481.2405665, "order_id": "paper-b4701dbd62", "amount": 0.54366825, "price": 91.96785, "level": 0}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787847481.241431, "order_id": "paper-1d5a601c0b", "amount": 0.54641405, "price": 91.5057, "level": 1}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787847481.2420957, "order_id": "paper-bd39c51340", "amount": 0.54653231, "entry": 91.4859, "exit": 92.400759, "profit": 0.3995000020728412, "total_pnl": 22.946631438930524}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787847511.24372, "order_id": "paper-ec22551adc", "amount": 0.54600055, "entry": 91.575, "exit": 92.49075, "profit": 0.399500002926338, "total_pnl": 23.346131441856862}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787847751.257654, "order_id": "paper-b4701dbd62"}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787847751.2582686, "order_id": "paper-1d5a601c0b"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787847751.2586915, "order_id": "paper-bade66b915", "amount": 0.8115513, "price": 92.4156, "level": 0}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787847751.259123, "order_id": "paper-d43f45ca94", "amount": 0.81565004, "price": 91.9512, "level": 1}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787848831.3432283, "order_id": "paper-bade66b915"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787848831.343988, "order_id": "paper-17b65f3302", "amount": 0.81363522, "price": 92.1789, "level": 1}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787848981.3531134, "order_id": "paper-d43f45ca94"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787848981.3541446, "order_id": "paper-d15f8cb5fc", "amount": 0.8108485, "price": 92.4957, "level": 1}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787849611.3982122, "order_id": "paper-17b65f3302"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787849611.3989925, "order_id": "paper-db64cf9293", "amount": 0.80877096, "price": 92.7333, "level": 1}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787850511.466503, "order_id": "paper-d15f8cb5fc"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787850511.4672973, "order_id": "paper-445e4966c4", "amount": 0.80670403, "price": 92.9709, "level": 1}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787851771.5606287, "order_id": "paper-445e4966c4", "entry": 92.9709, "amount": 0.80670403, "sell_target": 93.900609}
+{"event": "buy_filled", "symbol": "SOL/EUR", "ts": 1787851951.5777438, "order_id": "paper-db64cf9293", "entry": 92.7333, "amount": 0.80877096, "sell_target": 93.660633}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787858342.0313728, "order_id": "paper-994a33edb9", "amount": 0.80877096, "entry": 92.7333, "exit": 93.660633, "profit": 0.5992500005191062, "total_pnl": 23.945381442375968}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787859932.1511889, "order_id": "paper-e42204fa28", "amount": 0.80162591, "price": 93.55985, "level": 0}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787859932.1520517, "order_id": "paper-77718d6fe6", "amount": 0.80567453, "price": 93.0897, "level": 1}
+{"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787859932.1528008, "order_id": "paper-96d87fe7bc", "amount": 0.80670403, "entry": 92.9709, "exit": 93.900609, "profit": 0.5992499976248098, "total_pnl": 24.544631440000778}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1787860112.1632984, "order_id": "paper-e42204fa28"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1787860112.1641622, "order_id": "paper-e334bab8a5", "amount": 0.80336772, "price": 93.357, "level": 1}

@@ -1,0 +1,19 @@
+[Unit]
+Description=Denaro MC2 Feeder — Data Feeder Centralizzato ZeroMQ (ATLAS v6)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=sergio
+ExecStart=/home/sergio/denaro/venv/bin/python -m denaro.infrastructure.mc2_feeder
+WorkingDirectory=/home/sergio/denaro_node_app
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+# memoria sotto 512M (requisito 4): kill se il feeder sfora
+MemoryMax=512M
+
+[Install]
+WantedBy=multi-user.target
