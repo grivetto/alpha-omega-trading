@@ -80,7 +80,7 @@ bots:
   sell_levels: 1
   sell_distance: 0.02
   sell_step: 0.01
-  enabled: true
+  enabled: false  # chiave OKX morta (50119)
 - symbol: SOL/EUR
   mode: kraken
   capital: 26.0
