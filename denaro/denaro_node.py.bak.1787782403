@@ -35,19 +35,6 @@ from denaro.infrastructure.sqlite_store import SqliteStateStore
 
 log = logging.getLogger("denaro.node")
 
-# Chiavi di config dei bot modificabili a runtime via strategy_overrides.json.
-# La brain (watchdog/strategy lab) promuove/retrocede strategie scrivendo questo
-# file; il Node lo rilegge a ogni avvio di un bot. File assente o corrotto →
-# fallback silenzioso alla config YAML (MAI crash del Node).
-_OVERRIDE_KEYS = frozenset({
-    "strategy", "levels", "capital", "buy_distance", "profit_target",
-    "level_step", "retarget_factor", "max_order_age_s",
-    "sell_levels", "sell_distance", "sell_step", "sell_asset_share",
-    "stop_loss_pct", "daily_loss_limit", "max_drawdown_limit",
-    "weekly_loss_limit", "max_slippage",
-    "tick_interval", "fee", "entry_slip", "quote",
-})
-
 
 # --- configurazione ----------------------------------------------------------
 
@@ -85,36 +72,17 @@ def build_policy(bot: dict, exchange):
             MomentumParams(
                 profit_target=float(bot.get("profit_target", 0.02)),
                 entry_slip=float(bot.get("entry_slip", 0.002)),
-            ))
+            ),
+            min_amount=min_amount)
     if strategy == "meanrev":
         from denaro.domain.meanrev import MeanReversionParams, MeanReversionPolicy
         return MeanReversionPolicy(
             MeanReversionParams(
                 profit_target=float(bot.get("profit_target", 0.015)),
                 entry_slip=float(bot.get("entry_slip", 0.001)),
-            ))
-    # adaptive_vol_grid: griglia mean-reversion a spacing ATR adattivo
-    if strategy == "adaptive_vol_grid":
-        from denaro.domain.adaptive_vol_grid import AdaptiveVolGrid, GridConfig
-        return AdaptiveVolGrid(
-            GridConfig(
-                symbol=bot.get("symbol", "SOL/EUR"),
-                capital=float(bot.get("capital", 13.5)),
-                levels=int(bot.get("levels", 4)),
-                atr_period=int(bot.get("atr_period", 14)),
-                atr_mult=float(bot.get("atr_mult", 0.5)),
-                tp_atr_mult=float(bot.get("tp_atr_mult", 1.5)),
-                fee_rate=float(bot.get("fee_rate", 0.0026)),
-                max_drawdown=float(bot.get("max_drawdown", 0.10)),
-                max_position_pct=float(bot.get("max_position_pct", 0.95)),
-                recenter_band_pct=float(bot.get("recenter_band_pct", 0.03)),
-                cooldown_ticks=int(bot.get("cooldown_ticks", 5)),
-                min_vol_ratio=float(bot.get("min_vol_ratio", 0.0005)),
-                max_vol_ratio=float(bot.get("max_vol_ratio", 0.10)),
-                max_tick_age=float(bot.get("max_tick_age", 60.0)),
-            ))
-
-    # adaptive: engine generico ADX/ATR
+            ),
+            min_amount=min_amount)
+    # default: grid
     if strategy == "adaptive":
         from denaro.domain.adaptive import AdaptiveEngine, AdaptiveParams
         return AdaptiveEngine(
@@ -122,8 +90,8 @@ def build_policy(bot: dict, exchange):
                 levels=int(bot.get("levels", 5)),
                 base_buy_distance=float(bot.get("buy_distance", 0.01)),
                 profit_target=float(bot.get("profit_target", 0.015)),
-            ))
-    # default: grid
+            ),
+            min_amount=min_amount)
     return GridPolicy(build_grid_params(bot), min_amount=min_amount)
 
 
@@ -155,15 +123,8 @@ def build_exchange(bot: dict, data_dir: Path):
     mode = bot.get("mode", "paper")
     symbol = bot["symbol"]
     if mode == "paper":
-        # realismo v2: fee/min_notional/slippage dal config bot (parita' live)
-        return PaperExchange(
-            symbol, capital=float(bot.get("capital", 100)),
-            quote=bot.get("quote", "EUR"),
-            fee=float(bot.get("fee", 0.001)),
-            min_notional=bot.get("min_notional", 1.0),
-            slippage=bot.get("slippage", 0.001),
-            amount_precision=float(bot.get("amount_precision", 1e-8)),
-            price_precision=float(bot.get("price_precision", 1e-6)))
+        return PaperExchange(symbol, capital=float(bot.get("capital", 100)),
+                             quote=bot.get("quote", "EUR"))
     if mode == "okx":
         from denaro.infrastructure.exchanges.okx import OKXAdapter
         key = env("OKX_API_KEY", bot.get("api_key", ""))
@@ -249,36 +210,10 @@ class NodeApp:
             )
 
         self.orchestrator = TradeOrchestrator(supervisor=self.supervisor)
-        self.overrides_path = Path(config.get(
-            "overrides_file", "config/strategy_overrides.json"))
         self._build_bots()
 
-    def _apply_overrides(self, bot: dict) -> dict:
-        """Fonde gli override strategici (strategy_overrides.json) nel bot dict.
-        Chiave: 'mode:symbol' oppure il solo symbol. Solo le chiavi whitelist
-        vengono accettate; un file corrotto viene ignorato (mai crash)."""
-        try:
-            if not self.overrides_path.exists():
-                return bot
-            data = json.loads(self.overrides_path.read_text(encoding="utf-8"))
-            if not isinstance(data, dict):
-                return bot
-            key = f"{bot.get('mode', 'paper')}:{bot['symbol']}"
-            ov = data.get(key) or data.get(bot["symbol"])
-            if not isinstance(ov, dict):
-                return bot
-            merged = dict(bot)
-            merged.update({k: v for k, v in ov.items() if k in _OVERRIDE_KEYS})
-            if merged != bot:
-                log.info("override strategico [%s]: %s", key, ov)
-            return merged
-        except Exception as e:  # noqa: BLE001
-            log.warning("override strategici ignorati (%s)", e)
-            return bot
-
     def _build_bots(self) -> None:
-        for raw_bot in self.config.get("bots", []):
-            bot = self._apply_overrides(raw_bot)
+        for bot in self.config.get("bots", []):
             if not bot.get("enabled", True):
                 log.info("bot %s disabilitato (config)", bot.get("symbol"))
                 continue
@@ -299,14 +234,12 @@ class NodeApp:
                 fee=float(bot.get("fee", 0.001 if bot.get("mode", "paper") == "paper" else 0.0)),
                 bot_key=bot_key,
                 stop_loss_pct=float(bot.get("stop_loss_pct", 0.0)),
-                max_slippage=float(bot.get("max_slippage", 0.005)),
                 **paths,
             )
             policy = build_policy(bot, exchange)
             risk = RiskManager(
                 daily_loss_limit=float(bot.get("daily_loss_limit", 0.05)),
                 max_drawdown_limit=float(bot.get("max_drawdown_limit", 0.15)),
-                weekly_loss_limit=float(bot.get("weekly_loss_limit", 0.20)),
             )
             task = BotTask(cfg, exchange, policy, risk,
                            price_source=self._make_price_source(bot["symbol"]),
@@ -388,7 +321,7 @@ class NodeApp:
         log.info("Arresto del Node...")
         await self.guardian.stop()
         await self.orchestrator.stop_all()
-        await self.hub.close()   # P3: chiude anche i client ccxt.pro (no leak)
+        await self.hub.stop()
         self.sqlite.close()
 
 

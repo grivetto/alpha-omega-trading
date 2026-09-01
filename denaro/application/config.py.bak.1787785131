@@ -74,8 +74,6 @@ class BotConfigSchema(BaseModel):
     strategy: str = "grid"   # grid | momentum | meanrev | adaptive (ATLAS v6)
     daily_loss_limit: float = 0.05
     max_drawdown_limit: float = 0.15
-    weekly_loss_limit: float = 0.20   # P2: hard stop settimanale (lun 00:00 UTC)
-    max_slippage: float = 0.005       # P2: tolleranza spread max per market order
     # ── GRID BILATERALE ────────────────────────────────────────────────────────
     # NB CRITICO: se questi campi mancano dallo schema, Pydantic li SCARTA in
     # silenzio → i sell ladder NON vengono MAI piazzati (bug storico: i bot
@@ -106,10 +104,6 @@ class BotConfigSchema(BaseModel):
 
 class NodeConfig(BaseModel):
     data_dir: str = "node_data"
-    # NB: se manca dallo schema, Pydantic lo SCARTA in silenzio e il nodo usa
-    # il file sbagliato (bug F1): l'istanza trend era stata convertita in grid
-    # dagli override del main. Ogni istanza DEVE poter puntare al proprio file.
-    overrides_file: str = "config/strategy_overrides.json"
     exchange_rest: Dict[str, Any] = Field(default_factory=lambda: {"name": "okx", "eea": True})
     hub: HubConfig = Field(default_factory=HubConfig)
     supervisor: SupervisorConfig = Field(default_factory=SupervisorConfig)

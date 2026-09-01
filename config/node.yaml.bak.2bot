@@ -1,0 +1,187 @@
+# DENARO — config unificata del Node (tutti gli ambienti di trading).
+# CONFIG SPOT AGGRESSIVA (round 9): 5 livelli, DOGE+ETH, stop-loss per bot.
+# CUTOVER LIVE: i bot live OKX/Kraken sono attivi (v3.3 fermati).
+# L'ex-ATLAS (Kraken ATLAS_) resta disabilitato (stesso account del live).
+data_dir: node_data
+supervisor:
+  ram_critical_pct: 0.85
+  ram_throttle_pct: 0.70
+  cpu_critical_pct: 0.90
+  tick_max_factor: 5.0
+safemode:
+  caution_pct: 70.0
+  safe_pct: 85.0
+  emergency_pct: 95.0
+  interval_s: 10.0
+hub:
+  ws_enabled: true
+  poll_interval: 10
+  price_ttl: 30
+  ws_max_retries: 5
+  ws_retry_base_s: 2.0
+exchange_rest:
+  name: okx
+  eea: true
+bots:
+  # PAPER SIM 500€ (parita' live v2: fee reali, min_notional, slippage,
+  # stop_loss, TP >=2% da backtest v6; MTM mark-to-market)
+  - symbol: ADA/EUR
+    mode: paper
+    capital: 100
+    levels: 5
+    buy_distance: 0.015
+    profit_target: 0.02
+    fee: 0.001
+    min_notional: 1.0
+    slippage: 0.001
+    stop_loss_pct: 0.10
+    tick_interval: 30
+  - symbol: SOL/EUR
+    mode: paper
+    capital: 100
+    levels: 5
+    buy_distance: 0.015
+    profit_target: 0.02
+    fee: 0.001
+    min_notional: 1.0
+    slippage: 0.001
+    stop_loss_pct: 0.10
+    tick_interval: 30
+  - symbol: XRP/EUR
+    mode: paper
+    capital: 100
+    levels: 5
+    buy_distance: 0.015
+    profit_target: 0.02
+    fee: 0.001
+    min_notional: 1.0
+    slippage: 0.001
+    stop_loss_pct: 0.10
+    tick_interval: 30
+  - symbol: DOGE/EUR
+    mode: paper
+    capital: 100
+    levels: 5
+    buy_distance: 0.015
+    profit_target: 0.02
+    fee: 0.001
+    min_notional: 1.0
+    slippage: 0.001
+    stop_loss_pct: 0.10
+    tick_interval: 30
+    strategy: adaptive
+  - symbol: ETH/EUR
+    mode: paper
+    capital: 100
+    levels: 5
+    buy_distance: 0.015
+    profit_target: 0.02
+    fee: 0.001
+    min_notional: 1.0
+    slippage: 0.001
+    stop_loss_pct: 0.10
+    tick_interval: 30
+    strategy: adaptive
+
+# ── LIVE OKX (health_path = path v3.3 per dashboard/Zabbix) ──
+  # Account MAIN condiviso da 3 bot (SOL/DOGE/ETH in asset, ~28€ totali).
+  # GRID BILATERALE: ogni bot vende il proprio asset in mano per generare EUR
+  # e ricomprare sotto. stop_loss 0.15 (il conto e' condiviso → oscillazioni
+  # di equity comuni non devono fermare tutti insieme; il CB daily_loss resta).
+  - symbol: ADA/EUR
+    mode: okx
+    capital: 20.0
+    levels: 5
+    buy_distance: 0.001
+    profit_target: 0.02
+    fee: 0.001
+    tick_interval: 30
+    env_prefix: MARCOSUB1_
+    health_path: /home/marco/denaro/health/ada.json
+    stop_loss_pct: 0.15
+    sell_levels: 2
+    sell_distance: 0.01
+    sell_step: 0.008
+    enabled: true
+  - symbol: SOL/EUR
+    mode: okx
+    capital: 13.5   # per_level 4.5 <= free reale ~4.80 (fix preflight, opzione A Hermes)
+    levels: 3
+    buy_distance: 0.01
+    profit_target: 0.015
+    fee: 0.001
+    tick_interval: 30
+    env_prefix: MARCOSUB1_
+    health_path: /home/marco/denaro/health/sol.json
+    stop_loss_pct: 0.15
+    sell_levels: 2
+    sell_distance: 0.01
+    sell_step: 0.008
+    enabled: true
+  - symbol: DOGE/EUR
+    mode: okx
+    capital: 3.0
+    levels: 3
+    buy_distance: 0.015
+    profit_target: 0.02
+    fee: 0.001
+    tick_interval: 30
+    env_prefix: MARCOSUB1_
+    health_path: /home/marco/denaro/health/doge.json
+    stop_loss_pct: 0.15
+    sell_levels: 3
+    sell_distance: 0.02
+    sell_step: 0.01
+    enabled: true
+  - symbol: ETH/EUR
+    mode: okx
+    capital: 9.0
+    levels: 3
+    buy_distance: 0.008
+    profit_target: 0.012
+    fee: 0.001
+    tick_interval: 30
+    env_prefix: MARCOSUB1_
+    health_path: /home/marco/denaro/health/eth.json
+    stop_loss_pct: 0.15
+    sell_levels: 2
+    sell_distance: 0.008
+    sell_step: 0.006
+    enabled: true
+
+  # ── LIVE KRAKEN (cutover attivo, ora locale nel Node su MARCODG1) ──
+  # GRID BILATERALE: il conto ha SOL 0.303 in asset (~25€) + ~26€ EUR (dopo
+  # il TP riempito). capital = capitale EUR per la griglia sotto; sell ladder
+  # vende l'asset sopra per incassare EUR e alimentare i buy sotto.
+  # NB: minimo Kraken SOL = 0.06 (~5€/ordine) → per_level deve essere >= 5€.
+  - symbol: SOL/EUR
+    mode: kraken
+    capital: 15.0
+    levels: 3
+    buy_distance: 0.01
+    profit_target: 0.015
+    fee: 0.0026
+    tick_interval: 30
+    env_prefix: KRAKEN_
+    health_path: /home/marco/denaro/health/sol_kraken.json
+    stop_loss_pct: 0.10
+    sell_levels: 4
+    sell_distance: 0.02
+    sell_step: 0.01
+    # SWAP 2026-08-27: pausa grid su Kraken (0 ordini, conto liquido) —
+    # il conto e' passato all'istanza TREND live (denaro-node-trend-live).
+    # Reversibile: riportare enabled: true e fermare il nodo trend-live.
+    enabled: false
+
+  # ── KRAKEN ex-ATLAS (stesso account del live → disabilitato) ──
+  - symbol: SOL/EUR
+    mode: kraken
+    capital: 26.0
+    levels: 5
+    buy_distance: 0.008
+    profit_target: 0.008
+    fee: 0.0026
+    tick_interval: 30
+    env_prefix: ATLAS_
+    stop_loss_pct: 0.10
+    enabled: false

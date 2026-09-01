@@ -80,6 +80,30 @@ class MarketDataHub:
         if tasks:
             await asyncio.gather(*tasks, return_exceptions=True)
 
+    async def close(self) -> None:
+        """P3 — stop dei canali + chiusura dei CLIENT (ccxt.pro mantiene una
+        aiohttp ClientSession: senza close() si accumulano 'Unclosed client
+        session' e socket a ogni restart del Node — memory leak visto nei
+        journal di produzione). Idempotente."""
+        log.info("hub.close: stop canali")
+        await self.stop()
+        for client in (self._pro, self._rest):
+            closer = getattr(client, "close", None)
+            log.info("hub.close: %s close=%s",
+                     type(client).__name__ if client else "None",
+                     closer is not None)
+            if closer is None:
+                continue
+            try:
+                if asyncio.iscoroutinefunction(closer):
+                    await closer()
+                else:
+                    closer()
+                log.info("hub.close: %s chiuso",
+                         type(client).__name__ if client else "None")
+            except Exception as e:  # noqa: BLE001
+                log.warning("close client fallito: %s", e)
+
     # --- subscription --------------------------------------------------------
 
     def subscribe(self, symbol: str, handler: PriceHandler) -> None:

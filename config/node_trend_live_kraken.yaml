@@ -1,0 +1,55 @@
+# DENARO — istanza TREND LIVE su Kraken (SWAP sul conto principale).
+# Il conto Kraken (~52€ EUR liquidi, griglia SOL in pausa) ospita il bot
+# momentum. Un solo engine per volta: node.yaml ha la griglia kraken
+# enabled:false (reversibile).
+# NB: il bot paper SOL sotto serve SOLO a nutrire l'hub prezzi (un nodo senza
+# paper bots non ha canali prezzi — vedi denaro_node._build_bots).
+data_dir: node_data_trend_live
+overrides_file: config/strategy_overrides_trend_live.json
+supervisor:
+  ram_critical_pct: 0.85
+  ram_throttle_pct: 0.70
+  cpu_critical_pct: 0.90
+  tick_max_factor: 5.0
+safemode:
+  caution_pct: 70.0
+  safe_pct: 85.0
+  emergency_pct: 95.0
+  interval_s: 10.0
+hub:
+  ws_enabled: false
+  poll_interval: 10
+  price_ttl: 30
+  ws_max_retries: 5
+  ws_retry_base_s: 2.0
+exchange_rest:
+  name: okx
+  eea: true
+bots:
+  # ── feeder prezzi (paper, virtuale: tiene vivo il canale hub per SOL/EUR) ──
+  - symbol: SOL/EUR
+    mode: paper
+    capital: 50
+    levels: 2
+    buy_distance: 0.01
+    profit_target: 0.015
+    fee: 0.001
+    tick_interval: 60
+  # ── MOMENTUM LIVE (conto Kraken principale, chiave TRENDSUB_) ──
+  # Kraken: min SOL 0.06 (~5€), fee maker 0.25% → TP >= 2.5% per coprire 2x0.25%.
+  # levels 4 → per_level = 40/4 = 10 <= free 12.04 (fix preflight, S1 tranche 1)
+  - symbol: SOL/EUR
+    mode: kraken
+    capital: 54.0
+    levels: 4
+    strategy: momentum
+    profit_target: 0.015
+    entry_slip: 0.002
+    fee: 0.0025
+    tick_interval: 30
+    env_prefix: TRENDSUB_
+    health_path: /home/marco/denaro/health/trend_sol_kraken.json
+    stop_loss_pct: 0.05
+    daily_loss_limit: 0.05
+    max_drawdown_limit: 0.15
+    enabled: true

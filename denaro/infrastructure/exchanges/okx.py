@@ -28,6 +28,11 @@ DEFAULT_REFILL_RATE = 5.0
 MAX_RETRIES = 3
 RETRY_BASE_S = 1.0
 
+# Caching rigido dei bilanci (requisito 4 ATLAS v6): i dati in tempo reale
+# arrivano dagli eventi WS (orders/fills), il balance REST e' solo un
+# fallback → refresh minimo ogni 15s.
+BALANCE_CACHE_TTL = 15.0
+
 
 class OKXPermanentError(Exception):
     """Errore non ritentabile (ordine invalido, chiave errata, ...)."""
@@ -56,12 +61,36 @@ class OKXAdapter:
         self.sandbox = sandbox
         self.ex = ccxt.okx(config)
         self.bucket = bucket or TokenBucket(DEFAULT_CAPACITY, DEFAULT_REFILL_RATE)
+        # cache bilanci con TTL (evita chiamate REST ridondanti)
+        self._balance_cache: Optional[tuple] = None  # (value, ts)
+
+    @property
+    def min_amount(self) -> float:
+        """Amount minimo di default per gli ordini (filtro conservative)."""
+        return 0.0
+
+    def min_amount_for(self, symbol: str) -> float:
+        """Amount minimo dell'exchange per un symbol (limits.amount.min)."""
+        try:
+            m = self.ex.market(symbol)
+            return float((m.get("limits", {}).get("amount", {}).get("min") or 0.0))
+        except Exception:
+            return 0.0
 
     # --- error classification ------------------------------------------------
 
     @staticmethod
     def _classify(exc: Exception) -> bool:
-        """True se l'errore e' transitorio (ritentabile)."""
+        """True se l'errore e' transitorio (ritentabile).
+
+        Gli errori di ORDINE sono PERMANENTI (InvalidOrder, InsufficientFunds,
+        OrderNotFound...): ritentarli in loop blocca il tick e congela le
+        health (bug visto in produzione: stop-loss DOGE appeso 90 min).
+        """
+        if isinstance(exc, (ccxt.InvalidOrder, ccxt.InsufficientFunds,
+                           ccxt.OrderNotFound, ccxt.NotSupported,
+                           ccxt.BadRequest)):
+            return False
         if isinstance(exc, ccxt.RateLimitExceeded):
             return True
         if isinstance(exc, ccxt.NetworkError):
@@ -109,10 +138,42 @@ class OKXAdapter:
     def fetch_ohlcv(self, symbol: str, timeframe: str = "1h", limit: int = 100) -> list:
         return self._call(self.ex.fetch_ohlcv, symbol, timeframe, limit)
 
+    def fetch_ohlcv_raw(self, symbol: str, timeframe: str = "1h",
+                        limit: int = 200) -> list:
+        """OHLCV via RAW API (bypassa il bug di ccxt 4.5.x su fetch_ohlcv).
+        Ritorna [[ts, o, h, l, c, v], ...] con ts in secondi."""
+        try:
+            m = self.ex.market(symbol)
+            inst = m["id"]
+        except Exception:
+            # markets non caricati → formato OKX BASE-QUOTE
+            inst = symbol.replace("/", "-")
+        bar = {"1h": "1H", "15m": "15m", "1d": "1D"}.get(timeframe, "1H")
+        try:
+            r = self._call(self.ex.publicGetMarketHistoryCandles,
+                           {"instId": inst, "bar": bar, "limit": str(limit)})
+        except Exception:
+            return []
+        data = r.get("data") if isinstance(r, dict) else r
+        return [[int(row[0]) / 1000.0, float(row[1]), float(row[2]),
+                 float(row[3]), float(row[4]), float(row[5])]
+                for row in (data or [])]
+
     # --- account --------------------------------------------------------------
 
     def fetch_balance(self) -> dict:
-        return self._call(self.ex.fetch_balance)
+        """Bilancio con cache TTL 15s (requisito 4: niente refresh ridondanti)."""
+        import time as _t
+        now = _t.time()
+        if self._balance_cache and (now - self._balance_cache[1]) < BALANCE_CACHE_TTL:
+            return self._balance_cache[0]
+        bal = self._call(self.ex.fetch_balance)
+        self._balance_cache = (bal, now)
+        return bal
+
+    def invalidate_balance(self) -> None:
+        """Forza il refresh al prossimo fetch (dopo un ordine/fill)."""
+        self._balance_cache = None
 
     def fetch_free_quote(self, quote: str = "EUR") -> float:
         bal = self.fetch_balance()
@@ -173,6 +234,10 @@ class OKXAdapter:
         if side == "buy":
             return self._call(self.ex.create_limit_buy_order, symbol, amount, price)
         return self._call(self.ex.create_limit_sell_order, symbol, amount, price)
+
+    def sell_market(self, symbol: str, amount: float) -> dict:
+        """Vendita immediata (stop-loss): market sell di `amount` asset."""
+        return self._call(self.ex.create_market_sell_order, symbol, amount)
 
     def cancel_order(self, order_id: str, symbol: str) -> dict:
         return self._call(self.ex.cancel_order, order_id, symbol)
