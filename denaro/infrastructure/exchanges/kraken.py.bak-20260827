@@ -57,9 +57,6 @@ class KrakenAdapter:
             return True
         if isinstance(exc, ccxt.ExchangeError):
             msg = str(exc).lower()
-            if any(t in msg for t in ("unknown order", "ordernotfound", "ordernotexist")):
-                # ordine inesistente (es. EOrder:Unknown order): PERMANENTE, no retry
-                return False
             return ("rate limit" in msg or "too many" in msg
                     or any(c in msg for c in ("eorder:", "egeneral:timedout")))
         return False

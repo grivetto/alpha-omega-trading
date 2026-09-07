@@ -53,10 +53,12 @@ keys_master.env
 *_PASSPHRASE=
 
 # File temporanei di diagnostica/operativi (non fanno parte del codice)
-_*.py
+# NOTA: non usare `_*.py` — ignora anche i __init__.py del package
 _*.sh
 _*.bat
 _*.md
+_*.tmp.py
+_*.bak.py
 
 
 *.sql.gz

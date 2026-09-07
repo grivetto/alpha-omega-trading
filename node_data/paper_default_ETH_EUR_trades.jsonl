@@ -1,0 +1,56 @@
+{"event": "buy_placed", "symbol": "ETH/EUR", "ts": 1787861550.4588006, "order_id": "paper-1f77e165a0", "amount": 0.00951678, "price": 2101.5512, "level": 0}
+{"event": "buy_placed", "symbol": "ETH/EUR", "ts": 1787861550.4600449, "order_id": "paper-1c7caf15c7", "amount": 0.00956558, "price": 2090.829, "level": 1}
+{"event": "buy_placed", "symbol": "ETH/EUR", "ts": 1787861550.461515, "order_id": "paper-981493b1d2", "amount": 0.00961489, "price": 2080.1068, "level": 2}
+{"event": "buy_placed", "symbol": "ETH/EUR", "ts": 1787861550.4620945, "order_id": "paper-93f0c452ed", "amount": 0.00966471, "price": 2069.3846, "level": 3}
+{"event": "buy_placed", "symbol": "ETH/EUR", "ts": 1787861550.4624772, "order_id": "paper-2e838bd959", "amount": 0.00971505, "price": 2058.6624, "level": 4}
+{"event": "buy_filled", "symbol": "ETH/EUR", "ts": 1787862182.2776299, "order_id": "paper-1f77e165a0", "entry": 2101.5512, "amount": 0.00951678, "sell_target": 2143.582224}
+{"event": "buy_filled", "symbol": "ETH/EUR", "ts": 1787862182.2798262, "order_id": "paper-1c7caf15c7", "entry": 2090.829, "amount": 0.00956558, "sell_target": 2132.64558}
+{"event": "buy_filled", "symbol": "ETH/EUR", "ts": 1787862182.2820387, "order_id": "paper-981493b1d2", "entry": 2080.1068, "amount": 0.00961489, "sell_target": 2121.708936}
+{"event": "buy_filled", "symbol": "ETH/EUR", "ts": 1787862182.284396, "order_id": "paper-93f0c452ed", "entry": 2069.3846, "amount": 0.00966471, "sell_target": 2110.772292}
+{"event": "buy_filled", "symbol": "ETH/EUR", "ts": 1787862182.2867663, "order_id": "paper-2e838bd959", "entry": 2058.6624, "amount": 0.00971505, "sell_target": 2099.835648}
+{"event": "buy_placed", "symbol": "ETH/EUR", "ts": 1787862212.2954926, "order_id": "paper-9f8a6f18cf", "amount": 0.00949769, "price": 2105.775, "level": 0}
+{"event": "buy_placed", "symbol": "ETH/EUR", "ts": 1787862212.297191, "order_id": "paper-9b3070e4bb", "amount": 0.0095464, "price": 2095.03125, "level": 1}
+{"event": "buy_placed", "symbol": "ETH/EUR", "ts": 1787862212.298747, "order_id": "paper-24ba39ad20", "amount": 0.00959561, "price": 2084.2875, "level": 2}
+{"event": "buy_placed", "symbol": "ETH/EUR", "ts": 1787862212.3002594, "order_id": "paper-38038743c3", "amount": 0.00964532, "price": 2073.54375, "level": 3}
+{"event": "buy_placed", "symbol": "ETH/EUR", "ts": 1787862212.3012938, "order_id": "paper-2f1d16b442", "amount": 0.00969556, "price": 2062.8, "level": 4}
+{"event": "sell_filled", "symbol": "ETH/EUR", "ts": 1787862212.3051996, "order_id": "paper-5248b4c134", "amount": 0.00951678, "entry": 2101.5512, "exit": 2143.582224, "profit": 0.3596000077158692, "total_pnl": 0.3596000077158692}
+{"event": "sell_filled", "symbol": "ETH/EUR", "ts": 1787862212.3072345, "order_id": "paper-0e0865167e", "amount": 0.00956558, "entry": 2090.829, "exit": 2132.64558, "profit": 0.3595998573434436, "total_pnl": 0.7191998650593128}
+{"event": "sell_filled", "symbol": "ETH/EUR", "ts": 1787862212.308782, "order_id": "paper-43ab911395", "amount": 0.00961489, "entry": 2080.1068, "exit": 2121.708936, "profit": 0.35959996530313276, "total_pnl": 1.0787998303624455}
+{"event": "sell_filled", "symbol": "ETH/EUR", "ts": 1787862212.3112257, "order_id": "paper-65c505a6e1", "amount": 0.00966471, "entry": 2069.3846, "exit": 2110.772292, "profit": 0.3596000366336405, "total_pnl": 1.438399866996086}
+{"event": "sell_filled", "symbol": "ETH/EUR", "ts": 1787862212.3124032, "order_id": "paper-7c5508d5b3", "amount": 0.00971505, "entry": 2058.6624, "exit": 2099.835648, "profit": 0.35960014652118133, "total_pnl": 1.7980000135172673}
+{"event": "buy_placed", "symbol": "ETH/EUR", "ts": 1787864678.8322153, "order_id": "paper-837915d85f", "amount": 0.00948762, "price": 2108.0094, "level": 0}
+{"event": "buy_placed", "symbol": "ETH/EUR", "ts": 1787864678.8329701, "order_id": "paper-01e21e521d", "amount": 0.00953628, "price": 2097.25425, "level": 1}
+{"event": "buy_placed", "symbol": "ETH/EUR", "ts": 1787864678.8335762, "order_id": "paper-9d51a1a54c", "amount": 0.00958543, "price": 2086.4991, "level": 2}
+{"event": "buy_placed", "symbol": "ETH/EUR", "ts": 1787864678.8339295, "order_id": "paper-2e4e634ea8", "amount": 0.0096351, "price": 2075.74395, "level": 3}
+{"event": "buy_placed", "symbol": "ETH/EUR", "ts": 1787864678.8343787, "order_id": "paper-45e4d1352f", "amount": 0.00968528, "price": 2064.9888, "level": 4}
+{"event": "buy_filled", "symbol": "ETH/EUR", "ts": 1787865641.568346, "order_id": "paper-837915d85f", "entry": 2108.0094, "amount": 0.00948762, "sell_target": 2150.169588}
+{"event": "buy_filled", "symbol": "ETH/EUR", "ts": 1787865641.5701523, "order_id": "paper-01e21e521d", "entry": 2097.25425, "amount": 0.00953628, "sell_target": 2139.199335}
+{"event": "buy_filled", "symbol": "ETH/EUR", "ts": 1787865641.5723233, "order_id": "paper-9d51a1a54c", "entry": 2086.4991, "amount": 0.00958543, "sell_target": 2128.229082}
+{"event": "buy_filled", "symbol": "ETH/EUR", "ts": 1787865641.5740223, "order_id": "paper-2e4e634ea8", "entry": 2075.74395, "amount": 0.0096351, "sell_target": 2117.258829}
+{"event": "buy_filled", "symbol": "ETH/EUR", "ts": 1787865641.5752487, "order_id": "paper-45e4d1352f", "entry": 2064.9888, "amount": 0.00968528, "sell_target": 2106.288576}
+{"event": "buy_placed", "symbol": "ETH/EUR", "ts": 1787865671.581671, "order_id": "paper-10902bdea4", "amount": 0.00949809, "price": 2105.6868, "level": 0}
+{"event": "buy_placed", "symbol": "ETH/EUR", "ts": 1787865671.5832644, "order_id": "paper-f5e65b23eb", "amount": 0.0095468, "price": 2094.9435, "level": 1}
+{"event": "buy_placed", "symbol": "ETH/EUR", "ts": 1787865671.585571, "order_id": "paper-f248b38ffd", "amount": 0.00959601, "price": 2084.2002, "level": 2}
+{"event": "buy_placed", "symbol": "ETH/EUR", "ts": 1787865671.5870712, "order_id": "paper-43097d4d61", "amount": 0.00964573, "price": 2073.4569, "level": 3}
+{"event": "buy_placed", "symbol": "ETH/EUR", "ts": 1787865671.5886407, "order_id": "paper-957591d27f", "amount": 0.00969597, "price": 2062.7136, "level": 4}
+{"event": "sell_filled", "symbol": "ETH/EUR", "ts": 1787865671.5909617, "order_id": "paper-952c5c7b3e", "amount": 0.00953628, "entry": 2097.25425, "exit": 2139.199335, "profit": 0.35960006759023955, "total_pnl": 2.157600081107507}
+{"event": "sell_filled", "symbol": "ETH/EUR", "ts": 1787865671.5922322, "order_id": "paper-a0365e820e", "amount": 0.00958543, "entry": 2086.4991, "exit": 2128.229082, "profit": 0.35959983940466955, "total_pnl": 2.5171999205121764}
+{"event": "sell_filled", "symbol": "ETH/EUR", "ts": 1787865671.593916, "order_id": "paper-3858f4090e", "amount": 0.0096351, "entry": 2075.74395, "exit": 2117.258829, "profit": 0.35960000957695826, "total_pnl": 2.8767999300891347}
+{"event": "sell_filled", "symbol": "ETH/EUR", "ts": 1787865671.5969138, "order_id": "paper-2c8309798a", "amount": 0.00968528, "entry": 2064.9888, "exit": 2106.288576, "profit": 0.35959990515305407, "total_pnl": 3.2363998352421888}
+{"event": "sell_filled", "symbol": "ETH/EUR", "ts": 1787865731.6072526, "order_id": "paper-4e5a10e328", "amount": 0.00948762, "entry": 2108.0094, "exit": 2150.169588, "profit": 0.35959985874243827, "total_pnl": 3.595999693984627}
+{"event": "buy_placed", "symbol": "ETH/EUR", "ts": 1787867929.696335, "order_id": "paper-fc8dd458f1", "amount": 0.00949592, "price": 2106.167, "level": 0}
+{"event": "buy_placed", "symbol": "ETH/EUR", "ts": 1787867929.6978066, "order_id": "paper-10e2abbf9a", "amount": 0.00954462, "price": 2095.42125, "level": 1}
+{"event": "buy_placed", "symbol": "ETH/EUR", "ts": 1787867929.6992984, "order_id": "paper-7f454c0bbd", "amount": 0.00959382, "price": 2084.6755, "level": 2}
+{"event": "buy_placed", "symbol": "ETH/EUR", "ts": 1787867929.7007449, "order_id": "paper-46bc068d0a", "amount": 0.00964353, "price": 2073.92975, "level": 3}
+{"event": "buy_placed", "symbol": "ETH/EUR", "ts": 1787867929.7011125, "order_id": "paper-3931f2d92f", "amount": 0.00969375, "price": 2063.184, "level": 4}
+{"event": "buy_filled", "symbol": "ETH/EUR", "ts": 1787868106.7459645, "order_id": "paper-fc8dd458f1", "entry": 2106.167, "amount": 0.00949592, "sell_target": 2148.29034}
+{"event": "buy_filled", "symbol": "ETH/EUR", "ts": 1787868106.7475502, "order_id": "paper-10e2abbf9a", "entry": 2095.42125, "amount": 0.00954462, "sell_target": 2137.329675}
+{"event": "buy_filled", "symbol": "ETH/EUR", "ts": 1787868106.750471, "order_id": "paper-7f454c0bbd", "entry": 2084.6755, "amount": 0.00959382, "sell_target": 2126.36901}
+{"event": "buy_filled", "symbol": "ETH/EUR", "ts": 1787868106.7509007, "order_id": "paper-46bc068d0a", "entry": 2073.92975, "amount": 0.00964353, "sell_target": 2115.408345}
+{"event": "buy_filled", "symbol": "ETH/EUR", "ts": 1787868106.7517798, "order_id": "paper-3931f2d92f", "entry": 2063.184, "amount": 0.00969375, "sell_target": 2104.44768}
+{"event": "buy_placed", "symbol": "ETH/EUR", "ts": 1787899604.2191026, "order_id": "paper-56f28bff51", "amount": 0.00162866, "price": 2146.56, "level": 0}
+{"event": "buy_placed", "symbol": "ETH/EUR", "ts": 1788021930.8643649, "order_id": "paper-2000c86f95", "amount": 0.00165476, "price": 2112.704256, "level": 0}
+{"event": "buy_placed", "symbol": "ETH/EUR", "ts": 1788025830.2309697, "order_id": "paper-10efb57943", "amount": 0.00165433, "price": 2113.253376, "level": 0}
+{"event": "buy_canceled", "symbol": "ETH/EUR", "ts": 1788025980.2441444, "order_id": "paper-10efb57943"}
+{"event": "buy_placed", "symbol": "ETH/EUR", "ts": 1788026430.2797172, "order_id": "paper-fac48cc608", "amount": 0.00165316, "price": 2114.750976, "level": 0}
+{"event": "buy_filled", "symbol": "ETH/EUR", "ts": 1788026459.8058827, "order_id": "paper-fac48cc608", "entry": 2114.750976, "amount": 0.00165316, "sell_target": 2140.127988}

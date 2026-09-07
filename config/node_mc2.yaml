@@ -33,7 +33,7 @@ bots:
   sell_levels: 2
   sell_distance: 0.02
   sell_step: 0.01
-  enabled: true
+  enabled: false  # chiave OKX morta (50119)
 - symbol: SOL/EUR
   mode: okx
   capital: 20.0
@@ -80,5 +80,5 @@ bots:
   sell_levels: 2
   sell_distance: 0.02
   sell_step: 0.01
-  enabled: true
+  enabled: false  # chiave OKX morta (50119)
   min_notional: 1.0

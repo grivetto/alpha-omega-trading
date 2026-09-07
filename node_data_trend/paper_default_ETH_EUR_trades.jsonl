@@ -1,0 +1,24 @@
+{"event": "buy_placed", "symbol": "ETH/EUR", "ts": 1787787212.3058522, "order_id": "paper-ac5da6f6af", "amount": 0.0142628, "price": 2103.374, "level": 0}
+{"event": "buy_placed", "symbol": "ETH/EUR", "ts": 1787787212.3077443, "order_id": "paper-943358fe7c", "amount": 0.01433594, "price": 2092.6425, "level": 1}
+{"event": "buy_placed", "symbol": "ETH/EUR", "ts": 1787787212.308919, "order_id": "paper-f1d18a2af0", "amount": 0.01440984, "price": 2081.911, "level": 2}
+{"event": "buy_placed", "symbol": "ETH/EUR", "ts": 1787787212.310561, "order_id": "paper-0442e3b486", "amount": 0.0144845, "price": 2071.1795, "level": 3}
+{"event": "buy_placed", "symbol": "ETH/EUR", "ts": 1787787212.311712, "order_id": "paper-5b634a65f9", "amount": 0.01455994, "price": 2060.448, "level": 4}
+{"event": "buy_filled", "symbol": "ETH/EUR", "ts": 1787787308.899392, "order_id": "paper-ac5da6f6af", "entry": 2103.374, "amount": 0.0142628, "sell_target": 2155.95835}
+{"event": "buy_filled", "symbol": "ETH/EUR", "ts": 1787787308.9013004, "order_id": "paper-943358fe7c", "entry": 2092.6425, "amount": 0.01433594, "sell_target": 2144.958562}
+{"event": "buy_filled", "symbol": "ETH/EUR", "ts": 1787787308.9028864, "order_id": "paper-f1d18a2af0", "entry": 2081.911, "amount": 0.01440984, "sell_target": 2133.958775}
+{"event": "buy_filled", "symbol": "ETH/EUR", "ts": 1787787308.9043727, "order_id": "paper-0442e3b486", "entry": 2071.1795, "amount": 0.0144845, "sell_target": 2122.958988}
+{"event": "buy_filled", "symbol": "ETH/EUR", "ts": 1787787308.9060504, "order_id": "paper-5b634a65f9", "entry": 2060.448, "amount": 0.01455994, "sell_target": 2111.9592}
+{"event": "sell_filled", "symbol": "ETH/EUR", "ts": 1787787338.9111788, "order_id": "paper-7f2adb846d", "amount": 0.01440984, "entry": 2081.911, "exit": 2133.958775, "profit": 0.6892501011874188, "total_pnl": 0.6892501011874188}
+{"event": "sell_filled", "symbol": "ETH/EUR", "ts": 1787787338.9123108, "order_id": "paper-aba6de28cb", "amount": 0.0144845, "entry": 2071.1795, "exit": 2122.958988, "profit": 0.6892499950065591, "total_pnl": 1.378500096193978}
+{"event": "sell_filled", "symbol": "ETH/EUR", "ts": 1787787338.9130964, "order_id": "paper-781de87fce", "amount": 0.01455994, "entry": 2060.448, "exit": 2111.9592, "profit": 0.6892499828404333, "total_pnl": 2.067750079034411}
+{"event": "sell_filled", "symbol": "ETH/EUR", "ts": 1787787368.9148169, "order_id": "paper-7cba7bfe84", "amount": 0.01433594, "entry": 2092.6425, "exit": 2144.958562, "profit": 0.6892499312995106, "total_pnl": 2.757000010333922}
+{"event": "buy_placed", "symbol": "ETH/EUR", "ts": 1787787938.949329, "order_id": "paper-2fa567bb2d", "amount": 0.10470213, "price": 2148.95348, "level": 0}
+{"event": "sell_filled", "symbol": "ETH/EUR", "ts": 1787788058.960635, "order_id": "paper-44bddd16da", "amount": 0.0142628, "entry": 2103.374, "exit": 2155.95835, "profit": 0.6892500617384236, "total_pnl": 3.4462500720723455}
+{"event": "buy_filled", "symbol": "ETH/EUR", "ts": 1787788148.969408, "order_id": "paper-2fa567bb2d", "entry": 2148.95348, "amount": 0.10470213, "sell_target": 2202.677317}
+{"event": "buy_placed", "symbol": "ETH/EUR", "ts": 1787788599.003792, "order_id": "paper-d782d42bb2", "amount": 0.03651426, "price": 2146.31876, "level": 0}
+{"event": "buy_canceled", "symbol": "ETH/EUR", "ts": 1787788989.037218, "order_id": "paper-d782d42bb2"}
+{"event": "buy_placed", "symbol": "ETH/EUR", "ts": 1787789319.0660512, "order_id": "paper-266a925ede", "amount": 0.03648305, "price": 2148.15508, "level": 0}
+{"event": "buy_canceled", "symbol": "ETH/EUR", "ts": 1787789589.0885484, "order_id": "paper-266a925ede"}
+{"event": "buy_placed", "symbol": "ETH/EUR", "ts": 1787822831.7157917, "order_id": "paper-eab375c766", "amount": 0.10241809, "price": 2196.87744, "level": 0}
+{"event": "sell_filled", "symbol": "ETH/EUR", "ts": 1787822831.7172406, "order_id": "paper-10d53c66fd", "amount": 0.10470213, "entry": 2148.95348, "exit": 2202.677317, "profit": 5.1693751522533375, "total_pnl": 8.615625224325683}
+{"event": "buy_filled", "symbol": "ETH/EUR", "ts": 1787822861.719713, "order_id": "paper-eab375c766", "entry": 2196.87744, "amount": 0.10241809, "sell_target": 2251.799376}

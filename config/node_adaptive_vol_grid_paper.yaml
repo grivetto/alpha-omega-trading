@@ -1,0 +1,49 @@
+# DENARO — AdaptiveVolGrid PAPER validation su MARCODG1 (SOL/EUR Kraken)
+# Validazione 48h + min 20 trade prima di promozione a LIVE (policy capo)
+# Capitale 13.5 EUR allocato, fee 0.26% Kraken
+data_dir: node_data_adaptive_vol_grid
+overrides_file: config/strategy_overrides_trend_live.json
+supervisor:
+  ram_critical_pct: 0.85
+  ram_throttle_pct: 0.70
+  cpu_critical_pct: 0.90
+  tick_max_factor: 5.0
+safemode:
+  caution_pct: 70.0
+  safe_pct: 85.0
+  emergency_pct: 95.0
+  interval_s: 10.0
+hub:
+  ws_enabled: false
+  poll_interval: 10
+  price_ttl: 30
+  ws_max_retries: 5
+  ws_retry_base_s: 2.0
+exchange_rest:
+  name: okx
+  eea: true
+bots:
+  # ── AdaptiveVolGrid PAPER (SOL/EUR, Kraken params) ──
+  - symbol: SOL/EUR
+    mode: paper
+    strategy: adaptive_vol_grid
+    capital: 13.5
+    levels: 4
+    atr_period: 14
+    atr_mult: 0.5
+    tp_atr_mult: 1.5
+    fee_rate: 0.0026
+    max_drawdown: 0.10
+    max_position_pct: 0.95
+    recenter_band_pct: 0.03
+    cooldown_ticks: 5
+    min_vol_ratio: 0.0005
+    max_vol_ratio: 0.10
+    max_tick_age: 60.0
+    tick_interval: 30
+    fee: 0.0026
+    health_path: /home/marco/denaro/health/adaptive_vol_grid_sol_paper.json
+    stop_loss_pct: 0.0
+    daily_loss_limit: 0.10
+    max_drawdown_limit: 0.15
+    enabled: true

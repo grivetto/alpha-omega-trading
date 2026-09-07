@@ -5,8 +5,8 @@
 data_dir: node_data
 supervisor:
   ram_critical_pct: 0.85
-  ram_throttle_pct: 0.7
-  cpu_critical_pct: 0.9
+  ram_throttle_pct: 0.70
+  cpu_critical_pct: 0.90
   tick_max_factor: 5.0
 safemode:
   caution_pct: 70.0
@@ -73,7 +73,7 @@ bots:
   # e ricomprare sotto. stop_loss 0.15 (il conto e' condiviso → oscillazioni
   # di equity comuni non devono fermare tutti insieme; il CB daily_loss resta).
   - symbol: ADA/EUR
-    mode: okx # DEAD-KEY
+    mode: okx
     capital: 20.0
     levels: 5
     buy_distance: 0.001
@@ -86,9 +86,9 @@ bots:
     sell_levels: 2
     sell_distance: 0.01
     sell_step: 0.008
-    enabled: false  # chiave OKX morta (50119)
+    enabled: true
   - symbol: SOL/EUR
-    mode: okx # DEAD-KEY
+    mode: okx
     capital: 13.5   # per_level 4.5 <= free reale ~4.80 (fix preflight, opzione A Hermes)
     levels: 3
     buy_distance: 0.01
@@ -101,9 +101,9 @@ bots:
     sell_levels: 2
     sell_distance: 0.01
     sell_step: 0.008
-    enabled: false  # chiave OKX morta (50119)
+    enabled: true
   - symbol: DOGE/EUR
-    mode: okx # DEAD-KEY
+    mode: okx
     capital: 3.0
     levels: 3
     buy_distance: 0.015
@@ -116,9 +116,9 @@ bots:
     sell_levels: 3
     sell_distance: 0.02
     sell_step: 0.01
-    enabled: false  # chiave OKX morta (50119)
+    enabled: true
   - symbol: ETH/EUR
-    mode: okx # DEAD-KEY
+    mode: okx
     capital: 9.0
     levels: 3
     buy_distance: 0.008
@@ -131,7 +131,7 @@ bots:
     sell_levels: 2
     sell_distance: 0.008
     sell_step: 0.006
-    enabled: false  # chiave OKX morta (50119)
+    enabled: true
 
   # ── LIVE KRAKEN (cutover attivo, ora locale nel Node su MARCODG1) ──
   # GRID BILATERALE: il conto ha SOL 0.303 in asset (~25€) + ~26€ EUR (dopo

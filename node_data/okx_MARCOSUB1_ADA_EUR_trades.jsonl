@@ -1,0 +1,133 @@
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787875398.30624, "order_id": "3871275423703191552", "amount": 21.85589317, "price": 0.183017, "level": 0}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787875398.468064, "order_id": "3871275429105455104", "amount": 21.96583215, "price": 0.182101, "level": 1}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787875398.6351135, "order_id": "3871275434709045248", "amount": 22.07688274, "price": 0.181185, "level": 2}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787875398.7955236, "order_id": "3871275440111308800", "amount": 22.1890619, "price": 0.180269, "level": 3}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1787875429.781269, "order_id": "3871275423703191552"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787875429.945842, "order_id": "3871276485298311168", "amount": 22.17700577, "price": 0.180367, "level": 3}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1787875930.042934, "order_id": "3871275429105455104"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1787875930.2024393, "order_id": "3871275434709045248"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1787875930.3588324, "order_id": "3871275440111308800"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1787875930.5164032, "order_id": "3871276485298311168"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787875930.6739144, "order_id": "3871293287042600960", "amount": 21.8678417, "price": 0.182917, "level": 0}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787875930.834899, "order_id": "3871293292310646784", "amount": 21.97790122, "price": 0.182001, "level": 1}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787875930.992164, "order_id": "3871293297679355904", "amount": 22.08895221, "price": 0.181086, "level": 2}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787875931.150246, "order_id": "3871293302947401728", "amount": 22.20125437, "price": 0.18017, "level": 3}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1787875992.4679182, "order_id": "3871293287042600960"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787875992.6307476, "order_id": "3871295365806772224", "amount": 22.1890619, "price": 0.180269, "level": 3}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1787876359.6523445, "order_id": "3871293292310646784"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787876359.8108256, "order_id": "3871307686423777280", "amount": 22.12866714, "price": 0.180761, "level": 3}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1787876879.8603318, "order_id": "3871293297679355904"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787876880.0193932, "order_id": "3871325141741293568", "amount": 22.08066065, "price": 0.181154, "level": 3}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1787879020.2518113, "order_id": "3871293302947401728"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1787879020.4082696, "order_id": "3871295365806772224"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787879020.5664694, "order_id": "3871396966546493440", "amount": 21.90952462, "price": 0.182569, "level": 2}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787879020.7261834, "order_id": "3871396971881648128", "amount": 22.02085375, "price": 0.181646, "level": 3}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1787879816.1055362, "order_id": "3871307686423777280"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787879816.2725255, "order_id": "3871423665975808000", "amount": 21.96136995, "price": 0.182138, "level": 3}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1787879938.8058183, "order_id": "3871325141741293568"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1787879938.9689343, "order_id": "3871396966546493440"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787879939.1314065, "order_id": "3871427788439769088", "amount": 21.75627533, "price": 0.183855, "level": 2}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787879939.2926803, "order_id": "3871427793909141504", "amount": 21.8667658, "price": 0.182926, "level": 3}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1787880398.3030496, "order_id": "3871396971881648128"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787880398.4660165, "order_id": "3871443201198346248", "amount": 21.84336126, "price": 0.183122, "level": 3}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1787880796.2348528, "order_id": "3871423665975808000"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787880796.4057117, "order_id": "3871456553781907456", "amount": 21.78483122, "price": 0.183614, "level": 3}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1787880827.1592314, "order_id": "3871427788439769088"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1787880827.322084, "order_id": "3871457591284944896", "amount": 21.7381853, "price": 0.184008, "level": 3}
+{"event": "sell_placed", "symbol": "ADA/EUR", "ts": 1787882295.7107098, "order_id": "3871506862277349376", "amount": 10.8473506, "price": 0.185638, "kind": "ladder"}
+{"event": "sell_placed", "symbol": "ADA/EUR", "ts": 1787882295.8739774, "order_id": "3871506867746721792", "amount": 10.8473506, "price": 0.187108, "kind": "ladder"}
+{"event": "sell_placed", "symbol": "ADA/EUR", "ts": 1787882911.5653565, "order_id": "3871527526908514304", "amount": 10.8706658, "price": 0.185335, "kind": "ladder"}
+{"event": "sell_placed", "symbol": "ADA/EUR", "ts": 1787882911.7248988, "order_id": "3871527532310777856", "amount": 10.8706658, "price": 0.186803, "kind": "ladder"}
+{"event": "sell_placed", "symbol": "ADA/EUR", "ts": 1787883129.0022223, "order_id": "3871534822883545088", "amount": 10.8998725, "price": 0.184931, "kind": "ladder"}
+{"event": "sell_placed", "symbol": "ADA/EUR", "ts": 1787883129.1627326, "order_id": "3871534828285808640", "amount": 10.8998725, "price": 0.186396, "kind": "ladder"}
+{"event": "sell_placed", "symbol": "ADA/EUR", "ts": 1787883285.6898422, "order_id": "3871540080493940736", "amount": 10.9115558, "price": 0.184628, "kind": "ladder"}
+{"event": "sell_placed", "symbol": "ADA/EUR", "ts": 1787883285.8488512, "order_id": "3871540085795540992", "amount": 10.9115558, "price": 0.18609, "kind": "ladder"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788105014.386849, "order_id": "3878980060879212544", "amount": 22.81490269, "price": 0.175324, "level": 0}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788105014.5534036, "order_id": "3878980066449248258", "amount": 22.92960039, "price": 0.174447, "level": 1}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788105014.7171803, "order_id": "3878980071918620672", "amount": 23.04558994, "price": 0.173569, "level": 2}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788105014.8788154, "order_id": "3878980077354438664", "amount": 23.16262479, "price": 0.172692, "level": 3}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788105046.4260564, "order_id": "3878980060879212544"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788105076.9805915, "order_id": "3878982161151774722", "amount": 23.14948782, "price": 0.17279, "level": 3}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788105681.1256852, "order_id": "3878980066449248258"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788105681.292251, "order_id": "3878980071918620672"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788105681.4583974, "order_id": "3878980077354438664"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788105681.6276596, "order_id": "3878982161151774722"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788105712.0953336, "order_id": "3879003471974191105", "amount": 22.80189712, "price": 0.175424, "level": 0}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788105712.2716427, "order_id": "3879003477879771136", "amount": 22.91659505, "price": 0.174546, "level": 1}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788105712.4411657, "order_id": "3879003483550470144", "amount": 23.03245273, "price": 0.173668, "level": 2}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788105712.6084764, "order_id": "3879003489254723584", "amount": 23.14948782, "price": 0.17279, "level": 3}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788105773.8719947, "order_id": "3879003471974191105"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788105804.4634042, "order_id": "3879006571296411648", "amount": 23.08375942, "price": 0.173282, "level": 3}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788105896.28385, "order_id": "3879003477879771136"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788105926.8490841, "order_id": "3879003483550470144"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788105927.0170078, "order_id": "3879010683559825408", "amount": 22.90203084, "price": 0.174657, "level": 2}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788105927.1837883, "order_id": "3879010689163415552", "amount": 23.01840321, "price": 0.173774, "level": 3}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788106341.0402355, "order_id": "3879003489254723584"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788106341.2032833, "order_id": "3879006571296411648"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788106341.3655994, "order_id": "3879010683559825408"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788106341.5296886, "order_id": "3879010689163415552"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788106371.972814, "order_id": "3879025613839224832", "amount": 22.75002275, "price": 0.175824, "level": 0}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788106372.1408165, "order_id": "3879025619241488384", "amount": 22.86445948, "price": 0.174944, "level": 1}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788106372.3134167, "order_id": "3879025625281286153", "amount": 22.98005331, "price": 0.174064, "level": 2}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788106372.474825, "order_id": "3879025630616440832", "amount": 23.09682188, "price": 0.173184, "level": 3}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788106403.221225, "order_id": "3879025613839224832"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788106403.3802185, "order_id": "3879025619241488384"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788106433.8918777, "order_id": "3879027691462545410", "amount": 22.90203084, "price": 0.174657, "level": 2}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788106434.052092, "order_id": "3879027696864808960", "amount": 23.01840321, "price": 0.173774, "level": 3}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788106464.7992828, "order_id": "3879025625281286153"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788106495.3508203, "order_id": "3879029753684381696", "amount": 22.94038368, "price": 0.174365, "level": 3}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788106556.599094, "order_id": "3879025630616440832"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788106587.1651099, "order_id": "3879027691462545410"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788106587.3283758, "order_id": "3879032839886819328", "amount": 22.77307767, "price": 0.175646, "level": 2}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788106587.4886787, "order_id": "3879032845322637312", "amount": 22.88879479, "price": 0.174758, "level": 3}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788107000.766487, "order_id": "3879027696864808960"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788107000.9300556, "order_id": "3879029753684381696"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788107001.093578, "order_id": "3879032839886819328"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788107001.2561522, "order_id": "3879032845322637312"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788107031.7095363, "order_id": "3879047750905974784", "amount": 22.65993667, "price": 0.176523, "level": 0}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788107031.873077, "order_id": "3879047756408901632", "amount": 22.77385561, "price": 0.17564, "level": 1}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788107032.032438, "order_id": "3879047761777610752", "amount": 22.88905674, "price": 0.174756, "level": 2}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788107032.200909, "order_id": "3879047767146319872", "amount": 23.00529697, "price": 0.173873, "level": 3}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788107123.8554997, "order_id": "3879047750905974784"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788107154.4152877, "order_id": "3879051868135444480", "amount": 22.96633136, "price": 0.174168, "level": 3}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788108889.8872414, "order_id": "3879047756408901632"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788108920.4519634, "order_id": "3879111126638088192", "amount": 22.94038368, "price": 0.174365, "level": 3}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788109072.983733, "order_id": "3879047761777610752"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788109103.5633144, "order_id": "3879117270790131712", "amount": 22.85009197, "price": 0.175054, "level": 3}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788109281.206566, "order_id": "3879047767146319872"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788109281.3744102, "order_id": "3879051868135444480"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788109281.5440898, "order_id": "3879111126638088192"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788109281.7084734, "order_id": "3879117270790131712"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788109312.1923256, "order_id": "3879124271184171008", "amount": 22.54511842, "price": 0.177422, "level": 0}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788109312.376582, "order_id": "3879124277358186496", "amount": 22.6585247, "price": 0.176534, "level": 1}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788109312.5517485, "order_id": "3879124283263766528", "amount": 22.77307767, "price": 0.175646, "level": 2}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788109312.7264829, "order_id": "3879124289102237696", "amount": 22.88879479, "price": 0.174758, "level": 3}
+{"event": "sell_placed", "symbol": "ADA/EUR", "ts": 1788109404.4968758, "order_id": "3879127368325353472", "amount": 11.2500107, "price": 0.179073, "kind": "ladder"}
+{"event": "sell_placed", "symbol": "ADA/EUR", "ts": 1788109404.6856062, "order_id": "3879127374600032256", "amount": 11.2500107, "price": 0.180491, "kind": "ladder"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788109941.1293964, "order_id": "3879124277358186496"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788109941.296423, "order_id": "3879124283263766528"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788109941.4617653, "order_id": "3879124289102237696"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788109971.9990044, "order_id": "3879146410666840064", "amount": 22.53241852, "price": 0.177522, "level": 0}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788109972.1686187, "order_id": "3879146416270430210", "amount": 22.64569675, "price": 0.176634, "level": 1}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788109972.3386502, "order_id": "3879146422041792512", "amount": 22.76024922, "price": 0.175745, "level": 2}
+{"event": "sell_placed", "symbol": "ADA/EUR", "ts": 1788110155.7837994, "order_id": "3879152577300353026", "amount": 11.2436783, "price": 0.179275, "kind": "ladder"}
+{"event": "sell_placed", "symbol": "ADA/EUR", "ts": 1788110155.951417, "order_id": "3879152583038160896", "amount": 11.2436783, "price": 0.180695, "kind": "ladder"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788110601.42116, "order_id": "3879146422041792512"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788110632.064793, "order_id": "3879168558772998144", "amount": 22.77385561, "price": 0.17564, "level": 1}
+{"event": "sell_placed", "symbol": "ADA/EUR", "ts": 1788110693.8051748, "order_id": "3879170630490738688", "amount": 11.3002327, "price": 0.17776, "kind": "ladder"}
+{"event": "sell_placed", "symbol": "ADA/EUR", "ts": 1788110693.967469, "order_id": "3879170635893002240", "amount": 11.3002327, "price": 0.179168, "kind": "ladder"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788112881.4477854, "order_id": "3879168558772998144"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788112912.1242526, "order_id": "3879245064824115200", "amount": 22.64710712, "price": 0.176623, "level": 0}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788113035.4928846, "order_id": "3879245064824115200"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788113066.1454732, "order_id": "3879250232944840704", "amount": 22.62149155, "price": 0.176823, "level": 0}
+{"event": "sell_placed", "symbol": "ADA/EUR", "ts": 1788113128.249421, "order_id": "3879252316809285632", "amount": 11.2881113, "price": 0.178568, "kind": "ladder"}
+{"event": "sell_placed", "symbol": "ADA/EUR", "ts": 1788113128.4138522, "order_id": "3879252322245103616", "amount": 11.2881113, "price": 0.179982, "kind": "ladder"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788114875.7037067, "order_id": "3879310951669256192", "amount": 22.51973292, "price": 0.177622, "level": 0}
+{"event": "sell_filled", "symbol": "ADA/EUR", "ts": 1788114876.6834056, "order_id": "3879170630490738688", "amount": 11.3002, "entry": 0.176022, "exit": 0.1778, "profit": 0.01609349623560008, "total_pnl": 0.01609349623560008}
+{"event": "sell_placed", "symbol": "ADA/EUR", "ts": 1788114999.410116, "order_id": "3879315102553821184", "amount": 11.2373416, "price": 0.179376, "kind": "ladder"}
+{"event": "sell_placed", "symbol": "ADA/EUR", "ts": 1788114999.5707648, "order_id": "3879315107922530308", "amount": 11.2373416, "price": 0.180797, "kind": "ladder"}
+{"event": "sell_placed", "symbol": "ADA/EUR", "ts": 1788118049.1546476, "order_id": "3879417434914377728", "amount": 50.6691416, "price": 0.178265, "kind": "ladder"}
+{"event": "sell_placed", "symbol": "ADA/EUR", "ts": 1788118049.3493192, "order_id": "3879417441189056512", "amount": 50.6691416, "price": 0.179677, "kind": "ladder"}
+{"event": "sell_placed", "symbol": "ADA/EUR", "ts": 1788118262.7899883, "order_id": "3879424603416121344", "amount": 50.6691416, "price": 0.178366, "kind": "ladder"}
+{"event": "sell_placed", "symbol": "ADA/EUR", "ts": 1788118262.960269, "order_id": "3879424609120374784", "amount": 50.6691416, "price": 0.179779, "kind": "ladder"}
+{"event": "stop_loss", "symbol": "ADA/EUR", "ts": 1788121147.3766134, "drawdown": 0.9392, "equity": 1.153540979575}
