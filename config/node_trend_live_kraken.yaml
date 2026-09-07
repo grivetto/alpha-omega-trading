@@ -37,12 +37,12 @@ bots:
     tick_interval: 60
   # ── MOMENTUM LIVE (conto Kraken principale, chiave TRENDSUB_) ──
   # Kraken: min SOL 0.06 (~5.36€ a 89.41), fee maker 0.25% → TP >= 2.5%.
-  # CALIBRATO al capitale reale 40€: per_level ~5.5€ (min operabile),
-  # levels 7 → usa il capitale in modo granulare anche con cash basso.
+  # levels 4 → per_level = 40/4 = 10. Il bot è in posizione (free ~0.70€),
+  # il preflight blocca correttamente i nuovi buy finché non vende.
   - symbol: SOL/EUR
     mode: kraken
     capital: 40.0
-    levels: 7
+    levels: 4
     strategy: momentum
     profit_target: 0.03
     entry_slip: 0.002
