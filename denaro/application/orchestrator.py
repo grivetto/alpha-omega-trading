@@ -393,10 +393,46 @@ class BotTask:
         sporco) sostituite con l'ultimo valore valido. Range plausibile per
         conti micro: [5% , 30×] del capitale — evita che una lettura sporca
         avveleni peak/daily/weekly baseline (bug weekly_loss_-99% visto in
-        produzione su DOGE nuvola)."""
+        produzione su DOGE nuvola).
+
+        Fix B1 (2026-09-07): per exchange live (Kraken/OKX), se l'equity bassa
+        e' coerente con free+asset*price (capitale reale spostato in asset),
+        trustarla invece di usare il fallback. Questo evita il preflight blocker
+        per bot trend con equity libera bassa ma posizione in asset consistente.
+        Per paper exchange l'equity e' calcolata localmente ed e' sempre coerente."""
         cap = max(1e-9, self.cfg.capital)
         lo, hi = cap * 0.05, cap * 30.0
         if equity is None or equity != equity or equity <= lo or equity > hi:
+            # coerenza check: solo per exchange live (KrakenAdapter/OKXAdapter)
+            # che hanno fetch_balance sincrono + price_source sincrono.
+            # PaperExchange ha equity locale coerente → skip.
+            from ..infrastructure.exchanges.paper import PaperExchange
+            if isinstance(self.ex, PaperExchange):
+                # paper: equity locale, sempre coerente se dentro range
+                # ma siamo qui perché equity <= lo o > hi → fallback
+                pass
+            else:
+                try:
+                    bal = self.ex.fetch_balance()
+                    free_q = float((bal.get("free", {}) or {}).get(
+                        self.cfg.symbol.split("/")[1] if "/" in self.cfg.symbol else "EUR", 0))
+                    base = self.cfg.symbol.split("/")[0]
+                    free_b = float((bal.get("free", {}) or {}).get(base, 0))
+                    price = self._price_source() if self._price_source else 0
+                    if asyncio.iscoroutinefunction(price):
+                        # non siamo in async qui → skip coerenza
+                        raise RuntimeError("async price source")
+                    price = float(price)
+                    if price > 0:
+                        estimated = free_q + free_b * price
+                        # tolleranza 20%: se equity bassa ~= estimated, e' reale
+                        if estimated > 0 and abs(equity - estimated) / estimated < 0.2:
+                            log.info("equity coerente con free+asset*price (%.4f~=%.4f) per %s — trust",
+                                     equity, estimated, self.cfg.symbol)
+                            self._last_sane_equity = equity
+                            return equity
+                except Exception:
+                    pass  # fallback al comportamento originale
             prev = getattr(self, "_last_sane_equity", cap)
             log.warning("equity sospetta %.4f per %s → uso %.4f",
                         equity, self.cfg.symbol, prev)
