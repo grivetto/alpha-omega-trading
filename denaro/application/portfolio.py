@@ -88,7 +88,12 @@ class PortfolioManager:
             # solo ordini nella stessa coppia quote (es. X/EUR)
             if sym and self.quote and not sym.endswith(f"/{self.quote}"):
                 continue
-            total += amt * price
+            notional = amt * price
+            if notional < 0:
+                log.warning("ordine buy con notional negativo: amt=%s price=%s sym=%s",
+                            amt, price, sym)
+                continue
+            total += notional
         return total
 
     def total_available(self, free: Optional[float] = None) -> float:
@@ -97,7 +102,8 @@ class PortfolioManager:
             total_available = free + (locked_cancellable_buys * 0.85)
         """
         free = float(free) if free is not None else self._free
-        return free + (self._locked * LOCKED_SAFETY_FACTOR)
+        raw = free + (self._locked * LOCKED_SAFETY_FACTOR)
+        return max(0.0, raw)  # clamp: available non puo' essere negativo
 
     @property
     def free(self) -> float:
