@@ -1,164 +1,228 @@
-<div align="center">
+# Alpha-Omega Trading
 
-# 💰 DENARO
+**_Codename "Denaro" — a unified, distributed grid-trading engine for OKX and Kraken, with realistic paper trading, staged live capital, and Zabbix-based monitoring._
 
-### *La macchina che genera denaro — grid trading su OKX e Kraken, su 3 nodi, monitorata e verificata.*
+Alpha-Omega trading is a Python system that runs the same trading engine across several machines ("nodes"), each trading one or more markets on OKX or Kraken through the CCXT library. It is designed for disciplined, backtested and paper-validated deployment, with a **small, staged live budget** — the live account is deliberately kept separate from development and is small enough that a full drawdown is affordable while the engine is still in validation.
 
-[![Python](https://img.shields.io/badge/python-3.12%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
-[![CCXT](https://img.shields.io/badge/exchange-OKX%20%7C%20Kraken-5741D9?logo=bitcoin&logoColor=white)](https://github.com/ccxt/ccxt)
-[![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20systemd-FCC624?logo=linux&logoColor=black)](https://www.freedesktop.org/wiki/Software/systemd/)
-[![License](https://img.shields.io/badge/license-Pubblico%20Dominio-black)](LICENSE)
-[![Monitoring](https://img.shields.io/badge/monitoring-Zabbix%20%2B%20Web%20Dashboard-FF6F00)]()
-[![Status](https://img.shields.io/badge/status-2%20NODI%20LIVE%20%7C%203%20BOTS%20LIVE-brightgreen)]()
-
-**Grid trading consolidato su 3 bot live (2 nodi, sub-account OKX/Kraken dedicati) + paper trade con motore realistico, edge verificato dal backtest su dati reali.**
-
-</div>
+> [English](README.md) · [Italiano](README.it.md) · [Español](README.es.md) · [ไทย](README.th.md)
 
 ---
 
-## 📌 Stato attuale (2026-09-07)
+## Table of contents
 
-| Componente | Stato |
-|---|---|
-| **MARCODG1** (87.106.222.123) | ✅ **SOL/Kraken grid** (trend-live) + **SOL/Kraken grid** (Kraken) + **ADA/OKX** running + **SOL/DOGE/ETH OKX** in CB weekly loss + 5 paper bot 500€ |
-| **nuvola** (87.106.3.15) | ✅ **SOL/Kraken trend-live** (conto principale) + paper DOGE feeder |
-| **mc2** (locale, 100.87.24.42 CGNAT) | ✅ Zabbix server + reverse SSH tunnel verso MARCODG1 |
-| Conto MAIN OKX | 🚫 **MAI usato per trading** — solo trasferimenti/appoggio (regola) |
-| Paper trade 500€ (5×100€) | ✅ motore realistico: fee reali, min_notional, slippage, MTM, stop-loss |
-| Ponte Hermes ⇄ DeepSeek | ✅ chat CLI (`dschat`) + canale web unico `:3080` + heartbeat Zabbix |
-| Zabbix | ✅ monitoraggio completo + trigger autohealing (auto-heal disabilitato per sicurezza) |
-| Dashboard web | ✅ https://mgrivett.ddns.net/dashboard/ |
-
-**Capitale reale verificato: ~29.5 EUR totali** (Kraken ~26 EUR + OKX ~1.56 EUR). I 50€ in arrivo (25€ Kraken + 25€ OKX) saranno assorbiti dai bot live.
+- [Honest status](#honest-status)
+- [What it does](#what-it-does)
+- [Architecture](#architecture)
+- [Safety and risk controls](#safety-and-risk-controls)
+- [Monitoring and alerting](#monitoring-and-alerting)
+- [Getting started](#getting-started)
+- [Running live and paper nodes](#running-live-and-paper-nodes)
+- [Running as systemd services](#running-as-systemd-services)
+- [Configuration](#configuration)
+- [Repository layout](#repository-layout)
+- [Testing](#testing)
+- [Roadmap](#roadmap)
+- [Disclaimer](#disclaimer)
+- [License](#license)
 
 ---
 
-## 🏗️ Architettura
+## Honest status
+
+This is **research-grade software in live validation**, not a finished money-making product.
+
+- Trading is real but conducted on a **small capital budget** (order of tens of euros), intentionally bounded so that bugs and drawdowns are affordable while the engine is proven out.
+- Strategies are first validated in a **realistic paper-trading engine** before any live capital is committed, and live capital is supposed to be increased in **stages** only after stat-based thresholds are met (see [Roadmap](#roadmap)).
+- Past attempts have **not consistently produced strong results**. The current codebase reflects lessons from those attempts: an emphasis on kill-switches, stop-losses, pre-flight checks, and honest accounting of fees/slippage rather than on optimistic forecasts.
+- No figure in this repository is a promise of future returns. See the [Disclaimer](#disclaimer).
+
+Treat this repository as a reference for how-not-to and how-to operate a small algorithmic trading fleet — and manage your own expectations accordingly.
+
+---
+
+## What it does
+
+The engine runs **two-sided grid trading**: it places buy orders as the price falls within a configured ladder of levels, and sell orders at take-profit levels above, harvesting small gains from oscillation while holding inventory between the levels. Several strategy families live under `denaro/domain/` (grid, momentum, mean-reversion, adaptive/volatility and regime-aware variants); the node engine around them is shared and exchange-agnostic.
+
+Core traits:
+
+- **Unified engine, many markets.** The same `denaro.denaro_node` process, configured via a YAML file, runs any combination of live and paper markets with per-bot capital, symbols, levels and risk settings.
+- **Realistic paper trading.** A dedicated paper engine applies real exchange fees, minimum notional, slippage and stop-losses so that simulation results are comparable to live behaviour.
+- **Exchange-agnostic.** All order and market-data access sits behind an adapter layer (CCXT-based) in `denaro/infrastructure/exchanges`, so strategies never talk to a specific exchange.
+- **Performance orientation.** Asynchronous I/O, WebSocket price feeds with ZMQ fan-out, rate limiting, and a supervisor that throttles ticks under CPU/RAM pressure.
+
+---
+
+## Architecture
+
+The fleet is distributed across three machine classes by role, not by a fixed topology:
+
+- **Trading nodes** — VPS hosts (the project currently uses two, referred to as nodes) that run one or more `denaro_node` processes. Each interprets its own `config/node_*.yaml` and reports health.
+- **Monitoring host** — a machine that aggregates node health and runs monitoring. In this deployment it sits behind CGNAT and is reached only through **reverse SSH tunnels** originated by the trading nodes, so no inbound firewall rule is required.
+- **Optional orchestration / feeder tiers** — the engine also includes a "brain"/feeder layer used to coordinate higher-level decisions and feed signals between components.
+
+A simplified view of the runtime relationships:
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                        DENARO — 2 NODI                          │
-│                                                                 │
-│  ┌──────────────┐  ┌──────────────┐                             │
-│  │  MARCODG1    │  │   nuvola     │                             │
-│  │ SOL/Kraken   │  │ SOL/Kraken   │                             │
-│  │ grid (trend) │  │ trend-live   │                             │
-│  │ + ADA/OKX    │  │ (conto main) │                             │
-│  │ + paper 500€ │  │ + paper      │                             │
-│  └──────┬───────┘  └──────┬───────┘                             │
-│         │                 │                                     │
-│  ┌──────▼─────────────────▼─────────────────┐                    │
-│  │           denaro_node (motore unificato) │                    │
-│  │  grid bilaterale: buy in calo, sell TP  │                    │
-│  │  preflight anti-deadlock + sizing       │                    │
-│  │  stop-loss + cooldown + safe-mode       │                    │
-│  └──────┬─────────────────┬─────────────────┘                    │
-│         │                 │                                        │
-│  ┌──────▼──────┐   ┌───────▼──────┐                                │
-│  │   mc2       │   │  Zabbix      │                                │
-│  │ (CGNAT)     │   │  + Dashboard │                                │
-│  │ reverse SSH │   │  HTTPS       │                                │
-│  └─────────────┘   └──────────────┘                                │
+┌──────────────┐   ┌──────────────┐     ┌──────────────┐
+│   NODE A     │   │   NODE B     │     │  ORCHESTRATOR│
+│ denaro_node  │   │ denaro_node  │     │ (optional)   │
+│ grid markets │   │ grid markets │     │  brain/feed  │
+└──────┬───────┘   └──────┬───────┘     └──────┬───────┘
+       │                  │                    │
+       └─────────┬────────┴────────────────────┘
+                 │   health / metrics over network
+        ┌────────▼─────────┐
+        │   MONITORING     │   Zabbix server + web dashboard
+        │   (aggregates,   │   reachable over reverse SSH tunnel
+        │    https access) │
+        └──────────────────┘
 ```
 
----
-
-## 🔧 Componenti Core
-
-| Modulo | Descrizione |
-|---|---|
-| `denaro/domain/` | Layer dominio: grid policies, risk, regime, indicators |
-| `denaro/application/` | Orchestration, portfolio, supervisor, safemode |
-| `denaro/infrastructure/` | Exchange adapters (OKX/Kraken), market data, storage |
-| `denaro/denaro_node.py` | Entry point unificato per tutti i nodi |
-| `push_metrics.py` | Push metriche a Zabbix (trapper) — fixato auto-heal |
-| `infra_aggregator.py` | Aggrega health da tutti i nodi su porta 8912 |
-| `health_server_v33.py` | Health endpoint per nodo (porta 8911) |
-| `config/*.yaml` | Config per nodo (node.yaml, node_paper.yaml, node_trend_live_kraken.yaml) |
+Communication, control-plane and monitoring details depend on the deployment; the mechanism currently used is **reverse SSH tunnels (autossh)** so that even a NATed host can be reached and can act as the monitoring server.
 
 ---
 
-## 📊 Monitoraggio & Alerting
+## Safety and risk controls
 
-- **Zabbix Server** su mc2 (Docker) → HTTPS via `https://mgrivett.ddns.net/`
-- **Items chiave**: `bot.kraken.*`, `bot.trend_live.*`, `project.*`, `svc.denaro-*`
-- **Trigger**: CB weekly loss, daily loss, preflight block, stale health, DeepSeek heartbeat
-- **Auto-heal**: **DISABILITATO** (causava riavvii spurii su bot live con capitale reale)
-- **Dashboard**: https://mgrivett.ddns.net/dashboard/ (nginx + Let's Encrypt)
+Risk management is a first-class concern, baked into the node engine rather than bolted on per strategy:
+
+- **Stop-loss** per bot and a **global daily / weekly circuit-breaker** that halts a symbol or node when configured loss limits are crossed.
+- **Pre-flight checks** before every order placement (anti-deadlock validation and position sizing) so a misconfigured or stale bot cannot trade blindly.
+- **Safe mode** — a graduated set of throttle states (caution → safe → emergency) driven by the supervisor (RAM/CPU/tick pressure) that progressively slows or stops a node before resources are exhausted.
+- **Sub-accounts.** Live OKX/Kraken trading runs on dedicated exchange **sub-accounts**, never on the main account, so operating mistakes stay contained.
+- **Credentials** live only in a local `.env` (never committed) and are loaded at runtime.
+- **Live budget staging.** Capital is grown in explicit stages (paper → small live → larger live) and only after the recorded triggers in the roadmap are met.
 
 ---
 
-## 🚀 Deploy & Operatività
+## Monitoring and alerting
 
-### Prerequisiti
-- Python 3.12+, `uv` o `venv`
-- Chiavi API OKX/Kraken in `.env` (mai in repo)
-- Docker + Docker Compose per Zabbix (su mc2)
+- **Zabbix** is used as the aggregation and alerting backend. Nodes push metrics (equity, per-bot PnL, pre-flight blocks, stale health, resource pressure) to the Zabbix **trapper**.
+- Triggers exist for: circuit-breaker crossings, daily/weekly loss, stale heartbeats, pre-flight blocks, resource pressure.
+- **Auto-heal is disabled by default.** Early iterations restarted live bots spuriously; recovery is now a deliberate, logged action rather than an automatic restart.
+- A read-only **web dashboard** provides an at-a-glance view of node and bot health.
 
-### Avvio rapido (su MARCODG1)
+---
+
+## Getting started
+
+Requirements:
+
+- Python **3.12+**
+- A `uv` or `venv` environment
+- Docker + Docker Compose only if you also run the Zabbix monitoring stack
+- Exchange API keys for OKX and/or Kraken (in a local `.env`, never committed)
+
+Clone and install:
+
 ```bash
-# Clona
 git clone git@github.com:grivetto/alpha-omega-trading.git
 cd alpha-omega-trading
 
-# Installa dipendenze
-python -m venv venv && source venv/bin/activate
+python -m venv venv
+source venv/bin/activate
 pip install -r requirements.txt
 
-# Configura .env con chiavi API (mai committare!)
-cp .env.example .env
-# modifica .env con le tue chiavi
+cp .env.example .env      # then fill in your API keys
+```
 
-# Avvia bot live (es. su MARCODG1)
+---
+
+## Running live and paper nodes
+
+The engine is a console application driven by a config file:
+
+```bash
+# Live grid node (per config file)
 python -m denaro.denaro_node --config config/node.yaml
 
-# Avvia paper trading
+# Paper trading node
 python -m denaro.denaro_node --config config/node_paper.yaml
 
-# Avvia trend-live Kraken
+# A Kraken trend-following live config (example)
 python -m denaro.denaro_node --config config/node_trend_live_kraken.yaml
 ```
 
-### Systemd services (produzione)
+Additional provided configs (`config/node_nuvola.yaml`, `config/node_mc2.yaml`, `config/node_adaptive_vol_grid_paper.yaml`, …) correspond to specific node/strategy roles; see the [Configuration](#configuration) section.
+
+Run `python -m denaro.denaro_node --help` for flags (`--verbose` is supported).
+
+---
+
+## Running as systemd services
+
+For production nodes, unit files are provided under `systemd/`. Typical steps on a given host:
+
 ```bash
-# Su MARCODG1
 sudo cp systemd/*.service /etc/systemd/system/
 sudo systemctl daemon-reload
-sudo systemctl enable --now denaro-node denaro-node-paper denaro-node-trend-live
+sudo systemctl enable --now denaro-node            # name depends on the host role
+```
 
-# Su nuvola
-sudo systemctl enable --now denaro-node-nuvola denaro-health-nuvola
+Unit files currently cover node, health, aggregator, dashboard, feeder and the reverse-tunnel (`zabbix-tunnel`) roles. **Adjust the `ExecStart` paths** in the units to match the user home, repository path and venv used on each host — the shipped values reflect one specific deployment.
 
-# Su mc2
-sudo systemctl enable --now zabbix-* denaro-tunnel-reverse
+---
+
+## Configuration
+
+Each node reads a YAML file that defines, among other things:
+
+- `exchange_rest`: exchange (e.g. `okx`) and EEA mode.
+- `bots`: a list of markets, each with symbol, `mode` (`live`/`paper`), `capital`, grid `levels` and strategy-specific settings.
+- `safemode`: the RAM/CPU throttle thresholds (`caution_pct`, `safe_pct`, `emergency_pct`) and their interval.
+- `supervisor`: resource-critical thresholds and tick throttling.
+- `data_dir`: where the node persists runtime state and market data.
+
+Keep exchange credentials out of config files — put them in `.env` and load them at runtime.
+
+---
+
+## Repository layout
+
+```
+config/                  Per-node YAML configuration
+denaro/
+  domain/                Strategies and risk/regime/indicator logic (grid, momentum, adaptive, …)
+  application/           Orchestration: portfolio, supervisor, safe-mode
+  infrastructure/        Exchange adapters (CCXT), market data, storage, feeder
+  denaro_node.py         Unified node entry point
+scripts/                 Deployment helpers
+systemd/                 systemd unit files (node, health, aggregator, tunnel, …)
+zabbix/                  Monitoring integration (healer, push_metrics)
+tests/                   Tests
+.env.example             Credential template (keys never committed)
 ```
 
 ---
 
-## 🔐 Sicurezza & Chiavi
+## Testing
 
-- **Mai committare chiavi API** — sono in `.env` (gitignored)
-- Sub-account OKX dedicati per bot (EEA, trasferimenti interni)
-- Chiavi Kraken separate per conto principale e sub-account
-- Zabbix accesso solo via HTTPS + autenticazione
+The project uses `pytest` (with `pytest-asyncio` for the async layers). Install the dev extras and run:
 
----
-
-## 📈 Roadmap
-
-- [ ] Validazione 60 giorni bot live Kraken (SOL grid + trend-live)
-- [ ] Soglie promozione automatica: profit factor > 1.3, max DD < 15%, Sharpe > 0.8
-- [ ] Iniezione graduale capitale: 50€ → 200€ → 500€ → 1000€
-- [ ] Template Zabbix "Denaro Grid Bot" con grafici equity/PnL/volume
-- [ ] Bot-as-a-service per terzi (gestione conto, fee su profitti)
+```bash
+pip install -e ".[dev]"
+pytest
+```
 
 ---
 
-## 📜 Licenza
+## Roadmap
 
-**Pubblico Dominio.** Questo codice è libero: usalo, copialo, modificalo, vendilo. **Usa al meglio questa tecnologia.**
+- [ ] Sustain a validated live record over a defined observation window (e.g. several weeks per bot).
+- [ ] Automatic promotion gates: a strategy may receive more capital only when it clears the recorded thresholds (profit factor, max drawdown, Sharpe).
+- [ ] Staged capital increase (paper → small live → 100–500 EUR → 1000 EUR) as conditions are met.
+- [ ] Monitoring templates with equity/PnL/volume charts per bot.
+- [ ] Cleaner packaging: align `pyproject.toml` metadata with the actual `denaro` package layout.
 
 ---
 
-> *DENARO — dalla baracca alla macchina che genera denaro. Usa al meglio questa tecnologia.*
+## Disclaimer
+
+**This software is provided for educational and research purposes only. It is not financial advice.** Algorithmic trading of crypto assets carries substantial risk, including total loss of the deployed capital. Past or paper performance does not guarantee future results; fees, slippage, liquidity gaps and exchange outages can all turn a profitable backtest into a losing live campaign. Only deploy capital you can afford to lose entirely, and never trade with money you rely on. The authors accept no liability for any loss arising from the use of this code.
+
+---
+
+## License
+
+Public domain (CC0-equivalent). See the [LICENSE](LICENSE) file for the full dedication — no rights reserved; use, copy, modify and sell freely, at your own risk.

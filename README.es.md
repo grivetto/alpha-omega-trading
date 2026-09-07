@@ -1,161 +1,228 @@
-<div align="center">
+# Alpha-Omega Trading
 
-# ⚡ ALPHA-OMEGA TRADING ⚡
+**_Nombre en clave "Denaro": un motor de trading en red (grid trading) unificado y distribuido para OKX y Kraken, con trading en papel realista, capital vivo por etapas y monitorización basada en Zabbix._
 
-### *El sistema de trading algorítmico distribuido definitivo — del papel a las ganancias, a través de dos nodos, sin compromisos.*
+Alpha-Omega trading es un sistema en Python que ejecuta el mismo motor de trading en varias máquinas ("nodos"), cada una operando uno o más mercados en OKX o Kraken a través de la librería CCXT. Está diseñado para un despliegue disciplinado, probado con backtests y validado en papel, con un **presupuesto vivo pequeño y por etapas** — la cuenta viva se mantiene deliberadamente separada del desarrollo y es lo bastante pequeña como para que un drawdown completo sea asumible mientras el motor sigue en fase de validación.
 
-[![License: Unlicense](https://img.shields.io/badge/license-Unlicense-blue.svg)](http://unlicense.org/)
-[![Python](https://img.shields.io/badge/python-3.12%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
-[![CCXT](https://img.shields.io/badge/exchange-CCXT%20Pro%20%2F%20Kraken%20%7C%20OKX-5741D9?logo=bitcoin&logoColor=white)](https://github.com/ccxt/ccxt)
-[![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20systemd%20%7C%20Docker-FCC624?logo=linux&logoColor=black)](https://www.freedesktop.org/wiki/Software/systemd/)
-[![Status](https://img.shields.io/badge/status-LIVE%20%E2%82%AC50%20CAPITAL%20%7C%2012%20BOTS%20OPERATIONAL-brightgreen)](https://github.com/grivetto/alpha-omega-trading)
-[![Architecture](https://img.shields.io/badge/architecture-distributed%2C%20async%2C%20fleet%20orchestrated-brightgreen)]()
-[![Monitoring](https://img.shields.io/badge/monitoring-Zabbix%20%2B%20Grafana%20%2B%20Telegram-FF6F00?logo=grafana&logoColor=white)]()
-
-**Sistema de trading distribuido, asíncrono y multiestrategia orquestado a través de dos máquinas. Datos de mercado en tiempo real vía ZeroMQ, estado compartido vía Redis Streams, gestión de riesgo de portafolio, selección dinámica de pares — todo validado en papel, ahora EN VIVO.**
-
-</div>
+> [English](README.md) · [Italiano](README.it.md) · [Español](README.es.md) · [ไทย](README.th.md)
 
 ---
 
-## 🚀 GO-LIVE: 2026-08-10 22:42:30 CEST — €50 CAPITAL REAL DESPLEGADO (Arquitectura v2.3 Split-by-Exchange)
+## Tabla de contenidos
 
-> **GO-LIVE CONFIRMADO** — El sistema está operativo con capital real. Arquitectura split-by-exchange: sin conflictos de cuenta.
-
-| Exchange | Cuenta | Capital | Nodo | Bots | Pares |
-|----------|--------|---------|------|------|-------|
-| **Kraken** | Compartida | €25.50 EUR | Nuvola | 6 | ADA, DOGE, ETH, LINK, SOL, XRP |
-| **OKX (EEA)** | Compartida | €25.00 EUR | MARCODG1 | 6 | ADA, BICO, DOGE, GRVT, LINK, XRP |
-| **TOTAL** | — | **€50** | 2 | **12** | 12 pares únicos |
-
-**Límites de Riesgo Activados (por exchange):**
-- Max DD por bot: 15% (€1.04)
-- Límite de pérdida diaria: 5% (€1.25)
-- Kill switch de portafolio: 20% (€5)
-- Filtro de correlación: 0.7
-- Máximo 2 posiciones por moneda base
-
-**Monitoreo:**
-- ✅ Zabbix en mc2 (monitoreo cada minuto)
-- ✅ Health API :8900 por nodo
+- [Estado honesto](#estado-honesto)
+- [Qué hace](#qué-hace)
+- [Arquitectura](#arquitectura)
+- [Controles de seguridad y riesgo](#controles-de-seguridad-y-riesgo)
+- [Monitorización y alertas](#monitorización-y-alertas)
+- [Primeros pasos](#primeros-pasos)
+- [Ejecutar nodos vivos y de papel](#ejecutar-nodos-vivos-y-de-papel)
+- [Ejecutar como servicios systemd](#ejecutar-como-servicios-systemd)
+- [Configuración](#configuración)
+- [Estructura del repositorio](#estructura-del-repositorio)
+- [Pruebas](#pruebas)
+- [Hoja de ruta](#hoja-de-ruta)
+- [Descargo de responsabilidad](#descargo-de-responsabilidad)
+- [Licencia](#licencia)
 
 ---
 
-## 🎯 Filosofía
+## Estado honesto
 
-> **La protección del capital es la ley. La eficiencia es ganancia. El código es la ley. La ganancia es la prueba. La distribución es resiliencia.**
+Se trata de **software de nivel de investigación en validación en vivo**, no de un producto terminado para generar dinero.
 
-Alpha-Omega Trading nació de una restricción simple: **el capital limitado no debe ser especulado — debe ser cultivado a través de una infraestructura distribuida y resiliente.**
+- El trading es real, pero se realiza con un **presupuesto de capital pequeño** (del orden de decenas de euros), acotado intencionadamente para que los bugs y los drawdowns sean asumibles mientras se demuestra el valor del motor.
+- Las estrategias se validan primero en un **motor de trading en papel realista** antes de comprometer cualquier capital vivo, y se prevé que el capital vivo aumente **por etapas** solo después de cumplir determinados umbrales estadísticos (véase la [Hoja de ruta](#hoja-de-ruta)).
+- Los intentos anteriores **no han producido de forma consistente resultados sólidos**. El código base actual refleja las lecciones de dichos intentos: un énfasis en los kill-switches, los stop-loss, las comprobaciones previas al vuelo y una contabilidad honesta de comisiones/deslizamiento (slippage), en lugar de pronósticos optimistas.
+- Ninguna cifra de este repositorio es una promesa de rentabilidades futuras. Véase el [Descargo de responsabilidad](#descargo-de-responsabilidad).
 
-Cada decisión de diseño sigue cuatro reglas:
-
-1. **🛡️ Nunca arriesgar lo que no puedes permitirte perder** — circuit breakers, límites de drawdown, caps de posición y límites de correlación no son características opcionales; son la base en cada capa (bot, portafolio, flota).
-2. **⚙️ No desperdiciar nada** — sin frameworks hinchados, sin procesos redundantes, sin servicios abandonados consumiendo RAM. I/O asíncrono, buffers circulares, arrays tipados, GC explícito. Un proceso, un propósito, huella mínima.
-3. **📈 Ventaja asimétrica** — órdenes de grid pequeñas y pacientes cosechando volatilidad. Muchas victorias pequeñas, pérdidas estrictamente acotadas. Múltiples estrategias para múltiples regímenes.
-4. **🌐 La distribución es resiliencia** — sin punto único de fallo. Dos nodos de trading, coordinador central, estado compartido, failover automático. La flota sobrevive caídas de nodos, cortes de exchange, particiones de red.
-
-Esto no es un bot para hacerse rico rápido. Es una **disciplina de ingeniería aplicada a los mercados**: empezar con €100, probar la estrategia en papel a través de una flota distribuida, y luego — y solo entonces — escalar con confianza.
+Trate este repositorio como una referencia de cómo-no-y-cómo operar una pequeña flota de trading algorítmico — y ajuste sus propias expectativas en consecuencia.
 
 ---
 
-## 📜 Historia del Proyecto
+## Qué hace
 
-| Milestone | Fecha / Commit | Descripción |
-|-----------|---------------|-------------|
-| **🌱 Live Bot (v0)** | pre-repo | Bot grid Kraken DOGE/EUR de un solo archivo. Funcionó en vivo en Raspberry Pi con ~€200 de capital durante meses. Persistencia systemd, recarga manual de estado. Probó el concepto; expuso los límites de un monolito. |
-| **📉 El Colapso de Binance** | 2026-06-29 → 07-01 | **El proyecto empezó a perder ritmo — y euros.** La flota live de Denaro estaba completamente operativa en sub-cuentas de Binance… hasta que no lo estuvo. Binance revocó silenciosamente los permisos de trading en API keys de sub-cuentas EU. Bots hambrientos, posiciones varadas, ~€206 congelados en medio del grid. Causa: **Aplicación MiCA el 1 de julio de 2026**. Lección: **el riesgo de exchange es riesgo real**. |
-| **🐙 El Pivote a Kraken** | 2026-07-01 | El mismo día: todo convertido a EUR en Binance (~€344 recuperados), retirado vía SEPA, infraestructura redirigida a **Kraken** — MiCA-compliant, licenciado en UE, API superior. Binance y Bybit deprecados permanentemente. |
-| **🏗️ p1 — Scaffold Modular** | `504172c` | Refactor completo. Monolito dividido en 5 módulos limpios: `engine`, `exchange`, `strategy`, `state`, `risk`. Arquitectura inspirada en Freqtrade, Hummingbot, OctoBot, Jesse. |
-| **🔄 p2 — Paper Runner** | `0b2e0f3` | `PaperEngine` loop principal: intervalo de tick configurable, grid wiring, persistencia de estado a JSON. Entry point `run_paper.py`. |
-| **🩹 p2.1 — Fix Sandbox Kraken** | `054b957` | El cliente CCXT de Kraken no tiene atributo `sandbox`. El adaptador de exchange captura el error y hace fallback a API live readonly. |
-| **🛡️ p2.2 — Guard + Graceful Shutdown** | `015627a` | Guard `getattr` contra `AttributeError`; manejador SIGINT/SIGTERM detiene engine, guarda portafolio, sale limpiamente. |
-| **🧹 p3 — Limpieza de Infraestructura** | — | Eliminación de **todos** los servicios legacy Denaro, cron jobs, units systemd, timers, binarios y procesos huérfanos en ambos nodos. Un servicio sobrevive: `denaro-paper`. |
-| **🧪 p4 — Test Suite Paper Trading** | actual | 33 tests unitarios + integración. Engine tick, risk gates, grid, trailing stop, fill/orderbook de paper exchange, runner de backtest. |
-| **🌐 DDNS + Automatización Multi-Nodo** | 2026-07-30 | **No-IP DDNS desplegado en ambos nodos de trading** (`nuvola` → `sgrivett.ddns.net`, `MARCODG1` → `mgrivett.ddns.net`). Systemd timer (10 min) + archivo de credenciales seguro. |
-| **🔑 Rotación & Validación de API Keys** | 2026-07-31 | **Key Kraken rotada** (post-MiCA). Nueva key validada: permisos de trading ✅. **Keys MEXC validadas en ambos nodos**. Bybit deprecado (MiCA), eliminado. |
-| **💸 El Misterio de los 115 USDT** | 2026-07-22 | **115.74 USDT (ERC20) enviados a Kraken — nunca llegaron. No on-chain.** API de Kraken carece de permisos de funding. Ticket de soporte abierto con TxID, prueba de no-llegada. |
-| **🤖 Airdrop Farm v1** | 2026-07-31 | **Airdrop farmer autónomo multiestrategia** desplegado en nuvola (systemd). 20 wallets, 4 estrategias, €250 virtual/€100 real. Scheduler Poisson, circuit breaker, idempotente. Zabbix en MC2. |
-| **🔄 Reboot Completo & Verificación** | 2026-07-31 | Ambos nodos reiniciados para actualizaciones de kernel. Post-reboot: todos los servicios systemd saludables. |
-| **⚡ ShadowGrid v2.0 & Fleet Multi-Bot** | 2026-08-07 | **Transformación completa en una flota adaptativa de 14 bots a través de 2 exchanges.** Spread adaptativo ATR, filtro de momentum ADX/RSI, circuit breaker DD 15%, límite de pérdida diaria 5%, re-anclaje dinámico 6%. Supervisor de flota, scanner de pares, rebalancer. 14 bots totales, €200 capital paper. |
-| **🛡️ ShadowGrid v2.1 — Riesgo & Alertas** | 2026-08-08 | **Gestión de riesgo a nivel de portafolio + alertas multi-canal.** Risk Manager: matriz de correlación, límites de exposición, targeting de volatilidad, asignación de riesgo paritario, kill switch multi-capa. Alert System: canales Telegram/Email/Log con deduplicación. Selección dinámica de pares con detección de régimen, scoring de decaimiento de rendimiento, filtrado de correlación, auto-rotación semanal. |
-| **🏗️ ShadowGrid v2.2 — Arquitectura Unificada** | 2026-08-09 | **Unificación de ShadowGrid v2 (features de producción) + neo (rendimiento async).** Nuevo paquete `alpha_omega` con UnifiedTradingEngine, DistributedFleetCoordinator, DistributedPairScanner, PortfolioRiskManager. ZeroMQ Pub/Sub para datos de mercado, Redis Streams para estado compartido, elección de líder Raft. 24 bots (12/nodo), €200 capital paper. Todos los issues de auditoría resueltos. |
-| **🚀 GO-LIVE — Trading en Vivo con Capital Real** | **2026-08-10 22:42:30 CEST** | **€50 de capital real desplegados en 2 nodos.** Endpoint OKX EEA (`eea.okx.com`) validado. Keys live de Kraken validadas. 12 bots operativos (6/nodo). Gestión de riesgo armada. Arquitectura split-by-exchange: Nuvola=Kraken, MARCODG1=OKX. |
-| **🏗️ v2.3 — Arquitectura Split-by-Exchange** | **2026-08-11** | **Fix crítico: eliminados conflictos de cuenta.** Nuvola tradea solo Kraken (6 bots), MARCODG1 solo OKX (6 bots). Cuentas compartidas por exchange, sin colisiones de órdenes. Zabbix monitoring desplegado en mc2. Capital total correcto: €50 (no €101). Endpoint OKX WebSocket arreglado (eea.okx.com). |
-| **🔑 Validación & Testing de API Keys** | **2026-08-22** | **Testing completo de API keys en todos los nodos.** Keys Kraken en NUVOLA (2 pares funcionando, EUR=22.20), keys OKX en MARCODG1 (estables 2+ días). Arreglados problemas de base64 padding e IP whitelist. Todos los exchanges operativos. |
-| **🤝 Compatibilidad Denaro-Atlas** | **2026-08-22** | **Capa de compatibilidad oficial entre Denaro (legacy estable) y Atlas (next-gen gestionado por Hermes).** Ambos sistemas coexisten en los mismos nodos con API keys separadas. Denaro ejecuta solo-engine (Kraken/OKX grid), Atlas vía Hermes AI. Sin conflictos con aislamiento de keys. Estado operativo completo en NUVOLA y MARCODG1. |
+El motor ejecuta **trading en red (grid trading) de doble sentido**: coloca órdenes de compra a medida que el precio cae dentro de una escalera de niveles configurada, y órdenes de venta en niveles de toma de beneficios por encima, cosechando pequeñas ganancias de la oscilación mientras mantiene inventario entre los niveles. Varias familias de estrategias viven bajo `denaro/domain/` (grid, momentum, mean-reversion, variantes adaptativas/volatilidad y sensibles al régimen); el motor de nodo que las rodea es compartido e independiente del exchange.
+
+Rasgos principales:
+
+- **Motor unificado, muchos mercados.** El mismo proceso `denaro.denaro_node`, configurado mediante un archivo YAML, ejecuta cualquier combinación de mercados vivos y de papel con capital, símbolos, niveles y ajustes de riesgo por bot.
+- **Trading en papel realista.** Un motor de papel dedicado aplica las comisiones reales del exchange, el nocional mínimo, el deslizamiento (slippage) y los stop-loss, de modo que los resultados de la simulación sean comparables al comportamiento en vivo.
+- **Independiente del exchange.** Todo el acceso a órdenes y a datos de mercado se sitúa detrás de una capa de adaptadores (basada en CCXT) en `denaro/infrastructure/exchanges`, de modo que las estrategias nunca hablan con un exchange específico.
+- **Orientación al rendimiento.** I/O asíncrono, feeds de precios por WebSocket con difusión ZMQ, limitación de velocidad (rate limiting) y un supervisor que ralentiza los ticks bajo presión de CPU/RAM.
 
 ---
 
-## 🤝 Compatibilidad Denaro-Atlas
+## Arquitectura
 
-Alpha-Omega Trading ahora soporta oficialmente la coexistencia de dos sistemas de trading en los mismos nodos:
+La flota se distribuye entre tres clases de máquinas según su rol, no según una topología fija:
 
-| Sistema | Versión | Gestor | Exchange | Descripción |
-|---------|---------|--------|----------|-------------|
-| **Denaro** | v3.x (legacy) | Sistema operativo | Kraken, OKX | Motor SOLO estable, grid multi-nivel, systemd |
-| **Atlas** | Next-gen | Hermes AI | Kraken, OKX | Arquitectura async moderna, DCA + Grid, auto-healing |
+- **Nodos de trading** — hosts VPS (el proyecto usa actualmente dos, denominados nodos) que ejecutan uno o varios procesos `denaro_node`. Cada uno interpreta su propio `config/node_*.yaml` e informa de su estado de salud.
+- **Host de monitorización** — una máquina que agrega el estado de salud de los nodos y ejecuta la monitorización. En este despliegue se encuentra detrás de CGNAT y solo se alcanza a través de **túneles SSH inversos** originados por los nodos de trading, por lo que no se requiere ninguna regla de firewall de entrada.
+- **Niveles opcionales de orquestación / alimentación (feeder)** — el motor también incluye una capa de "cerebro"/feeder utilizada para coordinar decisiones de nivel superior y alimentar señales entre componentes.
 
-**Requisitos para coexistencia:**
-- API keys **separadas** por sistema (no compartir keys entre Denaro y Atlas)
-- Sub-cuentas OKX dedicadas o keys globales separadas
-- Cada sistema gestiona su propio estado y posiciones
-
-**Beneficios:**
-- ✅ Denaro: Estabilidad probada, simple, confiable
-- ✅ Atlas: Features avanzadas, gestión automática por IA
-- ✅ Diversificación de estrategias en el mismo hardware
-
----
-
-## 🏗️ Arquitectura
+Una vista simplificada de las relaciones en tiempo de ejecución:
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                      SISTEMA ALPHA-OMEGA TRADING                             │
-└─────────────────────────────────────────────────────────────────────────────┘
-
-           ┌──────────────┐         ┌──────────────┐         ┌──────────────┐
-           │     mc2      │◄───────►│    nuvola    │◄───────►│  MARCODG1    │
-           │  (Home/DB)   │  ZeroMQ │  (Primario)  │  ZeroMQ │ (Secundario) │
-           └──────┬───────┘         └──────┬───────┘         └──────┬───────┘
-                  │                        │                        │
-                  │         ┌──────────────┴──────────────┐        │
-                  │         │        Redis Cluster        │        │
-                  │         │   (Estado Compartido)       │        │
-                  │         └──────────────┬──────────────┘        │
-                  │                        │                        │
-                  ▼                        ▼                        ▼
-         ┌───────────────┐         ┌───────────────┐         ┌───────────────┐
-         │ TimescaleDB   │         │  Kraken EUR   │         │  OKX USDT     │
-         │ Histórico     │         │  Denaro+Atlas │         │  Denaro+Atlas │
-         └───────────────┘         └───────────────┘         └───────────────┘
+┌──────────────┐   ┌──────────────┐     ┌──────────────┐
+│   NODE A     │   │   NODE B     │     │  ORCHESTRATOR│
+│ denaro_node  │   │ denaro_node  │     │ (optional)   │
+│ grid markets │   │ grid markets │     │  brain/feed  │
+└──────┬───────┘   └──────┬───────┘     └──────┬───────┘
+       │                  │                    │
+       └─────────┬────────┴────────────────────┘
+                 │   health / metrics over network
+        ┌────────▼─────────┐
+        │   MONITORING     │   Zabbix server + web dashboard
+        │   (aggregates,   │   reachable over reverse SSH tunnel
+        │    https access) │
+        └──────────────────┘
 ```
+
+Los detalles de comunicación, plano de control y monitorización dependen del despliegue; el mecanismo utilizado actualmente son los **túneles SSH inversos (autossh)**, de modo que incluso un host NATed pueda ser alcanzado y pueda actuar como servidor de monitorización.
 
 ---
 
-## 🚀 Quick Start
+## Controles de seguridad y riesgo
+
+La gestión del riesgo es una preocupación de primer nivel, integrada en el motor del nodo en lugar de añadida por separado a cada estrategia:
+
+- **Stop-loss** por bot y un **disyuntor (circuit-breaker) global diario / semanal** que detiene un símbolo o un nodo cuando se cruzan los límites de pérdida configurados.
+- **Comprobaciones previas al vuelo** antes de cada colocación de órdenes (validación anti-interbloqueo y dimensionado de la posición), de modo que un bot mal configurado o desactualizado no pueda operar a ciegas.
+- **Modo seguro** — un conjunto graduado de estados de limitación (caution → safe → emergency) impulsado por el supervisor (presión de RAM/CPU/ticks) que ralentiza o detiene progresivamente un nodo antes de que se agoten los recursos.
+- **Sub-cuentas.** El trading vivo en OKX/Kraken se ejecuta en **sub-cuentas dedicadas** del exchange, nunca en la cuenta principal, de modo que los errores operativos queden contenidos.
+- **Credenciales** que viven solo en un `.env` local (nunca commiteadas) y se cargan en tiempo de ejecución.
+- **Escalonamiento del presupuesto vivo.** El capital crece en etapas explícitas (papel → vivo pequeño → vivo mayor) y solo después de cumplir los desencadenantes registrados en la hoja de ruta.
+
+---
+
+## Monitorización y alertas
+
+- **Zabbix** se utiliza como backend de agregación y alertas. Los nodos envían métricas (equity, PnL por bot, bloqueos previos al vuelo, estado de salud obsoleto, presión de recursos) al **trapper** de Zabbix.
+- Existen desencadenantes para: cruces del circuit-breaker, pérdida diaria/semanal, heartbeats obsoletos, bloqueos previos al vuelo y presión de recursos.
+- **La autocuración (auto-heal) está desactivada por defecto.** Las primeras iteraciones reiniciaban los bots vivos de forma espuria; la recuperación es ahora una acción deliberada y registrada en lugar de un reinicio automático.
+- Un **panel web (dashboard)** de solo lectura ofrece una vista rápida del estado de salud de nodos y bots.
+
+---
+
+## Primeros pasos
+
+Requisitos:
+
+- Python **3.12+**
+- Un entorno `uv` o `venv`
+- Docker + Docker Compose solo si además se ejecuta el stack de monitorización Zabbix
+- Claves de API del exchange para OKX y/o Kraken (en un `.env` local, nunca commiteadas)
+
+Clonar e instalar:
 
 ```bash
-# Clonar repositorio
-git clone https://github.com/griveto/alpha-omega-trading.git
+git clone git@github.com:grivetto/alpha-omega-trading.git
 cd alpha-omega-trading
 
-# Configurar entorno
-python3 -m venv venv
+python -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 
-# Configurar .env
-cp .env.example .env
-# Editar .env con tus API keys
-
-# Iniciar en modo paper
-python -m alpha_omega.core.engine_solo --exchange kraken --symbol SOL/EUR --capital 15.0 --paper
-
-# Desplegar con systemd
-./scripts/deploy_alpha_omega.sh
+cp .env.example .env      # then fill in your API keys
 ```
 
 ---
 
-**Desarrollado con ❤️ para el trading algorítmico distribuido.**
+## Ejecutar nodos vivos y de papel
+
+El motor es una aplicación de consola impulsada por un archivo de configuración:
+
+```bash
+# Live grid node (per config file)
+python -m denaro.denaro_node --config config/node.yaml
+
+# Paper trading node
+python -m denaro.denaro_node --config config/node_paper.yaml
+
+# A Kraken trend-following live config (example)
+python -m denaro.denaro_node --config config/node_trend_live_kraken.yaml
+```
+
+Las configuraciones adicionales proporcionadas (`config/node_nuvola.yaml`, `config/node_mc2.yaml`, `config/node_adaptive_vol_grid_paper.yaml`, …) corresponden a roles específicos de nodo/estrategia; véase la sección [Configuración](#configuración).
+
+Ejecute `python -m denaro.denaro_node --help` para las opciones (se admite `--verbose`).
+
+---
+
+## Ejecutar como servicios systemd
+
+Para los nodos de producción, se proporcionan archivos de unidad en `systemd/`. Pasos típicos en un host determinado:
+
+```bash
+sudo cp systemd/*.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now denaro-node            # name depends on the host role
+```
+
+Los archivos de unidad cubren actualmente los roles de nodo, salud, agregador, panel, feeder y túnel inverso (`zabbix-tunnel`). **Ajuste las rutas de `ExecStart`** en las unidades para que coincidan con el home de usuario, la ruta del repositorio y el venv utilizados en cada host — los valores distribuidos reflejan un despliegue específico.
+
+---
+
+## Configuración
+
+Cada nodo lee un archivo YAML que define, entre otras cosas:
+
+- `exchange_rest`: el exchange (p. ej. `okx`) y el modo EEA.
+- `bots`: una lista de mercados, cada uno con símbolo, `mode` (`live`/`paper`), `capital`, `levels` de grid y ajustes específicos de la estrategia.
+- `safemode`: los umbrales de limitación de RAM/CPU (`caution_pct`, `safe_pct`, `emergency_pct`) y su intervalo.
+- `supervisor`: umbrales críticos de recursos y limitación de ticks.
+- `data_dir`: dónde persiste el nodo su estado en tiempo de ejecución y los datos de mercado.
+
+Mantenga las credenciales del exchange fuera de los archivos de configuración — póngalas en `.env` y cárguelas en tiempo de ejecución.
+
+---
+
+## Estructura del repositorio
+
+```
+config/                  Per-node YAML configuration
+denaro/
+  domain/                Strategies and risk/regime/indicator logic (grid, momentum, adaptive, …)
+  application/           Orchestration: portfolio, supervisor, safe-mode
+  infrastructure/        Exchange adapters (CCXT), market data, storage, feeder
+  denaro_node.py         Unified node entry point
+scripts/                 Deployment helpers
+systemd/                 systemd unit files (node, health, aggregator, tunnel, …)
+zabbix/                  Monitoring integration (healer, push_metrics)
+tests/                   Tests
+.env.example             Credential template (keys never committed)
+```
+
+---
+
+## Pruebas
+
+El proyecto usa `pytest` (con `pytest-asyncio` para las capas asíncronas). Instale las extensiones de desarrollo y ejecute:
+
+```bash
+pip install -e ".[dev]"
+pytest
+```
+
+---
+
+## Hoja de ruta
+
+- [ ] Mantener un registro vivo validado durante una ventana de observación definida (p. ej., varias semanas por bot).
+- [ ] Puertas automáticas de promoción: una estrategia puede recibir más capital solo cuando supera los umbrales registrados (factor de beneficio, drawdown máximo, Sharpe).
+- [ ] Aumento por etapas del capital (papel → vivo pequeño → 100–500 EUR → 1000 EUR) a medida que se cumplen las condiciones.
+- [ ] Plantillas de monitorización con gráficos de equity/PnL/volumen por bot.
+- [ ] Empaquetado más limpio: alinear los metadatos de `pyproject.toml` con el diseño real del paquete `denaro`.
+
+---
+
+## Descargo de responsabilidad
+
+**Este software se proporciona únicamente con fines educativos y de investigación. No constituye asesoramiento financiero.** El trading algorítmico de criptoactivos conlleva un riesgo sustancial, incluida la pérdida total del capital desplegado. El rendimiento pasado o en papel no garantiza resultados futuros; las comisiones, el deslizamiento (slippage), las lagunas de liquidez y las interrupciones del exchange pueden convertir un backtest rentable en una campaña en vivo perdedora. Solo despliegue capital que pueda permitirse perder por completo, y nunca opere con dinero del que dependa. Los autores no aceptan ninguna responsabilidad por cualquier pérdida derivada del uso de este código.
+
+---
+
+## Licencia
+
+Dominio público (equivalente a CC0). Véase el archivo [LICENSE](LICENSE) para la dedicación completa — sin derechos reservados; use, copie, modifique y venda libremente, bajo su propio riesgo.
