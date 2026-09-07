@@ -41,7 +41,7 @@ bots:
   # il preflight blocca correttamente i nuovi buy finché non vende.
   - symbol: SOL/EUR
     mode: kraken
-    capital: 40.0
+    capital: 25.7
     levels: 4
     strategy: momentum
     profit_target: 0.03
