@@ -541,13 +541,37 @@ class BotTask:
         try:
             bal = await asyncio.to_thread(self.ex.fetch_balance)
             amount = float((bal.get("free", {}) or {}).get(base, 0.0) or 0.0)
+            # usiamo il saldo libero; se residuo sotto il minimo dell'exchange,
+            # un market sell separato fallirebbe (volume minimum not met).
+            # → proviamo comunque un unico market sell del totale: su molti
+            #   exchange la chiusura completa dell'asset è accettata anche se
+            #   sotto il minimo nominale (il minimo vale per ordini nuovi).
+            min_amt = 0.0
+            mfn = getattr(self.ex, "min_amount_for", None)
+            if mfn is not None:
+                try:
+                    min_amt = float(mfn(self.cfg.symbol) or 0.0)
+                except Exception:
+                    min_amt = 0.0
             if amount > 0:
+                if min_amt > 0 and amount < min_amt:
+                    log.warning(
+                        "STOP LOSS %s: amount %.8f < min %.8f — tentativo market "
+                        "sell del totale (chiusura completa posizione)",
+                        self.cfg.symbol, amount, min_amt)
                 await asyncio.to_thread(self.ex.sell_market, self.cfg.symbol, amount)
                 self._journal("stop_loss_sell", amount=amount,
                               drawdown=round(drawdown, 4), price=price)
+            else:
+                log.warning("STOP LOSS %s: nessun %s libero da vendere (amount=0); "
+                            "controlla ordini aperti/posizioni residue",
+                            self.cfg.symbol, base)
         except Exception as e:  # noqa: BLE001
             self._last_error = f"stop loss sell: {e}"
             log.error("STOP LOSS %s: vendita fallita: %s", self.cfg.symbol, e)
+            # non resettare stop_loss_triggered: se la vendita fallisce per un
+            # errore transitorio, il retry al prossimo tick lo risolverà; il flag
+            # resta True per tracciare che lo stop è in corso.
 
         self._journal("stop_loss", drawdown=round(drawdown, 4), equity=equity)
         self._write_health(equity, blocked=True)
