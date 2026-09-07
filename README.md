@@ -9,26 +9,28 @@
 [![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20systemd-FCC624?logo=linux&logoColor=black)](https://www.freedesktop.org/wiki/Software/systemd/)
 [![License](https://img.shields.io/badge/license-Pubblico%20Dominio-black)](LICENSE)
 [![Monitoring](https://img.shields.io/badge/monitoring-Zabbix%20%2B%20Web%20Dashboard-FF6F00)]()
-[![Status](https://img.shields.io/badge/status-3%20NODI%20LIVE%20%7C%2012%20BOTS-brightgreen)]()
+[![Status](https://img.shields.io/badge/status-2%20NODI%20LIVE%20%7C%203%20BOTS%20LIVE-brightgreen)]()
 
-**Grid trading consolidato su 12 bot live (3 macchine, sub-account OKX dedicati) + paper trade 500€ con motore realistico, edge verificato dal backtest su dati reali.**
+**Grid trading consolidato su 3 bot live (2 nodi, sub-account OKX/Kraken dedicati) + paper trade con motore realistico, edge verificato dal backtest su dati reali.**
 
 </div>
 
 ---
 
-## 📌 Stato attuale (2026-08-27)
+## 📌 Stato attuale (2026-09-07)
 
 | Componente | Stato |
 |---|---|
-| **MARCODG1** (87.106.222.123) | ✅ ADA/SOL/DOGE/ETH live su OKX **marcosub1** + 5 paper bot 500€ |
-| **nuvola** (87.106.3.15) | ✅ ADA/SOL/XRP/DOGE live su OKX **nuvolasub1** |
-| **mc2** (locale) | ✅ ADA/SOL/XRP/DOGE live su OKX **mc2sub1** + Zabbix server |
+| **MARCODG1** (87.106.222.123) | ✅ **SOL/Kraken grid** (trend-live) + **SOL/Kraken grid** (Kraken) + **ADA/OKX** running + **SOL/DOGE/ETH OKX** in CB weekly loss + 5 paper bot 500€ |
+| **nuvola** (87.106.3.15) | ✅ **SOL/Kraken trend-live** (conto principale) + paper DOGE feeder |
+| **mc2** (locale, 100.87.24.42 CGNAT) | ✅ Zabbix server + reverse SSH tunnel verso MARCODG1 |
 | Conto MAIN OKX | 🚫 **MAI usato per trading** — solo trasferimenti/appoggio (regola) |
 | Paper trade 500€ (5×100€) | ✅ motore realistico: fee reali, min_notional, slippage, MTM, stop-loss |
 | Ponte Hermes ⇄ DeepSeek | ✅ chat CLI (`dschat`) + canale web unico `:3080` + heartbeat Zabbix |
-| Zabbix | ✅ monitoraggio completo + trigger autohealing |
+| Zabbix | ✅ monitoraggio completo + trigger autohealing (auto-heal disabilitato per sicurezza) |
 | Dashboard web | ✅ https://mgrivett.ddns.net/dashboard/ |
+
+**Capitale reale verificato: ~29.5 EUR totali** (Kraken ~26 EUR + OKX ~1.56 EUR). I 50€ in arrivo (25€ Kraken + 25€ OKX) saranno assorbiti dai bot live.
 
 ---
 
@@ -36,177 +38,127 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                        DENARO — 3 NODI                          │
+│                        DENARO — 2 NODI                          │
 │                                                                 │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐           │
-│  │  MARCODG1    │  │   nuvola     │  │     mc2      │           │
-│  │ 4 bot OKX    │  │ 4 bot OKX    │  │ 4 bot OKX    │           │
-│  │ marcosub1    │  │ nuvolasub1   │  │ mc2sub1      │           │
-│  │ + 5 paper    │  │              │  │ + Zabbix     │           │
-│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘           │
-│         │                 │                 │                    │
-│  ┌──────▼─────────────────▼─────────────────▼──────┐            │
-│  │            denaro_node (motore unificato)       │            │
-│  │  grid bilaterale: buy in calo, sell ladder a TP │            │
-│  │  preflight anti-deadlock + sizing dinamico      │            │
-│  │  stop-loss + cooldown + safe-mode supervisor    │            │
-│  └──────┬─────────────────┬─────────────────┬──────┘            │
-│         │                 │                 │                    │
-│  ┌──────▼──────┐  ┌───────▼──────┐  ┌───────▼──────┐            │
-│  │ OKX sub     │  │ OKX sub      │  │ OKX sub      │            │
-│  │ (EEA)       │  │ (EEA)        │  │ (EEA)        │            │
-│  └─────────────┘  └──────────────┘  └──────────────┘            │
-│                                                                 │
-│  Canale AI: Hermes ⇄ DeepSeek (ponte inbox/outbox + web :3080)  │
-│  Monitoring: health :8911 · aggregator :8912 · Zabbix :10051    │
-└─────────────────────────────────────────────────────────────────┘
+│  ┌──────────────┐  ┌──────────────┐                             │
+│  │  MARCODG1    │  │   nuvola     │                             │
+│  │ SOL/Kraken   │  │ SOL/Kraken   │                             │
+│  │ grid (trend) │  │ trend-live   │                             │
+│  │ + ADA/OKX    │  │ (conto main) │                             │
+│  │ + paper 500€ │  │ + paper      │                             │
+│  └──────┬───────┘  └──────┬───────┘                             │
+│         │                 │                                     │
+│  ┌──────▼─────────────────▼─────────────────┐                    │
+│  │           denaro_node (motore unificato) │                    │
+│  │  grid bilaterale: buy in calo, sell TP  │                    │
+│  │  preflight anti-deadlock + sizing       │                    │
+│  │  stop-loss + cooldown + safe-mode       │                    │
+│  └──────┬─────────────────┬─────────────────┘                    │
+│         │                 │                                        │
+│  ┌──────▼──────┐   ┌───────▼──────┐                                │
+│  │   mc2       │   │  Zabbix      │                                │
+│  │ (CGNAT)     │   │  + Dashboard │                                │
+│  │ reverse SSH │   │  HTTPS       │                                │
+│  └─────────────┘   └──────────────┘                                │
 ```
-
-- **3 nodi, ognuno con il proprio sub-account OKX** (marcosub1, nuvolasub1, mc2sub1) — il conto MAIN non viene mai usato per trading
-- **1 motore**: `denaro/denaro_node.py` + `domain/grid.py` — grid bilaterale, preflight anti-deadlock, sizing dinamico, stop-loss con cooldown
-- **Paper realistico**: `infrastructure/exchanges/paper.py` — fee reale, min_notional, slippage, mark-to-market, rounding ai tick (parità 1:1 col live)
-- **Edge verificato**: backtest v6 su 90 giorni di dati reali — grid redditizia SOLO con spread ≥2%
-- **Ciclo completo**: buy → fill → sell ladder → profitto (verificato in produzione)
 
 ---
 
-## 🤖 Ponte Hermes ⇄ DeepSeek
+## 🔧 Componenti Core
 
-Collaborazione automatica a due agenti per sviluppare, monitorare e auto-guarire il sistema:
-
-| Canale | Descrizione |
+| Modulo | Descrizione |
 |---|---|
-| `hermes_bridge/inbox.md` | direttive Hermes → DeepSeek |
-| `hermes_bridge/outbox.md` | risposte DeepSeek → Hermes |
-| `ponte.py` | invio/ricezione (cron */2, one-shot con lock) |
-| `dschat` | chat CLI interattiva con DeepSeek (REPL, history sessioni) |
-| **webchat `:3080`** | canale web unico — scrivi una volta, rispondono **entrambi** (Hermes + DeepSeek), tracciato sul ponte |
-| `ds_heartbeat.py` | heartbeat ponte → Zabbix (item `denaro.ds.*`, trigger nodata 180s) |
-
-Apri `http://127.0.0.1:3080/` (su mc2) e scrivi — DeepSeek e Hermes rispondono live sullo stesso canale.
-
----
-
-## 📁 Struttura del repo
-
-```
-.
-├── denaro/                  # ★ Il motore attivo
-│   ├── denaro_node.py       #   Node unificato (paper + live OKX/Kraken)
-│   ├── engine_solo_v33.py   #   Grid engine standalone (legacy)
-│   ├── engine_paper.py      #   Simulazione paper trade (prezzi reali)
-│   ├── application/         #   orchestrator, portfolio, config, safemode
-│   ├── domain/              #   grid, adaptive, momentum, meanrev, risk, regime
-│   ├── infrastructure/      #   exchanges (paper/okx/kraken), market_data, storage
-│   ├── health_server_v33.py #   Health endpoint :8911
-│   └── ...                  #   infra, dashboard, multi-exchange
-├── hermes_bridge/           # ★ Ponte Hermes ⇄ DeepSeek
-│   ├── ponte.py             #   Motore one-shot (cron */2)
-│   ├── webchat3080.py       #   Canale web unico :3080 (Hermes + DeepSeek)
-│   ├── ds_heartbeat.py      #   Heartbeat → Zabbix
-│   └── inbox.md / outbox.md #   Canale file-based
-├── systemd/                 # Unit systemd dei bot (live + paper + health)
-├── config/                  # Config per nodo (node.yaml, node_mc2.yaml, ...)
-├── scripts/                 # check_orders, backtest, validate
-├── legacy/                  # ★ Architetture morte (storia del progetto)
-├── test_v7.py               # Test del motore attuale
-├── README.md                # Questo file
-├── REPORT_NON_GUADAGNA.md   # Analisi completa e storico delle correzioni
-└── requirements.txt
-```
+| `denaro/domain/` | Layer dominio: grid policies, risk, regime, indicators |
+| `denaro/application/` | Orchestration, portfolio, supervisor, safemode |
+| `denaro/infrastructure/` | Exchange adapters (OKX/Kraken), market data, storage |
+| `denaro/denaro_node.py` | Entry point unificato per tutti i nodi |
+| `push_metrics.py` | Push metriche a Zabbix (trapper) — fixato auto-heal |
+| `infra_aggregator.py` | Aggrega health da tutti i nodi su porta 8912 |
+| `health_server_v33.py` | Health endpoint per nodo (porta 8911) |
+| `config/*.yaml` | Config per nodo (node.yaml, node_paper.yaml, node_trend_live_kraken.yaml) |
 
 ---
 
-## 🚀 Quick Start
+## 📊 Monitoraggio & Alerting
 
+- **Zabbix Server** su mc2 (Docker) → HTTPS via `https://mgrivett.ddns.net/`
+- **Items chiave**: `bot.kraken.*`, `bot.trend_live.*`, `project.*`, `svc.denaro-*`
+- **Trigger**: CB weekly loss, daily loss, preflight block, stale health, DeepSeek heartbeat
+- **Auto-heal**: **DISABILITATO** (causava riavvii spurii su bot live con capitale reale)
+- **Dashboard**: https://mgrivett.ddns.net/dashboard/ (nginx + Let's Encrypt)
+
+---
+
+## 🚀 Deploy & Operatività
+
+### Prerequisiti
+- Python 3.12+, `uv` o `venv`
+- Chiavi API OKX/Kraken in `.env` (mai in repo)
+- Docker + Docker Compose per Zabbix (su mc2)
+
+### Avvio rapido (su MARCODG1)
 ```bash
-# Node completo con config per nodo (vedi systemd/)
-python -m denaro.denaro_node --config config/node_mc2.yaml
+# Clona
+git clone git@github.com:grivetto/alpha-omega-trading.git
+cd alpha-omega-trading
 
-# Paper trade (nessun soldo reale)
-python denaro/engine_paper.py --symbol ADA/EUR --capital 100 \
-    --levels 5 --buy-dist 1.5 --tp 2.0 --loop
+# Installa dipendenze
+python -m venv venv && source venv/bin/activate
+pip install -r requirements.txt
 
-# Chat diretta con DeepSeek
-dschat                          # REPL interattivo
-dschat -m deepseek-v4-pro       # modello diverso
+# Configura .env con chiavi API (mai committare!)
+cp .env.example .env
+# modifica .env con le tue chiavi
 
-# Canale web unico (Hermes + DeepSeek)
-python hermes_bridge/webchat3080.py   # poi apri http://127.0.0.1:3080/
+# Avvia bot live (es. su MARCODG1)
+python -m denaro.denaro_node --config config/node.yaml
+
+# Avvia paper trading
+python -m denaro.denaro_node --config config/node_paper.yaml
+
+# Avvia trend-live Kraken
+python -m denaro.denaro_node --config config/node_trend_live_kraken.yaml
 ```
 
-Le unit systemd di riferimento sono in `systemd/` (es. `denaro-node-mc2.service`).
-
----
-
-## 🔐 Chiavi API (`.env`)
-
-Il motore legge le chiavi da `.env` (vedi `.env.example`). **Regola: il conto MAIN non si usa per trading — ogni nodo ha il proprio sub-account.**
-
+### Systemd services (produzione)
 ```bash
-# OKX (EEA — obbligatorio hostname eea.okx.com)
-OKX_API_KEY=...          # chiave del SUB-ACCOUNT del nodo
-OKX_API_SECRET=...
-OKX_PASSPHRASE=...
-OKX_EEA=true
+# Su MARCODG1
+sudo cp systemd/*.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now denaro-node denaro-node-paper denaro-node-trend-live
 
-# Per più account sullo stesso nodo: prefisso env
-MARCOSUB1_OKX_API_KEY=...
-MARCOSUB1_OKX_API_SECRET=...
-MARCOSUB1_OKX_PASSPHRASE=...
+# Su nuvola
+sudo systemctl enable --now denaro-node-nuvola denaro-health-nuvola
 
-# Kraken
-KRAKEN_API_KEY=...
-KRAKEN_API_SECRET=...
-
-# DeepSeek (ponte/chat)
-DEEPSEEK_API_KEY=...
+# Su mc2
+sudo systemctl enable --now zabbix-* denaro-tunnel-reverse
 ```
 
-> **Importante**: per OKX usare SEMPRE l'endpoint EEA (`eea.okx.com`) — con l'hostname
-> globale le chiavi EU falliscono con `50119 API key doesn't exist`.
+---
+
+## 🔐 Sicurezza & Chiavi
+
+- **Mai committare chiavi API** — sono in `.env` (gitignored)
+- Sub-account OKX dedicati per bot (EEA, trasferimenti interni)
+- Chiavi Kraken separate per conto principale e sub-account
+- Zabbix accesso solo via HTTPS + autenticazione
 
 ---
 
-## 📊 Monitoraggio
+## 📈 Roadmap
 
-- **Zabbix**: server su mc2, trapper `127.0.0.1:10051`, frontend via tunnel SSH inverso
-- **Host Denaro**: 7+ host, 75+ item (equity, PnL, trades, wins, losses, volume, drawdown, uptime, prezzi, heartbeat bot)
-- **Heartbeat ponte AI**: item `denaro.ds.heartbeat/status/giro` + trigger nodata 180s (HIGH)
-- **Trigger**: bot OFFLINE, drawdown >25%, equity sotto soglia, DeepSeek silenzioso
-- **Autohealing**: `zabbix_healer.sh` (oneshot via cron */2, cooldown 300s, filtro trigger Denaro)
-- **Dashboard web**: https://mgrivett.ddns.net/dashboard/
-- **Health**: `curl http://127.0.0.1:8911/health` (per nodo)
+- [ ] Validazione 60 giorni bot live Kraken (SOL grid + trend-live)
+- [ ] Soglie promozione automatica: profit factor > 1.3, max DD < 15%, Sharpe > 0.8
+- [ ] Iniezione graduale capitale: 50€ → 200€ → 500€ → 1000€
+- [ ] Template Zabbix "Denaro Grid Bot" con grafici equity/PnL/volume
+- [ ] Bot-as-a-service per terzi (gestione conto, fee su profitti)
 
 ---
 
-## ⚠️ Onestà sul rendimento
+## 📜 Licenza
 
-Con capitale piccolo (30-500€) il guadagno è proporzionato ma **reale e verificato**:
-- Edge dal backtest v6: grid redditizia SOLO con spread ≥2% (fee reali + slippage)
-- Drawdown possibile: 20-25% nei momenti brutti (stop-loss 10% per bot, daily-loss CB)
-- **Il grid non insegue il movimento: compra in calo, vende al take-profit**
-- Il paper trade ora simula 1:1 il live: fee reali, min_notional, slippage, mark-to-market
-
-> Niente promesse di "denaro sonante": è una macchina onesta con numeri veri,
-> pronta a scalare quando il capitale crescerà.
+**Pubblico Dominio.** Questo codice è libero: usalo, copialo, modificalo, vendilo. **Usa al meglio questa tecnologia.**
 
 ---
 
-## 📜 Storia
-
-Il progetto nasce da un anno di tentativi con varie AI (OpenClaw, Hermes, Agent Zero,
-DeepSeek TUI). Le architetture fallite sono archiviate in `legacy/`. Il nome **DENARO**
-è stato scelto per chiudere il cerchio: la baracca originale è diventata una macchina
-che genera denaro. Vedi `REPORT_NON_GUADAGNA.md` per la storia completa.
-
----
-
-## ⚖️ Licenza
-
-**Pubblico Dominio.** Questo codice è libero: usalo, copialo, modificalo, vendilo.
-**Usa al meglio questa tecnologia.**
-
----
-
-*DENARO — dalla baracca alla macchina che genera denaro. Usa al meglio questa tecnologia.*
+> *DENARO — dalla baracca alla macchina che genera denaro. Usa al meglio questa tecnologia.*
