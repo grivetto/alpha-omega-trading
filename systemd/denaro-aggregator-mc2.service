@@ -1,0 +1,17 @@
+[Unit]
+Description=Denaro — Infra Aggregator mc2 (:8912, alimenta dashboard)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=sergio
+ExecStart=/usr/bin/python3 /home/sergio/alpha-omega-trading/denaro/infra_aggregator.py
+WorkingDirectory=/home/sergio/alpha-omega-trading
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

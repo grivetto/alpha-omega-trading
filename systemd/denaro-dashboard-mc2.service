@@ -1,0 +1,17 @@
+[Unit]
+Description=Denaro — Dashboard server mc2 (:8913, HTML + proxy /api/infra.json)
+After=network-online.target denaro-aggregator-mc2.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=sergio
+ExecStart=/usr/bin/python3 /home/sergio/denaro/serve_dashboard.py
+WorkingDirectory=/home/sergio/denaro
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
