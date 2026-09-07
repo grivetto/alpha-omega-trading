@@ -23,30 +23,30 @@ import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 
-HEALTH_DIR = Path(os.getenv("HEALTH_DIR", "/home/marco/denaro/health"))
-NODE_DIR = Path(os.getenv("NODE_DIR", "/home/marco/denaro_node_app/node_data"))
+HEALTH_DIR = Path(os.getenv("HEALTH_DIR", "/home/sergio/alpha-omega-trading/health"))
+NODE_DIR = Path(os.getenv("NODE_DIR", "/home/sergio/alpha-omega-trading/node_data"))
 PORT = int(os.getenv("AGG_PORT", "8912"))
 HOST = os.getenv("AGG_HOST", "127.0.0.1")
 
 # Nodi remoti che eseguono il Node Denaro (paper/live). L'aggregator gira su
-# MARCODG1 e li legge via SSH (stesso meccanismo di zabbix_state).
+# mc2 e li legge via SSH (stesso meccanismo di zabbix_state).
 # remote_data_dir: cartella node_data sul nodo remoto.
 REMOTE_NODES = {
     "nuvola": {
         "ssh": ["sergio@87.106.3.15", "-p", "22"],
-        "data_dir": "/home/sergio/denaro_node_app/node_data",
+        "data_dir": "/home/sergio/alpha-omega-trading/node_data",
         "unit": "denaro-node-nuvola",
     },
-    "mc2": {
+    "marcodg1": {
         "ssh": ["sergio@127.0.0.1", "-p", "2222"],  # tunnel inverso
-        "data_dir": "/home/sergio/denaro_node_app/node_data",
-        "unit": "denaro-node-mc2",
+        "data_dir": "/home/marco/alpha-omega-trading/node_data",
+        "unit": "denaro-node-paper",
     },
 }
 
 # Conti OKX (per saldi reali)
 ENV_FILES = {
-    "denaro (main)": "/home/marco/denaro/.env",
+    "denaro (main)": "/home/sergio/alpha-omega-trading/.env",
     "alpha (marcosub1)": "/home/marco/alpha-omega-trading/.env",
 }
 
