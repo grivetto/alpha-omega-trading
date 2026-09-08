@@ -24,7 +24,9 @@ def make_config(data_dir: str, bots=None) -> dict:
         "data_dir": data_dir,
         "supervisor": {"ram_critical_pct": 0.85, "ram_throttle_pct": 0.70,
                        "cpu_critical_pct": 0.90},
-        "overrides_file": "/tmp/nonexistent_overrides.json",
+        # override esplicito e isolato: i test paper NON devono ereditare
+        # strategy_overrides.json di produzione (drift silenzioso).
+        "overrides_file": str(Path(data_dir) / "test_overrides.json"),
         "bots": bots or [
             {"symbol": "ADA/EUR", "mode": "paper", "capital": 300, "levels": 3,
              "buy_distance": 0.015, "profit_target": 0.02, "tick_interval": 30},
@@ -232,6 +234,32 @@ class TestBuildPolicy(unittest.TestCase):
         pol = build_policy({"symbol": "SOL/EUR", "strategy": "adaptive",
                             "levels": 5}, self._ex())
         self.assertIsInstance(pol, AdaptiveEngine)
+
+
+class TestOverrideDriftGuard(unittest.TestCase):
+    """Regressione: strategy_overrides.json NON deve alterare i bot paper
+    usati dai test del Node. Se qualcuno aggiunge una chiave 'paper:SOL/EUR'
+    o 'paper:ADA/EUR' con capital/strategy diversi da quelli attesi dai test,
+    questo test fallisce e segnala il drift PRIMA che rompa la suite."""
+
+    def test_production_overrides_do_not_touch_test_paper_bots(self):
+        import json
+        root = Path(__file__).resolve().parent.parent.parent
+        ov_path = root / "config" / "strategy_overrides.json"
+        if not ov_path.exists():
+            return  # nessun override di produzione: nessun drift possibile
+        ov = json.loads(ov_path.read_text(encoding="utf-8"))
+        # i bot paper dei test usano capital 100 (SOL/XRP) e 300 (ADA), grid
+        for symbol, expected_capital in (("SOL/EUR", 100), ("ADA/EUR", 300),
+                                         ("XRP/EUR", 100)):
+            key = f"paper:{symbol}"
+            if key in ov:
+                self.assertNotIn("capital", ov[key],
+                                 f"drift: {key} ridefinisce capital in "
+                                 f"strategy_overrides.json e altera i test paper")
+                self.assertNotIn("strategy", ov[key],
+                                 f"drift: {key} ridefinisce strategy in "
+                                 f"strategy_overrides.json e altera i test paper")
 
 
 if __name__ == "__main__":
