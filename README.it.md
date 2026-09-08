@@ -1,22 +1,37 @@
 # Alpha-Omega Trading
 
-**_Nome in codice "Denaro" — Sistema di trading algoritmico distribuito e motore di esecuzione multi-nodo per OKX e Kraken._**
+<p align="center">
+  <img src="https://raw.githubusercontent.com/grivetto/alpha-omega-trading/main/assets/banner.png" alt="Alpha-Omega Trading Banner" width="100%" onerror="this.style.display='none'"/>
+</p>
 
-![Python](https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white)
-![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)
-![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
-![Zabbix](https://img.shields.io/badge/Zabbix-D40000?style=for-the-badge&logo=zabbix&logoColor=white)
-![Ubuntu](https://img.shields.io/badge/Ubuntu-E95420?style=for-the-badge&logo=ubuntu&logoColor=white)
-![Git](https://img.shields.io/badge/Git-F05032?style=for-the-badge&logo=git&logoColor=white)
-![Cloudflare](https://img.shields.io/badge/Cloudflare-F38020?style=for-the-badge&logo=cloudflare&logoColor=white)
+<h3 align="center">Flotta di Trading Algoritmico Distribuito & Telemetria ad Alta Frequenza</h3>
 
-Alpha-Omega Trading è una piattaforma di esecuzione multi-host che opera su una topologia distribuita di server (`nuvola`, `MARCODG1` e `mc2`). Gestisce strategie automatizzate di grid trading, momentum e modelli adattivi di regime sugli exchange crypto tramite CCXT, vincolata da telemetria real-time e gate di supervisione del rischio.
+<p align="center">
+  <i>Motore di esecuzione multi-nodo per OKX e Kraken, protetto da supervisor di rischio, monitoraggio Zabbix in Docker e validazione a scaglioni di capitale.</i>
+</p>
 
-> [English](README.md) · [Italiano](README.it.md) · [Español](README.es.md) · [ไทย](README.th.md)
+<p align="center">
+  <a href="https://www.python.org/"><img src="https://img.shields.io/badge/Python-3.12-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python 3.12"></a>
+  <a href="https://fastapi.tiangolo.com/"><img src="https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white" alt="FastAPI"></a>
+  <a href="https://www.docker.com/"><img src="https://img.shields.io/badge/Docker-Containerized-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker"></a>
+  <a href="https://www.zabbix.com/"><img src="https://img.shields.io/badge/Zabbix-7.0_LTS-D40000?style=flat-square&logo=zabbix&logoColor=white" alt="Zabbix 7.0 LTS"></a>
+  <a href="https://ubuntu.com/"><img src="https://img.shields.io/badge/Ubuntu-24.04_LTS-E95420?style=flat-square&logo=ubuntu&logoColor=white" alt="Ubuntu"></a>
+  <a href="https://www.cloudflare.com/"><img src="https://img.shields.io/badge/Cloudflare-Tunnel-F38020?style=flat-square&logo=cloudflare&logoColor=white" alt="Cloudflare"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-CC0_1.0-blue.svg?style=flat-square" alt="Licenza CC0"></a>
+</p>
+
+<p align="center">
+  <a href="README.md"><b>English</b></a> •
+  <a href="README.it.md"><b>Italiano</b></a> •
+  <a href="README.es.md"><b>Español</b></a> •
+  <a href="README.th.md"><b>ไทย</b></a>
+</p>
 
 ---
 
-## Architettura e Stack Tecnologico
+## 🏛 Architettura e Topologia della Flotta Distribuita
+
+Il sistema opera su una topologia multi-host distribuita (`nuvola`, `MARCODG1` e `mc2`). Ogni nodo svolge un ruolo dedicato per garantire esecuzione continua, acquisizione dati e sicurezza senza esposizione di porte in ingresso su reti domestiche dietro CGNAT.
 
 ```
  ┌─────────────────────────────────────────────────────────┐
@@ -37,88 +52,95 @@ Alpha-Omega Trading è una piattaforma di esecuzione multi-host che opera su una
                  Zabbix Trapper :10051 / Reverse 2222
 ```
 
-- **Runtime & Core Engine:** Python 3.12+, AsyncIO, CCXT Pro per la connettività diretta con gli exchange.
-- **Topologia & Comunicazione:** 3 nodi attivi interconnessi tramite tunnel SSH inversi (`autossh`) e tunnel Cloudflare per superare ambienti con CGNAT in sicurezza.
-- **Monitoraggio & Osservabilità:** Stack Zabbix 7.0 LTS containerizzato in Docker su mc2, alimentato da invii ad alta frequenza tramite Zabbix Trapper.
-- **Dashboard & Telemetria:** Servizio HTTP/JSON asincrono dedicato con dashboard visuale su `web.grivetto.eu`.
+### Tecnologie Principali
+| Componente | Stack Tecnologico | Funzione |
+| :--- | :--- | :--- |
+| **Core di Esecuzione** | `Python 3.12`, `AsyncIO`, `CCXT` | Runtime unificato per strategie a griglia e momentum. |
+| **Rete e Connettività** | `autossh`, `systemd`, `Cloudflare` | Tunnel SSH inversi cifrati (2222/10051/8912) per superare CGNAT. |
+| **Telemetria & Allarmi** | `Zabbix 7.0 LTS`, `Docker`, `PostgreSQL` | Oltre 350 metriche per tracciare equity, PnL e heartbeat di sistema. |
+| **Dashboard Real-Time** | `FastAPI` / `HTTP Server`, Neon UI | Stato live del portafoglio e salute dei bot su `web.grivetto.eu`. |
 
 ---
 
-## Storia e Lezioni Apprese ("La Baracca")
+## 📖 Storia e la Realtà dei Mercati ("La Baracca")
 
-Il progetto è nato come framework di esplorazione algoritmica soprannominato *"La Baracca"* — termine colloquiale che esprime la natura imperfetta di un sistema in continua evoluzione e riparazione, lontano da illusioni di facili guadagni.
+Il progetto è nato con il soprannome *"La Baracca"* — espressione onesta e colloquiale per indicare un marchingegno fragile, continuamente bisognoso di riparazioni e verifiche, senza spazio per facili entusiasmi.
 
-### La realtà del trading algoritmico
-Nelle fasi iniziali di sviluppo, test su modelli ingenui, overfitting nei backtest e disconnessioni API hanno chiarito che il codice deve fare i conti con la dura realtà dei mercati reali:
-- **Commissioni e Slippage:** Le fee maker/taker erodono rapidamente margini stretti di griglia.
-- **Limiti API e Requisiti Normativi:** Gli endpoint conformi EEA richiedono riconnessioni resilienti e stringente gestione dei rate limit.
-- **Rischio di Mercato:** Le griglie statiche non protette durante trend ribassisti portano rapidamente al blocco del capitale.
+### Le lezioni del trading reale
+Nelle prime fasi, backtest teorici e parametri statici sembravano promettenti. Il confronto con gli exchange reali ha mostrato un quadro ben diverso:
+- **Erosione da Commissioni e Slippage:** Le fee maker/taker e lo scostamento degli ordini a mercato possono azzerare i piccoli guadagni di una griglia troppo fitta.
+- **Frizioni di Rete e Limiti Normativi:** Riconnessioni forzate, rate limit degli endpoint EEA e manutenzioni degli exchange causavano ordini rifiutati o blocchi non rilevati.
+- **Asimmetria dei Trend:** Griglie statiche senza filtri di regime accumulano scorte durante forti discese, portando a trappole di inventario e capitale bloccato.
 
-Per questi motivi l'architettura è stata riscritta con solide basi ingegneristiche: stop-loss obbligatori, verifiche pre-flight anti-deadlock, safe-mode con throttle su CPU/RAM e gestione isolata dei sub-account.
-
----
-
-## Work in Progress Attivo (Fase Live: 25 + 25 EUR)
-
-Operiamo su una rigorosa roadmap a scaglioni di capitale. Il trading live è attualmente limitato a un envelope di prova (~50 EUR totali) per verificare robustezza e tenuta dei bot:
-
-| Exchange | Coppia | Modalità | Capitale Assegnato | Strategia | Host Nodo |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **Kraken** | `SOL/EUR` | **Live** | ~12.70 € | Momentum | `MARCODG1` |
-| **Kraken** | `XRP/EUR` | **Live** | ~12.70 € | Momentum | `MARCODG1` |
-| **OKX** | `DOGE/EUR` | **Live** | ~12.00 € | Multi-level Grid | `mc2` (`mc2sub1`) |
-| **OKX** | `SOL/EUR` | **Live** | ~12.00 € | Multi-level Grid | `mc2` (`mc2sub1`) |
-
-### Priorità di Sviluppo in Corso:
-1. **Finestra di Osservazione Live:** Monitoraggio continuo di riempimenti, slippage e fee su un orizzonte di più settimane per i 4 bot attivi.
-2. **Spaziatura Dinamica e Volatilità:** Perfezionamento dell'adattamento delle griglie in funzione della volatilità (ATR).
-3. **Passaggio di Scaglione (Staging):** Incremento del capitale da ~50 EUR a 100 EUR, 500 EUR e successivamente fino a 1.000 EUR solo al superamento comprovato dei target statistici di Sharpe Ratio e Profit Factor.
+L'intero sistema è stato perciò reingegnerizzato con **approccio difensivo e modulare**: controlli pre-flight anti-deadlock, isolamento tramite sub-account, monitoraggio continuo di CPU/RAM con safe-mode automatica e circuit breaker.
 
 ---
 
-## Controlli di Sicurezza e Rischio
+## 🚀 Work in Progress Attivo (Fase Live: 25 + 25 EUR)
 
-- **Validazione Pre-Flight:** Controlli anti-deadlock verificano saldo libero ed equity prima di inviare ogni singolo ordine.
-- **Supervisor Safe Mode:** Monitoraggio in tempo reale di RAM, CPU e lag dei tick. Rallenta o arresta l'engine se le risorse superano le soglie di sicurezza.
-- **Isolamento Sub-Account:** L'esecuzione live avviene solo su sub-account dedicati (`TRENDSUB` su Kraken, `mc2sub1` su OKX).
-- **Zero Credenziali nel Repository:** Tutte le chiavi risiedono nei file `.env` locali esclusi da Git.
+L'operatività segue una rigida **roadmap a scaglioni di capitale**. I fondi reali sono mantenuti su un envelope ridotto (~50 EUR complessivi) finché la robustezza statistica non è comprovata:
+
+| Exchange | Coppia | Modalità | Budget | Strategia | Host di Esecuzione | Stato |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **Kraken** | `SOL/EUR` | **Live** | ~12.70 € | Momentum Capture | `MARCODG1` | <img src="https://img.shields.io/badge/Attivo-brightgreen?style=flat-square" alt="Attivo"> |
+| **Kraken** | `XRP/EUR` | **Live** | ~12.70 € | Momentum Capture | `MARCODG1` | <img src="https://img.shields.io/badge/Attivo-brightgreen?style=flat-square" alt="Attivo"> |
+| **OKX** | `DOGE/EUR` | **Live** | ~12.00 € | Multi-level Grid | `mc2` (`mc2sub1`) | <img src="https://img.shields.io/badge/Attivo-brightgreen?style=flat-square" alt="Attivo"> |
+| **OKX** | `SOL/EUR` | **Live** | ~12.00 € | Multi-level Grid | `mc2` (`mc2sub1`) | <img src="https://img.shields.io/badge/Attivo-brightgreen?style=flat-square" alt="Attivo"> |
+
+### Roadmap a Scaglioni verso i 1.000 EUR
+- [x] **Fase 1 (Attuale):** 4 bot live attivi (~50 EUR di budget totale). Finestra di osservazione prolungata su fee reali, esecuzioni e stabilità delle API.
+- [ ] **Fase 2:** Incremento a 100 EUR – 250 EUR solo dopo aver consolidato Profit Factor > 1.25 e Drawdown Massimo < 8%.
+- [ ] **Fase 3:** Estensione a 500 EUR con spaziatura dinamica calcolata su volatilità storica (ATR).
+- [ ] **Fase 4:** Flotta di produzione a regime pieno (1.000 EUR) distribuita sui sub-account dedicati.
 
 ---
 
-## Avvio Rapido
+## 🛡 Controlli di Rischio e Sicurezza
 
+- **Validazione Pre-Flight:** Controlli anti-deadlock verificano saldo libero ed equity prima di inviare ogni singolo ordine a mercato.
+- **Supervisor Safe Mode:** Monitoraggio continuo delle risorse (RAM, CPU, lag dei tick). Rallenta o arresta l'engine se vengono superate le soglie critiche.
+- **Isolamento Sub-Account:** L'esecuzione live avviene esclusivamente su sub-account dedicati (`TRENDSUB` su Kraken, `mc2sub1` su OKX).
+- **Zero Credenziali nel Repository:** Tutte le chiavi API risiedono nei file `.env` locali esclusi dal versionamento Git.
+
+---
+
+## 🛠 Avvio Rapido
+
+### Installazione
 ```bash
 # Clona il repository
 git clone git@github.com:grivetto/alpha-omega-trading.git
 cd alpha-omega-trading
 
-# Crea ambiente virtuale
+# Crea ambiente virtuale e installa dipendenze
 python3 -m venv venv
 source venv/bin/activate
-
-# Installa dipendenze
 pip install -r requirements.txt
 
 # Configura ambiente
 cp .env.example .env
 ```
 
+### Avvio Nodi
 ```bash
-# Avvia un nodo con configurazione
+# Avvia il nodo Kraken trend-following
 python -m denaro.denaro_node --config config/node_trend_live_kraken.yaml
 
-# Esegui i test
+# Avvia il nodo OKX grid
+python -m denaro.denaro_node --config config/node_mc2.yaml
+
+# Esegui la suite di test
 pytest
 ```
 
 ---
 
-## Disclaimer
+## ⚖️ Disclaimer
 
-**Questo software è fornito esclusivamente a scopo didattico, accademico e di ricerca. Non costituisce consulenza finanziaria.** Il trading su criptovalute comporta elevati rischi di perdita totale del capitale. Gli autori non si assumono alcuna responsabilità per perdite finanziarie derivanti dall'uso di questo codice. Non impiegare mai denaro che non ci si possa permettere di perdere.
+**Questo software è fornito esclusivamente a scopo didattico, accademico e di ricerca. Non costituisce consulenza finanziaria.** Il trading algoritmico su criptovalute comporta elevati rischi finanziari, inclusa la possibile perdita totale del capitale impiegato. Gli autori non rilasciano alcuna garanzia in merito a profitti o performance. Non operare mai con fondi che non ci si possa permettere di perdere.
 
 ---
 
-## Licenza
+## 📄 Licenza
 
-Rilasciato nel pubblico dominio tramite Creative Commons Zero (CC0). Consulta il file [LICENSE](LICENSE) per tutti i dettagli.
+Rilasciato nel pubblico dominio tramite Creative Commons Zero (CC0 1.0 Universal). Consulta il file [LICENSE](LICENSE) per tutti i dettagli.
