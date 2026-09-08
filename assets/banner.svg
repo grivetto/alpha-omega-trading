@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 320" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#04060f"/>
+      <stop offset="50%" stop-color="#080c1c"/>
+      <stop offset="100%" stop-color="#0a1030"/>
+    </linearGradient>
+    <linearGradient id="neon-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#00f3ff"/>
+      <stop offset="50%" stop-color="#b026ff"/>
+      <stop offset="100%" stop-color="#ff2bd6"/>
+    </linearGradient>
+    <linearGradient id="chart-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#00f3ff" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#00f3ff" stop-opacity="0.0"/>
+    </linearGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(0, 243, 255, 0.05)" stroke-width="1"/>
+    </pattern>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="320" fill="url(#bg)"/>
+  <rect width="1200" height="320" fill="url(#grid)"/>
+
+  <!-- Decorative glow orb -->
+  <circle cx="600" cy="160" r="180" fill="#b026ff" opacity="0.08" filter="blur(60px)"/>
+
+  <!-- Animated-like Chart Path / Background telemetry wave -->
+  <path d="M 0 260 Q 200 240, 350 250 T 600 210 T 850 170 T 1100 120 L 1200 110 L 1200 320 L 0 320 Z" fill="url(#chart-grad)"/>
+  <path d="M 0 260 Q 200 240, 350 250 T 600 210 T 850 170 T 1100 120 L 1200 110" fill="none" stroke="#00f3ff" stroke-width="2.5" opacity="0.8" filter="url(#glow)"/>
+
+  <!-- Grid nodes points -->
+  <circle cx="350" cy="250" r="4" fill="#00f3ff" filter="url(#glow)"/>
+  <circle cx="600" cy="210" r="4" fill="#b026ff" filter="url(#glow)"/>
+  <circle cx="850" cy="170" r="4" fill="#ff2bd6" filter="url(#glow)"/>
+  <circle cx="1100" cy="120" r="5" fill="#0aff9d" filter="url(#glow)"/>
+
+  <!-- Logo symbol (Alpha & Omega stylized) -->
+  <g transform="translate(60, 85)">
+    <!-- Shield / Hexagon outer -->
+    <polygon points="75,0 150,42 150,128 75,170 0,128 0,42" fill="none" stroke="url(#neon-grad)" stroke-width="3" filter="url(#glow)"/>
+    <!-- Greek Alpha -->
+    <path d="M 45 110 L 75 48 L 105 110 M 55 92 L 95 92" fill="none" stroke="#00f3ff" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Greek Omega accent -->
+    <path d="M 52 122 C 52 114, 62 106, 75 106 C 88 106, 98 114, 98 122 L 106 122 M 44 122 L 52 122" fill="none" stroke="#ff2bd6" stroke-width="3.5" stroke-linecap="round"/>
+  </g>
+
+  <!-- Titles -->
+  <g transform="translate(250, 125)">
+    <text x="0" y="0" font-family="'Orbitron', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="900" font-size="46" fill="url(#neon-grad)" letter-spacing="4" filter="url(#glow)">ALPHA-OMEGA TRADING</text>
+    <text x="0" y="38" font-family="'Share Tech Mono', monospace, -apple-system, sans-serif" font-weight="600" font-size="20" fill="#00f3ff" letter-spacing="3">CODENAME: DENARO · MULTI-NODE EXECUTION FLEET</text>
+    <text x="0" y="72" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="15" fill="#8ea2c6" letter-spacing="0.8">Distributed Grid &amp; Momentum Architecture · OKX &amp; Kraken · Enterprise Zabbix Telemetry</text>
+  </g>
+
+  <!-- Status badges inside banner -->
+  <g transform="translate(250, 235)">
+    <!-- Fleet Nodes -->
+    <rect x="0" y="0" width="130" height="28" rx="6" fill="rgba(0, 243, 255, 0.1)" stroke="rgba(0, 243, 255, 0.3)" stroke-width="1"/>
+    <circle cx="14" cy="14" r="4" fill="#00f3ff"/>
+    <text x="26" y="18" font-family="monospace" font-size="11" font-weight="700" fill="#d7e3ff">NODES: 3 LIVE</text>
+
+    <!-- 4 Bots Active -->
+    <rect x="145" y="0" width="140" height="28" rx="6" fill="rgba(10, 255, 157, 0.1)" stroke="rgba(10, 255, 157, 0.3)" stroke-width="1"/>
+    <circle cx="159" cy="14" r="4" fill="#0aff9d"/>
+    <text x="171" y="18" font-family="monospace" font-size="11" font-weight="700" fill="#0aff9d">4 BOTS OPERATIVE</text>
+
+    <!-- Zabbix -->
+    <rect x="300" y="0" width="150" height="28" rx="6" fill="rgba(212, 0, 0, 0.1)" stroke="rgba(212, 0, 0, 0.3)" stroke-width="1"/>
+    <circle cx="314" cy="14" r="4" fill="#ff2e63"/>
+    <text x="326" y="18" font-family="monospace" font-size="11" font-weight="700" fill="#ff8ba0">ZABBIX 7.0 DOCKER</text>
+
+    <!-- Stage -->
+    <rect x="465" y="0" width="150" height="28" rx="6" fill="rgba(176, 38, 255, 0.1)" stroke="rgba(176, 38, 255, 0.3)" stroke-width="1"/>
+    <circle cx="479" cy="14" r="4" fill="#b026ff"/>
+    <text x="491" y="18" font-family="monospace" font-size="11" font-weight="700" fill="#e0a6ff">STAGE: 25+25 EUR</text>
+  </g>
+</svg>

@@ -1,7 +1,7 @@
 # Alpha-Omega Trading
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/grivetto/alpha-omega-trading/main/assets/banner.png" alt="Alpha-Omega Trading Banner" width="100%" onerror="this.style.display='none'"/>
+  <img src="assets/banner.svg" alt="Alpha-Omega Trading Banner" width="100%"/>
 </p>
 
 <h3 align="center">Flotta di Trading Algoritmico Distribuito & Telemetria ad Alta Frequenza</h3>
