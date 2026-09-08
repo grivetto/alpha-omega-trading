@@ -251,7 +251,7 @@ function render(d) {
   const te = d.total_equity || 0;
   $('totaleq').textContent = fmt(te);
   const be = d.bot_equity ?? 0, ke = d.kraken_equity ?? 0;
-  $('eqbreak').innerHTML = `OKX LIVE <b>€${fmt(be)}</b> + KRAKEN LIVE <b>€${fmt(ke)}</b>`;
+  $('eqbreak').innerHTML = `OKX LIVE (MC2) <b>€${fmt(be)}</b> + KRAKEN LIVE (MARCODG1) <b>€${fmt(ke)}</b>`;
   const bal = d.balances || {};
   const labels = Object.keys(bal).filter(k => bal[k] && bal[k].ok);
   $('eqdetail').innerHTML = 'CHANNELS: ' + labels.map(esc).join(' ⏺ ');
