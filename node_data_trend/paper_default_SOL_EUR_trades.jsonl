@@ -216,3 +216,5 @@
 {"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1788098417.044357, "order_id": "paper-2c489739ee"}
 {"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1788099227.1063354, "order_id": "paper-3045ee1833", "amount": 0.8112283, "price": 92.43476, "level": 0}
 {"event": "stop_loss", "symbol": "SOL/EUR", "ts": 1788227757.641402, "drawdown": 0.5409, "equity": 74.98569284307627}
+{"event": "stop_loss", "symbol": "SOL/EUR", "ts": 1788830532.0033872, "drawdown": 0.5323, "equity": 74.98569284307627}
+{"event": "stop_loss", "symbol": "SOL/EUR", "ts": 1788833472.4042675, "drawdown": 0.5326, "equity": 74.98569284307627}

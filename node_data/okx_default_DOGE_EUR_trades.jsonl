@@ -1508,3 +1508,11 @@
 {"event": "buy_placed", "symbol": "DOGE/EUR", "ts": 1787940744.8028681, "order_id": "3873468088192667648", "amount": 13.98288495, "price": 0.071516, "level": 2}
 {"event": "buy_canceled", "symbol": "DOGE/EUR", "ts": 1787952751.985989, "order_id": "3873229064874037248"}
 {"event": "buy_placed", "symbol": "DOGE/EUR", "ts": 1787952752.1476195, "order_id": "3873870987968188416", "amount": 13.97526378, "price": 0.071555, "level": 2}
+{"event": "buy_canceled", "symbol": "DOGE/EUR", "ts": 1788829571.4199653, "order_id": "3903281108045500416"}
+{"event": "buy_canceled", "symbol": "DOGE/EUR", "ts": 1788829571.592759, "order_id": "3903281113850417152"}
+{"event": "buy_canceled", "symbol": "DOGE/EUR", "ts": 1788829571.7639034, "order_id": "3903282135985524738"}
+{"event": "buy_placed", "symbol": "DOGE/EUR", "ts": 1788829602.053393, "order_id": "3903293188412772352", "amount": 51.79736869, "price": 0.077224, "level": 0}
+{"event": "buy_placed", "symbol": "DOGE/EUR", "ts": 1788829602.2269826, "order_id": "3903293194217689088", "amount": 52.06164098, "price": 0.076832, "level": 1}
+{"event": "buy_placed", "symbol": "DOGE/EUR", "ts": 1788829602.4034045, "order_id": "3903293200190377984", "amount": 52.32862376, "price": 0.07644, "level": 2}
+{"event": "buy_canceled", "symbol": "DOGE/EUR", "ts": 1788829873.8461716, "order_id": "3903293200190377984"}
+{"event": "buy_placed", "symbol": "DOGE/EUR", "ts": 1788829904.194798, "order_id": "3903303326548856832", "amount": 52.24182742, "price": 0.076567, "level": 2}

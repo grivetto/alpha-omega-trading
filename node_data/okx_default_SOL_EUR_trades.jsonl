@@ -200,3 +200,9 @@
 {"event": "sell_placed", "symbol": "SOL/EUR", "ts": 1787875930.0950754, "order_id": "3871293267480481792", "amount": 0.01811292, "price": 94.4249, "kind": "ladder"}
 {"event": "sell_placed", "symbol": "SOL/EUR", "ts": 1787875930.2597358, "order_id": "3871293273016963072", "amount": 0.01811292, "price": 95.17282, "kind": "ladder"}
 {"event": "sell_filled", "symbol": "SOL/EUR", "ts": 1787877179.8174725, "order_id": "3871293267480481792", "amount": 0.01811292, "entry": 93.49, "exit": 94.4249, "profit": 0.013530081357492119, "total_pnl": 0.37051548017159597}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1788829601.0180607, "order_id": "3903293153650380800", "amount": 0.04537334, "price": 88.1575, "level": 0}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1788829601.193291, "order_id": "3903293159589515264", "amount": 0.04560483, "price": 87.71, "level": 1}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1788829601.3649533, "order_id": "3903293165293768706", "amount": 0.04583871, "price": 87.2625, "level": 2}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1788829874.003034, "order_id": "3903293165293768706"}
+{"event": "buy_canceled", "symbol": "SOL/EUR", "ts": 1788829904.4435532, "order_id": "3903293159589515264"}
+{"event": "buy_placed", "symbol": "SOL/EUR", "ts": 1788829904.620981, "order_id": "3903303340809490433", "amount": 0.04550822, "price": 87.8962, "level": 1}
