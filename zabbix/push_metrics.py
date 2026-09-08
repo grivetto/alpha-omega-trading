@@ -15,7 +15,7 @@ from pathlib import Path
 
 BASE = Path("/home/marco/denaro")
 HEALTH_DIR = BASE / "health"
-NODE_DIR = Path("/home/marco/denaro_node_app/node_data")
+NODE_DIR = Path("/home/marco/alpha-omega-trading/node_data")
 API = "http://127.0.0.1:1080/api_jsonrpc.php"
 USER = "Admin"
 PASS = "zabbix"
@@ -52,14 +52,14 @@ TREND_LIVE = ("alpha-omega-bot-trend-live", "bot.trend_live",
 REMOTE_NODES = {
     "nuvola": {
         "ssh": ["sergio@87.106.3.15", "-p", "22"],
-        "data_dir": "/home/sergio/denaro_node_app/node_data",
+        "data_dir": "/home/sergio/alpha-omega-trading/node_data",
         "live_dir": "/home/sergio/denaro/health",
         "host": "alpha-omega-node-nuvola",
         "unit": "denaro-node-nuvola",
     },
     "mc2": {
         "ssh": ["sergio@127.0.0.1", "-p", "2222"],  # tunnel inverso
-        "data_dir": "/home/sergio/denaro_node_app/node_data",
+        "data_dir": "/home/sergio/denaro/node_data",
         "live_dir": "/home/sergio/denaro/health",
         "host": "alpha-omega-node-mc2",
         "unit": "denaro-node-mc2",
@@ -494,21 +494,24 @@ def main():
         ]
         _push_atlas_metrics(data, host, prefix, h)
     tl_host, tl_prefix, tl_path = TREND_LIVE
-    tl_h = read_json(tl_path)
-    if tl_h and not is_stale(tl_h.get("timestamp", 0)):
-        data += [
-            {"host": tl_host, "key": f"{tl_prefix}.status",
-             "value": 1 if tl_h.get("status") == "running" else 0},
-            {"host": tl_host, "key": f"{tl_prefix}.equity",
-             "value": tl_h.get("total_equity", 0)},
-            {"host": tl_host, "key": f"{tl_prefix}.buys", "value": tl_h.get("buys", 0)},
-            {"host": tl_host, "key": f"{tl_prefix}.sells", "value": tl_h.get("sells", 0)},
-            {"host": tl_host, "key": f"{tl_prefix}.pnl", "value": tl_h.get("pnl", 0)},
-            {"host": tl_host, "key": f"{tl_prefix}.trades", "value": tl_h.get("trades", 0)},
-        ]
-        _push_atlas_metrics(data, tl_host, tl_prefix, tl_h)
-    else:
-        data.append({"host": tl_host, "key": f"{tl_prefix}.status", "value": 0})
+    for live_name, live_path in [("trend_sol", HEALTH_DIR / "trend_sol_kraken.json"),
+                                 ("trend_xrp", HEALTH_DIR / "trend_xrp_kraken.json")]:
+        tl_h = read_json(live_path)
+        pfx = f"bot.{live_name}" if live_name != "trend_sol" else tl_prefix
+        if tl_h and not is_stale(tl_h.get("timestamp", 0)):
+            data += [
+                {"host": tl_host, "key": f"{pfx}.status",
+                 "value": 1 if tl_h.get("status") == "running" else 0},
+                {"host": tl_host, "key": f"{pfx}.equity",
+                 "value": tl_h.get("total_equity", 0)},
+                {"host": tl_host, "key": f"{pfx}.buys", "value": tl_h.get("buys", 0)},
+                {"host": tl_host, "key": f"{pfx}.sells", "value": tl_h.get("sells", 0)},
+                {"host": tl_host, "key": f"{pfx}.pnl", "value": tl_h.get("pnl", 0)},
+                {"host": tl_host, "key": f"{pfx}.trades", "value": tl_h.get("trades", 0)},
+            ]
+            _push_atlas_metrics(data, tl_host, pfx, tl_h)
+        else:
+            data.append({"host": tl_host, "key": f"{pfx}.status", "value": 0})
 
     # ── 6. Nodi Denaro remoti (nuvola, mc2) + auto-heal remoto ──
     push_remote_nodes(data, auth)

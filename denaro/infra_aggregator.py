@@ -252,6 +252,9 @@ def collect_node_bots():
         "okx:ETH/EUR": HEALTH_DIR / "eth.json",
         "kraken:SOL/EUR": HEALTH_DIR / "sol_kraken.json",
         "trend-live:SOL/EUR": HEALTH_DIR / "trend_sol_kraken.json",
+        "trend-live:XRP/EUR": HEALTH_DIR / "trend_xrp_kraken.json",
+        "mc2:okx:DOGE/EUR": HEALTH_DIR / "doge_mc2.json",
+        "mc2:okx:SOL/EUR": HEALTH_DIR / "sol_mc2.json",
     }
     for key, p in live.items():
         try:

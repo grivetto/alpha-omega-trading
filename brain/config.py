@@ -72,6 +72,7 @@ BOTS = {
     ("marcodg1", "trend:paper:XRP/EUR"): ("denaro-node-trend", "/home/marco/alpha-omega-trading/node_data_trend/paper_default_XRP_EUR_health.json"),
     # MARCODG1 — TREND LIVE su Kraken (swap: griglia in pausa)
     ("marcodg1", "trend-live:SOL/EUR"): ("denaro-node-trend-live", "/home/marco/denaro/health/trend_sol_kraken.json"),
+    ("marcodg1", "trend-live:XRP/EUR"): ("denaro-node-trend-live", "/home/marco/denaro/health/trend_xrp_kraken.json"),
     # NUVOLA — live nuvolasub1 (solo DOGE; ADA/SOL/XRP disabilitati: sub 0.76€
     # non finanziabile) + istanza TREND paper
     ("nuvola", "okx:DOGE/EUR"): ("denaro-node-nuvola", "/home/sergio/denaro/health/doge_nuvola.json"),
