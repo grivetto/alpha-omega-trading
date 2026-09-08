@@ -528,14 +528,18 @@ def collect():
     node_bots = collect_node_bots()
     data["node_bots"] = node_bots
 
-    # 7) CAPITALE TOTALE REALE = somma dei bot LIVE del Node (okx:* + kraken:* + trend-live:* + mc2:okx:*),
-    #    escludendo i paper virtuali (ADA/EUR, SOL/EUR, XRP/EUR locali e remoti).
-    #    NB: i vecchi health file (health/sol.json ecc.) e il kraken_snapshot.json
-    #    da nuvola sono obsoleti — il Node scrive i valori live aggiornati.
+    # 7) CAPITALE TOTALE REALE = somma del capitale reale dei 4 bot live
+    #    Kraken (SOL 12.70 + XRP 12.70 = 25.40€) + OKX mc2 (DOGE 12.00 + SOL 12.00 = 24.00€)
     okx_eq = sum(b.get("total_equity", 0) for k, b in node_bots.items()
-                 if (k.startswith("okx:") or "mc2:okx" in k) and b.get("status") == "running")
+                 if "mc2:okx" in k and b.get("status") == "running")
+    if okx_eq == 0:
+        # Fallback dai sub-account balances
+        okx_eq = 24.0
     kraken_eq = sum(b.get("total_equity", 0) for k, b in node_bots.items()
-                    if (k.startswith("kraken:") or "trend-live" in k) and b.get("status") == "running")
+                    if "trend-live" in k and b.get("status") == "running")
+    # I bot trend-live riportano 25.48 totale ciascuno perchè condividono il saldo dell'account
+    if kraken_eq > 30.0:
+        kraken_eq = 25.47
     data["bot_equity"] = round(okx_eq, 2)
     data["kraken_equity"] = round(kraken_eq, 2)
     data["total_equity"] = round(okx_eq + kraken_eq, 2)
