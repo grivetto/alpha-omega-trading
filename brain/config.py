@@ -60,32 +60,32 @@ BOTS = {
     # live; il bot live e' monitorato sotto "trend-live:SOL/EUR".
     # ("marcodg1", "kraken:SOL/EUR"): ("denaro-node-paper", ".../sol_kraken.json"),
     # MARCODG1 — paper (stesso Node)
-    ("marcodg1", "paper:ADA/EUR"):  ("denaro-node-paper", "/home/marco/denaro_node_app/node_data/paper_default_ADA_EUR_health.json"),
-    ("marcodg1", "paper:SOL/EUR"):  ("denaro-node-paper", "/home/marco/denaro_node_app/node_data/paper_default_SOL_EUR_health.json"),
-    ("marcodg1", "paper:XRP/EUR"):  ("denaro-node-paper", "/home/marco/denaro_node_app/node_data/paper_default_XRP_EUR_health.json"),
-    ("marcodg1", "paper:DOGE/EUR"): ("denaro-node-paper", "/home/marco/denaro_node_app/node_data/paper_default_DOGE_EUR_health.json"),
-    ("marcodg1", "paper:ETH/EUR"):  ("denaro-node-paper", "/home/marco/denaro_node_app/node_data/paper_default_ETH_EUR_health.json"),
+    ("marcodg1", "paper:ADA/EUR"):  ("denaro-node-paper", "/home/marco/alpha-omega-trading/node_data/paper_default_ADA_EUR_health.json"),
+    ("marcodg1", "paper:SOL/EUR"):  ("denaro-node-paper", "/home/marco/alpha-omega-trading/node_data/paper_default_SOL_EUR_health.json"),
+    ("marcodg1", "paper:XRP/EUR"):  ("denaro-node-paper", "/home/marco/alpha-omega-trading/node_data/paper_default_XRP_EUR_health.json"),
+    ("marcodg1", "paper:DOGE/EUR"): ("denaro-node-paper", "/home/marco/alpha-omega-trading/node_data/paper_default_DOGE_EUR_health.json"),
+    ("marcodg1", "paper:ETH/EUR"):  ("denaro-node-paper", "/home/marco/alpha-omega-trading/node_data/paper_default_ETH_EUR_health.json"),
     # MARCODG1 — istanza TREND (momentum + adaptive scalper, paper)
-    ("marcodg1", "trend:paper:SOL/EUR"): ("denaro-node-trend", "/home/marco/denaro_node_app/node_data_trend/paper_default_SOL_EUR_health.json"),
-    ("marcodg1", "trend:paper:ETH/EUR"): ("denaro-node-trend", "/home/marco/denaro_node_app/node_data_trend/paper_default_ETH_EUR_health.json"),
-    ("marcodg1", "trend:paper:ADA/EUR"): ("denaro-node-trend", "/home/marco/denaro_node_app/node_data_trend/paper_default_ADA_EUR_health.json"),
-    ("marcodg1", "trend:paper:XRP/EUR"): ("denaro-node-trend", "/home/marco/denaro_node_app/node_data_trend/paper_default_XRP_EUR_health.json"),
+    ("marcodg1", "trend:paper:SOL/EUR"): ("denaro-node-trend", "/home/marco/alpha-omega-trading/node_data_trend/paper_default_SOL_EUR_health.json"),
+    ("marcodg1", "trend:paper:ETH/EUR"): ("denaro-node-trend", "/home/marco/alpha-omega-trading/node_data_trend/paper_default_ETH_EUR_health.json"),
+    ("marcodg1", "trend:paper:ADA/EUR"): ("denaro-node-trend", "/home/marco/alpha-omega-trading/node_data_trend/paper_default_ADA_EUR_health.json"),
+    ("marcodg1", "trend:paper:XRP/EUR"): ("denaro-node-trend", "/home/marco/alpha-omega-trading/node_data_trend/paper_default_XRP_EUR_health.json"),
     # MARCODG1 — TREND LIVE su Kraken (swap: griglia in pausa)
     ("marcodg1", "trend-live:SOL/EUR"): ("denaro-node-trend-live", "/home/marco/denaro/health/trend_sol_kraken.json"),
     # NUVOLA — live nuvolasub1 (solo DOGE; ADA/SOL/XRP disabilitati: sub 0.76€
     # non finanziabile) + istanza TREND paper
     ("nuvola", "okx:DOGE/EUR"): ("denaro-node-nuvola", "/home/sergio/denaro/health/doge_nuvola.json"),
-    ("nuvola", "trend:paper:SOL/EUR"): ("denaro-node-trend", "/home/sergio/denaro_node_app/node_data_trend/paper_default_SOL_EUR_health.json"),
-    ("nuvola", "trend:paper:ETH/EUR"): ("denaro-node-trend", "/home/sergio/denaro_node_app/node_data_trend/paper_default_ETH_EUR_health.json"),
-    ("nuvola", "trend:paper:ADA/EUR"): ("denaro-node-trend", "/home/sergio/denaro_node_app/node_data_trend/paper_default_ADA_EUR_health.json"),
-    ("nuvola", "trend:paper:XRP/EUR"): ("denaro-node-trend", "/home/sergio/denaro_node_app/node_data_trend/paper_default_XRP_EUR_health.json"),
+    ("nuvola", "trend:paper:SOL/EUR"): ("denaro-node-trend", "/home/sergio/alpha-omega-trading/node_data_trend/paper_default_SOL_EUR_health.json"),
+    ("nuvola", "trend:paper:ETH/EUR"): ("denaro-node-trend", "/home/sergio/alpha-omega-trading/node_data_trend/paper_default_ETH_EUR_health.json"),
+    ("nuvola", "trend:paper:ADA/EUR"): ("denaro-node-trend", "/home/sergio/alpha-omega-trading/node_data_trend/paper_default_ADA_EUR_health.json"),
+    ("nuvola", "trend:paper:XRP/EUR"): ("denaro-node-trend", "/home/sergio/alpha-omega-trading/node_data_trend/paper_default_XRP_EUR_health.json"),
     # MC2 — live mc2sub1 (ADA cap 3.4 + DOGE 3.7) + istanza TREND paper
-    ("mc2", "okx:ADA/EUR"): ("denaro-node-mc2", "/home/sergio/denaro_node_app/node_data/okx_default_ADA_EUR_health.json"),
+    ("mc2", "okx:ADA/EUR"): ("denaro-node-mc2", "/home/sergio/denaro/node_data/okx_default_ADA_EUR_health.json"),
     ("mc2", "okx:DOGE/EUR"): ("denaro-node-mc2", "/home/sergio/denaro/health/doge_mc2.json"),
-    ("mc2", "trend:paper:SOL/EUR"): ("denaro-node-trend", "/home/sergio/denaro_node_app/node_data_trend/paper_default_SOL_EUR_health.json"),
-    ("mc2", "trend:paper:ETH/EUR"): ("denaro-node-trend", "/home/sergio/denaro_node_app/node_data_trend/paper_default_ETH_EUR_health.json"),
-    ("mc2", "trend:paper:ADA/EUR"): ("denaro-node-trend", "/home/sergio/denaro_node_app/node_data_trend/paper_default_ADA_EUR_health.json"),
-    ("mc2", "trend:paper:XRP/EUR"): ("denaro-node-trend", "/home/sergio/denaro_node_app/node_data_trend/paper_default_XRP_EUR_health.json"),
+    ("mc2", "trend:paper:SOL/EUR"): ("denaro-node-trend", "/home/sergio/denaro/node_data_trend/paper_default_SOL_EUR_health.json"),
+    ("mc2", "trend:paper:ETH/EUR"): ("denaro-node-trend", "/home/sergio/denaro/node_data_trend/paper_default_ETH_EUR_health.json"),
+    ("mc2", "trend:paper:ADA/EUR"): ("denaro-node-trend", "/home/sergio/denaro/node_data_trend/paper_default_ADA_EUR_health.json"),
+    ("mc2", "trend:paper:XRP/EUR"): ("denaro-node-trend", "/home/sergio/denaro/node_data_trend/paper_default_XRP_EUR_health.json"),
 }
 
 # ── soglie ───────────────────────────────────────────────────────────────────

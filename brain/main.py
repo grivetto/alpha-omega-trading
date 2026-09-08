@@ -67,7 +67,7 @@ def _to_node_params(p: dict) -> dict:
 
 def _load_node_yaml():
     import yaml
-    with open("/home/marco/denaro_node_app/config/node.yaml", encoding="utf-8") as f:
+    with open("/home/marco/alpha-omega-trading/config/node.yaml", encoding="utf-8") as f:
         return yaml.safe_load(f)
 
 
@@ -202,7 +202,7 @@ def write_overrides(reg: dict) -> dict:
     if ov:
         sshutil.run("marcodg1",
                     f"cp {config.OVERRIDES_PATH} "
-                    f"/home/marco/denaro_node_app/config/strategy_overrides.json")
+                    f"/home/marco/alpha-omega-trading/config/strategy_overrides.json")
     return ov
 
 

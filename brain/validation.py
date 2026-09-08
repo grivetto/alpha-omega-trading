@@ -15,8 +15,8 @@ from pathlib import Path
 
 from . import config, hermes_bridge
 
-NODE_DATA = Path("/home/marco/denaro_node_app/node_data")
-TREND_DATA = Path("/home/marco/denaro_node_app/node_data_trend")
+NODE_DATA = Path("/home/marco/alpha-omega-trading/node_data")
+TREND_DATA = Path("/home/marco/alpha-omega-trading/node_data_trend")
 SYMBOLS = ("SOL", "ETH", "ADA", "XRP")
 
 
