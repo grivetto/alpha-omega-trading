@@ -1,228 +1,133 @@
 # Alpha-Omega Trading
 
-**_Codename "Denaro" — a unified, distributed grid-trading engine for OKX and Kraken, with realistic paper trading, staged live capital, and Zabbix-based monitoring._
+**_Codename "Denaro" — Distributed algorithmic trading system & multi-node execution engine for OKX and Kraken._**
 
-Alpha-Omega trading is a Python system that runs the same trading engine across several machines ("nodes"), each trading one or more markets on OKX or Kraken through the CCXT library. It is designed for disciplined, backtested and paper-validated deployment, with a **small, staged live budget** — the live account is deliberately kept separate from development and is small enough that a full drawdown is affordable while the engine is still in validation.
+![Python](https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+![Zabbix](https://img.shields.io/badge/Zabbix-D40000?style=for-the-badge&logo=zabbix&logoColor=white)
+![Ubuntu](https://img.shields.io/badge/Ubuntu-E95420?style=for-the-badge&logo=ubuntu&logoColor=white)
+![Git](https://img.shields.io/badge/Git-F05032?style=for-the-badge&logo=git&logoColor=white)
+![Cloudflare](https://img.shields.io/badge/Cloudflare-F38020?style=for-the-badge&logo=cloudflare&logoColor=white)
+
+Alpha-Omega Trading is a multi-host execution platform operating across a distributed server topology (`nuvola`, `MARCODG1`, and `mc2`). It drives automated grid trading, momentum capture, and regime-adaptive execution models on crypto exchanges through CCXT, bound by strict real-time telemetry and risk supervisory gates.
 
 > [English](README.md) · [Italiano](README.it.md) · [Español](README.es.md) · [ไทย](README.th.md)
 
 ---
 
-## Table of contents
-
-- [Honest status](#honest-status)
-- [What it does](#what-it-does)
-- [Architecture](#architecture)
-- [Safety and risk controls](#safety-and-risk-controls)
-- [Monitoring and alerting](#monitoring-and-alerting)
-- [Getting started](#getting-started)
-- [Running live and paper nodes](#running-live-and-paper-nodes)
-- [Running as systemd services](#running-as-systemd-services)
-- [Configuration](#configuration)
-- [Repository layout](#repository-layout)
-- [Testing](#testing)
-- [Roadmap](#roadmap)
-- [Disclaimer](#disclaimer)
-- [License](#license)
-
----
-
-## Honest status
-
-This is **research-grade software in live validation**, not a finished money-making product.
-
-- Trading is real but conducted on a **small capital budget** (order of tens of euros), intentionally bounded so that bugs and drawdowns are affordable while the engine is proven out.
-- Strategies are first validated in a **realistic paper-trading engine** before any live capital is committed, and live capital is supposed to be increased in **stages** only after stat-based thresholds are met (see [Roadmap](#roadmap)).
-- Past attempts have **not consistently produced strong results**. The current codebase reflects lessons from those attempts: an emphasis on kill-switches, stop-losses, pre-flight checks, and honest accounting of fees/slippage rather than on optimistic forecasts.
-- No figure in this repository is a promise of future returns. See the [Disclaimer](#disclaimer).
-
-Treat this repository as a reference for how-not-to and how-to operate a small algorithmic trading fleet — and manage your own expectations accordingly.
-
----
-
-## What it does
-
-The engine runs **two-sided grid trading**: it places buy orders as the price falls within a configured ladder of levels, and sell orders at take-profit levels above, harvesting small gains from oscillation while holding inventory between the levels. Several strategy families live under `denaro/domain/` (grid, momentum, mean-reversion, adaptive/volatility and regime-aware variants); the node engine around them is shared and exchange-agnostic.
-
-Core traits:
-
-- **Unified engine, many markets.** The same `denaro.denaro_node` process, configured via a YAML file, runs any combination of live and paper markets with per-bot capital, symbols, levels and risk settings.
-- **Realistic paper trading.** A dedicated paper engine applies real exchange fees, minimum notional, slippage and stop-losses so that simulation results are comparable to live behaviour.
-- **Exchange-agnostic.** All order and market-data access sits behind an adapter layer (CCXT-based) in `denaro/infrastructure/exchanges`, so strategies never talk to a specific exchange.
-- **Performance orientation.** Asynchronous I/O, WebSocket price feeds with ZMQ fan-out, rate limiting, and a supervisor that throttles ticks under CPU/RAM pressure.
-
----
-
-## Architecture
-
-The fleet is distributed across three machine classes by role, not by a fixed topology:
-
-- **Trading nodes** — VPS hosts (the project currently uses two, referred to as nodes) that run one or more `denaro_node` processes. Each interprets its own `config/node_*.yaml` and reports health.
-- **Monitoring host** — a machine that aggregates node health and runs monitoring. In this deployment it sits behind CGNAT and is reached only through **reverse SSH tunnels** originated by the trading nodes, so no inbound firewall rule is required.
-- **Optional orchestration / feeder tiers** — the engine also includes a "brain"/feeder layer used to coordinate higher-level decisions and feed signals between components.
-
-A simplified view of the runtime relationships:
+## Architecture & Technology Stack
 
 ```
-┌──────────────┐   ┌──────────────┐     ┌──────────────┐
-│   NODE A     │   │   NODE B     │     │  ORCHESTRATOR│
-│ denaro_node  │   │ denaro_node  │     │ (optional)   │
-│ grid markets │   │ grid markets │     │  brain/feed  │
-└──────┬───────┘   └──────┬───────┘     └──────┬───────┘
-       │                  │                    │
-       └─────────┬────────┴────────────────────┘
-                 │   health / metrics over network
-        ┌────────▼─────────┐
-        │   MONITORING     │   Zabbix server + web dashboard
-        │   (aggregates,   │   reachable over reverse SSH tunnel
-        │    https access) │
-        └──────────────────┘
+ ┌─────────────────────────────────────────────────────────┐
+ │                   EXCHANGES LAYER                       │
+ │              OKX (EEA)   ·   Kraken REST/WS             │
+ └─────────────┬───────────────────────────┬───────────────┘
+               │ CCXT Execution            │ CCXT Execution
+ ┌─────────────▼─────────────┐ ┌───────────▼───────────────┐
+ │       NODE: mc2           │ │      NODE: MARCODG1       │
+ │   (Home Node / CGNAT)     │ │        (Cloud VPS)        │
+ │ · denaro-node-mc2         │ │ · denaro-node-trend-live  │
+ │ · Docker Zabbix Server    │ │ · Zabbix Push Metrics     │
+ │ · Dashboard Web (:8913)   │ │ · Aggregator API (:8912)  │
+ └─────────────┬─────────────┘ └───────────┬───────────────┘
+               │                           │
+               └─────────────►◄────────────┘
+                 Reverse SSH Tunnels (autossh)
+                 Zabbix Trapper :10051 / Reverse 2222
 ```
 
-Communication, control-plane and monitoring details depend on the deployment; the mechanism currently used is **reverse SSH tunnels (autossh)** so that even a NATed host can be reached and can act as the monitoring server.
+- **Runtime & Core Engine:** Python 3.12+, AsyncIO, CCXT Pro for exchange connectivity.
+- **Topology & Communication:** 3 active nodes interconnected via reverse SSH tunnels (`autossh`) and Cloudflare tunnels to bridge CGNAT environments safely.
+- **Monitoring & Observability:** Enterprise Zabbix 7.0 LTS monitoring stack running containerized on Docker, receiving high-frequency telemetry via Zabbix Trappers.
+- **Dashboard & Telemetry:** Custom asynchronous HTTP/JSON service exposing real-time metrics, node states, and balance telemetry at `web.grivetto.eu`.
 
 ---
 
-## Safety and risk controls
+## History & Lessons Learned ("La Baracca")
 
-Risk management is a first-class concern, baked into the node engine rather than bolted on per strategy:
+This system originated as an exploratory algorithmic trading framework nicknamed *"La Baracca"* (Italian slang for a rickety contraption that constantly needs fixing).
 
-- **Stop-loss** per bot and a **global daily / weekly circuit-breaker** that halts a symbol or node when configured loss limits are crossed.
-- **Pre-flight checks** before every order placement (anti-deadlock validation and position sizing) so a misconfigured or stale bot cannot trade blindly.
-- **Safe mode** — a graduated set of throttle states (caution → safe → emergency) driven by the supervisor (RAM/CPU/tick pressure) that progressively slows or stops a node before resources are exhausted.
-- **Sub-accounts.** Live OKX/Kraken trading runs on dedicated exchange **sub-accounts**, never on the main account, so operating mistakes stay contained.
-- **Credentials** live only in a local `.env` (never committed) and are loaded at runtime.
-- **Live budget staging.** Capital is grown in explicit stages (paper → small live → larger live) and only after the recorded triggers in the roadmap are met.
+### The Reality of Algorithmic Trading
+In early development, naive strategies, over-fitted parameters, exchange API disconnections, and silent order rejections proved that optimistic backtests rarely survive live market execution. Real-world crypto markets impose heavy friction:
+- **Exchange Fees & Slippage:** Maker/taker fee structures easily erode thin grid spreads.
+- **API Rate Limits & IP Restrictions:** Exchange endpoints (especially EEA-compliant endpoints) require resilient reconnection routines and strict rate limiting.
+- **Drawdown Realities:** Unhedged grids during sudden market crashes lead to locked capital and structural inventory traps.
 
----
-
-## Monitoring and alerting
-
-- **Zabbix** is used as the aggregation and alerting backend. Nodes push metrics (equity, per-bot PnL, pre-flight blocks, stale health, resource pressure) to the Zabbix **trapper**.
-- Triggers exist for: circuit-breaker crossings, daily/weekly loss, stale heartbeats, pre-flight blocks, resource pressure.
-- **Auto-heal is disabled by default.** Early iterations restarted live bots spuriously; recovery is now a deliberate, logged action rather than an automatic restart.
-- A read-only **web dashboard** provides an at-a-glance view of node and bot health.
+Rather than hiding these failures behind marketing buzzwords, the system was re-engineered from the ground up with defensive engineering principles: hard stop-losses, anti-deadlock position validation, supervisor-driven safe mode throttles, and segregated staging accounts.
 
 ---
 
-## Getting started
+## Active Work in Progress (Live Stage: 25 + 25 EUR)
 
-Requirements:
+We operate on a strictly enforced **staged capital roadmap**. Live capital is capped at small test envelopes (~50 EUR total) while operational resilience is demonstrated:
 
-- Python **3.12+**
-- A `uv` or `venv` environment
-- Docker + Docker Compose only if you also run the Zabbix monitoring stack
-- Exchange API keys for OKX and/or Kraken (in a local `.env`, never committed)
+| Exchange | Target Pair | Mode | Capital Budget | Strategy | Node Host |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Kraken** | `SOL/EUR` | **Live** | ~12.70 € | Trend Momentum | `MARCODG1` |
+| **Kraken** | `XRP/EUR` | **Live** | ~12.70 € | Trend Momentum | `MARCODG1` |
+| **OKX** | `DOGE/EUR` | **Live** | ~12.00 € | Multi-level Grid | `mc2` (`mc2sub1`) |
+| **OKX** | `SOL/EUR` | **Live** | ~12.00 € | Multi-level Grid | `mc2` (`mc2sub1`) |
 
-Clone and install:
+### Active Development Priorities:
+1. **Live Observation Window:** Monitoring fill frequencies, slippage, and fee friction over multi-week observation periods across the 4 active live bots.
+2. **Dynamic Spacing & Volatility Adaptation:** Enhancing the grid spacing engine based on historical volatility (ATR) rather than static price percentages.
+3. **Threshold-Gated Staging:** Advancing capital allocation from the current ~50 EUR envelope to 100 EUR, 500 EUR, and ultimately 1,000 EUR strictly upon meeting verified Sharpe and profit-factor thresholds.
 
+---
+
+## Safety & Risk Controls
+
+- **Pre-Flight Order Validation:** Anti-deadlock checks inspect free quote equity and order notional before dispatching orders to CCXT.
+- **Supervisor Safe Mode:** Real-time RAM, CPU, and tick-lag monitoring. If resource pressure exceeds thresholds (`caution` -> `safe` -> `emergency`), the supervisor automatically throttles or suspends trading loops.
+- **Sub-Account Isolation:** All live execution runs on dedicated API sub-accounts (`TRENDSUB` on Kraken, `mc2sub1` on OKX), ensuring operational errors can never impact core account assets.
+- **Zero-Secret Commits:** Credentials exist strictly inside server-local `.env` configurations excluded by `.gitignore`.
+
+---
+
+## Getting Started
+
+### Prerequisites
+- Linux (Ubuntu 22.04 / Debian 12 recommended)
+- Python 3.12+ and `venv`
+- Docker & Docker Compose (for the Zabbix telemetry stack)
+- Exchange API credentials with Spot trading permissions
+
+### Installation
 ```bash
+# Clone the repository
 git clone git@github.com:grivetto/alpha-omega-trading.git
 cd alpha-omega-trading
 
-python -m venv venv
+# Create and activate virtual environment
+python3 -m venv venv
 source venv/bin/activate
+
+# Install dependencies
 pip install -r requirements.txt
 
-cp .env.example .env      # then fill in your API keys
+# Configure environment
+cp .env.example .env
+# Edit .env with your sub-account keys
 ```
 
----
-
-## Running live and paper nodes
-
-The engine is a console application driven by a config file:
-
+### Running the Engine
 ```bash
-# Live grid node (per config file)
-python -m denaro.denaro_node --config config/node.yaml
-
-# Paper trading node
-python -m denaro.denaro_node --config config/node_paper.yaml
-
-# A Kraken trend-following live config (example)
+# Start a node with a specific configuration
 python -m denaro.denaro_node --config config/node_trend_live_kraken.yaml
-```
 
-Additional provided configs (`config/node_nuvola.yaml`, `config/node_mc2.yaml`, `config/node_adaptive_vol_grid_paper.yaml`, …) correspond to specific node/strategy roles; see the [Configuration](#configuration) section.
-
-Run `python -m denaro.denaro_node --help` for flags (`--verbose` is supported).
-
----
-
-## Running as systemd services
-
-For production nodes, unit files are provided under `systemd/`. Typical steps on a given host:
-
-```bash
-sudo cp systemd/*.service /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl enable --now denaro-node            # name depends on the host role
-```
-
-Unit files currently cover node, health, aggregator, dashboard, feeder and the reverse-tunnel (`zabbix-tunnel`) roles. **Adjust the `ExecStart` paths** in the units to match the user home, repository path and venv used on each host — the shipped values reflect one specific deployment.
-
----
-
-## Configuration
-
-Each node reads a YAML file that defines, among other things:
-
-- `exchange_rest`: exchange (e.g. `okx`) and EEA mode.
-- `bots`: a list of markets, each with symbol, `mode` (`live`/`paper`), `capital`, grid `levels` and strategy-specific settings.
-- `safemode`: the RAM/CPU throttle thresholds (`caution_pct`, `safe_pct`, `emergency_pct`) and their interval.
-- `supervisor`: resource-critical thresholds and tick throttling.
-- `data_dir`: where the node persists runtime state and market data.
-
-Keep exchange credentials out of config files — put them in `.env` and load them at runtime.
-
----
-
-## Repository layout
-
-```
-config/                  Per-node YAML configuration
-denaro/
-  domain/                Strategies and risk/regime/indicator logic (grid, momentum, adaptive, …)
-  application/           Orchestration: portfolio, supervisor, safe-mode
-  infrastructure/        Exchange adapters (CCXT), market data, storage, feeder
-  denaro_node.py         Unified node entry point
-scripts/                 Deployment helpers
-systemd/                 systemd unit files (node, health, aggregator, tunnel, …)
-zabbix/                  Monitoring integration (healer, push_metrics)
-tests/                   Tests
-.env.example             Credential template (keys never committed)
-```
-
----
-
-## Testing
-
-The project uses `pytest` (with `pytest-asyncio` for the async layers). Install the dev extras and run:
-
-```bash
-pip install -e ".[dev]"
+# Run tests
 pytest
 ```
 
 ---
 
-## Roadmap
-
-- [ ] Sustain a validated live record over a defined observation window (e.g. several weeks per bot).
-- [ ] Automatic promotion gates: a strategy may receive more capital only when it clears the recorded thresholds (profit factor, max drawdown, Sharpe).
-- [ ] Staged capital increase (paper → small live → 100–500 EUR → 1000 EUR) as conditions are met.
-- [ ] Monitoring templates with equity/PnL/volume charts per bot.
-- [ ] Cleaner packaging: align `pyproject.toml` metadata with the actual `denaro` package layout.
-
----
-
 ## Disclaimer
 
-**This software is provided for educational and research purposes only. It is not financial advice.** Algorithmic trading of crypto assets carries substantial risk, including total loss of the deployed capital. Past or paper performance does not guarantee future results; fees, slippage, liquidity gaps and exchange outages can all turn a profitable backtest into a losing live campaign. Only deploy capital you can afford to lose entirely, and never trade with money you rely on. The authors accept no liability for any loss arising from the use of this code.
+**This software is distributed strictly for educational, academic, and research purposes. It is not financial or investment advice.** Cryptocurrency algorithmic trading involves substantial financial risk, including the possible loss of all invested capital. The authors make no representations or warranties regarding system profitability or performance. Never trade with capital you cannot afford to lose.
 
 ---
 
 ## License
 
-Public domain (CC0-equivalent). See the [LICENSE](LICENSE) file for the full dedication — no rights reserved; use, copy, modify and sell freely, at your own risk.
+Dedicated to the public domain under Creative Commons Zero (CC0). See [LICENSE](LICENSE) for details.
