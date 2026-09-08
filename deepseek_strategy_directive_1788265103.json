@@ -1,7 +1,0 @@
-{
-  "ts": "2026-09-01",
-  "strategy_file": "/home/sergio/denaro/strategies/auto_gen_1788265084_volasym_rebal.py",
-  "strategy": "volasym_rebal (VolAsymRebalanceGrid)",
-  "self_test": "pass",
-  "message_len": 11096
-}

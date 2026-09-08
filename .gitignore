@@ -62,3 +62,16 @@ _*.bak.py
 
 
 *.sql.gz
+
+# Operational and execution run artifacts
+node_data/
+node_data_*/
+health/*.json
+!health/.gitkeep
+deepseek_*.json*
+deploy_decisions_*.json
+fase*.json*
+orchestration*.json*
+orchestration/
+comunicazione_ai/
+strategies/*.json

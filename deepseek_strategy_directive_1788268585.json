@@ -1,8 +1,0 @@
-{
-  "ts": "2026-09-01",
-  "strategy_file": "/home/sergio/denaro/strategies/auto_gen_1788268585_crossvar_grid.py",
-  "strategy": "CrossVaRGrid (grid-level VaR sizing)",
-  "self_test": "pass",
-  "jump_scale": 0.001381,
-  "mem_mb": 0.014
-}
