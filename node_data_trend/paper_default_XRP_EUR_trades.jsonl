@@ -1119,3 +1119,133 @@
 {"event": "buy_canceled", "symbol": "XRP/EUR", "ts": 1788036822.724585, "order_id": "paper-3d10cc8aa3"}
 {"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788037272.7569108, "order_id": "paper-6e86db4901", "amount": 102.44541755, "price": 1.205285, "level": 0}
 {"event": "stop_loss", "symbol": "XRP/EUR", "ts": 1788227757.643115, "drawdown": 0.2123, "equity": 123.4759250906494}
+{"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788298159.578657, "order_id": "paper-66fb715a14", "amount": 26.04248049, "price": 1.151964, "level": 0}
+{"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788298159.5830996, "order_id": "paper-abe832cecd", "amount": 26.17467583, "price": 1.146146, "level": 1}
+{"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788298159.5858324, "order_id": "paper-f7be3d2409", "amount": 26.30822009, "price": 1.140328, "level": 2}
+{"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788298159.5887485, "order_id": "paper-6012892f43", "amount": 26.44313404, "price": 1.13451, "level": 3}
+{"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788298159.5914168, "order_id": "paper-1e5e4e2b03", "amount": 26.57943885, "price": 1.128692, "level": 4}
+{"event": "buy_canceled", "symbol": "XRP/EUR", "ts": 1788298189.603194, "order_id": "paper-f7be3d2409"}
+{"event": "buy_canceled", "symbol": "XRP/EUR", "ts": 1788298189.6061943, "order_id": "paper-6012892f43"}
+{"event": "buy_canceled", "symbol": "XRP/EUR", "ts": 1788298189.60891, "order_id": "paper-1e5e4e2b03"}
+{"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788298189.6117635, "order_id": "paper-8be4eedd65", "amount": 26.30822009, "price": 1.140328, "level": 2}
+{"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788298189.6131773, "order_id": "paper-aa299b812e", "amount": 26.44313404, "price": 1.13451, "level": 3}
+{"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788298189.614577, "order_id": "paper-ce17a8f1f6", "amount": 26.57943885, "price": 1.128692, "level": 4}
+{"event": "buy_canceled", "symbol": "XRP/EUR", "ts": 1788298219.6264462, "order_id": "paper-8be4eedd65"}
+{"event": "buy_canceled", "symbol": "XRP/EUR", "ts": 1788298219.6289628, "order_id": "paper-aa299b812e"}
+{"event": "buy_canceled", "symbol": "XRP/EUR", "ts": 1788298219.6315289, "order_id": "paper-ce17a8f1f6"}
+{"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788298219.6343079, "order_id": "paper-ed4d9b73b3", "amount": 26.30822009, "price": 1.140328, "level": 2}
+{"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788298219.6358974, "order_id": "paper-f5eb1d7048", "amount": 26.44313404, "price": 1.13451, "level": 3}
+{"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788298219.6373854, "order_id": "paper-69ebb31f6d", "amount": 26.57943885, "price": 1.128692, "level": 4}
+{"event": "buy_canceled", "symbol": "XRP/EUR", "ts": 1788298249.649766, "order_id": "paper-f5eb1d7048"}
+{"event": "buy_canceled", "symbol": "XRP/EUR", "ts": 1788298249.6530578, "order_id": "paper-69ebb31f6d"}
+{"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788298249.6552823, "order_id": "paper-65ed69d07b", "amount": 26.46814382, "price": 1.133438, "level": 3}
+{"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788298249.6569407, "order_id": "paper-f63df388e8", "amount": 26.60458929, "price": 1.127625, "level": 4}
+{"event": "buy_canceled", "symbol": "XRP/EUR", "ts": 1788298279.6672237, "order_id": "paper-65ed69d07b"}
+{"event": "buy_canceled", "symbol": "XRP/EUR", "ts": 1788298279.6695383, "order_id": "paper-f63df388e8"}
+{"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788298279.6706407, "order_id": "paper-d5195c94d7", "amount": 26.48639438, "price": 1.132657, "level": 3}
+{"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788298279.6716256, "order_id": "paper-5052a35d04", "amount": 26.62291043, "price": 1.126849, "level": 4}
+{"event": "buy_canceled", "symbol": "XRP/EUR", "ts": 1788298309.67761, "order_id": "paper-d5195c94d7"}
+{"event": "buy_canceled", "symbol": "XRP/EUR", "ts": 1788298309.6802506, "order_id": "paper-5052a35d04"}
+{"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788298309.6845884, "order_id": "paper-cdd09ef472", "amount": 26.48639438, "price": 1.132657, "level": 3}
+{"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788298309.68737, "order_id": "paper-de88b82b7d", "amount": 26.62291043, "price": 1.126849, "level": 4}
+{"event": "buy_canceled", "symbol": "XRP/EUR", "ts": 1788298339.6968207, "order_id": "paper-cdd09ef472"}
+{"event": "buy_canceled", "symbol": "XRP/EUR", "ts": 1788298339.6999161, "order_id": "paper-de88b82b7d"}
+{"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788298339.702878, "order_id": "paper-7781282e15", "amount": 26.48639438, "price": 1.132657, "level": 3}
+{"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788298339.7056203, "order_id": "paper-b245283ec9", "amount": 26.62291043, "price": 1.126849, "level": 4}
+{"event": "buy_canceled", "symbol": "XRP/EUR", "ts": 1788298369.7179222, "order_id": "paper-7781282e15"}
+{"event": "buy_canceled", "symbol": "XRP/EUR", "ts": 1788298369.721074, "order_id": "paper-b245283ec9"}
+{"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788298369.7241755, "order_id": "paper-a137dc774b", "amount": 26.48639438, "price": 1.132657, "level": 3}
+{"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788298369.7259018, "order_id": "paper-6be33faa3e", "amount": 26.62291043, "price": 1.126849, "level": 4}
+{"event": "buy_canceled", "symbol": "XRP/EUR", "ts": 1788298399.7404075, "order_id": "paper-a137dc774b"}
+{"event": "buy_canceled", "symbol": "XRP/EUR", "ts": 1788298399.7432966, "order_id": "paper-6be33faa3e"}
+{"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788298399.7454863, "order_id": "paper-6fee769284", "amount": 26.50235208, "price": 1.131975, "level": 3}
+{"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788298399.747505, "order_id": "paper-e81692a199", "amount": 26.63896215, "price": 1.12617, "level": 4}
+{"event": "buy_canceled", "symbol": "XRP/EUR", "ts": 1788298429.7641792, "order_id": "paper-6fee769284"}
+{"event": "buy_canceled", "symbol": "XRP/EUR", "ts": 1788298429.7656195, "order_id": "paper-e81692a199"}
+{"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788298429.7675433, "order_id": "paper-3b08e44af4", "amount": 26.52519894, "price": 1.131, "level": 3}
+{"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788298429.7691917, "order_id": "paper-068ba1ab3a", "amount": 26.66192677, "price": 1.1252, "level": 4}
+{"event": "buy_canceled", "symbol": "XRP/EUR", "ts": 1788298459.7840865, "order_id": "paper-3b08e44af4"}
+{"event": "buy_canceled", "symbol": "XRP/EUR", "ts": 1788298459.7859359, "order_id": "paper-068ba1ab3a"}
+{"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788298459.78758, "order_id": "paper-c523ce8d95", "amount": 26.52292421, "price": 1.131097, "level": 3}
+{"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788298459.7891402, "order_id": "paper-c2112d13f5", "amount": 26.65962852, "price": 1.125297, "level": 4}
+{"event": "buy_canceled", "symbol": "XRP/EUR", "ts": 1788298489.8027873, "order_id": "paper-c523ce8d95"}
+{"event": "buy_canceled", "symbol": "XRP/EUR", "ts": 1788298489.8052695, "order_id": "paper-c2112d13f5"}
+{"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788298489.8071792, "order_id": "paper-7265bf20ea", "amount": 26.52292421, "price": 1.131097, "level": 3}
+{"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788298489.8089523, "order_id": "paper-92e60f612d", "amount": 26.65962852, "price": 1.125297, "level": 4}
+{"event": "buy_canceled", "symbol": "XRP/EUR", "ts": 1788298519.8197026, "order_id": "paper-7265bf20ea"}
+{"event": "buy_canceled", "symbol": "XRP/EUR", "ts": 1788298519.82222, "order_id": "paper-92e60f612d"}
+{"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788298519.8242574, "order_id": "paper-fd434ab5d6", "amount": 26.52292421, "price": 1.131097, "level": 3}
+{"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788298519.825728, "order_id": "paper-b1f1216764", "amount": 26.65962852, "price": 1.125297, "level": 4}
+{"event": "buy_canceled", "symbol": "XRP/EUR", "ts": 1788298549.8409278, "order_id": "paper-fd434ab5d6"}
+{"event": "buy_canceled", "symbol": "XRP/EUR", "ts": 1788298549.84266, "order_id": "paper-b1f1216764"}
+{"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788298549.8444133, "order_id": "paper-f8ccde912d", "amount": 26.52292421, "price": 1.131097, "level": 3}
+{"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788298549.8461406, "order_id": "paper-9a4d0edd12", "amount": 26.65962852, "price": 1.125297, "level": 4}
+{"event": "buy_canceled", "symbol": "XRP/EUR", "ts": 1788298579.8600526, "order_id": "paper-f8ccde912d"}
+{"event": "buy_canceled", "symbol": "XRP/EUR", "ts": 1788298579.8616889, "order_id": "paper-9a4d0edd12"}
+{"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788298579.8632803, "order_id": "paper-ddbedbecb2", "amount": 26.52292421, "price": 1.131097, "level": 3}
+{"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788298579.864802, "order_id": "paper-2876026b7c", "amount": 26.65962852, "price": 1.125297, "level": 4}
+{"event": "buy_canceled", "symbol": "XRP/EUR", "ts": 1788298609.8764565, "order_id": "paper-ddbedbecb2"}
+{"event": "buy_canceled", "symbol": "XRP/EUR", "ts": 1788298609.8795836, "order_id": "paper-2876026b7c"}
+{"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788298609.881996, "order_id": "paper-e7aecfa0e7", "amount": 26.52292421, "price": 1.131097, "level": 3}
+{"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788298609.883547, "order_id": "paper-a9f20df4fb", "amount": 26.65962852, "price": 1.125297, "level": 4}
+{"event": "buy_canceled", "symbol": "XRP/EUR", "ts": 1788298639.8968344, "order_id": "paper-e7aecfa0e7"}
+{"event": "buy_canceled", "symbol": "XRP/EUR", "ts": 1788298639.9000013, "order_id": "paper-a9f20df4fb"}
+{"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788298639.9037511, "order_id": "paper-1bcad338be", "amount": 26.52292421, "price": 1.131097, "level": 3}
+{"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788298639.906222, "order_id": "paper-cdbdc54e86", "amount": 26.65962852, "price": 1.125297, "level": 4}
+{"event": "buy_canceled", "symbol": "XRP/EUR", "ts": 1788298669.923979, "order_id": "paper-1bcad338be"}
+{"event": "buy_canceled", "symbol": "XRP/EUR", "ts": 1788298669.925667, "order_id": "paper-cdbdc54e86"}
+{"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788298669.927275, "order_id": "paper-120adb6976", "amount": 26.52292421, "price": 1.131097, "level": 3}
+{"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788298669.9288702, "order_id": "paper-5b689f6e93", "amount": 26.65962852, "price": 1.125297, "level": 4}
+{"event": "buy_canceled", "symbol": "XRP/EUR", "ts": 1788298699.9437237, "order_id": "paper-120adb6976"}
+{"event": "buy_canceled", "symbol": "XRP/EUR", "ts": 1788298699.9464147, "order_id": "paper-5b689f6e93"}
+{"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788298699.9483874, "order_id": "paper-60e07a88bd", "amount": 26.52977304, "price": 1.130805, "level": 3}
+{"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788298699.9506366, "order_id": "paper-baab37c169", "amount": 26.66652445, "price": 1.125006, "level": 4}
+{"event": "buy_canceled", "symbol": "XRP/EUR", "ts": 1788298729.9652646, "order_id": "paper-60e07a88bd"}
+{"event": "buy_canceled", "symbol": "XRP/EUR", "ts": 1788298729.9670095, "order_id": "paper-baab37c169"}
+{"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788298729.9685793, "order_id": "paper-0faec2f9ec", "amount": 26.52977304, "price": 1.130805, "level": 3}
+{"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788298729.9702272, "order_id": "paper-cffc6eca94", "amount": 26.66652445, "price": 1.125006, "level": 4}
+{"event": "buy_canceled", "symbol": "XRP/EUR", "ts": 1788298759.9870431, "order_id": "paper-0faec2f9ec"}
+{"event": "buy_canceled", "symbol": "XRP/EUR", "ts": 1788298759.9895806, "order_id": "paper-cffc6eca94"}
+{"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788298759.9910376, "order_id": "paper-c97e5790e1", "amount": 26.52977304, "price": 1.130805, "level": 3}
+{"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788298759.9924564, "order_id": "paper-cee758da1c", "amount": 26.66652445, "price": 1.125006, "level": 4}
+{"event": "buy_canceled", "symbol": "XRP/EUR", "ts": 1788298790.0057664, "order_id": "paper-c97e5790e1"}
+{"event": "buy_canceled", "symbol": "XRP/EUR", "ts": 1788298790.0086877, "order_id": "paper-cee758da1c"}
+{"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788298790.011515, "order_id": "paper-fddd90cbe3", "amount": 26.52977304, "price": 1.130805, "level": 3}
+{"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788298790.0132854, "order_id": "paper-3a895a4d45", "amount": 26.66652445, "price": 1.125006, "level": 4}
+{"event": "buy_canceled", "symbol": "XRP/EUR", "ts": 1788298820.0261674, "order_id": "paper-fddd90cbe3"}
+{"event": "buy_canceled", "symbol": "XRP/EUR", "ts": 1788298820.0289836, "order_id": "paper-3a895a4d45"}
+{"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788298820.0317776, "order_id": "paper-8095dcf9e6", "amount": 26.52977304, "price": 1.130805, "level": 3}
+{"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788298820.0335383, "order_id": "paper-a9418ce27f", "amount": 26.66652445, "price": 1.125006, "level": 4}
+{"event": "buy_canceled", "symbol": "XRP/EUR", "ts": 1788298850.0457137, "order_id": "paper-8095dcf9e6"}
+{"event": "buy_canceled", "symbol": "XRP/EUR", "ts": 1788298850.048879, "order_id": "paper-a9418ce27f"}
+{"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788298850.0518205, "order_id": "paper-899a0030e0", "amount": 26.52977304, "price": 1.130805, "level": 3}
+{"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788298850.0533412, "order_id": "paper-f4b0366677", "amount": 26.66652445, "price": 1.125006, "level": 4}
+{"event": "buy_canceled", "symbol": "XRP/EUR", "ts": 1788298880.0658274, "order_id": "paper-899a0030e0"}
+{"event": "buy_canceled", "symbol": "XRP/EUR", "ts": 1788298880.0685575, "order_id": "paper-f4b0366677"}
+{"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788298880.0711415, "order_id": "paper-ffa54ac813", "amount": 26.4909551, "price": 1.132462, "level": 3}
+{"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788298880.0728054, "order_id": "paper-fa9622391a", "amount": 26.62749466, "price": 1.126655, "level": 4}
+{"event": "buy_canceled", "symbol": "XRP/EUR", "ts": 1788298910.085625, "order_id": "paper-ffa54ac813"}
+{"event": "buy_canceled", "symbol": "XRP/EUR", "ts": 1788298910.0885718, "order_id": "paper-fa9622391a"}
+{"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788298910.092444, "order_id": "paper-03d22789a3", "amount": 26.4909551, "price": 1.132462, "level": 3}
+{"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788298910.095337, "order_id": "paper-1bb2dd8f4b", "amount": 26.62749466, "price": 1.126655, "level": 4}
+{"event": "buy_canceled", "symbol": "XRP/EUR", "ts": 1788298940.1059484, "order_id": "paper-03d22789a3"}
+{"event": "buy_canceled", "symbol": "XRP/EUR", "ts": 1788298940.109018, "order_id": "paper-1bb2dd8f4b"}
+{"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788298940.112024, "order_id": "paper-dcf25819ec", "amount": 26.4909551, "price": 1.132462, "level": 3}
+{"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788298940.1150026, "order_id": "paper-cfecbfc46c", "amount": 26.62749466, "price": 1.126655, "level": 4}
+{"event": "buy_canceled", "symbol": "XRP/EUR", "ts": 1788298970.1272862, "order_id": "paper-dcf25819ec"}
+{"event": "buy_canceled", "symbol": "XRP/EUR", "ts": 1788298970.130329, "order_id": "paper-cfecbfc46c"}
+{"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788298970.1329973, "order_id": "paper-8187ca9f51", "amount": 26.4909551, "price": 1.132462, "level": 3}
+{"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788298970.135808, "order_id": "paper-84ebaa8bf4", "amount": 26.62749466, "price": 1.126655, "level": 4}
+{"event": "buy_canceled", "symbol": "XRP/EUR", "ts": 1788299000.1491842, "order_id": "paper-8187ca9f51"}
+{"event": "buy_canceled", "symbol": "XRP/EUR", "ts": 1788299000.1516838, "order_id": "paper-84ebaa8bf4"}
+{"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788299000.1551616, "order_id": "paper-7d0980d911", "amount": 26.4955174, "price": 1.132267, "level": 3}
+{"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788299000.1567981, "order_id": "paper-c8c9000d7e", "amount": 26.63208047, "price": 1.126461, "level": 4}
+{"event": "buy_canceled", "symbol": "XRP/EUR", "ts": 1788299030.1700337, "order_id": "paper-66fb715a14"}
+{"event": "buy_canceled", "symbol": "XRP/EUR", "ts": 1788299030.1729403, "order_id": "paper-abe832cecd"}
+{"event": "buy_canceled", "symbol": "XRP/EUR", "ts": 1788299030.1759522, "order_id": "paper-ed4d9b73b3"}
+{"event": "buy_canceled", "symbol": "XRP/EUR", "ts": 1788299030.1774106, "order_id": "paper-7d0980d911"}
+{"event": "buy_canceled", "symbol": "XRP/EUR", "ts": 1788299030.178752, "order_id": "paper-c8c9000d7e"}
+{"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788299330.2134817, "order_id": "paper-b061b51edb", "amount": 106.29155656, "price": 1.161672, "level": 0}
+{"event": "buy_canceled", "symbol": "XRP/EUR", "ts": 1788300080.3198588, "order_id": "paper-b061b51edb"}
+{"event": "buy_placed", "symbol": "XRP/EUR", "ts": 1788300230.3468237, "order_id": "paper-eb9a42a2ac", "amount": 106.06375639, "price": 1.164167, "level": 0}
+{"event": "stop_loss", "symbol": "XRP/EUR", "ts": 1788829210.9223547, "drawdown": 0.1906, "equity": 123.4759250906494}

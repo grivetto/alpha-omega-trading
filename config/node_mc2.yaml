@@ -1,8 +1,9 @@
+# DENARO — istanza LIVE su MC2 (OKX mc2sub1: DOGE/EUR + SOL/EUR)
 data_dir: node_data
 supervisor:
   ram_critical_pct: 0.85
-  ram_throttle_pct: 0.7
-  cpu_critical_pct: 0.9
+  ram_throttle_pct: 0.70
+  cpu_critical_pct: 0.90
   tick_max_factor: 5.0
 safemode:
   caution_pct: 70.0
@@ -19,66 +20,42 @@ exchange_rest:
   name: okx
   eea: true
 bots:
-- symbol: ADA/EUR
-  mode: okx
-  capital: 3.4
-  levels: 2
-  buy_distance: 0.02
-  profit_target: 0.02
-  fee: 0.001
-  min_notional: 1.0
-  slippage: 0.001
-  stop_loss_pct: 0.1
-  tick_interval: 30
-  sell_levels: 2
-  sell_distance: 0.02
-  sell_step: 0.01
-  enabled: false  # chiave OKX morta (50119)
-- symbol: SOL/EUR
-  mode: okx
-  capital: 20.0
-  levels: 3
-  buy_distance: 0.02
-  profit_target: 0.02
-  fee: 0.001
-  min_notional: 1.0
-  slippage: 0.001
-  stop_loss_pct: 0.1
-  tick_interval: 30
-  sell_levels: 2
-  sell_distance: 0.02
-  sell_step: 0.01
-  enabled: false
-- symbol: XRP/EUR
-  mode: okx
-  capital: 20.0
-  levels: 3
-  buy_distance: 0.02
-  profit_target: 0.02
-  fee: 0.001
-  min_notional: 1.0
-  slippage: 0.001
-  stop_loss_pct: 0.1
-  tick_interval: 30
-  sell_levels: 2
-  sell_distance: 0.02
-  sell_step: 0.01
-  enabled: false
-- symbol: DOGE/EUR
-  mode: okx
-  capital: 3.7
-  levels: 3
-  buy_distance: 0.015
-  profit_target: 0.02
-  fee: 0.001
-  tick_interval: 30
-  env_prefix: ''
-  health_path: /home/sergio/denaro/health/doge_mc2.json
-  stop_loss_pct: 0.3
-  daily_loss_limit: 0.2
-  max_drawdown_limit: 0.3
-  sell_levels: 2
-  sell_distance: 0.02
-  sell_step: 0.01
-  enabled: false  # chiave OKX morta (50119)
-  min_notional: 1.0
+  # ── BOT LIVE 1: OKX DOGE/EUR (Capitale: 12.00 €) ──
+  - symbol: DOGE/EUR
+    mode: okx
+    capital: 12.0
+    levels: 3
+    buy_distance: 0.015
+    profit_target: 0.02
+    fee: 0.001
+    tick_interval: 30
+    env_prefix: ''
+    health_path: /home/sergio/denaro/health/doge_mc2.json
+    stop_loss_pct: 0.10
+    daily_loss_limit: 0.05
+    max_drawdown_limit: 0.15
+    sell_levels: 2
+    sell_distance: 0.02
+    sell_step: 0.01
+    min_notional: 1.0
+    enabled: true
+
+  # ── BOT LIVE 2: OKX SOL/EUR (Capitale: 12.00 €) ──
+  - symbol: SOL/EUR
+    mode: okx
+    capital: 12.0
+    levels: 3
+    buy_distance: 0.015
+    profit_target: 0.02
+    fee: 0.001
+    tick_interval: 30
+    env_prefix: ''
+    health_path: /home/sergio/denaro/health/sol_mc2.json
+    stop_loss_pct: 0.10
+    daily_loss_limit: 0.05
+    max_drawdown_limit: 0.15
+    sell_levels: 2
+    sell_distance: 0.02
+    sell_step: 0.01
+    min_notional: 1.0
+    enabled: true

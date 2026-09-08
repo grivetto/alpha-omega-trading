@@ -1662,3 +1662,361 @@
 {"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788102138.3912115, "order_id": "paper-ba619679c0", "amount": 174.9760866, "price": 0.171452, "level": 3}
 {"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788102138.3915014, "order_id": "paper-df47668b9c", "amount": 175.88087002, "price": 0.17057, "level": 4}
 {"event": "stop_loss", "symbol": "ADA/EUR", "ts": 1788227757.6440313, "drawdown": 0.5046, "equity": 74.99611798777376}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788298159.5764601, "order_id": "paper-2e1f8cf1e9", "amount": 179.62673564, "price": 0.167013, "level": 0}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788298159.5801528, "order_id": "paper-8962337478", "amount": 180.53908972, "price": 0.166169, "level": 1}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788298159.5843334, "order_id": "paper-5c6dca7aa7", "amount": 181.45966152, "price": 0.165326, "level": 2}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788298159.5870361, "order_id": "paper-520de229d8", "amount": 182.39077832, "price": 0.164482, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788298159.5901856, "order_id": "paper-c2b54dcd49", "amount": 183.33037968, "price": 0.163639, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788298189.597997, "order_id": "paper-5c6dca7aa7"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788298189.6001828, "order_id": "paper-520de229d8"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788298189.6017988, "order_id": "paper-c2b54dcd49"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788298189.6047015, "order_id": "paper-942663d263", "amount": 181.35216172, "price": 0.165424, "level": 2}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788298189.60743, "order_id": "paper-f3bb650630", "amount": 182.2821728, "price": 0.16458, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788298189.6102707, "order_id": "paper-921b0fa82a", "amount": 183.22177163, "price": 0.163736, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788298219.6210303, "order_id": "paper-942663d263"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788298219.6233833, "order_id": "paper-f3bb650630"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788298219.6251066, "order_id": "paper-921b0fa82a"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788298219.6278698, "order_id": "paper-0fed659893", "amount": 181.35216172, "price": 0.165424, "level": 2}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788298219.6302466, "order_id": "paper-9fe2605839", "amount": 182.2821728, "price": 0.16458, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788298219.6329923, "order_id": "paper-bdf243ce42", "amount": 183.22177163, "price": 0.163736, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788298249.6419797, "order_id": "paper-0fed659893"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788298249.6440444, "order_id": "paper-9fe2605839"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788298249.6454034, "order_id": "paper-bdf243ce42"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788298249.646829, "order_id": "paper-df620c92ff", "amount": 181.35216172, "price": 0.165424, "level": 2}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788298249.6484623, "order_id": "paper-203a812d6a", "amount": 182.2821728, "price": 0.16458, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788298249.6516447, "order_id": "paper-e82f86c67e", "amount": 183.22177163, "price": 0.163736, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788298279.6609297, "order_id": "paper-df620c92ff"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788298279.662393, "order_id": "paper-203a812d6a"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788298279.6633887, "order_id": "paper-e82f86c67e"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788298279.6645954, "order_id": "paper-bd6163b2c0", "amount": 181.24478921, "price": 0.165522, "level": 2}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788298279.66573, "order_id": "paper-ada3491803", "amount": 182.17369655, "price": 0.164678, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788298279.6685445, "order_id": "paper-f994d027ee", "amount": 183.11329219, "price": 0.163833, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788298309.675852, "order_id": "paper-ada3491803"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788298309.679098, "order_id": "paper-f994d027ee"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788298309.683058, "order_id": "paper-041ce7dd32", "amount": 182.71514709, "price": 0.16419, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788298309.6862116, "order_id": "paper-7dccf89100", "amount": 183.65697774, "price": 0.163348, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788298339.6948397, "order_id": "paper-041ce7dd32"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788298339.698294, "order_id": "paper-7dccf89100"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788298339.7011783, "order_id": "paper-8fe6250263", "amount": 182.60615504, "price": 0.164288, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788298339.7041116, "order_id": "paper-41e94089ec", "amount": 183.5479825, "price": 0.163445, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788298369.7123117, "order_id": "paper-8fe6250263"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788298369.7164679, "order_id": "paper-41e94089ec"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788298369.7197812, "order_id": "paper-cccd00eafb", "amount": 182.71514709, "price": 0.16419, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788298369.722619, "order_id": "paper-581f934376", "amount": 183.65697774, "price": 0.163348, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788298399.7331185, "order_id": "paper-cccd00eafb"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788298399.7371802, "order_id": "paper-581f934376"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788298399.739171, "order_id": "paper-328148dac8", "amount": 182.71514709, "price": 0.16419, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788298399.7420359, "order_id": "paper-6d59ce1bc3", "amount": 183.65697774, "price": 0.163348, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788298429.754237, "order_id": "paper-328148dac8"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788298429.7583141, "order_id": "paper-6d59ce1bc3"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788298429.7612035, "order_id": "paper-e3c776570c", "amount": 182.82315516, "price": 0.164093, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788298429.7629154, "order_id": "paper-2b8fd30df8", "amount": 183.7661025, "price": 0.163251, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788298459.7746634, "order_id": "paper-e3c776570c"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788298459.7790391, "order_id": "paper-2b8fd30df8"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788298459.7808685, "order_id": "paper-4c0916deaf", "amount": 182.82315516, "price": 0.164093, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788298459.7827904, "order_id": "paper-dae3202f6c", "amount": 183.7661025, "price": 0.163251, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788298489.7951112, "order_id": "paper-4c0916deaf"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788298489.7993388, "order_id": "paper-dae3202f6c"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788298489.801301, "order_id": "paper-62e276ace7", "amount": 182.82315516, "price": 0.164093, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788298489.8039076, "order_id": "paper-5a908a6b49", "amount": 183.7661025, "price": 0.163251, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788298519.8147125, "order_id": "paper-62e276ace7"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788298519.8169248, "order_id": "paper-5a908a6b49"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788298519.818668, "order_id": "paper-dce4b92ffb", "amount": 182.93240648, "price": 0.163995, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788298519.8210285, "order_id": "paper-7ad289823c", "amount": 183.87535702, "price": 0.163154, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788298549.8311424, "order_id": "paper-dce4b92ffb"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788298549.8357255, "order_id": "paper-7ad289823c"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788298549.8376222, "order_id": "paper-2c3610f439", "amount": 182.93240648, "price": 0.163995, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788298549.8395965, "order_id": "paper-f286910790", "amount": 183.87535702, "price": 0.163154, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788298579.8508987, "order_id": "paper-2c3610f439"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788298579.8551843, "order_id": "paper-f286910790"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788298579.8568997, "order_id": "paper-359baa6f2d", "amount": 182.71514709, "price": 0.16419, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788298579.8587458, "order_id": "paper-f4af45b824", "amount": 183.65697774, "price": 0.163348, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788298609.8708088, "order_id": "paper-359baa6f2d"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788298609.8750727, "order_id": "paper-f4af45b824"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788298609.8780897, "order_id": "paper-2461d604c1", "amount": 182.71514709, "price": 0.16419, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788298609.8807, "order_id": "paper-06ebe57126", "amount": 183.65697774, "price": 0.163348, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788298639.8910606, "order_id": "paper-2461d604c1"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788298639.8954592, "order_id": "paper-06ebe57126"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788298639.8985815, "order_id": "paper-65f7b1e727", "amount": 182.71514709, "price": 0.16419, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788298639.9019392, "order_id": "paper-2307993eb8", "amount": 183.65697774, "price": 0.163348, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788298669.9139428, "order_id": "paper-65f7b1e727"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788298669.918101, "order_id": "paper-2307993eb8"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788298669.9196908, "order_id": "paper-de4a5767fc", "amount": 182.82315516, "price": 0.164093, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788298669.922497, "order_id": "paper-4873e19e2b", "amount": 183.7661025, "price": 0.163251, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788298699.936097, "order_id": "paper-de4a5767fc"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788298699.9404867, "order_id": "paper-4873e19e2b"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788298699.9425745, "order_id": "paper-0b910faada", "amount": 182.82315516, "price": 0.164093, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788298699.945168, "order_id": "paper-ce178742ad", "amount": 183.7661025, "price": 0.163251, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788298729.9561856, "order_id": "paper-0b910faada"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788298729.9601755, "order_id": "paper-ce178742ad"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788298729.9617746, "order_id": "paper-9c3ce5022b", "amount": 182.82315516, "price": 0.164093, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788298729.9635847, "order_id": "paper-dbe4e428ba", "amount": 183.7661025, "price": 0.163251, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788298759.9753048, "order_id": "paper-9c3ce5022b"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788298759.9795163, "order_id": "paper-dbe4e428ba"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788298759.9816027, "order_id": "paper-4b4bd34519", "amount": 182.71514709, "price": 0.16419, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788298759.984592, "order_id": "paper-19abe87a7f", "amount": 183.65697774, "price": 0.163348, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788298789.997895, "order_id": "paper-4b4bd34519"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788298790.0020897, "order_id": "paper-19abe87a7f"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788298790.0043368, "order_id": "paper-53873c9f08", "amount": 182.60615504, "price": 0.164288, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788298790.0075421, "order_id": "paper-c3456b6e7e", "amount": 183.5479825, "price": 0.163445, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788298820.0209963, "order_id": "paper-53873c9f08"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788298820.0250223, "order_id": "paper-c3456b6e7e"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788298820.0277264, "order_id": "paper-417e47672d", "amount": 182.71514709, "price": 0.16419, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788298820.030556, "order_id": "paper-cb8acf15c6", "amount": 183.65697774, "price": 0.163348, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788298850.0401974, "order_id": "paper-417e47672d"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788298850.044377, "order_id": "paper-cb8acf15c6"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788298850.0472527, "order_id": "paper-917e547a51", "amount": 182.71514709, "price": 0.16419, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788298850.050544, "order_id": "paper-a2ac85d57a", "amount": 183.65697774, "price": 0.163348, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788298880.060093, "order_id": "paper-917e547a51"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788298880.0643551, "order_id": "paper-a2ac85d57a"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788298880.0673916, "order_id": "paper-08c870c9ab", "amount": 182.49840314, "price": 0.164385, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788298880.0699978, "order_id": "paper-4beb41b7d8", "amount": 183.43911656, "price": 0.163542, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788298910.0818186, "order_id": "paper-08c870c9ab"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788298910.0872986, "order_id": "paper-4beb41b7d8"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788298910.0908616, "order_id": "paper-5a008c8934", "amount": 182.49840314, "price": 0.164385, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788298910.0940206, "order_id": "paper-188ec3976d", "amount": 183.43911656, "price": 0.163542, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788298940.1019135, "order_id": "paper-5a008c8934"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788298940.1076643, "order_id": "paper-188ec3976d"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788298940.1107981, "order_id": "paper-973b05b54a", "amount": 182.49840314, "price": 0.164385, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788298940.113513, "order_id": "paper-2ac25eba88", "amount": 183.43911656, "price": 0.163542, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788298970.123686, "order_id": "paper-973b05b54a"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788298970.1289022, "order_id": "paper-2ac25eba88"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788298970.1318476, "order_id": "paper-be189fa422", "amount": 182.49840314, "price": 0.164385, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788298970.1345103, "order_id": "paper-037b493b0f", "amount": 183.43911656, "price": 0.163542, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788299000.1435487, "order_id": "paper-be189fa422"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788299000.147903, "order_id": "paper-037b493b0f"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788299000.1506023, "order_id": "paper-6901ded89d", "amount": 182.49840314, "price": 0.164385, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788299000.153496, "order_id": "paper-ab9abf0aa0", "amount": 183.43911656, "price": 0.163542, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788299030.1639142, "order_id": "paper-6901ded89d"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788299030.1685317, "order_id": "paper-ab9abf0aa0"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788299030.171696, "order_id": "paper-ea2d8d52d4", "amount": 182.49840314, "price": 0.164385, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788299030.17447, "order_id": "paper-04b783cf66", "amount": 183.43911656, "price": 0.163542, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788299060.1847684, "order_id": "paper-ea2d8d52d4"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788299060.187401, "order_id": "paper-04b783cf66"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788299060.1892078, "order_id": "paper-77c22e1697", "amount": 182.49840314, "price": 0.164385, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788299060.1914513, "order_id": "paper-628d096a6b", "amount": 183.43911656, "price": 0.163542, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788299090.1977997, "order_id": "paper-77c22e1697"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788299090.200215, "order_id": "paper-628d096a6b"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788299090.2018712, "order_id": "paper-2044dce1fd", "amount": 182.49840314, "price": 0.164385, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788299090.203799, "order_id": "paper-5cb8e05467", "amount": 183.43911656, "price": 0.163542, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788299120.2097728, "order_id": "paper-2044dce1fd"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788299120.2124286, "order_id": "paper-5cb8e05467"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788299120.2150018, "order_id": "paper-bd2149d2f7", "amount": 182.49840314, "price": 0.164385, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788299120.2168381, "order_id": "paper-050c0699c3", "amount": 183.43911656, "price": 0.163542, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788299150.2234864, "order_id": "paper-bd2149d2f7"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788299150.225937, "order_id": "paper-050c0699c3"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788299150.2275665, "order_id": "paper-e72cce7199", "amount": 182.49840314, "price": 0.164385, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788299150.2290645, "order_id": "paper-0f06b3907a", "amount": 183.43911656, "price": 0.163542, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788299180.2358053, "order_id": "paper-e72cce7199"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788299180.2382338, "order_id": "paper-0f06b3907a"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788299180.2396433, "order_id": "paper-67c1238abd", "amount": 182.2821728, "price": 0.16458, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788299180.2410662, "order_id": "paper-c1c5719f87", "amount": 183.22177163, "price": 0.163736, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788299210.2468011, "order_id": "paper-67c1238abd"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788299210.2491617, "order_id": "paper-c1c5719f87"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788299210.2509341, "order_id": "paper-58b29e7f9f", "amount": 182.2821728, "price": 0.16458, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788299210.2524948, "order_id": "paper-c851a90599", "amount": 183.22177163, "price": 0.163736, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788299240.2585468, "order_id": "paper-bd6163b2c0"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788299240.2614176, "order_id": "paper-58b29e7f9f"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788299240.2629068, "order_id": "paper-c851a90599"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788299240.26445, "order_id": "paper-158d9362a6", "amount": 181.24478921, "price": 0.165522, "level": 2}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788299240.2661433, "order_id": "paper-3624e3731f", "amount": 182.17369655, "price": 0.164678, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788299240.2678294, "order_id": "paper-63a6412f31", "amount": 183.11329219, "price": 0.163833, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788299270.2762232, "order_id": "paper-158d9362a6"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788299270.2788987, "order_id": "paper-3624e3731f"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788299270.280496, "order_id": "paper-63a6412f31"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788299270.2823603, "order_id": "paper-e85f36ace7", "amount": 181.24478921, "price": 0.165522, "level": 2}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788299270.2842963, "order_id": "paper-c597cd20ac", "amount": 182.17369655, "price": 0.164678, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788299270.2862167, "order_id": "paper-b292408a9e", "amount": 183.11329219, "price": 0.163833, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788299300.294057, "order_id": "paper-e85f36ace7"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788299300.2967277, "order_id": "paper-c597cd20ac"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788299300.298499, "order_id": "paper-b292408a9e"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788299300.3007498, "order_id": "paper-2353c89170", "amount": 181.13754377, "price": 0.16562, "level": 2}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788299300.3026161, "order_id": "paper-ef49c28e82", "amount": 182.06645426, "price": 0.164775, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788299300.3044262, "order_id": "paper-07957a6c2b", "amount": 183.00494113, "price": 0.16393, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788300380.5194561, "order_id": "paper-07957a6c2b"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788300380.5247912, "order_id": "paper-3addde57e9", "amount": 183.80438312, "price": 0.163217, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788300410.5324962, "order_id": "paper-3addde57e9"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788300410.5365908, "order_id": "paper-8b1be3edd2", "amount": 183.80438312, "price": 0.163217, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788300440.544885, "order_id": "paper-8b1be3edd2"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788300440.5493703, "order_id": "paper-41792b8314", "amount": 183.80438312, "price": 0.163217, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788300470.5581672, "order_id": "paper-41792b8314"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788300470.5666473, "order_id": "paper-df8a9748bc", "amount": 183.80438312, "price": 0.163217, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788300500.5746686, "order_id": "paper-df8a9748bc"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788300500.579302, "order_id": "paper-a3b5d03337", "amount": 183.6952129, "price": 0.163314, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788300530.5886936, "order_id": "paper-a3b5d03337"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788300530.5909367, "order_id": "paper-6c79616c4d", "amount": 183.6952129, "price": 0.163314, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788300560.5977695, "order_id": "paper-ef49c28e82"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788300560.6000478, "order_id": "paper-6c79616c4d"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788300560.6018002, "order_id": "paper-c152c256ba", "amount": 182.5339361, "price": 0.164353, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788300560.603568, "order_id": "paper-ba3557ccff", "amount": 183.47726105, "price": 0.163508, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788300590.610233, "order_id": "paper-c152c256ba"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788300590.6146653, "order_id": "paper-ba3557ccff"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788300590.6173773, "order_id": "paper-b20b87c158", "amount": 182.64284192, "price": 0.164255, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788300590.6196332, "order_id": "paper-f4a5f93138", "amount": 183.58617229, "price": 0.163411, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788300620.6270957, "order_id": "paper-b20b87c158"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788300620.6313376, "order_id": "paper-f4a5f93138"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788300620.6338243, "order_id": "paper-0b7ed2e260", "amount": 182.5339361, "price": 0.164353, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788300620.6360865, "order_id": "paper-fcd7d6a1fa", "amount": 183.47726105, "price": 0.163508, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788300650.6431575, "order_id": "paper-0b7ed2e260"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788300650.647569, "order_id": "paper-fcd7d6a1fa"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788300650.6519985, "order_id": "paper-e961b7a46f", "amount": 182.5339361, "price": 0.164353, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788300650.654227, "order_id": "paper-b2ef516197", "amount": 183.47726105, "price": 0.163508, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788300980.7216969, "order_id": "paper-2e1f8cf1e9"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788300980.7258337, "order_id": "paper-8962337478"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788300980.7275991, "order_id": "paper-2353c89170"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788300980.729311, "order_id": "paper-e961b7a46f"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788300980.7310717, "order_id": "paper-b2ef516197"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788302931.0424836, "order_id": "paper-776aac5f86", "amount": 445.97276445, "price": 0.168163, "level": 0}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788303381.1319025, "order_id": "paper-776aac5f86"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788303681.1856997, "order_id": "paper-c276f5e022", "amount": 445.70771939, "price": 0.168263, "level": 0}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788304431.3334453, "order_id": "paper-eb7a2db679", "amount": 181.10473891, "price": 0.16565, "level": 1}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788304431.3375688, "order_id": "paper-33b8c24ecb", "amount": 182.03220757, "price": 0.164806, "level": 2}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788304431.3390648, "order_id": "paper-a7874b5d9a", "amount": 182.96699275, "price": 0.163964, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788304431.3406398, "order_id": "paper-14f45bf9a9", "amount": 183.91255571, "price": 0.163121, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788304461.347635, "order_id": "paper-a7874b5d9a"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788304461.3523307, "order_id": "paper-14f45bf9a9"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788304461.3540928, "order_id": "paper-04ccdc1fe8", "amount": 183.18485183, "price": 0.163769, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788304461.355799, "order_id": "paper-de47f42ce2", "amount": 184.13154357, "price": 0.162927, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788304491.363094, "order_id": "paper-04ccdc1fe8"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788304491.3654397, "order_id": "paper-de47f42ce2"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788304491.3671422, "order_id": "paper-9b1232eb84", "amount": 183.0764161, "price": 0.163866, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788304491.3686461, "order_id": "paper-f5f0c92478", "amount": 184.02198449, "price": 0.163024, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788304521.374565, "order_id": "paper-9b1232eb84"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788304521.3761597, "order_id": "paper-f5f0c92478"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788304521.3775632, "order_id": "paper-241c02674f", "amount": 183.18485183, "price": 0.163769, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788304521.3789334, "order_id": "paper-f841a8ab68", "amount": 184.13154357, "price": 0.162927, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788304551.3852706, "order_id": "paper-241c02674f"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788304551.3868172, "order_id": "paper-f841a8ab68"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788304551.388033, "order_id": "paper-76159467f2", "amount": 183.0764161, "price": 0.163866, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788304551.389314, "order_id": "paper-13d28691fe", "amount": 184.02198449, "price": 0.163024, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788304731.4356034, "order_id": "paper-76159467f2"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788304731.4376752, "order_id": "paper-13d28691fe"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788304731.4390414, "order_id": "paper-2375efd156", "amount": 183.0764161, "price": 0.163866, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788304731.4406924, "order_id": "paper-23122ef3f8", "amount": 184.02198449, "price": 0.163024, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788304761.4476175, "order_id": "paper-2375efd156"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788304761.4500067, "order_id": "paper-23122ef3f8"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788304761.4516234, "order_id": "paper-73894e974c", "amount": 183.0764161, "price": 0.163866, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788304761.4532378, "order_id": "paper-757e4f39eb", "amount": 184.02198449, "price": 0.163024, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788304791.4603596, "order_id": "paper-73894e974c"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788304791.4625692, "order_id": "paper-757e4f39eb"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788304791.46401, "order_id": "paper-2f0c666db8", "amount": 182.85881471, "price": 0.164061, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788304791.4654257, "order_id": "paper-e953655c98", "amount": 183.80438312, "price": 0.163217, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788304821.4728072, "order_id": "paper-2f0c666db8"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788304821.4752347, "order_id": "paper-e953655c98"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788304821.4769058, "order_id": "paper-3d5cbf7db1", "amount": 182.96699275, "price": 0.163964, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788304821.4785552, "order_id": "paper-dd8ccb4f83", "amount": 183.91255571, "price": 0.163121, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788304851.48473, "order_id": "paper-3d5cbf7db1"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788304851.4892147, "order_id": "paper-dd8ccb4f83"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788304851.4908137, "order_id": "paper-41e01af309", "amount": 182.85881471, "price": 0.164061, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788304851.4925418, "order_id": "paper-f4f0d6eb87", "amount": 183.80438312, "price": 0.163217, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788304881.5038822, "order_id": "paper-41e01af309"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788304881.5114439, "order_id": "paper-f4f0d6eb87"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788304881.5129752, "order_id": "paper-a9fcc4047e", "amount": 182.96699275, "price": 0.163964, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788304881.5145392, "order_id": "paper-3be17f05a4", "amount": 183.91255571, "price": 0.163121, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788304911.5221822, "order_id": "paper-a9fcc4047e"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788304911.5264556, "order_id": "paper-3be17f05a4"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788304911.5282276, "order_id": "paper-94a4f623a3", "amount": 183.0764161, "price": 0.163866, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788304911.5297556, "order_id": "paper-3cb6da608c", "amount": 184.02198449, "price": 0.163024, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788304941.5350668, "order_id": "paper-94a4f623a3"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788304941.5388877, "order_id": "paper-3cb6da608c"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788304941.540672, "order_id": "paper-1a34c698de", "amount": 183.18485183, "price": 0.163769, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788304941.5426269, "order_id": "paper-23ebce32b6", "amount": 184.13154357, "price": 0.162927, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788304971.5493097, "order_id": "paper-1a34c698de"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788304971.5532506, "order_id": "paper-23ebce32b6"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788304971.5551429, "order_id": "paper-d82c678a64", "amount": 182.96699275, "price": 0.163964, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788304971.5568786, "order_id": "paper-f0c7e23c82", "amount": 183.91255571, "price": 0.163121, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788305001.5629992, "order_id": "paper-d82c678a64"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788305001.5676582, "order_id": "paper-f0c7e23c82"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788305001.5694213, "order_id": "paper-dd47491d41", "amount": 182.96699275, "price": 0.163964, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788305001.5711575, "order_id": "paper-7d881aad96", "amount": 183.91255571, "price": 0.163121, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788305031.58271, "order_id": "paper-dd47491d41"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788305031.5865693, "order_id": "paper-7d881aad96"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788305031.5880482, "order_id": "paper-6339ad6e77", "amount": 182.96699275, "price": 0.163964, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788305031.589474, "order_id": "paper-06460d930a", "amount": 183.91255571, "price": 0.163121, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788305061.5958543, "order_id": "paper-6339ad6e77"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788305061.6000354, "order_id": "paper-06460d930a"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788305061.6016502, "order_id": "paper-8fa749119d", "amount": 183.0764161, "price": 0.163866, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788305061.6031854, "order_id": "paper-570c86e13f", "amount": 184.02198449, "price": 0.163024, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788305091.6092854, "order_id": "paper-8fa749119d"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788305091.6135597, "order_id": "paper-570c86e13f"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788305091.6151702, "order_id": "paper-60a431fd02", "amount": 182.96699275, "price": 0.163964, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788305091.6168005, "order_id": "paper-ad6da2d6b6", "amount": 183.91255571, "price": 0.163121, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788305121.6225417, "order_id": "paper-60a431fd02"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788305121.6273239, "order_id": "paper-ad6da2d6b6"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788305121.6289315, "order_id": "paper-0a3d34ded4", "amount": 182.96699275, "price": 0.163964, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788305121.6305192, "order_id": "paper-e02206ad70", "amount": 183.91255571, "price": 0.163121, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788305151.6361828, "order_id": "paper-0a3d34ded4"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788305151.6403027, "order_id": "paper-e02206ad70"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788305151.6419253, "order_id": "paper-90d658f25b", "amount": 182.85881471, "price": 0.164061, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788305151.64337, "order_id": "paper-264f3a8f65", "amount": 183.80438312, "price": 0.163217, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788305181.655604, "order_id": "paper-90d658f25b"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788305181.6594932, "order_id": "paper-264f3a8f65"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788305181.661057, "order_id": "paper-0f44c44a49", "amount": 182.75076451, "price": 0.164158, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788305181.6624913, "order_id": "paper-8e9a7d2375", "amount": 183.6952129, "price": 0.163314, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788305211.6681175, "order_id": "paper-0f44c44a49"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788305211.6722965, "order_id": "paper-8e9a7d2375"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788305211.6743665, "order_id": "paper-226b1a9f74", "amount": 182.96699275, "price": 0.163964, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788305211.675979, "order_id": "paper-ff861cddf8", "amount": 183.91255571, "price": 0.163121, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788305241.6810415, "order_id": "paper-226b1a9f74"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788305241.6850345, "order_id": "paper-ff861cddf8"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788305241.6868548, "order_id": "paper-6a4c2e817a", "amount": 183.0764161, "price": 0.163866, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788305241.68877, "order_id": "paper-333e47ddf6", "amount": 184.02198449, "price": 0.163024, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788305271.6946301, "order_id": "paper-6a4c2e817a"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788305271.6985524, "order_id": "paper-333e47ddf6"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788305271.6999245, "order_id": "paper-08dee9f7af", "amount": 183.0764161, "price": 0.163866, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788305271.70127, "order_id": "paper-ccc9a60aa9", "amount": 184.02198449, "price": 0.163024, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788305301.7075105, "order_id": "paper-08dee9f7af"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788305301.7113245, "order_id": "paper-ccc9a60aa9"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788305301.7129128, "order_id": "paper-0c78ff7b73", "amount": 182.85881471, "price": 0.164061, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788305301.7145317, "order_id": "paper-07bcfe8834", "amount": 183.80438312, "price": 0.163217, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788305331.7259996, "order_id": "paper-0c78ff7b73"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788305331.7299263, "order_id": "paper-07bcfe8834"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788305331.7315195, "order_id": "paper-ae32a9e7fc", "amount": 182.85881471, "price": 0.164061, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788305331.733283, "order_id": "paper-eab9731274", "amount": 183.80438312, "price": 0.163217, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788305361.7396255, "order_id": "paper-ae32a9e7fc"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788305361.743607, "order_id": "paper-eab9731274"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788305361.745205, "order_id": "paper-14d77afaae", "amount": 182.64284192, "price": 0.164255, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788305361.7467928, "order_id": "paper-e23ad404ee", "amount": 183.58617229, "price": 0.163411, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788305391.7540572, "order_id": "paper-33b8c24ecb"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788305391.7565618, "order_id": "paper-14d77afaae"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788305391.7587082, "order_id": "paper-e23ad404ee"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788305391.7600906, "order_id": "paper-76394d21a9", "amount": 181.6002615, "price": 0.165198, "level": 2}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788305391.761464, "order_id": "paper-e701cc4f02", "amount": 182.5339361, "price": 0.164353, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788305391.7627208, "order_id": "paper-4e8ba2a3d0", "amount": 183.47726105, "price": 0.163508, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788305421.7699447, "order_id": "paper-e701cc4f02"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788305421.7737489, "order_id": "paper-4e8ba2a3d0"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788305421.775205, "order_id": "paper-e6a3d9c6c6", "amount": 182.64284192, "price": 0.164255, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788305421.7773302, "order_id": "paper-df820c536b", "amount": 183.58617229, "price": 0.163411, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788305451.784649, "order_id": "paper-e6a3d9c6c6"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788305451.7889383, "order_id": "paper-df820c536b"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788305451.7905622, "order_id": "paper-8cd33acaf7", "amount": 182.42626938, "price": 0.16445, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788305451.7920887, "order_id": "paper-5708ea92e8", "amount": 183.36959977, "price": 0.163604, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788307132.1201992, "order_id": "paper-76394d21a9"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788307132.1226938, "order_id": "paper-8cd33acaf7"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788307132.1243317, "order_id": "paper-5708ea92e8"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788307132.1259031, "order_id": "paper-5a3cfb7a15", "amount": 180.95835545, "price": 0.165784, "level": 2}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788307132.1275587, "order_id": "paper-df7ecc5440", "amount": 181.8887326, "price": 0.164936, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788307132.1291125, "order_id": "paper-06352a71be", "amount": 182.82872605, "price": 0.164088, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788307162.1348615, "order_id": "paper-df7ecc5440"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788307162.1387706, "order_id": "paper-06352a71be"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788307162.1402256, "order_id": "paper-9d35e3e0dd", "amount": 181.8887326, "price": 0.164936, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788307162.141618, "order_id": "paper-542645a80c", "amount": 182.82872605, "price": 0.164088, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788307192.1483972, "order_id": "paper-9d35e3e0dd"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788307192.1523561, "order_id": "paper-542645a80c"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788307192.154358, "order_id": "paper-0774b33991", "amount": 181.8887326, "price": 0.164936, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788307192.156034, "order_id": "paper-d579aaf64e", "amount": 182.82872605, "price": 0.164088, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788307222.1628098, "order_id": "paper-0774b33991"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788307222.1673791, "order_id": "paper-d579aaf64e"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788307222.168822, "order_id": "paper-00dbe480a7", "amount": 181.8887326, "price": 0.164936, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788307222.1702342, "order_id": "paper-2647297975", "amount": 182.82872605, "price": 0.164088, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788307252.176646, "order_id": "paper-00dbe480a7"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788307252.1808474, "order_id": "paper-2647297975"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788307252.1825483, "order_id": "paper-0eb01919bd", "amount": 181.78182545, "price": 0.165033, "level": 3}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788307252.1841414, "order_id": "paper-08ce4d4088", "amount": 182.72071139, "price": 0.164185, "level": 4}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788309082.5375507, "order_id": "paper-c276f5e022"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788309082.5413108, "order_id": "paper-eb7a2db679"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788309082.542825, "order_id": "paper-5a3cfb7a15"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788309082.5443218, "order_id": "paper-0eb01919bd"}
+{"event": "buy_canceled", "symbol": "ADA/EUR", "ts": 1788309082.5455518, "order_id": "paper-08ce4d4088"}
+{"event": "buy_placed", "symbol": "ADA/EUR", "ts": 1788309232.5690935, "order_id": "paper-5e82cf8bec", "amount": 441.51723765, "price": 0.16986, "level": 0}
+{"event": "stop_loss", "symbol": "ADA/EUR", "ts": 1788829210.9210782, "drawdown": 0.4959, "equity": 74.99611798777376}

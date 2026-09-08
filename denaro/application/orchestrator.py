@@ -243,6 +243,10 @@ class BotTask:
             if self._price_source is not None:
                 price = float(self._price_source())
             else:
+                price = 0.0
+            # Bot LIVE senza canale paper nell'hub: cache vuota -> prezzo 0.
+            # Fallback a fetch_ticker REST (one-shot) per non restare fermi.
+            if price <= 0:
                 t = await asyncio.to_thread(self.ex.fetch_ticker, self.cfg.symbol)
                 price = float(t["last"])
         except Exception as e:  # noqa: BLE001
