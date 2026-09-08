@@ -17,6 +17,7 @@ Endpoints (HTTP):
 """
 import json
 import os
+import shlex
 import socket
 import subprocess
 import time
@@ -140,6 +141,30 @@ def fetch_okx_balance(env):
 
 _price_cache = {}
 _PRICE_TTL = 15.0
+
+
+def fetch_kraken_balance(env, key_attr="KRAKEN_API_KEY", secret_attr="KRAKEN_API_SECRET"):
+    """Saldo Kraken LIVE (ccxt)."""
+    try:
+        key = env.get(key_attr, "")[:10]
+        now = time.time()
+        hit = _balance_cache.get("kraken:" + key)
+        if hit and now - hit[0] < _BAL_TTL:
+            return hit[1]
+        import ccxt
+        ex = ccxt.kraken({
+            "apiKey": env.get(key_attr, ""),
+            "secret": env.get(secret_attr, ""),
+            "enableRateLimit": True,
+        })
+        b = ex.fetch_balance()
+        total = {k: round(v, 6) for k, v in b.get("total", {}).items() if v and v > 0}
+        val = {"ok": True, "total": total,
+               "free": {k: round(v, 6) for k, v in b.get("free", {}).items() if v and v > 0}}
+        _balance_cache["kraken:" + key] = (now, val)
+        return val
+    except Exception as e:
+        return {"ok": False, "error": str(e)[:200]}
 
 
 def fetch_prices():
@@ -411,40 +436,38 @@ def write_trend(points):
 def collect():
     data = {"generated": time.time(), "ts_iso": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}
 
-    # 1) Bot health files
+    # 1) Bot health files (I 4 BOT REALI ATTIVI)
     bots = {}
-    for name in ("sol", "ada"):
-        p = HEALTH_DIR / f"{name}.json"
+    live_bots_map = {
+        "trend-live:SOL/EUR": HEALTH_DIR / "trend_sol_kraken.json",
+        "trend-live:XRP/EUR": HEALTH_DIR / "trend_xrp_kraken.json",
+        "mc2:okx:DOGE/EUR": Path("/home/sergio/denaro/health/doge_mc2.json"),
+        "mc2:okx:SOL/EUR": Path("/home/sergio/denaro/health/sol_mc2.json"),
+    }
+    for bot_id, p in live_bots_map.items():
         if p.exists():
             try:
-                bots[name] = json.loads(p.read_text())
+                bots[bot_id] = json.loads(p.read_text())
             except Exception:
-                bots[name] = {"status": "error"}
+                bots[bot_id] = {"status": "error"}
         else:
-            bots[name] = {"status": "no_file"}
-    # 1b) Bot Kraken (ora LOCALE nel Node: health/sol_kraken.json;
-    #      fallback retro-compatibile allo snapshot da nuvola)
-    kraken = None
-    snap = None
-    snap_path = HEALTH_DIR / "kraken_snapshot.json"
-    kraken_path = HEALTH_DIR / "sol_kraken.json"
-    if kraken_path.exists():
-        try:
-            kraken = json.loads(kraken_path.read_text())
-        except Exception:
-            kraken = None
-    if not kraken:
-        if snap_path.exists():
-            try:
-                snap = json.loads(snap_path.read_text())
-                kraken = snap.get("bot")
-            except Exception:
-                kraken = None
-    if kraken:
-        bots["sol_kraken"] = kraken
+            # Prova a leggere via SSH se il path e' su mc2 remoto
+            if "mc2:" in bot_id:
+                try:
+                    r = subprocess.run(["ssh", "-p", "2222", "-o", "BatchMode=yes", "-o", "ConnectTimeout=4",
+                                        "sergio@127.0.0.1", f"cat {p}"],
+                                       capture_output=True, text=True, timeout=5)
+                    if r.returncode == 0 and r.stdout.strip():
+                        bots[bot_id] = json.loads(r.stdout.strip())
+                    else:
+                        bots[bot_id] = {"status": "no_file"}
+                except Exception:
+                    bots[bot_id] = {"status": "no_file"}
+            else:
+                bots[bot_id] = {"status": "no_file"}
     data["bots"] = bots
 
-    # 2) Saldi OKX reali + Kraken (da snapshot locale)
+    # 2) Saldi OKX reali + Kraken LIVE
     balances = {}
     for label, path in ENV_FILES.items():
         env = load_env(path)
@@ -452,12 +475,37 @@ def collect():
             balances[label] = fetch_okx_balance(env)
         else:
             balances[label] = {"ok": False, "error": "no key"}
-    if snap_path.exists() and snap:
-        balances["kraken (nuvola)"] = {
-            "ok": True,
-            "total": snap.get("balance", {}),
-            "total_eur": snap.get("total_eur", 0),
-        }
+    # Saldo subaccount mc2 via SSH
+    try:
+        remote_py = (
+            "import ccxt, os, json\n"
+            "env = {}\n"
+            "for line in open('/home/sergio/alpha-omega-trading/.env'):\n"
+            "    if '=' in line and not line.strip().startswith('#'):\n"
+            "        k, v = line.strip().split('=', 1)\n"
+            "        env[k.strip()] = v.strip().strip('\\\"')\n"
+            "ex = ccxt.okx({'apiKey': env.get('OKX_API_KEY'), 'secret': env.get('OKX_API_SECRET'), 'password': env.get('OKX_PASSPHRASE'), 'hostname': 'eea.okx.com'})\n"
+            "b = ex.fetch_balance()\n"
+            "print(json.dumps({'ok': True, 'free': b.get('free', {}), 'total': b.get('total', {})}))\n"
+        )
+        r = subprocess.run(["ssh", "-p", "2222", "-o", "BatchMode=yes", "-o", "ConnectTimeout=5",
+                            "sergio@127.0.0.1", f"python3 -c {shlex.quote(remote_py)}"],
+                           capture_output=True, text=True, timeout=10)
+        if r.returncode == 0 and r.stdout.strip():
+            balances["denaro (mc2sub1)"] = json.loads(r.stdout.strip().splitlines()[-1])
+    except Exception:
+        pass
+
+    # Saldo Kraken LIVE
+    for env_path in [HEALTH_DIR.parent / ".env", Path("/home/marco/alpha-omega-trading/.env")]:
+        e = load_env(env_path)
+        k = e.get("TRENDSUB_KRAKEN_API_KEY") or e.get("KRAKEN_API_KEY")
+        s = e.get("TRENDSUB_KRAKEN_API_SECRET") or e.get("KRAKEN_API_SECRET")
+        if k and s:
+            r = fetch_kraken_balance({"KRAKEN_API_KEY": k, "KRAKEN_API_SECRET": s})
+            if r.get("ok"):
+                balances["kraken"] = r
+                break
     data["balances"] = balances
 
     # 3) Prezzi
