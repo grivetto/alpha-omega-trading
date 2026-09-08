@@ -258,9 +258,6 @@ class BotTask:
         # DEBUG: log price fetch
         log.info("TICK %s: price=%.6f free=%.4f equity=%.4f", self.cfg.symbol, price, free, equity)
 
-        # 2b) fill processing dei buy/sell aperti prima delle nuove decisioni
-        await self._process_fills(price)
-
         # 3) decisione (policy pura — idempotente)
         #    aggiorna prima lo storico della strategia (momentum/meanrev)
         on_price = getattr(self.policy, "on_price", None)
@@ -338,6 +335,10 @@ class BotTask:
         # 3b) PRE-FLIGHT anti-deadlock (ATLAS v6): fattibilita' BUY prima
         #     delle API. Capitale usabile = free + locked×0.85 (ordini buy
         #     cancellabili); dedup degli ordini speculari (buy sopra il mercato).
+        #     NOTA: i fill dei buy aperti vanno processati PRIMA del preflight,
+        #     altrimenti un bot con free negativo (asset in mano dopo un fill)
+        #     viene bloccato dal preflight e non converte mai i buy in sell.
+        await self._process_fills(price)
         min_notional = self._min_notional()
         per_level = risk_capital / max(1, self.cfg.levels)
         if decision.to_place or min_notional > 0:

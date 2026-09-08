@@ -24,6 +24,7 @@ def make_config(data_dir: str, bots=None) -> dict:
         "data_dir": data_dir,
         "supervisor": {"ram_critical_pct": 0.85, "ram_throttle_pct": 0.70,
                        "cpu_critical_pct": 0.90},
+        "overrides_file": "/tmp/nonexistent_overrides.json",
         "bots": bots or [
             {"symbol": "ADA/EUR", "mode": "paper", "capital": 300, "levels": 3,
              "buy_distance": 0.015, "profit_target": 0.02, "tick_interval": 30},
