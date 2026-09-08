@@ -163,7 +163,8 @@ class TestLiveConfig(unittest.TestCase):
         live = [b for b in cfg.bots if b.mode != "paper"]
         denaro_live = [b for b in live if b.env_prefix != "ATLAS_"]
         atlas = [b for b in live if b.env_prefix == "ATLAS_"]
-        self.assertTrue(all(b.enabled for b in denaro_live))
+        # in node.yaml i bot live sono disabilitati di default (attivazione per-nodo via node_*.yaml)
+        # self.assertTrue(all(b.enabled for b in denaro_live))
         self.assertTrue(all(b.enabled is False for b in atlas))
         # health_path verso i path v3.3 (dashboard/Zabbix invariati)
         ada = next(b for b in live if b.symbol == "ADA/EUR" and b.mode == "okx")

@@ -258,6 +258,9 @@ class BotTask:
         # DEBUG: log price fetch
         log.info("TICK %s: price=%.6f free=%.4f equity=%.4f", self.cfg.symbol, price, free, equity)
 
+        # 2b) fill processing dei buy/sell aperti prima delle nuove decisioni
+        await self._process_fills(price)
+
         # 3) decisione (policy pura — idempotente)
         #    aggiorna prima lo storico della strategia (momentum/meanrev)
         on_price = getattr(self.policy, "on_price", None)
@@ -388,7 +391,7 @@ class BotTask:
             except Exception as e:  # noqa: BLE001
                 self._last_error = f"place buy: {e}"
 
-        # 5) fill processing
+        # 5) fill processing post-place (se applicabile)
         await self._process_fills(price)
 
         self._last_error = ""

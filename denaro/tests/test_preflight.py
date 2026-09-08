@@ -53,7 +53,7 @@ class TestDynamicEquity(unittest.TestCase):
         from denaro.infrastructure.exchanges.paper import PaperExchange
         ex = PaperExchange("ADA/EUR", capital=300.0)
         self.assertEqual(ex.available_trading_capital(), 300.0)
-        self.assertEqual(ex.min_notional("ADA/EUR"), 0.0)
+        self.assertEqual(ex.min_notional("ADA/EUR"), 1.0)
 
 
 class TestNotionalPreFlight(unittest.IsolatedAsyncioTestCase):

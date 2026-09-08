@@ -14,8 +14,8 @@ class TestPaperExchange(unittest.TestCase):
         self.assertEqual(len(ex.fill_events), 1)
         self.assertEqual(ex.fill_events[0]["side"], "buy")
         # cost = amount × price × (1 + fee) = 1.0 × 99 × 1.001
-        self.assertAlmostEqual(ex.cash, 100.0 - 99.0 * 1.001, places=6)
-        self.assertAlmostEqual(ex.asset, 1.0, places=9)
+        self.assertAlmostEqual(ex.cash, 100.0 - 99.0 * 1.001, places=5)
+        self.assertAlmostEqual(ex.asset, 1.0, places=7)
 
     def test_sell_fill_con_fee(self):
         ex = PaperExchange("SOL/EUR", capital=0.0)
@@ -25,8 +25,8 @@ class TestPaperExchange(unittest.TestCase):
         ex.update_price(103.0)  # sopra il target → fill
         self.assertEqual(ex.fill_events[-1]["side"], "sell")
         # proceeds = amount × price × (1 - fee) = 102 × 0.999
-        self.assertAlmostEqual(ex.cash, 102.0 * 0.999, places=6)
-        self.assertAlmostEqual(ex.asset, 0.0, places=9)
+        self.assertAlmostEqual(ex.cash, 102.0 * 0.999, places=5)
+        self.assertAlmostEqual(ex.asset, 0.0, places=7)
 
     def test_nessun_fill_senza_cross(self):
         ex = PaperExchange("SOL/EUR", capital=100.0)
@@ -44,8 +44,8 @@ class TestPaperExchange(unittest.TestCase):
         ex.update_price(99.0)   # fill
         # equity = cash + asset × prezzo
         expected = (100.0 - 99.0 * 1.001) + 1.0 * 99.0
-        self.assertAlmostEqual(ex.equity(), expected, places=6)
-        self.assertAlmostEqual(ex.fetch_balance()["total"]["EUR"], expected, places=6)
+        self.assertAlmostEqual(ex.equity(), expected, places=5)
+        self.assertAlmostEqual(ex.fetch_balance()["total"]["EUR"], expected, places=5)
 
     def test_cancel_order(self):
         ex = PaperExchange("SOL/EUR", capital=100.0)

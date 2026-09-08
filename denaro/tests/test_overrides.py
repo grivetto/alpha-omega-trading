@@ -44,7 +44,7 @@ def test_schema_preserves_sell_fields_okx_sol():
 
 def test_schema_preserves_sell_fields_kraken():
     bots = _bots()
-    kraken = [b for b in bots if b["mode"] == "kraken" and b.get("enabled")]
+    kraken = [b for b in bots if b["mode"] == "kraken" and b.get("sell_levels")]
     assert kraken and kraken[0]["sell_levels"] == 4, \
         f"kraken sell_levels scartato: {kraken}"
 

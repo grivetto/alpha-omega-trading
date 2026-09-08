@@ -40,7 +40,7 @@ REMOTE_NODES = {
     },
     "mc2": {
         "ssh": ["sergio@127.0.0.1", "-p", "2222"],  # tunnel inverso
-        "data_dir": "/home/sergio/denaro/node_data",
+        "data_dir": "/home/sergio/denaro/health",
         "unit": "denaro-node-mc2",
     },
 }
@@ -319,7 +319,7 @@ def fetch_remote_node_bots(node_name):
         return hit[1]
     ssh_args = " ".join(cfg["ssh"])
     cmd = (f"ssh -o BatchMode=yes -o ConnectTimeout=5 {ssh_args} "
-           f"'for f in {data_dir}/*_health.json; do echo ===FILE===; cat \"$f\"; echo; done'")
+           f"'for f in {data_dir}/*_health.json {data_dir}/*.json; do if [ -f \"$f\" ]; then echo ===FILE===; cat \"$f\"; echo; fi; done'")
     try:
         r = subprocess.run(["bash", "-c", cmd], capture_output=True, text=True, timeout=20)
         bots = {}

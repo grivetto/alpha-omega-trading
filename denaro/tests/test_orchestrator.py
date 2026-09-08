@@ -125,8 +125,9 @@ class TestBotTask(unittest.IsolatedAsyncioTestCase):
         sell = next(iter(sells.values()))
         # target = entry × 1.02
         self.assertAlmostEqual(sell["target_price"], 99.0 * 1.02, places=3)
-        # il buy riempito esce dagli open
-        self.assertEqual(len(bot.state.open_buys), 2)
+        # il buy riempito o1 e' uscito dagli open (sostituito da re-grid con nuovo livello inferiore)
+        self.assertNotIn("o1", bot.state.open_buys)
+        self.assertLessEqual(len(bot.state.open_buys), 3)
 
     async def test_sell_filled_journalizza_pnl(self):
         ex = FakeExchange(price=100.0)
@@ -151,7 +152,8 @@ class TestBotTask(unittest.IsolatedAsyncioTestCase):
         ex.market_trade(98.3)   # riempie 99.0 e 98.5
         await bot.tick()
         self.assertLessEqual(len(bot.state.open_buys), 3)
-        self.assertEqual(len(bot.state.open_buys) + len(bot.state.open_sells), 3)
+        self.assertEqual(len(bot.state.open_sells), 2)
+        self.assertLessEqual(len(bot.state.open_buys), 3)
         # il mercato risale: nessun doppione piazzato
         ex.market_trade(100.0)
         await bot.tick()

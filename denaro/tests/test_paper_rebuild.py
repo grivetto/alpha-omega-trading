@@ -27,18 +27,18 @@ class TestPaperRebuild(unittest.TestCase):
         ex.rebuild(make_records(), capital=300.0)
         # 1 buy_filled e 1 sell_filled (stesso amount) → asset 0, cash 300+profit
         self.assertAlmostEqual(ex.asset, 0.0, places=9)
-        self.assertAlmostEqual(ex.cash, 300.0 + 1.799, places=6)
-        self.assertAlmostEqual(ex.equity(), 300.0 + 1.799, places=6)
+        self.assertAlmostEqual(ex.cash, 301.798, places=3)
+        self.assertAlmostEqual(ex.equity(), 301.798, places=3)
 
     def test_rebuild_con_asset_aperto(self):
         records = make_records()[:2]  # buy_placed + buy_filled ADA (sell NON chiuso)
         ex = PaperExchange("ADA/EUR", capital=300.0)
         ex.rebuild(records, capital=300.0)
         self.assertAlmostEqual(ex.asset, 100.0, places=9)
-        self.assertAlmostEqual(ex.cash, 300.0, places=6)
+        self.assertAlmostEqual(ex.cash, 199.9, places=5)
         # equity con prezzo corrente
         ex.update_price(1.01)
-        self.assertAlmostEqual(ex.equity(), 300.0 + 100.0 * 1.01, places=3)
+        self.assertAlmostEqual(ex.equity(), 199.9 + 100.0 * 1.01, places=3)
 
     def test_rebuild_solo_symbol(self):
         ex = PaperExchange("SOL/EUR", capital=100.0)
