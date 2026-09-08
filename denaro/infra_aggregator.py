@@ -24,8 +24,8 @@ import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 
-HEALTH_DIR = Path(os.getenv("HEALTH_DIR", "/home/sergio/alpha-omega-trading/health"))
-NODE_DIR = Path(os.getenv("NODE_DIR", "/home/sergio/alpha-omega-trading/node_data"))
+HEALTH_DIR = Path(os.getenv("HEALTH_DIR", "/home/marco/denaro/health"))
+NODE_DIR = Path(os.getenv("NODE_DIR", "/home/marco/alpha-omega-trading/node_data"))
 PORT = int(os.getenv("AGG_PORT", "8912"))
 HOST = os.getenv("AGG_HOST", "127.0.0.1")
 
@@ -533,11 +533,9 @@ def collect():
     okx_eq = sum(b.get("total_equity", 0) for k, b in node_bots.items()
                  if "mc2:okx" in k and b.get("status") == "running")
     if okx_eq == 0:
-        # Fallback dai sub-account balances
         okx_eq = 24.0
     kraken_eq = sum(b.get("total_equity", 0) for k, b in node_bots.items()
                     if "trend-live" in k and b.get("status") == "running")
-    # I bot trend-live riportano 25.48 totale ciascuno perchè condividono il saldo dell'account
     if kraken_eq > 30.0:
         kraken_eq = 25.47
     data["bot_equity"] = round(okx_eq, 2)
