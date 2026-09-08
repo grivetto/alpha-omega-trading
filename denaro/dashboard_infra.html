@@ -227,11 +227,12 @@ const fmt = (v, d=2) => (v === undefined || v === null) ? '—' : Number(v).toLo
 const esc = (s) => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 const BOT_META = {
-  sol: {sym: 'SOL/EUR', ex: 'OKX·MAIN', color: '#00f3ff'},
-  ada: {sym: 'ADA/EUR', ex: 'OKX·MARCOSUB1', color: '#ff2bd6'},
-  sol_kraken: {sym: 'SOL/EUR', ex: 'KRAKEN·NUVOLA', color: '#b026ff'}
+  'trend-live:SOL/EUR': {sym: 'SOL/EUR', ex: 'KRAKEN·LIVE', color: '#00f3ff'},
+  'trend-live:XRP/EUR': {sym: 'XRP/EUR', ex: 'KRAKEN·LIVE', color: '#0aff9d'},
+  'mc2:okx:DOGE/EUR': {sym: 'DOGE/EUR', ex: 'OKX·MC2SUB1', color: '#ff2bd6'},
+  'mc2:okx:SOL/EUR': {sym: 'SOL/EUR', ex: 'OKX·MC2SUB1', color: '#ffe600'},
 };
-const ORDER = ['sol', 'ada', 'sol_kraken'];
+const ORDER = ['trend-live:SOL/EUR', 'trend-live:XRP/EUR', 'mc2:okx:DOGE/EUR', 'mc2:okx:SOL/EUR'];
 
 async function load() {
   try {

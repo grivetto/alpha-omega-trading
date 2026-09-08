@@ -29,7 +29,7 @@ PORT = int(os.getenv("AGG_PORT", "8912"))
 HOST = os.getenv("AGG_HOST", "127.0.0.1")
 
 # Nodi remoti che eseguono il Node Denaro (paper/live). L'aggregator gira su
-# mc2 e li legge via SSH (stesso meccanismo di zabbix_state).
+# MARCODG1 e li legge via SSH (stesso meccanismo di zabbix_state).
 # remote_data_dir: cartella node_data sul nodo remoto.
 REMOTE_NODES = {
     "nuvola": {
@@ -37,17 +37,28 @@ REMOTE_NODES = {
         "data_dir": "/home/sergio/alpha-omega-trading/node_data",
         "unit": "denaro-node-nuvola",
     },
-    "marcodg1": {
+    "mc2": {
         "ssh": ["sergio@127.0.0.1", "-p", "2222"],  # tunnel inverso
-        "data_dir": "/home/marco/alpha-omega-trading/node_data",
-        "unit": "denaro-node-paper",
+        "data_dir": "/home/sergio/denaro/node_data",
+        "unit": "denaro-node-mc2",
     },
 }
 
 # Conti OKX (per saldi reali)
 ENV_FILES = {
-    "denaro (main)": "/home/sergio/alpha-omega-trading/.env",
+    "denaro (main)": "/home/marco/denaro/.env",
     "alpha (marcosub1)": "/home/marco/alpha-omega-trading/.env",
+}
+
+# Sub-account con chiavi IP-bound sul nodo di origine: il file si legge via SSH
+SUB_ENV_SOURCES = {
+    "denaro (mc2sub1)": ("sergio@127.0.0.1", "/home/sergio/alpha-omega-trading/.env", 2222),
+}
+
+# Sub-account che usano chiavi prefissate MC2SUB1_*/NUVOLASUB1_*
+SUB_PREFIXES = {
+    "denaro (mc2sub1)": "MC2SUB1_",
+    "nuvola (nuvolasub1)": "NUVOLASUB1_",
 }
 
 NODES = {
@@ -469,14 +480,14 @@ def collect():
     node_bots = collect_node_bots()
     data["node_bots"] = node_bots
 
-    # 7) CAPITALE TOTALE REALE = somma dei bot LIVE del Node (okx:* + kraken:*),
+    # 7) CAPITALE TOTALE REALE = somma dei bot LIVE del Node (okx:* + kraken:* + trend-live:* + mc2:okx:*),
     #    escludendo i paper virtuali (ADA/EUR, SOL/EUR, XRP/EUR locali e remoti).
     #    NB: i vecchi health file (health/sol.json ecc.) e il kraken_snapshot.json
     #    da nuvola sono obsoleti — il Node scrive i valori live aggiornati.
     okx_eq = sum(b.get("total_equity", 0) for k, b in node_bots.items()
-                 if k.startswith("okx:") and b.get("status") == "running")
+                 if (k.startswith("okx:") or "mc2:okx" in k) and b.get("status") == "running")
     kraken_eq = sum(b.get("total_equity", 0) for k, b in node_bots.items()
-                    if k.startswith("kraken:") and b.get("status") == "running")
+                    if (k.startswith("kraken:") or "trend-live" in k) and b.get("status") == "running")
     data["bot_equity"] = round(okx_eq, 2)
     data["kraken_equity"] = round(kraken_eq, 2)
     data["total_equity"] = round(okx_eq + kraken_eq, 2)
