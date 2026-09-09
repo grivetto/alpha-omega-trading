@@ -26,3 +26,10 @@ Equity reale Kraken ~EUR 25.8 (prezzi live: SOL 88.98, XRP 1.22, ADA 0.187, USD-
 
 ## 4) Repo/config
 HEAD git allineato locale==mc2==MARCODG1==origin/main. Config di deploy sincronizzati dai nodi live.
+
+
+## 5) COMMIT GITHUB (per analisi Manus AI)
+- branch main aggiornato: 4cce9c6 "fix(denaro): disabilita bot Kraken XRP live (1 bot per conto, resta SOL) + report audit allineamento AI/denaro"
+- repo: https://github.com/grivetto/alpha-omega-trading (public)
+- contenuto: config/node_trend_live_kraken.yaml (XRP live enabled:false) + docs/audit_allineamento_2026-09-09.md
+- nota: config OKX (node.yaml/node_mc2.yaml/node_nuvola.yaml) gia' allineati su origin/main (chiavi morte 50119 disabilitate); non riattivati.
