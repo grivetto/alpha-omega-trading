@@ -33,3 +33,13 @@ HEAD git allineato locale==mc2==MARCODG1==origin/main. Config di deploy sincroni
 - repo: https://github.com/grivetto/alpha-omega-trading (public)
 - contenuto: config/node_trend_live_kraken.yaml (XRP live enabled:false) + docs/audit_allineamento_2026-09-09.md
 - nota: config OKX (node.yaml/node_mc2.yaml/node_nuvola.yaml) gia' allineati su origin/main (chiavi morte 50119 disabilitate); non riattivati.
+
+
+## 6) STATO FINALE VERIFICATO (2026-09-09)
+- Gateway Hermes mc2: ACTIVE, cron ogni 15' gira (catch-up eseguito, drift-skip risolto).
+- MoA preset: default=prod; devel/prod/test aggregatore deepseek-v4-pro:gpt-oss-120b (modelli vivi).
+- Kraken live: SOL enabled, XRP disabled (1 bot per conto) - config MARCODG1 + GitHub main 4cce9c6.
+- OKX: bot ADA/SOL/DOGE/ETH disabilitati in node.yaml MARCODG1 (chiavi morte 50119) e su origin/main.
+- CB spurio SOL OKX: bot disabilitato -> nessun CB attivo da resettare; il file health stale riflette stato passato.
+- trades.db legacy archiviato in trades.db.legacy-2026-06-11.bak (non usato da processi attivi).
+- Commit su GitHub main: 4cce9c6 + 64bf65c (report + XRP disable).
