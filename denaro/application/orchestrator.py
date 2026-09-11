@@ -88,6 +88,7 @@ class BotConfig:
     health_path: Optional[Path] = None
     stop_loss_pct: float = 0.0      # drawdown dal peak → chiudi posizioni e ferma
     max_slippage: float = 0.005     # P2: spread max tollerato per market order
+    min_notional: float = 0.0       # limite locale, oltre al market metadata
 
 
 # --- bot task ----------------------------------------------------------------
@@ -157,6 +158,7 @@ class BotTask:
 
     def _rebuild_from_exchange(self) -> None:
         """Ricostruisce lo stato dagli ordini aperti + journal (replay PnL)."""
+        sell_cost_basis = {}
         # 1) PnL/trades dalla storia (journal immutabile → totale ricostruito)
         if self.journal is not None:
             pnl = trades = wins = losses = 0.0
@@ -168,6 +170,8 @@ class BotTask:
                     trades += 1
                     wins += 1 if float(r.get("profit", 0)) >= 0 else 0
                     losses += 1 if float(r.get("profit", 0)) < 0 else 0
+                if r.get("event") == "buy_filled" and r.get("sell_order_id"):
+                    sell_cost_basis[str(r["sell_order_id"])] = float(r["entry"])
             self.state.total_pnl = pnl
             self.state.total_trades = int(trades)
             self.state.wins = int(wins)
@@ -183,7 +187,9 @@ class BotTask:
                         "timestamp": self._now(), "level": 0}
                 else:
                     self.state.open_sells[oid] = {
-                        "amount": amount, "entry_price": price * 0.99,
+                        "amount": amount,
+                        "entry_price": sell_cost_basis.get(str(oid)),
+                        "cost_basis_known": str(oid) in sell_cost_basis,
                         "target_price": price, "timestamp": self._now()}
         except Exception as e:  # noqa: BLE001
             log.warning("rebuild open orders fallito: %s", e)
@@ -226,8 +232,9 @@ class BotTask:
         # 2) prezzo (hub con cache, fallback fetch)
         try:
             bal = await asyncio.to_thread(self.ex.fetch_balance)
-            free = float(bal.get("free", {}).get("EUR") or 0)
-            total = float(bal.get("total", {}).get("EUR") or 0)
+            quote = self.cfg.symbol.split("/", 1)[1] if "/" in self.cfg.symbol else "EUR"
+            free = float(bal.get("free", {}).get(quote) or 0)
+            total = float(bal.get("total", {}).get(quote) or 0)
         except Exception as e:  # noqa: BLE001
             self._last_error = f"balance: {e}"
             self._write_health(equity, blocked=False)
@@ -322,6 +329,7 @@ class BotTask:
                 if o:
                     self.state.open_sells[o["id"]] = {
                         "amount": amount, "entry_price": price,
+                        "cost_basis_known": False,
                         "target_price": sell_price, "timestamp": self._now()}
                     self._journal("sell_placed", order_id=o["id"],
                                   amount=amount, price=sell_price,
@@ -470,12 +478,16 @@ class BotTask:
 
     def _min_notional(self) -> float:
         fn = getattr(self.ex, "min_notional", None)
-        if fn is None:
-            return 0.0
+        market_min = 0.0
+        if fn is not None:
+            try:
+                market_min = float(fn(self.cfg.symbol) or 0.0)
+            except Exception:
+                market_min = 0.0
         try:
-            return float(fn(self.cfg.symbol) or 0.0)
-        except Exception:
-            return 0.0
+            return max(market_min, float(self.cfg.min_notional or 0.0))
+        except (TypeError, ValueError):
+            return market_min
 
     async def _trigger_stop_loss(self, equity: float, drawdown: float,
                                  price: Optional[float]) -> None:
@@ -590,19 +602,25 @@ class BotTask:
                 continue
             st = o.get("status", "open")
             if st in ("closed", "filled"):
-                entry = float(info["price"])
+                filled = float(o.get("filled") or info["amount"] or 0.0)
+                if filled <= 0:
+                    self.state.open_buys.pop(oid, None)
+                    continue
+                entry = float(o.get("average") or o.get("price") or info["price"])
                 target = self.policy.sell_target(entry)
                 try:
                     sell = await asyncio.to_thread(
                         self.ex.create_limit_order, self.cfg.symbol, "sell",
-                        float(info["amount"]), target)
+                        filled, target)
                     if sell:
                         self.state.open_sells[sell["id"]] = {
-                            "amount": float(info["amount"]), "entry_price": entry,
+                            "amount": filled, "entry_price": entry,
+                            "cost_basis_known": True,
                             "target_price": target, "timestamp": self._now()}
                         self._journal("buy_filled", order_id=oid, entry=entry,
-                                      amount=float(info["amount"]),
-                                      sell_target=target)
+                                      amount=filled,
+                                      sell_target=target,
+                                      sell_order_id=sell["id"])
                 except Exception as e:  # noqa: BLE001
                     self._last_error = f"place sell: {e}"
                 self.state.open_buys.pop(oid, None)
@@ -618,9 +636,20 @@ class BotTask:
             if st in ("closed", "filled"):
                 # PnL fee-aware: proceeds×(1-fee) - cost×(1+fee). Con fee=0
                 # il comportamento e' identico all'accounting del motore v3.3.
-                amount = float(info["amount"])
+                amount = float(o.get("filled") or info["amount"] or 0.0)
+                if amount <= 0:
+                    self.state.open_sells.pop(oid, None)
+                    continue
+                target = float(o.get("average") or o.get("price") or info["target_price"])
+                if not info.get("cost_basis_known", info.get("entry_price") is not None):
+                    self._journal("sell_filled_unpriced", order_id=oid,
+                                  amount=amount, exit=target,
+                                  reason="cost basis non riconciliato")
+                    self._last_error = (f"sell {oid}: cost basis non riconciliato; "
+                                        "PnL escluso")
+                    self.state.open_sells.pop(oid, None)
+                    continue
                 entry = float(info["entry_price"])
-                target = float(info["target_price"])
                 cost = amount * entry * (1 + self.cfg.fee)
                 proceeds = amount * target * (1 - self.cfg.fee)
                 profit = proceeds - cost

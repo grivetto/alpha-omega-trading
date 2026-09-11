@@ -45,7 +45,7 @@ _OVERRIDE_KEYS = frozenset({
     "sell_levels", "sell_distance", "sell_step", "sell_asset_share",
     "stop_loss_pct", "daily_loss_limit", "max_drawdown_limit",
     "weekly_loss_limit", "max_slippage",
-    "tick_interval", "fee", "entry_slip", "quote",
+    "tick_interval", "fee", "entry_slip", "quote", "min_notional",
     # VAGR specific
     "atr_window", "vol_target_pct", "min_spacing_pct", "max_spacing_pct",
     "max_grid_levels", "quiet_threshold", "active_threshold",
@@ -158,13 +158,29 @@ def build_policy(bot: dict, exchange):
 def build_rest_exchange(exchange_cfg: dict):
     """Client REST pubblico per il hub (ticker senza chiavi)."""
     import ccxt
-    name = exchange_cfg.get("name", "okx")
+    name = str(exchange_cfg.get("name", "okx")).lower()
     if name == "okx":
         config: Dict[str, Any] = {"enableRateLimit": True}
         if exchange_cfg.get("eea", True):
             config["hostname"] = "eea.okx.com"   # vincolo critico runtime
         return ccxt.okx(config)
+    if name == "kraken":
+        return ccxt.kraken({"enableRateLimit": True})
     raise ValueError(f"exchange REST non supportato: {name}")
+
+
+def build_pro_exchange(exchange_cfg: dict):
+    """Costruisce il client ccxt.pro coerente con il feed REST selezionato."""
+    import ccxt.pro as ccxtpro  # type: ignore
+    name = str(exchange_cfg.get("name", "okx")).lower()
+    config: Dict[str, Any] = {"enableRateLimit": True}
+    if name == "okx":
+        if exchange_cfg.get("eea", True):
+            config["hostname"] = "eea.okx.com"
+        return ccxtpro.okx(config)
+    if name == "kraken":
+        return ccxtpro.kraken(config)
+    raise ValueError(f"exchange WS non supportato: {name}")
 
 
 def build_exchange(bot: dict, data_dir: Path):
@@ -261,9 +277,8 @@ class NodeApp:
             ex_pro = None
             if ws_enabled:
                 try:
-                    import ccxt.pro as ccxtpro  # type: ignore
-                    ex_pro = ccxtpro.okx({"hostname": "eea.okx.com",
-                                          "enableRateLimit": True})
+                    ex_pro = build_pro_exchange(
+                        config.get("exchange_rest", {"name": "okx"}))
                 except Exception as e:  # noqa: BLE001
                     log.warning("ccxt.pro non disponibile (%s) — fallback REST", e)
             self.hub = MarketDataHub(
@@ -328,6 +343,7 @@ class NodeApp:
                 bot_key=bot_key,
                 stop_loss_pct=float(bot.get("stop_loss_pct", 0.0)),
                 max_slippage=float(bot.get("max_slippage", 0.005)),
+                min_notional=float(bot.get("min_notional", 0.0)),
                 **paths,
             )
             policy = build_policy(bot, exchange)
@@ -338,7 +354,7 @@ class NodeApp:
             )
             task = BotTask(cfg, exchange, policy, risk,
                            price_source=self._make_price_source(bot["symbol"]),
-                           get_equity=self._equity_for(exchange))
+                           get_equity=self._equity_for(exchange, bot["symbol"]))
             # per i bot paper: il prezzo dell'hub alimenta i fill simulati, e lo
             # stato cash/asset viene ricostruito dal journal al boot (M5)
             if isinstance(exchange, PaperExchange):
@@ -354,11 +370,12 @@ class NodeApp:
             log.info("bot %s (%s) registrato", bot["symbol"], bot.get("mode", "paper"))
 
     @staticmethod
-    def _equity_for(exchange):
+    def _equity_for(exchange, symbol: str):
         """Equity reale: paper = cash+asset×prezzo; live = fetch totale (in to_thread)."""
         if isinstance(exchange, PaperExchange):
             return exchange.equity
-        return exchange.fetch_total_equity
+        quote = symbol.split("/", 1)[1] if "/" in symbol else "EUR"
+        return lambda: exchange.fetch_total_equity(quote)
 
     def _make_price_source(self, symbol: str):
         async def source() -> float:
