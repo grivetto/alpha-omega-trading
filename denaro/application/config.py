@@ -76,6 +76,7 @@ class BotConfigSchema(BaseModel):
     max_drawdown_limit: float = 0.15
     weekly_loss_limit: float = 0.20   # P2: hard stop settimanale (lun 00:00 UTC)
     max_slippage: float = 0.005       # P2: tolleranza spread max per market order
+    min_notional: float = 0.0         # minimo locale conservativo per ordine
     # ── GRID BILATERALE ────────────────────────────────────────────────────────
     # NB CRITICO: se questi campi mancano dallo schema, Pydantic li SCARTA in
     # silenzio → i sell ladder NON vengono MAI piazzati (bug storico: i bot

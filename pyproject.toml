@@ -68,7 +68,7 @@ Repository = "https://github.com/grivetto/alpha-omega-trading"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["alpha_omega*", "config*", "scripts*", "systemd*", "docker*", "tests*"]
+include = ["denaro*", "alpha_omega*", "config*", "scripts*", "systemd*", "docker*", "tests*"]
 
 [tool.setuptools.package-dir]
 "" = "."

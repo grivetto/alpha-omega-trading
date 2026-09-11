@@ -197,6 +197,29 @@ class TestLiveConfig(unittest.TestCase):
         with self.assertRaises(ValueError):
             build_exchange({"mode": "bybit", "symbol": "X/EUR"}, Path("."))
 
+    def test_build_rest_exchange_supporta_kraken(self):
+        from denaro.denaro_node import build_rest_exchange
+        ex = build_rest_exchange({"name": "kraken"})
+        try:
+            self.assertEqual(ex.id, "kraken")
+        finally:
+            ex.close()
+
+    def test_config_preserva_min_notional(self):
+        from denaro.application.config import load_node_config
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "min.yaml"
+            path.write_text(
+                "bots:\n"
+                "  - symbol: BTC/USDT\n"
+                "    mode: paper\n"
+                "    capital: 20\n"
+                "    min_notional: 5.5\n",
+                encoding="utf-8")
+            cfg = load_node_config(path)
+        self.assertEqual(cfg.bots[0].min_notional, 5.5)
+
 
 class TestBuildPolicy(unittest.TestCase):
     """Selezione della strategia dal config (grid | momentum | meanrev)."""

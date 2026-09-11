@@ -129,6 +129,17 @@ class TestBotTask(unittest.IsolatedAsyncioTestCase):
         self.assertNotIn("o1", bot.state.open_buys)
         self.assertLessEqual(len(bot.state.open_buys), 3)
 
+    async def test_partial_fill_crea_sell_solo_sulla_quantita_filled(self):
+        ex = FakeExchange(price=100.0)
+        bot = make_bot(ex, self.dir)
+        await bot.tick()
+        order = ex.orders["o1"]
+        order["status"] = "filled"
+        order["filled"] = order["amount"] / 2
+        await bot.tick()
+        sell = next(iter(bot.state.open_sells.values()))
+        self.assertAlmostEqual(sell["amount"], order["filled"])
+
     async def test_sell_filled_journalizza_pnl(self):
         ex = FakeExchange(price=100.0)
         bot = make_bot(ex, self.dir)
