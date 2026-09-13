@@ -1,18 +1,21 @@
 #!/usr/bin/env bash
 # fleet_reconcile.sh — riconciliazione delle ISTANZE dei nodi Denaro.
 #
-# Problema rilevato il 2026-09-13: su mc2 ogni config gira DUE volte (unita' di
-# sistema in /etc/systemd/system + unita' utente in ~/.config/systemd/user con
-# lo STESSO nome, WorkingDirectory e config diverse); su MARCODG1 i nodi girano
-# come processi ORFANI (nessuna unit attiva, nessun riavvio).
+# Caso reale (mc2, 2026-09-13): ogni config girava DUE volte — unita' di sistema
+# in /etc/systemd/system E unita' utente in ~/.config/systemd/user con lo
+# STESSO nome, WorkingDirectory e config diverse, sullo STESSO conto (due
+# processi che piazzano ordini sullo stesso saldo e scrivono gli stessi file
+# health). Il rischio e' concreto: due processi sullo stesso conto possono
+# piazzare ordini duplicati; oggi non succedeva solo perche' il conto era in
+# deadlock.
 #
-# Il rischio e' concreto: due processi sullo stesso conto possono piazzare
-# ordini duplicati. Oggi non succede solo perche' il conto e' in deadlock.
-#
-# Uso:
+# Uso (dalla macchina target, dove lo script arriva con line-ending LF):
 #   bash fleet_reconcile.sh           # DRY-RUN: solo report (default)
 #   bash fleet_reconcile.sh --apply   # ferma le istanze duplicate e disabilita
 #                                     # le unita' utente che le generano
+#
+# Da Windows, inviandolo in pipe (PowerShell converte i fine riga in CRLF):
+#   ssh host 'tr -d "" | bash -s -- --apply'
 #
 # Regola di sicurezza: un'istanza viene fermata SOLO se un'altra istanza della
 # stessa config e' viva e gestita da systemd. Gli orfani unici non vengono

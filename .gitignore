@@ -73,6 +73,7 @@ backtest_data/
 backtest_out/
 .pytmp/
 .abtest/
+.dsh_push/
 deepseek_*.json*
 deploy_decisions_*.json
 fase*.json*

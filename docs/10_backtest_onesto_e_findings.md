@@ -219,12 +219,17 @@ anche offline.
 
 ---
 
-## 6. Fix applicate in locale (NON deployate)
+## 6. Fix applicate
 
 | fix | file | effetto |
 |---|---|---|
 | A | `denaro/infrastructure/exchanges/okx.py`, `kraken.py` | `_ensure_markets()` pigro: limiti e precision **reali** disponibili; `invalidate_balance()` dopo ogni ordine; i filtri di minimo tornano a funzionare → il ladder dust sparisce da solo |
-| B | `denaro/application/orchestrator.py` | il log del ladder riporta gli ordini **realmente accettati**; i fallimenti diventano un WARNING (`_note_error`, max 1/5 min) e restano in health; `_last_error` non viene più azzerato prima della scrittura |
+| B | `denaro/application/orchestrator.py` | il log del ladder riporta gli ordini **realmente accettati**; i fallimenti diventano un WARNING (`_note_error`, max 1/5 min) e restano in health; `_last_error` non viene più azzerato prima della scrittura; un prezzo non disponibile **blocca la decisione** e viene segnalato invece di tickare su 0.0 |
+| C | `denaro/infrastructure/market_data.py` | il client REST dell'hub carica i markets (`_ensure_rest_markets`, lazy): il fallback REST di `get_price` funziona → i bot non restano ciechi se il WebSocket cade (era la causa di `price=0.000000`) |
+| D | `denaro/infrastructure/mc2_feeder.py` | `inspect.iscoroutinefunction` al posto di `asyncio.iscoroutinefunction` (deprecato, rimosso in 3.16) |
+
+**Deployate il 2026-09-13** su mc2, MARCODG1 e nuvola (dettagli in §9), con
+backup `*.bak-<timestamp>` accanto a ogni file e md5 verificato.
 
 Verifica: **nessuna regressione** — A/B con `git stash` dei 3 file su 7 suite di
 test: identico risultato (31 failed / 49 passed / 23 error **prima e dopo**; le
@@ -270,8 +275,73 @@ Effetto atteso in produzione delle fix (nessun cambio di strategia):
 - Dati: `backtest_data/*.csv` (5m, 90 giorni, OKX EEA) — rigenerabili con `--refresh`.
 - Risultati: `backtest_out/*.json` (mc2, paper, trend, 4 finestre regime).
 - Un anno di finestre SOL/EUR: `regime_w0..w3.json`.
-- Analisi read-only sulle macchine: comandi in questo documento; nessuna
-  modifica su mc2/nuvola/MARCODG1.
+- Strumento di riconciliazione: `denaro/scripts/fleet_reconcile.sh` (dry-run di default).
 
-*Revisione: 2026-09-11. Tutte le cifre provengono da dati di mercato reali e
-dagli account di produzione interrogati in sola lettura.*
+---
+
+## 9. Verifica esecuzione 2026-09-13 e correzioni applicate
+
+### 9.1 Correzione all'analisi precedente
+
+- **MARCODG1 e nuvola NON avevano processi orfani**: i 3 nodi di MARCODG1
+  (`denaro-node-trend-live`, `-trend`, `-paper`) e i 2 di nuvola girano come
+  unità di **sistema** (`/etc/systemd/system`), regolarmente gestite. L'errore
+  era mio: avevo interrogato `systemctl --user`, che non li vede.
+
+### 9.2 Nuovi difetti trovati (con evidenza)
+
+| # | Difetto | Evidenza |
+|---|---|---|
+| B9 | **Ogni config su mc2 girava DUE volte**: unità di sistema *e* unità utente con lo **stesso nome**, WorkingDirectory e config **diverse** (`alpha-omega-trading`: capital 12 / sell 2 — `denaro_node_app`: capital 23 / levels 5 / sell 5 / distanza 0,3%), **stesso conto OKX**, stessi file health | `ps -eo pid,ppid,etime,cmd` + `/proc/PID/cgroup`: `system.slice/denaro-node-mc2.service` **e** `user@1000.service/app.slice/denaro-node-mc2.service` |
+| B10 | **Bot ciechi con prezzo 0**: `MarketDataHub.get_price` usa il client REST creato senza `load_markets()` → `fetch_ticker(symbol)` fallisce → `price=0.0` → il bot ticka "running", `error:""` e non opera. Le istanze col WebSocket funzionante avevano prezzi reali: la cecità dipendeva dal **fallback REST rotto** | journal: `TICK XRP/EUR: price=0.000000 free=5.4713 equity=25.2811` ogni 30s |
+| B11 | **Strategia fantasma**: `strategy: chandelier_trend_rider` in `config/node_trend_live_kraken.yaml` non esiste in `build_policy` → **fallback silenzioso a GridPolicy** (health: `"strategy": "grid"`). L'operatore crede di far girare un trend-follower con chandelier exit | `denaro/denaro_node.py:87-154` + health |
+| B12 | **Chiavi OKX non valide su nuvola**: 4 bot live in loop di errore ogni 30s | `AuthenticationError: okx Invalid OK-ACCESS-KEY, code 50111` |
+| B13 | **Stop-loss con drawdown 93,5% e 54%** mai emersi in alcuna metrica (il PnL conta solo i cicli chiusi in TP) | journal: `stop_loss drawdown 0.9352 equity 1.8617` e `stop_loss drawdown 0.5406 equity 3.4` |
+| B14 | **52 ore senza un singolo fill**: saldi identici byte per byte e 12 ordini immutati | `DOGE 262.946234 / SOL 0.044987 / EUR 0.380487` invariati dal 11/09; ultimo riempimento 2026-09-11T14:34Z |
+
+### 9.3 Azioni eseguite (con verifica)
+
+1. **Riconciliazione mc2** (`fleet_reconcile.sh --apply`): fermate e disabilitate
+   le due unità **utente** duplicate → resta **una sola istanza per config**
+   (verificato: 3 processi, 3 config, tutte unità di sistema).
+2. **Deploy delle fix A–D** su **mc2, MARCODG1 e nuvola** (5 file per host), con
+   backup `*.bak-<timestamp>` accanto a ogni file e **md5 verificato**.
+3. **Restart** dei nodi (`denaro-node-mc2`, `-nuvola`, `-trend`, `-trend-live`,
+   `-paper`) + `daemon-reload` su nuvola.
+4. **Verifica post-deploy**:
+   - `okx: 4640 mercati caricati` (mc2), `kraken: 1449 mercati caricati` (MARCODG1),
+     `hub: markets REST caricati (4640 / 1449 simboli)`;
+   - prezzi reali nei tick (`price=87.40`, `price=0.073000`, `price=1.169150`);
+   - **nessun** più `grid bilaterale ... sell ladder piazzati`: il loop di ordini
+     dust (~5.760 tentativi/giorno/bot) è **cessato**;
+   - i bot restano correttamente inerti dove il capitale non basta
+     (`PRE-FLIGHT BLOCK: per_level 4.1000 > free reale 3.6467` su Kraken).
+5. **Nota di trasparenza**: il deploy ha portato con sé, dall'HEAD del repo, anche
+   la fix `e4e6155` (fill dei buy processati **prima** del preflight — 3 righe in
+   `orchestrator.py`). È l'**unica** differenza oltre alle mie modifiche
+   (verificato con `git diff 951d537 581cc96`).
+
+### 9.4 Stato finale (2026-09-13 21:15 UTC)
+
+| Host | Nodi attivi | Fix | Cosa fa adesso |
+|---|---|---|---|
+| mc2 | `denaro-node-mc2`, `-nuvola`, `-trend` (1 istanza ciascuno) | OK | tick con prezzi reali, nessun ordine (free €0,38 < per_level €4) |
+| MARCODG1 | `-trend-live`, `-trend`, `-paper` | OK | Kraken bloccato dal preflight (free €3,65 < per_level €4,10) |
+| nuvola | `-nuvola`, `-trend` | OK | 4 bot OKX in errore: **chiavi non valide (50111)** |
+
+### 9.5 Aperti (richiedono una decisione, non codice)
+
+1. **nuvola**: chiavi OKX non valide → rigenerarle o disabilitare i 4 bot.
+2. **mc2**: 12 sell aperti (il più vecchio dell'08/09) e €0,38 liberi → decidere
+   se cancellare o riprezzare e ricostituire la liquidità.
+3. **MARCODG1**: per_level (€4,10) > free (€3,65) → allineare capitale e livelli
+   al saldo reale, altrimenti la griglia non parte.
+4. **chandelier_trend_rider**: o si integra in `build_policy`, o si cambia la
+   config: oggi è un grid travestito.
+5. **Telemetria mark-to-market** in health (`equity_mtm`, `unrealized_pnl`):
+   senza, gli stop-loss al 93,5% restano invisibili.
+
+---
+
+*Revisione: 2026-09-13. Le cifre provengono da dati di mercato reali e dagli
+account di produzione; le azioni di §9.3 sono state eseguite e verificate.*
