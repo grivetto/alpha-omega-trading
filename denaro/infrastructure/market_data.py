@@ -15,6 +15,7 @@ logica di broadcast/cache/fallback e' testabile con fake (nessuna rete).
 from __future__ import annotations
 
 import asyncio
+import inspect
 import logging
 import time
 from collections import defaultdict
@@ -51,6 +52,37 @@ class MarketDataHub:
         self._cache: Dict[str, tuple] = {}        # symbol -> (price, ts)
         self._tasks: Dict[str, asyncio.Task] = {}  # symbol -> canale attivo
         self._running = False
+        # ccxt richiede i markets caricati per QUALSIASI chiamata per simbolo
+        # (fetch_ticker incluso): senza, get_price fallisce e il Node ticka a
+        # prezzo 0.0 restando "running" ma incapace di operare (bug runtime
+        # 2026-09-13: i bot XRP/ETH su mc2 loggavano price=0.000000).
+        self._rest_markets_loaded = False
+
+    async def _ensure_rest_markets(self) -> bool:
+        """Carica i markets del client REST una volta (lazy, con retry).
+
+        Non viene fatto in __init__ perche' una rete momentaneamente giu' non
+        deve impedire l'avvio del Node: il primo fetch utile riprova.
+        """
+        if self._rest_markets_loaded:
+            return True
+        load = getattr(self._rest, "load_markets", None)
+        if load is None:
+            self._rest_markets_loaded = True
+            return True
+        try:
+            if inspect.iscoroutinefunction(load):
+                await load()
+            else:
+                await asyncio.to_thread(load)
+            self._rest_markets_loaded = True
+            n = len(getattr(self._rest, "markets", {}) or {})
+            log.info("hub: markets REST caricati (%d simboli)", n)
+        except Exception as e:  # noqa: BLE001
+            log.warning("hub: load_markets REST fallito (%s) — prezzi non "
+                        "disponibili finche' non riesce", e)
+            return False
+        return True
 
     # --- lifecycle -----------------------------------------------------------
 
@@ -61,7 +93,7 @@ class MarketDataHub:
             load = getattr(self._pro, "load_markets", None)
             if load:
                 try:
-                    if asyncio.iscoroutinefunction(load):
+                    if inspect.iscoroutinefunction(load):
                         await load()
                     else:
                         load()
@@ -95,7 +127,7 @@ class MarketDataHub:
             if closer is None:
                 continue
             try:
-                if asyncio.iscoroutinefunction(closer):
+                if inspect.iscoroutinefunction(closer):
                     await closer()
                 else:
                     closer()
@@ -144,9 +176,14 @@ class MarketDataHub:
         p = self.price(symbol)
         if p is not None:
             return p
+        if not await self._ensure_rest_markets():
+            return None
         try:
             t = await asyncio.to_thread(self._rest.fetch_ticker, symbol)
             last = float(t["last"])
+            if last <= 0:
+                log.warning("get_price(%s): prezzo non valido (%r)", symbol, last)
+                return None
             self._cache[symbol] = (last, self._now())
             return last
         except Exception as e:  # noqa: BLE001 - fallback silenzioso

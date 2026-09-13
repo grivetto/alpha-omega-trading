@@ -13,6 +13,7 @@ Il ciclo `tick()` e' deterministico e testabile con un FakeExchange.
 from __future__ import annotations
 
 import asyncio
+import inspect
 import json
 import logging
 import time
@@ -113,6 +114,8 @@ class BotTask:
         self._running = False
         self._task: Optional[asyncio.Task] = None
         self._last_error: str = ""
+        # rate-limit dei log di errore (chiave -> ultimo ts loggato)
+        self._err_log_ts: Dict[str, float] = {}
         # stop-loss gia' scattato (persistente: non rivende dopo un restart)
         self._stop_loss_triggered = False
         # portfolio manager anti-deadlock (capitale virtuale + preflight dedup)
@@ -199,6 +202,10 @@ class BotTask:
     async def tick(self) -> None:
         """Un ciclo completo: risk → prezzo → decisione → esecuzione → health."""
         now = self._now()
+        # l'errore e' PER-TICK: si azzera qui (non a fine tick), cosi' health e
+        # log riflettono l'esito del tick appena concluso invece di essere
+        # cancellati prima della scrittura (bug: errori di piazzamento invisibili)
+        self._last_error = ""
         # equity reale: get_equity puo' fare I/O (fetch live) → to_thread
         equity = await asyncio.to_thread(self._get_equity)
         equity = self._guard_equity(equity)
@@ -229,7 +236,7 @@ class BotTask:
             free = float(bal.get("free", {}).get("EUR") or 0)
             total = float(bal.get("total", {}).get("EUR") or 0)
         except Exception as e:  # noqa: BLE001
-            self._last_error = f"balance: {e}"
+            self._note_error(f"balance: {e}")
             self._write_health(equity, blocked=False)
             return
 
@@ -251,8 +258,19 @@ class BotTask:
                 t = await asyncio.to_thread(self.ex.fetch_ticker, self.cfg.symbol)
                 price = float(t["last"])
         except Exception as e:  # noqa: BLE001
-            self._last_error = f"ticker: {e}"
+            self._note_error(f"ticker: {e}")
             self._write_health(equity, blocked=False)
+            return
+
+        # 2b) PREZZO NON DISPONIBILE: non si decide su un prezzo finto.
+        #     Prima il tick proseguiva con price=0.0: la policy rispondeva
+        #     "prezzo non valido", health restava "running" con error="" e il
+        #     bot era di fatto inerte senza che nulla lo segnalasse (visto in
+        #     produzione il 2026-09-13 su XRP/ETH: price=0.000000 per giorni).
+        if price <= 0:
+            self._note_error("prezzo non disponibile (hub/REST)")
+            self._write_health(equity, blocked=False, free_quote=free)
+            self._save_state()
             return
 
         # DEBUG: log price fetch
@@ -314,6 +332,8 @@ class BotTask:
         # 3aa) GRID BILATERALE: i SELL ladder NON richiedono EUR (usano l'asset
         #      in mano) → si eseguono SEMPRE, anche se il preflight blocca i
         #      buy per mancanza di free (es. ADA con 0 EUR e 9.8 ADA free).
+        ladder_ok = 0
+        ladder_err = ""
         for amount, sell_price in decision.to_sell:
             try:
                 o = await asyncio.to_thread(
@@ -326,11 +346,22 @@ class BotTask:
                     self._journal("sell_placed", order_id=o["id"],
                                   amount=amount, price=sell_price,
                                   kind="ladder")
+                    ladder_ok += 1
             except Exception as e:  # noqa: BLE001
-                self._last_error = f"place sell ladder: {e}"
+                ladder_err = ladder_err or str(e)[:160]
+        # Il log riportava SEMPRE "N piazzati" (len della decisione) anche con
+        # 0 ordini accettati: un fallimento totale appariva come successo.
         if decision.to_sell:
-            log.info("grid bilaterale %s: %d sell ladder piazzati",
-                     self.cfg.symbol, len(decision.to_sell))
+            n = len(decision.to_sell)
+            if ladder_ok == n:
+                log.info("grid bilaterale %s: %d sell ladder piazzati",
+                         self.cfg.symbol, n)
+            elif ladder_ok:
+                log.warning("grid bilaterale %s: %d/%d sell ladder piazzati (%s)",
+                            self.cfg.symbol, ladder_ok, n, ladder_err)
+                self._note_error(f"ladder sell parziale: {ladder_err}")
+            else:
+                self._note_error(f"ladder sell rifiutati ({n}): {ladder_err}")
 
         # 3b) PRE-FLIGHT anti-deadlock (ATLAS v6): fattibilita' BUY prima
         #     delle API. Capitale usabile = free + locked×0.85 (ordini buy
@@ -395,9 +426,24 @@ class BotTask:
         # 5) fill processing post-place (se applicabile)
         await self._process_fills(price)
 
-        self._last_error = ""
         self._write_health(equity, blocked=False, free_quote=free)
         self._save_state()
+
+    def _note_error(self, msg: str) -> None:
+        """Registra l'errore del tick e lo logga (max 1 volta ogni 5 min).
+
+        Prima: gli errori di piazzamento finivano solo in health e venivano
+        azzerati a fine tick; i fallimenti ripetuti (es. ladder sell dust
+        rifiutati ogni 30s) erano completamente invisibili nei log.
+        """
+        if not self._last_error:
+            self._last_error = msg
+        key = msg.split(":")[0][:48]
+        now = self._now()
+        last = self._err_log_ts.get(key, 0.0)
+        if now - last > 300.0:
+            self._err_log_ts[key] = now
+            log.warning("%s %s: %s", self.cfg.symbol, key, msg[:300])
 
     def _guard_equity(self, equity: float) -> float:
         """P2 — sanity dell'equity: letture impossibili (spike/dip da fetch
@@ -430,7 +476,7 @@ class BotTask:
                     base = self.cfg.symbol.split("/")[0]
                     free_b = float((bal.get("free", {}) or {}).get(base, 0))
                     price = self._price_source() if self._price_source else 0
-                    if asyncio.iscoroutinefunction(price):
+                    if inspect.iscoroutinefunction(price):
                         # non siamo in async qui → skip coerenza
                         raise RuntimeError("async price source")
                     price = float(price)
@@ -772,7 +818,7 @@ class TradeOrchestrator:
                 ohlcv = await asyncio.to_thread(
                     fetch, symbol, self.OHLCV_TIMEFRAME, self.OHLCV_LIMIT)
                 if ohlcv:
-                    if asyncio.iscoroutinefunction(callback):
+                    if inspect.iscoroutinefunction(callback):
                         await callback(symbol, ohlcv)
                     else:
                         callback(symbol, ohlcv)

@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import inspect
 import json
 import logging
 import signal
@@ -74,7 +75,7 @@ class ExchangeFeeder:
             load = getattr(self.pro, "load_markets", None)
             if load:
                 try:
-                    if asyncio.iscoroutinefunction(load):
+                    if inspect.iscoroutinefunction(load):
                         await load()
                     else:
                         load()

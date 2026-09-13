@@ -68,6 +68,11 @@ node_data/
 node_data_*/
 health/*.json
 !health/.gitkeep
+# Backtest: cache dati di mercato e output dei run (rigenerabili)
+backtest_data/
+backtest_out/
+.pytmp/
+.abtest/
 deepseek_*.json*
 deploy_decisions_*.json
 fase*.json*

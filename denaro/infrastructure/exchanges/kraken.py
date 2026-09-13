@@ -49,6 +49,25 @@ class KrakenAdapter:
         })
         self.bucket = bucket or TokenBucket(DEFAULT_CAPACITY, DEFAULT_REFILL_RATE)
         self._balance_cache: Optional[tuple] = None  # (value, ts)
+        # metadati mercati caricati pigramente: senza di essi i limiti
+        # min_amount/min_notional valgono 0.0 e ogni filtro di minimo ordine
+        # resta disattivato (ordini dust ritentati a ogni tick)
+        self._markets_loaded = False
+
+    def _ensure_markets(self) -> bool:
+        """Carica i metadati dei mercati UNA volta (limiti e precision)."""
+        if self._markets_loaded:
+            return True
+        try:
+            self._call(self.ex.load_markets)
+            self._markets_loaded = True
+            log.info("kraken: %d mercati caricati (limiti/precision)",
+                     len(getattr(self.ex, "markets", {}) or {}))
+        except Exception as e:  # noqa: BLE001
+            log.warning("kraken load_markets fallito (%s) - minimi non "
+                        "disponibili", e)
+            return False
+        return True
 
     @staticmethod
     def _classify(exc: Exception) -> bool:
@@ -164,6 +183,8 @@ class KrakenAdapter:
 
     def min_notional(self, symbol: str) -> float:
         """Size minima (notional) richiesta da Kraken per un ordine."""
+        if not self._ensure_markets():
+            return 0.0
         try:
             m = self.ex.market(symbol)
             return float((m.get("limits", {}).get("cost", {}).get("min") or 0.0))
@@ -173,9 +194,13 @@ class KrakenAdapter:
     # orders
     def create_limit_order(self, symbol: str, side: str, amount: float,
                            price: float) -> dict:
+        self._ensure_markets()
         if side == "buy":
-            return self._call(self.ex.create_limit_buy_order, symbol, amount, price)
-        return self._call(self.ex.create_limit_sell_order, symbol, amount, price)
+            out = self._call(self.ex.create_limit_buy_order, symbol, amount, price)
+        else:
+            out = self._call(self.ex.create_limit_sell_order, symbol, amount, price)
+        self.invalidate_balance()
+        return out
 
     def sell_market(self, symbol: str, amount: float) -> dict:
         """Vendita immediata (stop-loss): market sell di `amount` asset."""
@@ -188,6 +213,8 @@ class KrakenAdapter:
 
     def min_amount_for(self, symbol: str) -> float:
         """Amount minimo dell'exchange per un symbol (limits.amount.min)."""
+        if not self._ensure_markets():
+            return 0.0
         try:
             m = self.ex.market(symbol)
             return float((m.get("limits", {}).get("amount", {}).get("min") or 0.0))

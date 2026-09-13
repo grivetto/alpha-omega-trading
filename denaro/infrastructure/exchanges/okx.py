@@ -63,6 +63,31 @@ class OKXAdapter:
         self.bucket = bucket or TokenBucket(DEFAULT_CAPACITY, DEFAULT_REFILL_RATE)
         # cache bilanci con TTL (evita chiamate REST ridondanti)
         self._balance_cache: Optional[tuple] = None  # (value, ts)
+        # metadati mercati caricati pigramente (SENZA questo i limiti
+        # min_amount/min_notional/precision sono invisibili -> 0.0)
+        self._markets_loaded = False
+
+    def _ensure_markets(self) -> bool:
+        """Carica i metadati dei mercati UNA volta.
+
+        Bug di produzione (2026-09-11): senza load_markets() la chiamata
+        ex.market() solleva "markets not loaded" e TUTTI i filtri di minimo
+        ordine (min_amount_for, min_notional) restituiscono 0.0. Risultato:
+        la policy pianificava ordini dust (9e-08 DOGE) mai accettabili
+        dall'exchange, ritentati a ogni tick e loggati come "piazzati".
+        """
+        if self._markets_loaded:
+            return True
+        try:
+            self._call(self.ex.load_markets)
+            self._markets_loaded = True
+            log.info("okx: %d mercati caricati (limiti/precision disponibili)",
+                     len(getattr(self.ex, "markets", {}) or {}))
+        except Exception as e:  # noqa: BLE001
+            log.warning("okx load_markets fallito (%s) - minimi ordine NON "
+                        "disponibili: i filtri restano disattivati", e)
+            return False
+        return True
 
     @property
     def min_amount(self) -> float:
@@ -71,6 +96,8 @@ class OKXAdapter:
 
     def min_amount_for(self, symbol: str) -> float:
         """Amount minimo dell'exchange per un symbol (limits.amount.min)."""
+        if not self._ensure_markets():
+            return 0.0
         try:
             m = self.ex.market(symbol)
             return float((m.get("limits", {}).get("amount", {}).get("min") or 0.0))
@@ -221,6 +248,8 @@ class OKXAdapter:
 
     def min_notional(self, symbol: str) -> float:
         """Size minima (notional) richiesta dall'exchange per un ordine."""
+        if not self._ensure_markets():
+            return 0.0
         try:
             m = self.ex.market(symbol)
             return float((m.get("limits", {}).get("cost", {}).get("min") or 0.0))
@@ -231,9 +260,15 @@ class OKXAdapter:
 
     def create_limit_order(self, symbol: str, side: str, amount: float,
                            price: float) -> dict:
+        # i mercati servono a ccxt per applicare tick size / precision
+        self._ensure_markets()
         if side == "buy":
-            return self._call(self.ex.create_limit_buy_order, symbol, amount, price)
-        return self._call(self.ex.create_limit_sell_order, symbol, amount, price)
+            out = self._call(self.ex.create_limit_buy_order, symbol, amount, price)
+        else:
+            out = self._call(self.ex.create_limit_sell_order, symbol, amount, price)
+        # il free balance cambia subito (fondi bloccati): non riusare la cache
+        self.invalidate_balance()
+        return out
 
     def sell_market(self, symbol: str, amount: float) -> dict:
         """Vendita immediata (stop-loss): market sell di `amount` asset."""
