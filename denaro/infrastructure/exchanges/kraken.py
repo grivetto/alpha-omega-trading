@@ -15,6 +15,7 @@ from typing import Any, Dict, List, Optional
 import ccxt
 
 from ..rate_limiter import TokenBucket
+from .errors import PermanentExchangeError, TransientExchangeError
 
 log = logging.getLogger("denaro.kraken")
 
@@ -28,11 +29,11 @@ RETRY_BASE_S = 1.0
 BALANCE_CACHE_TTL = 15.0
 
 
-class KrakenPermanentError(Exception):
+class KrakenPermanentError(PermanentExchangeError):
     """Errore non ritentabile."""
 
 
-class KrakenTransientError(Exception):
+class KrakenTransientError(TransientExchangeError):
     """Errore transitorio — ritentabile."""
 
 

@@ -58,8 +58,30 @@ class ResourceSupervisor:
 
     @staticmethod
     def _default_metrics() -> NodeMetrics:
-        """Metriche di default: nessuna informazione → stato nominale."""
-        return NodeMetrics()
+        """Metriche reali del processo (psutil), con degradazione silenziosa.
+
+        BUG STORICO: il default ritornava `NodeMetrics()` — tutti zeri — e
+        `NodeApp` non iniettava mai `get_metrics`. Risultato: `check()` vedeva
+        ram_used=0, il livello restava "nominal" per sempre e TUTTO il
+        backpressure/adaptive throttling del README era codice morto. Ora il
+        default legge la RAM reale, quindi il supervisore funziona anche senza
+        iniezione esplicita.
+        """
+        try:
+            import psutil
+            vm = psutil.virtual_memory()
+            proc = psutil.Process()
+            cpu = 0.0
+            try:
+                cpu = float(proc.cpu_percent(interval=None))
+            except Exception:  # noqa: BLE001
+                cpu = 0.0
+            return NodeMetrics(
+                rss_mb=float(proc.memory_info().rss) / (1024.0 * 1024.0),
+                cpu_pct=cpu,
+                ram_total_mb=float(vm.total) / (1024.0 * 1024.0))
+        except Exception:  # noqa: BLE001 - psutil assente: stato nominale
+            return NodeMetrics()
 
     def _read_metrics(self) -> NodeMetrics:
         """Legge RSS/CPU del processo corrente (Linux: /proc/self/status)."""

@@ -120,8 +120,18 @@ class BotConfigSchema(BaseModel):
     passphrase: str = ""
 
 
+class RateLimitConfig(BaseModel):
+    """Budget API per exchange, condiviso da tutti i bot del nodo (D3)."""
+    capacity: float = 10.0
+    refill_rate: float = 5.0
+
+
 class NodeConfig(BaseModel):
     data_dir: str = "node_data"
+    # NB: Pydantic v2 IGNORA in silenzio le chiavi non dichiarate nello schema.
+    # Qualsiasi parametro operativo nuovo (qui i rate limit) DEVE essere
+    # dichiarato, altrimenti il valore nel YAML viene scartato senza errore.
+    rate_limits: Dict[str, RateLimitConfig] = Field(default_factory=dict)
     # NB: se manca dallo schema, Pydantic lo SCARTA in silenzio e il nodo usa
     # il file sbagliato (bug F1): l'istanza trend era stata convertita in grid
     # dagli override del main. Ogni istanza DEVE poter puntare al proprio file.

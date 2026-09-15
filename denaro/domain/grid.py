@@ -57,7 +57,16 @@ class GridLevel:
 class GridDecision:
     to_cancel: List[str] = field(default_factory=list)          # order id buy da cancellare
     to_place: List[GridLevel] = field(default_factory=list)     # nuovi buy da piazzare
-    to_sell: List[tuple] = field(default_factory=list)          # (amount, entry_price) vendite da piazzare
+    to_sell: List[tuple] = field(default_factory=list)          # (amount, sell_price) vendite da piazzare
+    # livello della scala per ogni voce di `to_sell` (stessa lunghezza/ordine).
+    # Serve a rendere la scala di vendita IDEMPOTENTE: si piazzano solo i
+    # livelli mancanti. Lista separata per non rompere l'arity 2-tupla di
+    # `to_sell`, su cui si appoggiano le altre policy e i test.
+    to_sell_levels: List[int] = field(default_factory=list)
+    # order id di SELL ladder da cancellare (ri-ancoraggio della scala quando
+    # il mercato si allontana oltre la banda: evita che la scala venda al
+    # prezzo sbagliato dopo un movimento ampio)
+    to_cancel_sell: List[str] = field(default_factory=list)
     reason: str = ""
 
 
@@ -146,26 +155,112 @@ class GridPolicy:
         # 0) GRID BILATERALE: scala di vendita sopra il prezzo usando l'asset
         #    in mano (free_asset). Vende una frazione dell'asset a prezzi
         #    crescenti: i proventi EUR alimentano i buy sotto.
-        if self.params.sell_levels > 0 and free_asset > 0:
+        #
+        #    IDEMPOTENZA (fix critico 2026-09): la versione precedente
+        #    de-duplicava per UGUAGLIANZA ESATTA di prezzo contro la chiave
+        #    sbagliata (`s.get("price")` mentre l'orchestrator salva
+        #    `target_price`) e ri-ancorava la scala al prezzo corrente a ogni
+        #    tick. Su mercato fermo la scala cresceva di `sell_levels` ordini
+        #    per tick, all'infinito (riprodotto: 2,4,6,8,10,12...), bloccando
+        #    l'asset in ordini duplicati e facendo crescere `_process_fills`
+        #    linearmente → spirale di latenza.
+        #
+        #    Ora la scala e' ancorata a un prezzo stabile e indicizzata per
+        #    LIVELLO: si piazzano solo i livelli mancanti, mai un duplicato.
+        if self.params.sell_levels > 0 and (free_asset > 0 or open_sells):
             sell_cap = int(self.params.sell_levels)
-            # riusa i sell gia' aperti per non raddoppiare la scala
-            open_sell_prices = {float(s.get("price") or 0) for s in open_sells.values()}
-            share = free_asset * self.params.sell_asset_share / sell_cap
-            for level in range(sell_cap):
-                dist = self.params.sell_distance + (level * self.params.sell_step)
-                sell_price = self.round_price(price * (1 + dist))
-                if sell_price <= 0:
+            # 0.1) classifica i sell aperti. `kind="tp"` sono le take-profit
+            #      generate dai fill e NON consumano il budget della scala; tutto
+            #      il resto e' ladder (o ignoto → trattato come ladder).
+            ladder_open = {oid: s for oid, s in open_sells.items()
+                           if s.get("kind") != "tp"}
+
+            # 0.2) ancore: dai ladder TAGGATI se ci sono (livello esplicito →
+            #      ancoraggio esatto e ricostruibile dopo un restart), altrimenti
+            #      dal prezzo corrente.
+            level_dists = [self.params.sell_distance + l * self.params.sell_step
+                           for l in range(sell_cap)]
+            tagged = {oid: s for oid, s in ladder_open.items()
+                      if s.get("kind") == "ladder"
+                      and s.get("level") is not None}
+            if tagged:
+                base_lvl = max(0, min(int(s["level"]) for s in tagged.values()))
+                base_lvl = min(base_lvl, sell_cap - 1)
+                base_px = min(float(s.get("price") or s.get("target_price") or 0.0)
+                              for s in tagged.values())
+                anchor = (base_px / (1 + level_dists[base_lvl])
+                          if base_px > 0 else price)
+            else:
+                anchor = price
+
+            # 0.3) staleness: se la scala e' uscita dalla banda, cancellala e
+            #      ri-ancorala (evita fill immediati a prezzi non voluti).
+            span = level_dists[-1] if level_dists else 0.0
+            if ladder_open and anchor > 0 and abs(price - anchor) / anchor > (
+                    self.params.retarget_factor * max(span, 1e-6)):
+                decision.to_cancel_sell.extend(ladder_open)
+                ladder_open = {}
+                tagged = {}
+                anchor = price
+
+            grid_prices = [self.round_price(anchor * (1 + d))
+                           for d in level_dists]
+            # tolleranza di match = 1/4 del gap minimo tra livelli adiacenti:
+            # assorbe il rounding di tick-size senza confondere livelli vicini.
+            if len(grid_prices) > 1:
+                gaps = [abs(grid_prices[i + 1] - grid_prices[i])
+                        for i in range(len(grid_prices) - 1)]
+                tol = max(1e-9, 0.25 * min(g for g in gaps if g > 0)
+                          if any(g > 0 for g in gaps) else 1e-9)
+            else:
+                tol = max(1e-9, anchor * 1e-6)
+
+            # 0.4) livelli occupati: dal campo `level` (esatto) oppure, per gli
+            #      ordini ricaricati dall'exchange senza tag, per prossimita' di
+            #      prezzo rispetto alla griglia corrente.
+            occupied = set()
+            for s in ladder_open.values():
+                lvl = s.get("level")
+                if s.get("kind") == "ladder" and lvl is not None \
+                        and 0 <= int(lvl) < sell_cap:
+                    occupied.add(int(lvl))
                     continue
-                # salta se un sell a questo prezzo esiste gia'
-                if any(abs(sell_price - p) < 1e-9 for p in open_sell_prices):
+                px = float(s.get("price") or s.get("target_price") or 0.0)
+                if px <= 0:
+                    continue
+                for i, gp in enumerate(grid_prices):
+                    if abs(px - gp) <= tol:
+                        occupied.add(i)
+                        break
+
+            # 0.5) INVARIANTE: mai piu' di `sell_cap` sell ladder aperti.
+            #      E' la garanzia dura contro la duplicazione illimitata.
+            budget = max(0, sell_cap - len(ladder_open))
+
+            # 0.6) quota per livello su base STABILE (free + asset gia' bloccato
+            #      nei nostri ladder): senza questo la scala si restringe da
+            #      sola, perche' ogni sell piazzato riduce `free_asset`.
+            ladder_locked = sum(float(s.get("amount") or 0.0)
+                                for s in ladder_open.values())
+            basis = max(0.0, free_asset + ladder_locked)
+            share = basis * self.params.sell_asset_share / sell_cap
+            placed = 0
+            for level in range(sell_cap):
+                if placed >= budget or level in occupied:
+                    continue
+                sell_price = grid_prices[level]
+                if sell_price <= 0:
                     continue
                 amount = self.round_amount(share)
                 if amount <= 0 or (self.min_amount and amount < self.min_amount):
                     continue
                 decision.to_sell.append((amount, sell_price))
-            if decision.to_sell:
-                decision.reason = (f"grid bilaterale: {len(decision.to_sell)} sell "
-                                   f"sopra il prezzo (asset {free_asset:.4f})")
+                decision.to_sell_levels.append(level)
+                placed += 1
+            if placed:
+                decision.reason = (f"grid bilaterale: {placed} sell ladder "
+                                   f"({len(ladder_open)}/{sell_cap} gia' aperti, "
+                                   f"anchor {anchor:.4f})")
 
         # 1) buy stantii → cancella
         for oid, info in open_buys.items():
@@ -176,7 +271,9 @@ class GridPolicy:
         # 2) invariante: mai oltre `levels` buy aperti
         missing = self.params.levels - remaining
         if missing <= 0:
-            decision.reason = f"griglia piena ({remaining}/{self.params.levels})"
+            if not decision.to_sell:
+                decision.reason = (f"griglia piena "
+                                   f"({remaining}/{self.params.levels})")
             return decision
 
         # 3) capitale disponibile per un nuovo livello.

@@ -17,6 +17,7 @@ from typing import Any, Dict, List, Optional
 import ccxt
 
 from ..rate_limiter import TokenBucket
+from .errors import PermanentExchangeError, TransientExchangeError
 
 log = logging.getLogger("denaro.okx")
 
@@ -34,11 +35,11 @@ RETRY_BASE_S = 1.0
 BALANCE_CACHE_TTL = 15.0
 
 
-class OKXPermanentError(Exception):
+class OKXPermanentError(PermanentExchangeError):
     """Errore non ritentabile (ordine invalido, chiave errata, ...)."""
 
 
-class OKXTransientError(Exception):
+class OKXTransientError(TransientExchangeError):
     """Errore transitorio (rate limit, rete, 5xx) — ritentabile."""
 
 

@@ -243,7 +243,6 @@ class TestOverrideDriftGuard(unittest.TestCase):
     questo test fallisce e segnala il drift PRIMA che rompa la suite."""
 
     def test_production_overrides_do_not_touch_test_paper_bots(self):
-        import json
         root = Path(__file__).resolve().parent.parent.parent
         ov_path = root / "config" / "strategy_overrides.json"
         if not ov_path.exists():

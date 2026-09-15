@@ -20,8 +20,9 @@ import json
 import logging
 import signal
 import sys
+import time
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from denaro.application.config import load_node_config
 from denaro.application.orchestrator import BotConfig, BotTask, TradeOrchestrator
@@ -167,12 +168,16 @@ def build_rest_exchange(exchange_cfg: dict):
     raise ValueError(f"exchange REST non supportato: {name}")
 
 
-def build_exchange(bot: dict, data_dir: Path):
+def build_exchange(bot: dict, data_dir: Path, bucket=None):
     """Costruisce l'exchange del bot. Le chiavi LIVE arrivano dall'ambiente
     (EnvironmentFile systemd), MAI dal config versionato.
 
     `env_prefix` (es. "MARCOSUB1_", "ATLAS_") consente piu' account per lo
     stesso exchange: le chiavi vengono lette da {PREFIX}OKX_API_KEY ecc.
+
+    `bucket`: TokenBucket CONDIVISO per exchange (un solo budget API per nodo).
+    Senza, ogni adapter creava il proprio bucket e N bot moltiplicavano per N il
+    rate limit reale — vanificando il "rate limiter centralizzato".
     """
     import os
     prefix = bot.get("env_prefix", "")
@@ -199,14 +204,15 @@ def build_exchange(bot: dict, data_dir: Path):
         passphrase = env("OKX_PASSPHRASE", bot.get("passphrase", ""))
         if not key or not secret or not passphrase:
             raise ValueError(f"chiavi OKX mancanti per {symbol} (env {prefix}OKX_API_*)")
-        return OKXAdapter(api_key=key, secret=secret, passphrase=passphrase)
+        return OKXAdapter(api_key=key, secret=secret, passphrase=passphrase,
+                          bucket=bucket)
     if mode == "kraken":
         from denaro.infrastructure.exchanges.kraken import KrakenAdapter
         key = env("KRAKEN_API_KEY", bot.get("api_key", ""))
         secret = env("KRAKEN_API_SECRET", bot.get("api_secret", ""))
         if not key or not secret:
             raise ValueError(f"chiavi Kraken mancanti per {symbol} (env {prefix}KRAKEN_API_*)")
-        return KrakenAdapter(api_key=key, secret=secret)
+        return KrakenAdapter(api_key=key, secret=secret, bucket=bucket)
     raise ValueError(f"modalita' bot sconosciuta: {mode}")
 
 
@@ -219,6 +225,10 @@ def paths_for(bot: dict, data_dir: Path) -> Dict[str, Path]:
     stem = f"{mode}_{prefix}_{symbol}"
     return {
         "state_path": data_dir / f"{stem}_state.json",
+        # stato di RISCHIO persistente (peak/daily/weekly baseline + CB + storico
+        # trade + Kelly). Senza questo file il circuit breaker si azzera a ogni
+        # restart del Node.
+        "risk_state_path": data_dir / f"{stem}_risk.json",
         "journal_path": data_dir / f"{stem}_trades.jsonl",
         "health_path": data_dir / f"{stem}_health.json",
     }
@@ -279,6 +289,10 @@ class NodeApp:
         self.orchestrator = TradeOrchestrator(supervisor=self.supervisor)
         self.overrides_path = Path(config.get(
             "overrides_file", "config/strategy_overrides.json"))
+        # un TokenBucket per NOME di exchange: tutti i bot dello stesso exchange
+        # sul nodo condividono il budget API (D3 del blueprint).
+        from denaro.infrastructure.rate_limiter import RateLimiterRegistry
+        self.rate_limiters = RateLimiterRegistry()
         self._build_bots()
 
     def _apply_overrides(self, bot: dict) -> dict:
@@ -310,7 +324,15 @@ class NodeApp:
             if not bot.get("enabled", True):
                 log.info("bot %s disabilitato (config)", bot.get("symbol"))
                 continue
-            exchange = build_exchange(bot, self.data_dir)
+            bucket = None
+            if bot.get("mode") in ("okx", "kraken"):
+                limiters = self.config.get("rate_limits", {}) or {}
+                lim = limiters.get(bot["mode"], {}) or {}
+                bucket = self.rate_limiters.register(
+                    bot["mode"],
+                    float(lim.get("capacity", 10.0)),
+                    float(lim.get("refill_rate", 5.0)))
+            exchange = build_exchange(bot, self.data_dir, bucket=bucket)
             paths = paths_for(bot, self.data_dir)
             # health_path esplicito (bot live → path v3.3 per dashboard/Zabbix)
             if bot.get("health_path"):
@@ -355,7 +377,16 @@ class NodeApp:
 
     @staticmethod
     def _equity_for(exchange):
-        """Equity reale: paper = cash+asset×prezzo; live = fetch totale (in to_thread)."""
+        """Equity reale: paper = cash+asset×prezzo; live = fetch totale.
+
+        ⚠ LIMITE NOTO (P0 in docs/15_master_plan_audit.md): `fetch_total_equity`
+        valuta l'INTERO saldo dell'account/sub-account. Due bot che condividono
+        lo stesso sub-account (es. DOGE/EUR + SOL/EUR su `mc2sub1`) leggono la
+        STESSA equity: il drawdown, lo stop-loss e il circuit breaker di un bot
+        reagiscono alle perdite dell'altro e i due si fermano insieme. Serve un
+        ledger per-bot (allocazione di capitale per simbolo) prima di alzare il
+        capitale oltre lo stadio attuale.
+        """
         if isinstance(exchange, PaperExchange):
             return exchange.equity
         return exchange.fetch_total_equity

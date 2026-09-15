@@ -13,9 +13,10 @@ from __future__ import annotations
 
 import math
 import time
-from dataclasses import dataclass, field
+import types as _types
+from dataclasses import MISSING, dataclass, field, fields, is_dataclass
 from enum import Enum
-from typing import List
+from typing import Any, List, Union, get_args, get_origin, get_type_hints
 
 
 # --- Enums ------------------------------------------------------------------
@@ -251,3 +252,122 @@ class CoreState:
     @property
     def can_trade(self) -> bool:
         return self.cb.state != CBState.OPEN
+
+    # --- persistenza ---------------------------------------------------------
+
+    def to_dict(self) -> dict:
+        """Rappresentazione JSON-safe dell'intero albero di stato."""
+        return _core_state_to_dict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict, base: "CoreState") -> "CoreState":
+        """Ricostruisce lo stato sovrapponendo `data` sulla baseline `base`."""
+        return _core_state_from_dict(data, base)
+
+
+# --- serializzazione dello stato (persistenza del rischio tra i restart) ------
+#
+# Perche' esiste: `BotTask` ricostruiva `CoreState` da zero a ogni avvio. Peak
+# capital, baseline daily/weekly, storico trade, Kelly e metriche di performance
+# venivano quindi AZZERATI a ogni restart: il circuit breaker quotidiano e
+# settimanale poteva essere disarmato riavviando il processo, e le metriche di
+# Sharpe/Sortino/Calmar ripartivano da zero. Questi helper serializzano l'intero
+# albero di dataclass annidati (`CoreState` → cb/perf/regime/micro/var/dca/exec)
+# in JSON e lo ricostruiscono in modo tollerante: chiavi ignote scartate, chiavi
+# mancanti lasciate al default (retro-compatibile con i file di stato v4/v5/v6).
+
+_MAX_TRADE_RESULTS = 500  # bound di memoria: lo storico serve solo per Kelly/ratios
+
+# Fallback conservativo per enum corrotte nel file di stato persistito.
+_ENUM_FAILSAFE: dict = {CBState: CBState.OPEN}
+
+
+def _encode(value: Any) -> Any:
+    """Dataclass/enum/list/dict → struttura JSON-serializzabile."""
+    if is_dataclass(value) and not isinstance(value, type):
+        return {f.name: _encode(getattr(value, f.name)) for f in fields(value)}
+    if isinstance(value, Enum):
+        return value.value
+    if isinstance(value, (list, tuple)):
+        return [_encode(v) for v in value]
+    if isinstance(value, dict):
+        return {str(k): _encode(v) for k, v in value.items()}
+    return value
+
+
+def _coerce(hint: Any, raw: Any) -> Any:
+    """Ricostruisce un valore da JSON secondo il type hint del campo."""
+    if raw is None:
+        return None
+    origin = get_origin(hint)
+    # Optional[X] / Union[X, None] → usa l'argomento non-None
+    if origin is Union or origin is _types.UnionType:
+        args = [a for a in get_args(hint) if a is not type(None)]
+        if not args:
+            return raw
+        return _coerce(args[0], raw)
+    if origin in (list, List):
+        args = get_args(hint)
+        item = args[0] if args else Any
+        if not isinstance(raw, (list, tuple)):
+            return []
+        return [_coerce(item, v) for v in raw]
+    if origin is dict:
+        return raw if isinstance(raw, dict) else {}
+    if isinstance(hint, type):
+        if issubclass(hint, Enum):
+            try:
+                return hint(raw)
+            except ValueError:
+                # valore sconosciuto/corrotto: fail-SAFE, non fail-open. Un
+                # circuit breaker illeggibile deve restare APERTO (non tradare
+                # su uno stato di rischio che non sappiamo interpretare).
+                return _ENUM_FAILSAFE.get(hint, list(hint)[0])
+        if is_dataclass(hint):
+            return _decode(hint, raw if isinstance(raw, dict) else {})
+        if hint is float:
+            try:
+                return float(raw)
+            except (TypeError, ValueError):
+                return 0.0
+        if hint is int:
+            try:
+                return int(raw)
+            except (TypeError, ValueError):
+                return 0
+        if hint is bool:
+            return bool(raw)
+    return raw
+
+
+def _decode(cls: type, data: dict) -> Any:
+    """Costruisce `cls` da un dict, ignorando le chiavi ignote."""
+    hints = get_type_hints(cls)
+    kwargs = {}
+    for f in fields(cls):
+        if f.name in data:
+            kwargs[f.name] = _coerce(hints.get(f.name, Any), data[f.name])
+        elif f.default is MISSING and f.default_factory is MISSING:
+            continue  # campo obbligatorio assente: lascia decidere al chiamante
+    return cls(**kwargs)
+
+
+def _core_state_to_dict(state: "CoreState") -> dict:
+    """Serializza `CoreState` (e tutto l'albero annidato) in un dict JSON-safe."""
+    state.trade_results = state.trade_results[-_MAX_TRADE_RESULTS:]
+    return _encode(state)
+
+
+def _core_state_from_dict(data: dict, base: "CoreState") -> "CoreState":
+    """Ricostruisce `CoreState` sovrapponendo `data` su `base` (default).
+
+    `base` porta i valori di capitale corretti per questo bot: i campi assenti
+    nel file persistito NON devono tornare ai default della dataclass (100.0),
+    altrimenti la baseline weekly/daily (_week_start_capital) viene avvelenata.
+    """
+    merged = _encode(base)
+    if isinstance(data, dict):
+        for key, value in data.items():
+            if key in merged:
+                merged[key] = value
+    return _decode(CoreState, merged)

@@ -93,6 +93,17 @@ class VagrPolicy(Policy):
         self._std_tr: float = 0.0
         self._regime: str = "QUIET"
         self._kill_switched: bool = False
+        # Latch anti doppio-feed: l'orchestrator chiama `on_price(px)` e poi
+        # `decide(...)`, che a sua volta richiamava `on_price(px)` come rete di
+        # sicurezza. Il tick veniva quindi ingerito DUE volte, falsando media e
+        # std del Welford (quindi spacing, regime e inventory cap).
+        # `_fed_since_decide` dice se il tick corrente e' gia' stato consumato.
+        self._fed_since_decide: bool = False
+        # contabilita' realized per il kill-switch (prima `_daily_loss` non
+        # veniva MAI aggiornato: entrambe le soglie erano codice morto)
+        self._basis_qty: float = 0.0
+        self._basis_cost: float = 0.0
+        self._day_id: int = -1
 
         # Pending orders tracking for fill handling
         self._pending_buys: Dict[str, Dict[str, Any]] = {}
@@ -213,9 +224,14 @@ class VagrPolicy(Policy):
 
     # ---------------------------------------------------------------- contract
     def on_price(self, price: float) -> None:
-        """Update internal state with new price tick."""
+        """Ingerisce un tick di prezzo (chiamata dall'orchestrator)."""
         if price <= 0.0:
             return
+        self._ingest(price)
+        self._fed_since_decide = True
+
+    def _ingest(self, price: float) -> None:
+        """Aggiornamento di stato per UN tick (idempotente per tick)."""
         self._ticks += 1
 
         if self._anchor <= 0.0:
@@ -250,18 +266,36 @@ class VagrPolicy(Policy):
             decision.reason = "prezzo non valido"
             return decision
 
+        # Il roll-over giornaliero DEVE precedere la guardia del kill-switch:
+        # altrimenti al cambio di giorno si uscirebbe subito con lo stato
+        # ancora armato e il limite non si riarmerebbe mai.
+        self._roll_daily_baseline(now)
+
         if self._kill_switched:
-            decision.reason = "VAGR: kill-switch attivo (drawdown superato)"
+            decision.reason = "VAGR: kill-switch attivo (limite perdite)"
             return decision
 
-        # Update internal state
-        self.on_price(price)
+        # Rete di sicurezza: se `decide` viene usato da solo (test, backtest,
+        # replay) il tick non e' ancora stato ingerito. Se invece l'orchestrator
+        # ha gia' chiamato `on_price`, NON si ri-ingerisce.
+        if not self._fed_since_decide:
+            self._ingest(price)
+        self._fed_since_decide = False
+        return self._decide_inner(price, open_buys, open_sells, cash,
+                                  capital_config, free_balance, now)
+
+    def _decide_inner(self, price: float, open_buys: Dict[str, dict],
+                      open_sells: Dict[str, dict], cash: float,
+                      capital_config: float, free_balance: float,
+                      now: float) -> GridDecision:
+        decision = GridDecision()
 
         # Cancel stale buys (price drift or age)
         for oid, info in open_buys.items():
             bp = float(info.get("price") or 0)
             if bp <= 0 or bp > price:
                 continue
+
             drift = (price - bp) / bp
             level = int(info.get("level") or 0)
             expected = self._grid_spacing(price) * (1 + level * 0.5)
@@ -279,7 +313,8 @@ class VagrPolicy(Policy):
             for oid in open_buys:
                 if oid not in decision.to_cancel:
                     decision.to_cancel.append(oid)
-            decision.reason = "VAGR: daily loss limit — cancello tutto"
+            decision.reason = ("VAGR: kill-switch — limite perdite giornaliere, "
+                               "cancello tutto")
             return decision
 
         # 1) Mean-reversion entry (QUIET/ACTIVE only)
@@ -306,18 +341,58 @@ class VagrPolicy(Policy):
         return self.round_price(target)
 
     def on_fill(self, order_id: str, side: str, price: float, size: float) -> None:
-        """Handle fill notification from BotTask — updates inventory tracking."""
+        """Handle fill notification from BotTask — updates inventory tracking.
+
+        Prima questo metodo muoveva solo `_inventory_quote`: nessuno aggiornava
+        `_daily_loss`, quindi il kill-switch (`max_daily_loss_pct` e
+        `kill_switch_drawdown_pct`) non scattava MAI. Ora si tiene un costo
+        medio e si accumulano le perdite realizzate del giorno.
+        """
+        if side not in ("buy", "sell"):
+            raise ValueError(f"on_fill received unknown side: {side!r}")
+        if price <= 0.0 or size <= 0.0:
+            return
+
         if side == "buy":
             self._inventory_quote += price * size
-        elif side == "sell":
+            self._basis_qty += size
+            self._basis_cost += price * size
+        else:
             self._inventory_quote -= price * size
             if self._inventory_quote < 1e-12:
                 self._inventory_quote = 0.0
-        else:
-            raise ValueError(f"on_fill received unknown side: {side!r}")
+            if self._basis_qty > 0.0:
+                avg = self._basis_cost / self._basis_qty
+                closed = min(size, self._basis_qty)
+                realized = (price - avg) * closed
+                self._realized_pnl += realized
+                if realized < 0.0:
+                    self._daily_loss += -realized
+                self._basis_qty -= closed
+                self._basis_cost -= avg * closed
+                if self._basis_qty <= 1e-12:
+                    self._basis_qty = 0.0
+                    self._basis_cost = 0.0
 
-        # Track realized PnL if available (not directly passed here, but can be derived)
-        # The BotTask handles PnL; we just track inventory
+    def _roll_daily_baseline(self, now: float) -> None:
+        """Reset del kill-switch al cambio di giorno UTC.
+
+        Il limite e' `max_daily_loss_pct`: senza un roll-over il contatore
+        sarebbe cumulativo a vita e, una volta scattato, non si riarmerebbe piu'.
+        """
+        day = int(now // 86400.0) if now > 0 else 0
+        if self._day_id < 0:
+            # primo tick osservato: si REGISTRA il giorno, non si azzera nulla
+            # (altrimenti la prima chiamata cancellerebbe le perdite gia'
+            # accumulate dai fill avvenuti prima del primo decide()).
+            self._day_id = day
+            return
+        if day != self._day_id:
+            self._day_id = day
+            self._daily_loss = 0.0
+            if self._kill_switched:
+                self._kill_switched = False
+                logger.info("VAGR: kill-switch riarmato (nuovo giorno UTC)")
 
     @property
     def inventory(self) -> float:
@@ -369,7 +444,7 @@ if __name__ == "__main__":
     strat.on_fill("test1", "buy", 1.0, 2.0)
     strat.on_fill("test2", "sell", 1.04, 2.0)
 
-    print(f"memory_estimate_mb~0.0")
+    print("memory_estimate_mb~0.0")
     print(f"regimes={regimes_seen} atr={strat._atr:.6f} std_tr={strat._std_tr:.6f} "
           f"final_regime={strat._regime} inventory={strat._inventory_quote:.4f}")
     assert strat._n == 2000, "Welford tick count mismatch"

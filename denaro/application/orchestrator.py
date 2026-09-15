@@ -24,10 +24,23 @@ from typing import Any, Dict, List, Optional
 from ..domain.grid import GridDecision, GridLevel, GridPolicy
 from ..domain.risk import RiskManager
 from ..domain.types import CBState, CoreState
+from ..infrastructure.exchanges.errors import PermanentExchangeError
 from ..infrastructure.storage import AtomicFile, Journal, StateStore
 from .portfolio import PortfolioManager
 
 log = logging.getLogger("denaro.bot")
+
+
+def _sell_parts(item) -> tuple:
+    """Normalizza una voce di `GridDecision.to_sell`.
+
+    Le policy storiche emettono 2-tuple `(amount, price)`; GridPolicy aggiunge
+    il livello della scala come terzo elemento. Tollerare entrambe le arity
+    evita di rompere momentum/meanrev/irmr/mincapture quando la griglia evolve.
+    """
+    amount, price = float(item[0]), float(item[1])
+    level = int(item[2]) if len(item) > 2 else -1
+    return amount, price, level
 
 
 # --- porta exchange ----------------------------------------------------------
@@ -85,6 +98,10 @@ class BotConfig:
     fee: float = 0.0                # fee per lato (frazione); 0 = accounting v3.3
     bot_key: str = ""               # id univoco (mode:env_prefix:symbol)
     state_path: Optional[Path] = None
+    # stato di RISCHIO persistente (CoreState: peak/daily/weekly baseline,
+    # circuit breaker, storico trade, Kelly, metriche di performance). Senza
+    # questo file il CB daily/weekly si azzera a ogni restart.
+    risk_state_path: Optional[Path] = None
     journal_path: Optional[Path] = None
     health_path: Optional[Path] = None
     stop_loss_pct: float = 0.0      # drawdown dal peak → chiudi posizioni e ferma
@@ -113,6 +130,9 @@ class BotTask:
         self.trading_paused = False
         self._running = False
         self._task: Optional[asyncio.Task] = None
+        # ResourceSupervisor (iniettato da TradeOrchestrator.start_all): adatta
+        # l'intervallo di tick alla pressione di RAM/CPU del nodo.
+        self._supervisor = None
         self._last_error: str = ""
         # rate-limit dei log di errore (chiave -> ultimo ts loggato)
         self._err_log_ts: Dict[str, float] = {}
@@ -123,6 +143,8 @@ class BotTask:
 
         self.state = BotState(symbol=config.symbol, start_ts=self._now())
         self.store = StateStore(Path(config.state_path)) if config.state_path else None
+        self.risk_store = (StateStore(Path(config.risk_state_path))
+                           if config.risk_state_path else None)
         self.journal = Journal(Path(config.journal_path)) if config.journal_path else None
         self.health = AtomicFile(Path(config.health_path)) if config.health_path else None
 
@@ -137,6 +159,7 @@ class BotTask:
                                     week_start_capital=config.capital)
 
         self._load_state()
+        self._load_risk_state()
         self._rebuild_from_exchange()
 
     # --- persistence ---------------------------------------------------------
@@ -148,15 +171,42 @@ class BotTask:
         if isinstance(data, dict) and data.get("symbol"):
             self.state = BotState.from_dict(data)
 
+    def _load_risk_state(self) -> None:
+        """Ripristina peak/daily/weekly baseline, CB e storico trade.
+
+        Round-trip verificato: se il file e' assente/corrotto si resta sulla
+        baseline costruita in `__init__` (capitale del bot, NON i default 100.0
+        della dataclass). Uno stato CB illeggibile viene ricostruito APERTO
+        (fail-safe: non tradare su un rischio che non sappiamo interpretare).
+        """
+        if self.risk_store is None:
+            return
+        data = self.risk_store.load()
+        if not isinstance(data, dict) or not data:
+            return
+        try:
+            self.risk_state = CoreState.from_dict(data, self.risk_state)
+        except Exception as e:  # noqa: BLE001 - stato corrotto: si riparte
+            log.warning("risk_state %s illeggibile (%s): baseline ripristinata",
+                        self.cfg.symbol, e)
+
     def _save_state(self) -> None:
         if self.store is not None:
             self.store.save(self.state.to_dict())
+        if self.risk_store is not None:
+            self.risk_store.save(self.risk_state.to_dict())
 
-    def _journal(self, event: str, **fields) -> None:
+    async def _journal(self, event: str, **fields) -> None:
+        """Append al journal FUORI dall'event loop.
+
+        `Journal.append` fa `flush + os.fsync` per ogni riga: eseguito sul
+        thread dell'event loop blocca TUTTI i bot del nodo per alcuni ms a ogni
+        ordine. Con N bot che journalizzano ogni tick la latenza si somma.
+        """
         if self.journal is None:  # attenzione: Journal ha __len__ → non usare `not`
             return
         record = {"event": event, "symbol": self.cfg.symbol, "ts": self._now(), **fields}
-        self.journal.append(record)
+        await asyncio.to_thread(self.journal.append, record)
 
     def _rebuild_from_exchange(self) -> None:
         """Ricostruisce lo stato dagli ordini aperti + journal (replay PnL)."""
@@ -185,9 +235,14 @@ class BotTask:
                         "amount": amount, "price": price,
                         "timestamp": self._now(), "level": 0}
                 else:
+                    # `kind` ignoto: l'ordine arriva dall'exchange, non dal
+                    # nostro journal. Viene contato come "non classificato" dalla
+                    # scala di vendita, che quindi resta sospesa finche' non si
+                    # risolve → impedisce di duplicare la scala a ogni restart.
                     self.state.open_sells[oid] = {
                         "amount": amount, "entry_price": price * 0.99,
-                        "target_price": price, "timestamp": self._now()}
+                        "price": price, "target_price": price,
+                        "kind": "unknown", "timestamp": self._now()}
         except Exception as e:  # noqa: BLE001
             log.warning("rebuild open orders fallito: %s", e)
 
@@ -208,7 +263,7 @@ class BotTask:
         self._last_error = ""
         # equity reale: get_equity puo' fare I/O (fetch live) → to_thread
         equity = await asyncio.to_thread(self._get_equity)
-        equity = self._guard_equity(equity)
+        equity = await self._guard_equity(equity)
         if equity > self.state.peak_equity:
             self.state.peak_equity = equity
         dd = (self.state.peak_equity - equity) / max(1e-10, self.state.peak_equity)
@@ -226,18 +281,20 @@ class BotTask:
         blocked = self.risk.check_circuit_breaker(self.risk_state, equity, now)
         if blocked:
             self._last_error = f"CB OPEN: {self.risk_state.cb.reason}"
-            self._write_health(equity, blocked=True)
-            self._save_state()
+            await self._persist(equity, blocked=True)
             return
 
         # 2) prezzo (hub con cache, fallback fetch)
         try:
             bal = await asyncio.to_thread(self.ex.fetch_balance)
-            free = float(bal.get("free", {}).get("EUR") or 0)
-            total = float(bal.get("total", {}).get("EUR") or 0)
+            # valuta di QUOTAZIONE del simbolo, non EUR hardcoded: un bot
+            # SOL/USDT leggeva free=0.0 e appariva sempre senza capitale.
+            quote = self._quote
+            free = float((bal.get("free", {}) or {}).get(quote) or 0)
+            total = float((bal.get("total", {}) or {}).get(quote) or 0)
         except Exception as e:  # noqa: BLE001
             self._note_error(f"balance: {e}")
-            self._write_health(equity, blocked=False)
+            await self._persist(equity, blocked=False)
             return
 
         # aggiorna il portfolio con i dati gia' in mano (niente API extra)
@@ -245,6 +302,7 @@ class BotTask:
             orders = await asyncio.to_thread(self.ex.fetch_open_orders, self.cfg.symbol)
             self.portfolio.update(free, orders)
         except Exception:  # noqa: BLE001 - il preflight usera' solo free
+            orders = None
             self.portfolio.update(free, [])
         try:
             if self._price_source is not None:
@@ -259,7 +317,7 @@ class BotTask:
                 price = float(t["last"])
         except Exception as e:  # noqa: BLE001
             self._note_error(f"ticker: {e}")
-            self._write_health(equity, blocked=False)
+            await self._persist(equity, blocked=False)
             return
 
         # 2b) PREZZO NON DISPONIBILE: non si decide su un prezzo finto.
@@ -269,8 +327,7 @@ class BotTask:
         #     produzione il 2026-09-13 su XRP/ETH: price=0.000000 per giorni).
         if price <= 0:
             self._note_error("prezzo non disponibile (hub/REST)")
-            self._write_health(equity, blocked=False, free_quote=free)
-            self._save_state()
+            await self._persist(equity, blocked=False, free_quote=free)
             return
 
         # DEBUG: log price fetch
@@ -332,20 +389,42 @@ class BotTask:
         # 3aa) GRID BILATERALE: i SELL ladder NON richiedono EUR (usano l'asset
         #      in mano) → si eseguono SEMPRE, anche se il preflight blocca i
         #      buy per mancanza di free (es. ADA con 0 EUR e 9.8 ADA free).
+        # 3a-0) ri-ancoraggio della scala: cancella i ladder stantii richiesti
+        #       dalla policy (mercato uscito dalla banda) PRIMA di ri-piazzare,
+        #       cosi' il conteggio dei livelli occupati nel prossimo tick e'
+        #       coerente e non si sommano due scale.
+        for oid in getattr(decision, "to_cancel_sell", []):
+            try:
+                await asyncio.to_thread(self.ex.cancel_order, oid, self.cfg.symbol)
+            except Exception as e:  # noqa: BLE001
+                if not isinstance(e, PermanentExchangeError):
+                    self._note_error(f"cancel ladder {oid}: {e}")
+            self.state.open_sells.pop(oid, None)
+            await self._journal("ladder_canceled", order_id=oid)
+
         ladder_ok = 0
         ladder_err = ""
-        for amount, sell_price in decision.to_sell:
+        ladder_levels = list(getattr(decision, "to_sell_levels", []) or [])
+        for idx, item in enumerate(decision.to_sell):
+            amount, sell_price, level = _sell_parts(item)
+            if level < 0 and idx < len(ladder_levels):
+                level = int(ladder_levels[idx])
             try:
                 o = await asyncio.to_thread(
                     self.ex.create_limit_order, self.cfg.symbol, "sell",
                     amount, sell_price)
                 if o:
+                    # `price` (prezzo dell'ordine) + `kind`/`level` rendono la
+                    # scala ricostruibile e deduplicabile: prima qui si salvava
+                    # solo `target_price`, che grid.py non leggeva.
                     self.state.open_sells[o["id"]] = {
                         "amount": amount, "entry_price": price,
-                        "target_price": sell_price, "timestamp": self._now()}
-                    self._journal("sell_placed", order_id=o["id"],
-                                  amount=amount, price=sell_price,
-                                  kind="ladder")
+                        "price": sell_price, "target_price": sell_price,
+                        "kind": "ladder", "level": level,
+                        "timestamp": self._now()}
+                    await self._journal("sell_placed", order_id=o["id"],
+                                        amount=amount, price=sell_price,
+                                        level=level, kind="ladder")
                     ladder_ok += 1
             except Exception as e:  # noqa: BLE001
                 ladder_err = ladder_err or str(e)[:160]
@@ -369,7 +448,7 @@ class BotTask:
         #     NOTA: i fill dei buy aperti vanno processati PRIMA del preflight,
         #     altrimenti un bot con free negativo (asset in mano dopo un fill)
         #     viene bloccato dal preflight e non converte mai i buy in sell.
-        await self._process_fills(price)
+        await self._process_fills(price, open_orders=orders)
         min_notional = self._min_notional()
         per_level = risk_capital / max(1, self.cfg.levels)
         if decision.to_place or min_notional > 0:
@@ -383,11 +462,10 @@ class BotTask:
                         await asyncio.to_thread(self.ex.cancel_order,
                                                 oid, self.cfg.symbol)
                         self.state.open_buys.pop(oid, None)
-                        self._journal("buy_canceled", order_id=oid)
+                        await self._journal("buy_canceled", order_id=oid)
                     except Exception:  # noqa: BLE001
                         pass
-                self._write_health(equity, blocked=False)
-                self._save_state()
+                await self._persist(equity, blocked=False, free_quote=free)
                 return
         if decision.to_place:
             decision.to_place = [l for l in decision.to_place
@@ -398,16 +476,18 @@ class BotTask:
             try:
                 await asyncio.to_thread(self.ex.cancel_order, oid, self.cfg.symbol)
                 self.state.open_buys.pop(oid, None)
-                self._journal("buy_canceled", order_id=oid)
+                await self._journal("buy_canceled", order_id=oid)
+            except PermanentExchangeError:
+                # Ordine inesistente/invalido: il retry non puo' cambiare
+                # l'esito. Rimuovilo dallo stato locale e prosegui, altrimenti
+                # resta per sempre in open_buys e blocca l'invariante di griglia.
+                # NB: qui c'era `KrakenPermanentError`, MAI importato → il tick
+                # moriva con NameError sul ramo di cancel.
+                self.state.open_buys.pop(oid, None)
+                await self._journal("buy_canceled", order_id=oid)
+                log.warning("cancel %s: errore permanente, rimosso da open_buys", oid)
             except Exception as e:  # noqa: BLE001
-                if isinstance(e, KrakenPermanentError):
-                    # ordine inesistente: rimuovi dallo stato e continua il ciclo
-                    self.state.open_buys.pop(oid, None)
-                    self._journal("buy_canceled", order_id=oid)
-                    logging.getLogger(__name__).warning(
-                        "cancel %s: ordine inesistente (permanente), rimosso da open_buys", oid)
-                else:
-                    self._last_error = f"cancel {oid}: {e}"
+                self._last_error = f"cancel {oid}: {e}"
         for level in decision.to_place:
             try:
                 o = await asyncio.to_thread(
@@ -417,17 +497,16 @@ class BotTask:
                     self.state.open_buys[o["id"]] = {
                         "amount": level.amount, "price": level.buy_price,
                         "timestamp": self._now(), "level": level.level}
-                    self._journal("buy_placed", order_id=o["id"],
-                                  amount=level.amount, price=level.buy_price,
-                                  level=level.level)
+                    await self._journal("buy_placed", order_id=o["id"],
+                                        amount=level.amount, price=level.buy_price,
+                                        level=level.level)
             except Exception as e:  # noqa: BLE001
                 self._last_error = f"place buy: {e}"
 
         # 5) fill processing post-place (se applicabile)
         await self._process_fills(price)
 
-        self._write_health(equity, blocked=False, free_quote=free)
-        self._save_state()
+        await self._persist(equity, blocked=False, free_quote=free)
 
     def _note_error(self, msg: str) -> None:
         """Registra l'errore del tick e lo logga (max 1 volta ogni 5 min).
@@ -445,7 +524,7 @@ class BotTask:
             self._err_log_ts[key] = now
             log.warning("%s %s: %s", self.cfg.symbol, key, msg[:300])
 
-    def _guard_equity(self, equity: float) -> float:
+    async def _guard_equity(self, equity: float) -> float:
         """P2 — sanity dell'equity: letture impossibili (spike/dip da fetch
         sporco) sostituite con l'ultimo valore valido. Range plausibile per
         conti micro: [5% , 30×] del capitale — evita che una lettura sporca
@@ -456,46 +535,156 @@ class BotTask:
         e' coerente con free+asset*price (capitale reale spostato in asset),
         trustarla invece di usare il fallback. Questo evita il preflight blocker
         per bot trend con equity libera bassa ma posizione in asset consistente.
-        Per paper exchange l'equity e' calcolata localmente ed e' sempre coerente."""
+        Per paper exchange l'equity e' calcolata localmente ed e' sempre coerente.
+
+        ASYNC (fix critico): la versione sincrona chiamava `fetch_balance()` —
+        `time.sleep` di rate-limit/retry inclusi — SUL THREAD DELL'EVENT LOOP,
+        bloccando TUTTI i bot del nodo quando l'equity usciva dal range. Inoltre
+        il check di coerenza era codice morto per gli adapter live: testava
+        `iscoroutinefunction(price)` su un OGGETTO coroutine (il risultato della
+        chiamata), non sulla funzione, quindi cadeva sempre in `except`.
+        """
         cap = max(1e-9, self.cfg.capital)
         lo, hi = cap * 0.05, cap * 30.0
-        if equity is None or equity != equity or equity <= lo or equity > hi:
-            # coerenza check: solo per exchange live (KrakenAdapter/OKXAdapter)
-            # che hanno fetch_balance sincrono + price_source sincrono.
-            # PaperExchange ha equity locale coerente → skip.
-            from ..infrastructure.exchanges.paper import PaperExchange
-            if isinstance(self.ex, PaperExchange):
-                # paper: equity locale, sempre coerente se dentro range
-                # ma siamo qui perché equity <= lo o > hi → fallback
-                pass
+        if equity is not None and equity == equity and lo < equity <= hi:
+            self._last_sane_equity = equity
+            return equity
+
+        from ..infrastructure.exchanges.paper import PaperExchange
+        if not isinstance(self.ex, PaperExchange):
+            try:
+                bal = await asyncio.to_thread(self.ex.fetch_balance)
+                base, quote = (self.cfg.symbol.split("/") + ["EUR"])[:2]
+                free_q = float((bal.get("free", {}) or {}).get(quote) or 0)
+                free_b = float((bal.get("free", {}) or {}).get(base) or 0)
+                ref = price = 0.0
+                if self._price_source is not None:
+                    ref = self._price_source()
+                    price = float(await ref) if asyncio.iscoroutine(ref) else float(ref)
+                else:
+                    t = await asyncio.to_thread(self.ex.fetch_ticker, self.cfg.symbol)
+                    price = float(t["last"])
+                if price > 0:
+                    estimated = free_q + free_b * price
+                    # tolleranza 20%: se l'equity e' coerente con la posizione
+                    # reale (capitale spostato in asset) la si accetta.
+                    if estimated > 0 and abs(equity - estimated) / estimated < 0.2:
+                        log.info("equity coerente con free+asset*price "
+                                 "(%.4f~=%.4f) per %s — trust",
+                                 equity, estimated, self.cfg.symbol)
+                        self._last_sane_equity = equity
+                        return equity
+            except Exception:  # noqa: BLE001
+                pass  # fallback al comportamento originale
+        prev = getattr(self, "_last_sane_equity", cap)
+        log.warning("equity sospetta %.4f per %s → uso %.4f",
+                    equity, self.cfg.symbol, prev)
+        return prev
+
+    async def _persist(self, equity: float, blocked: bool,
+                       free_quote: float = 0.0) -> None:
+        """Scrive stato + risk_state + health FUORI dall'event loop.
+
+        `_save_state` fa due scritture atomiche (tmp+rename) e `_write_health`
+        una terza: eseguirle sul thread dell'event loop serializza il disco su
+        tutti i bot del nodo. Un unico `to_thread` le raggruppa.
+        """
+        def _write() -> None:
+            self._save_state()
+            self._write_health(equity, blocked=blocked, free_quote=free_quote)
+
+        await asyncio.to_thread(_write)
+
+    @property
+    def _quote(self) -> str:
+        """Valuta di quotazione del simbolo (fallback EUR per i simboli nudi)."""
+        return self.cfg.symbol.split("/")[-1] if "/" in self.cfg.symbol else "EUR"
+
+    async def _notify_fill(self, order_id: str, side: str, price: float,
+                           size: float, fee: float = 0.0) -> None:
+        """Notifica il fill alla policy (contratto `Policy.on_fill`).
+
+        Le firme delle policy sono storicamente eterogenee:
+        - VAGR/IRMR/MinCapture: `on_fill(order_id, side, price, size)`
+        - AdaptiveVolGrid:      `on_fill(side, price, qty, fee, ts)`
+        - CyclePhaseGrid:       `on_fill(fill: dict)`
+        Si prova il bind della firma reale invece di indovinare, cosi' una
+        policy nuova non deve adattarsi. Qualsiasi errore della policy NON deve
+        far fallire il tick (la contabilita' autorevole e' nel Journal).
+        """
+        fn = getattr(self.policy, "on_fill", None)
+        if fn is None:
+            return
+        ts = self._now()
+        payload = {"order_id": order_id, "side": side, "price": price,
+                   "size": size, "fee": fee, "ts": ts}
+        # NB: l'arity da sola NON basta a disambiguare — `(order_id, side,
+        # price, size)` e `(side, price, qty, fee, ts)` collidono quando fee/ts
+        # non hanno default. Si dispatcha quindi sui NOMI dei parametri.
+        values = {
+            "order_id": order_id, "oid": order_id, "id": order_id,
+            "side": side,
+            "price": price, "entry": price, "fill_price": price,
+            "size": size, "amount": size, "qty": size, "quantity": size,
+            "fee": fee, "fees": fee,
+            "ts": ts, "timestamp": ts, "now": ts,
+        }
+        signature = None
+        try:
+            signature = inspect.signature(fn)
+        except (TypeError, ValueError):  # pragma: no cover - builtins
+            signature = None
+
+        if signature is not None:
+            params = [p for p in signature.parameters.values()
+                      if p.kind in (inspect.Parameter.POSITIONAL_ONLY,
+                                    inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                                    inspect.Parameter.KEYWORD_ONLY)]
+            has_var_positional = any(
+                p.kind == inspect.Parameter.VAR_POSITIONAL
+                for p in signature.parameters.values())
+
+            if not params and has_var_positional:
+                params = []          # `on_fill(*args)`: usa il fallback posizionale
+            elif len(params) == 1 and params[0].name in (
+                    "fill", "record", "data", "event", "payload"):
+                self._call_on_fill(fn, payload)
+                return
+            elif params:
+                kwargs = {}
+                for p in params:
+                    if p.name in values:
+                        kwargs[p.name] = values[p.name]
+                    elif (p.default is inspect.Parameter.empty
+                          and p.kind is not inspect.Parameter.KEYWORD_ONLY):
+                        kwargs = None
+                        break
+                if kwargs is not None:
+                    self._call_on_fill(fn, kwargs)
+                    return
+
+        # Ultimo tentativo: le due firme posizionali storiche.
+        for args in ((order_id, side, price, size),
+                     (side, price, size, fee, ts),
+                     (side, price, size),
+                     (payload,)):
+            try:
+                fn(*args)
+            except TypeError:
+                continue
+            except Exception as e:  # noqa: BLE001
+                log.warning("policy.on_fill(%s) fallito: %s", self.cfg.symbol, e)
+            return
+
+    @staticmethod
+    def _call_on_fill(fn, arg) -> None:
+        try:
+            if isinstance(arg, dict):
+                fn(**arg)
             else:
-                try:
-                    bal = self.ex.fetch_balance()
-                    free_q = float((bal.get("free", {}) or {}).get(
-                        self.cfg.symbol.split("/")[1] if "/" in self.cfg.symbol else "EUR", 0))
-                    base = self.cfg.symbol.split("/")[0]
-                    free_b = float((bal.get("free", {}) or {}).get(base, 0))
-                    price = self._price_source() if self._price_source else 0
-                    if inspect.iscoroutinefunction(price):
-                        # non siamo in async qui → skip coerenza
-                        raise RuntimeError("async price source")
-                    price = float(price)
-                    if price > 0:
-                        estimated = free_q + free_b * price
-                        # tolleranza 20%: se equity bassa ~= estimated, e' reale
-                        if estimated > 0 and abs(equity - estimated) / estimated < 0.2:
-                            log.info("equity coerente con free+asset*price (%.4f~=%.4f) per %s — trust",
-                                     equity, estimated, self.cfg.symbol)
-                            self._last_sane_equity = equity
-                            return equity
-                except Exception:
-                    pass  # fallback al comportamento originale
-            prev = getattr(self, "_last_sane_equity", cap)
-            log.warning("equity sospetta %.4f per %s → uso %.4f",
-                        equity, self.cfg.symbol, prev)
-            return prev
-        self._last_sane_equity = equity
-        return equity
+                fn(*arg)
+        except Exception as e:  # noqa: BLE001 - la contabilita' e' nel Journal
+            log.warning("policy.on_fill fallito: %s", e)
 
     def _available_capital(self, free: float) -> float:
         """Equity dinamica anti-deadlock: free + locked×0.85 (ATLAS v6)."""
@@ -537,7 +726,11 @@ class BotTask:
         if price is None:
             try:
                 if self._price_source is not None:
-                    price = float(self._price_source())
+                    ref = self._price_source()
+                    # `price_source` e' ASYNC per i bot live (hub.get_price):
+                    # `float(coroutine)` sollevava TypeError e il prezzo finiva
+                    # sempre a 0.0 nel journal dello stop-loss.
+                    price = float(await ref) if asyncio.iscoroutine(ref) else float(ref)
                 else:
                     t = await asyncio.to_thread(self.ex.fetch_ticker, self.cfg.symbol)
                     price = float(t["last"])
@@ -577,11 +770,10 @@ class BotTask:
                                             f"{spread * 100:.2f}% > max "
                                             f"{max_slip * 100:.2f}%")
                         self.state.stop_loss_triggered = False  # riprova
-                        self._journal("stop_loss_blocked_slippage",
-                                      spread=round(spread, 4),
-                                      max_slippage=max_slip)
-                        self._write_health(equity, blocked=True)
-                        self._save_state()
+                        await self._journal("stop_loss_blocked_slippage",
+                                            spread=round(spread, 4),
+                                            max_slippage=max_slip)
+                        await self._persist(equity, blocked=True)
                         return
             except Exception:  # noqa: BLE001
                 pass  # fail-open: non misurabile → procedi
@@ -610,8 +802,8 @@ class BotTask:
                         "sell del totale (chiusura completa posizione)",
                         self.cfg.symbol, amount, min_amt)
                 await asyncio.to_thread(self.ex.sell_market, self.cfg.symbol, amount)
-                self._journal("stop_loss_sell", amount=amount,
-                              drawdown=round(drawdown, 4), price=price)
+                await self._journal("stop_loss_sell", amount=amount,
+                                    drawdown=round(drawdown, 4), price=price)
             else:
                 log.warning("STOP LOSS %s: nessun %s libero da vendere (amount=0); "
                             "controlla ordini aperti/posizioni residue",
@@ -623,32 +815,64 @@ class BotTask:
             # errore transitorio, il retry al prossimo tick lo risolverà; il flag
             # resta True per tracciare che lo stop è in corso.
 
-        self._journal("stop_loss", drawdown=round(drawdown, 4), equity=equity)
-        self._write_health(equity, blocked=True)
-        self._save_state()
+        await self._journal("stop_loss", drawdown=round(drawdown, 4), equity=equity)
+        await self._persist(equity, blocked=True)
 
-    async def _process_fills(self, price: float) -> None:
-        """Controlla i buy aperti: su fill piazza il sell al TP e journal."""
-        for oid, info in list(self.state.open_buys.items()):
+    async def _process_fills(self, price: float,
+                             open_orders: Optional[List[dict]] = None) -> None:
+        """Riconcilia gli ordini tracciati con lo stato dell'exchange.
+
+        OTTIMIZZAZIONE CRITICA DI LATENZA (fix 2026-09): la versione precedente
+        faceva UNA chiamata REST `fetch_order` per OGNI ordine tracciato, in
+        serie: 2×(buy+sell) round-trip per tick, piu' `fetch_balance` e
+        `fetch_ticker`. Con la scala di vendita duplicata (bug grid.py) il
+        numero di ordini cresceva a ogni tick e il tempo di tick cresceva con
+        esso → spirale. Ora si fa UNA `fetch_open_orders` (spesso gia' in cache
+        dal chiamante) e si paga `fetch_order` SOLO per gli ordini che sono
+        spariti dagli aperti, cioe' solo nel tick in cui qualcosa e' cambiato.
+        """
+        if open_orders is None:
+            try:
+                open_orders = await asyncio.to_thread(
+                    self.ex.fetch_open_orders, self.cfg.symbol)
+            except Exception:  # noqa: BLE001
+                open_orders = None
+        open_ids: Optional[set] = (None if open_orders is None
+                                   else {str(o.get("id")) for o in open_orders})
+
+        async def _resolved_status(oid: str) -> str:
+            """'open' se ancora aperto; altrimenti interroga l'ordine singolo."""
+            if open_ids is not None and oid in open_ids:
+                return "open"
             try:
                 o = await asyncio.to_thread(self.ex.fetch_order, oid, self.cfg.symbol)
             except Exception:  # noqa: BLE001
-                continue
-            st = o.get("status", "open")
+                return "open"  # non risolvibile: non toccare lo stato
+            return str(o.get("status", "open"))
+
+        for oid, info in list(self.state.open_buys.items()):
+            st = await _resolved_status(oid)
             if st in ("closed", "filled"):
                 entry = float(info["price"])
+                amount = float(info["amount"])
                 target = self.policy.sell_target(entry)
                 try:
                     sell = await asyncio.to_thread(
                         self.ex.create_limit_order, self.cfg.symbol, "sell",
-                        float(info["amount"]), target)
+                        amount, target)
                     if sell:
+                        # `kind="tp"` distingue le vendite da take-profit dalla
+                        # scala ladder (grid.py conta solo le ladder) e `price`
+                        # le rende deduplicabili.
                         self.state.open_sells[sell["id"]] = {
-                            "amount": float(info["amount"]), "entry_price": entry,
-                            "target_price": target, "timestamp": self._now()}
-                        self._journal("buy_filled", order_id=oid, entry=entry,
-                                      amount=float(info["amount"]),
-                                      sell_target=target)
+                            "amount": amount, "entry_price": entry,
+                            "price": target, "target_price": target,
+                            "kind": "tp", "timestamp": self._now()}
+                        await self._journal("buy_filled", order_id=oid, entry=entry,
+                                            amount=amount, sell_target=target)
+                        await self._notify_fill(
+                            oid, "buy", entry, amount,
+                            fee=amount * entry * self.cfg.fee)
                 except Exception as e:  # noqa: BLE001
                     self._last_error = f"place sell: {e}"
                 self.state.open_buys.pop(oid, None)
@@ -656,11 +880,7 @@ class BotTask:
                 self.state.open_buys.pop(oid, None)
 
         for oid, info in list(self.state.open_sells.items()):
-            try:
-                o = await asyncio.to_thread(self.ex.fetch_order, oid, self.cfg.symbol)
-            except Exception:  # noqa: BLE001
-                continue
-            st = o.get("status", "open")
+            st = await _resolved_status(oid)
             if st in ("closed", "filled"):
                 # PnL fee-aware: proceeds×(1-fee) - cost×(1+fee). Con fee=0
                 # il comportamento e' identico all'accounting del motore v3.3.
@@ -677,11 +897,11 @@ class BotTask:
                 else:
                     self.state.losses += 1
                 self.state.volume += amount * target
-                self._journal("sell_filled", order_id=oid,
-                              amount=float(info["amount"]),
-                              entry=float(info["entry_price"]),
-                              exit=float(info["target_price"]),
-                              profit=profit, total_pnl=self.state.total_pnl)
+                await self._journal("sell_filled", order_id=oid,
+                                    amount=amount, entry=entry, exit=target,
+                                    profit=profit, total_pnl=self.state.total_pnl)
+                await self._notify_fill(oid, "sell", target, amount,
+                                        fee=amount * target * self.cfg.fee)
                 # P5: performance metrics (Sharpe/Sortino/Calmar/ProfitFactor)
                 self.risk_state.trade_results.append(profit)
                 pnl_pct = profit / max(1e-9, self.cfg.capital)
@@ -756,6 +976,21 @@ class BotTask:
 
     # --- run loop ------------------------------------------------------------
 
+    def _tick_interval(self) -> float:
+        """Intervallo di tick con backpressure del supervisore.
+
+        Prima il loop usava `cfg.tick_interval` nudo: la RAM non rallentava
+        nulla e sotto pressione tutti i bot restavano alla frequenza massima,
+        proprio quando serviva alleggerire.
+        """
+        base = self.cfg.tick_interval
+        if self._supervisor is None:
+            return base
+        try:
+            return self._supervisor.adjusted_interval(base)
+        except Exception:  # noqa: BLE001
+            return base
+
     async def run(self) -> None:
         self._running = True
         self.state.start_ts = self._now()
@@ -765,7 +1000,7 @@ class BotTask:
             except Exception as e:  # noqa: BLE001 - il bot non deve morire
                 self._last_error = f"tick: {e}"
                 log.error("bot %s tick error: %s", self.cfg.symbol, e)
-            await asyncio.sleep(self.cfg.tick_interval)
+            await asyncio.sleep(self._tick_interval())
 
     async def stop(self) -> None:
         self._running = False
@@ -835,6 +1070,7 @@ class TradeOrchestrator:
             if self._supervisor and not self._supervisor.can_start_worker():
                 log.warning("supervisor: worker %s non avviato (risorse)", symbol)
                 continue
+            bot._supervisor = self._supervisor
             bot._task = asyncio.create_task(bot.run())
             log.info("bot %s avviato", symbol)
 

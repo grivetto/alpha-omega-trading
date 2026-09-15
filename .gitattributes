@@ -1,9 +1,10 @@
-# Script shell eseguiti su Linux: forzare LF (PowerShell scrive CRLF)
+# Normalizzazione fine-riga: il repo vive su Linux, ma si lavora anche da
+# Windows (PowerShell scrive CRLF). Senza queste regole ogni trasferimento
+# produce un diff dell'intero file invece delle sole righe cambiate.
 *.sh text eol=lf
 *.service text eol=lf
 *.yaml text eol=lf
 *.yml text eol=lf
-
-# Python e documentazione: sempre LF (PowerShell scrive CRLF)
 *.py text eol=lf
 *.md text eol=lf
+*.json text eol=lf

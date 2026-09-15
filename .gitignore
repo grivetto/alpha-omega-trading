@@ -70,6 +70,15 @@ htmlcov/
 .dsh_*
 hermes-moa-free-presets.yaml
 
+# ── Ponte AI / orchestratori LLM: fuori dal prodotto di trading ──
+# (documenti e script sul bridge Hermes/DeepSeek: non riguardano il motore)
+docs/*hermes*
+docs/*ponte*
+docs/*moa*
+scripts/hermes_moa_anti_refusal.py
+scripts/patch_moa_aggregator.py
+scripts/stella_bridge.py
+
 # ── File temporanei di diagnostica/operativi ──
 # NOTA: non usare `_*.py` — ignorerebbe anche i __init__.py del package
 _*.sh
