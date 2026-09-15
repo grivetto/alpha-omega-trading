@@ -27,9 +27,18 @@ class AtomicFile:
         self.path = Path(path)
 
     def write_text(self, content: str) -> None:
+        """Scrittura atomica E durevole.
+
+        M1 (revisione esterna 2026-09-15): senza flush+fsync un power-loss
+        poteva lasciare il file sostituito ma vuoto. Qui vivono le baseline di
+        rischio (*_risk.json): perderle significa azzerare il circuit breaker.
+        """
         self.path.parent.mkdir(parents=True, exist_ok=True)
         tmp = self.path.with_suffix(self.path.suffix + ".tmp")
-        tmp.write_text(content, encoding="utf-8")
+        with open(tmp, "w", encoding="utf-8") as fh:
+            fh.write(content)
+            fh.flush()
+            os.fsync(fh.fileno())
         os.replace(tmp, self.path)
 
     def write_json(self, data: Any) -> None:

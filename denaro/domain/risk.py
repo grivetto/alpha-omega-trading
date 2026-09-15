@@ -19,6 +19,11 @@ _KELLY_VOL_ADJ = {"low": 1.5, "normal": 1.0, "high": 0.5, "extreme": 0.25}
 # Grid exposure cap per regime (multipliers on max_deployed)
 _EXPOSURE_VOL_FACTOR = {"low": 1.2, "normal": 1.0, "high": 0.7, "extreme": 0.5}
 _DAY_SEC = 86400.0
+# A12 (revisione esterna 2026-09-15): VaR oraria di fallback (5%) usata quando
+# la VaR non e' popolata. Con var_95_1h = 0 il cap diventava
+# capital*0.02/1e-10 = 2e8 x capitale, cioe' nessun cap: un rischio non
+# misurato si trasformava in rischio nullo.
+_DEFAULT_VAR_95_1H = 0.05
 
 
 def _week_start_ts(now: float) -> float:
@@ -81,7 +86,13 @@ class RiskManager:
         # ── Daily reset ──
         if now - cs.last_daily_reset > _DAY_SEC:
             cs.last_daily_reset = now
-            cs.day_start_capital = max(cs.day_start_capital, current_equity)
+            # M14 (revisione esterna 2026-09-15): la baseline NON deve usare
+            # max(). Dopo un rialzo la base restava alta e il giorno seguente si
+            # partiva gia' "in perdita": e' l'origine del weekly_loss_-99%
+            # spurio documentato nel progetto. Il max serviva solo al primo
+            # avvio, quando la baseline e' ancora 0.
+            cs.day_start_capital = (max(cs.day_start_capital, current_equity)
+                                    if cs.day_start_capital <= 0 else current_equity)
             cs.cb.daily_loss_pct = 0.0
             cs.perf.daily_pnl_pct = 0.0
 
@@ -89,7 +100,10 @@ class RiskManager:
         ws = _week_start_ts(now)
         if cs.last_weekly_reset < ws:
             cs.last_weekly_reset = ws
-            cs.week_start_capital = max(cs.week_start_capital, current_equity)
+            # M14: stessa correzione del daily — la baseline e' l'equity di
+            # inizio periodo, non il massimo storico di inizio periodo.
+            cs.week_start_capital = (max(cs.week_start_capital, current_equity)
+                                     if cs.week_start_capital <= 0 else current_equity)
             cs.cb.weekly_loss_pct = 0.0
 
         # ── Track peak ──
@@ -99,6 +113,11 @@ class RiskManager:
         cs.current_capital = current_equity
 
         # ── Weekly loss (P2: hard stop settimanale, indipendente dal daily) ──
+        # M15: con baseline ~0 il rapporto esplodeva in un valore enorme
+        # (falso hallazgo di drawdown). Senza base non si puo' calcolare un
+        # rapporto: il periodo viene semplicemente inizializzato.
+        if cs.week_start_capital <= 1e-10:
+            cs.week_start_capital = current_equity
         week_pnl = (current_equity - cs.week_start_capital) / max(1e-10, cs.week_start_capital)
         cs.cb.weekly_loss_pct = week_pnl
         if week_pnl < -self.weekly_loss_limit:
@@ -109,6 +128,8 @@ class RiskManager:
             return True
 
         # ── Daily loss (vol-scaled limit) ──
+        if cs.day_start_capital <= 1e-10:
+            cs.day_start_capital = current_equity
         day_pnl = (current_equity - cs.day_start_capital) / max(1e-10, cs.day_start_capital)
         cs.cb.daily_loss_pct = day_pnl
         limit = self.daily_loss_limit_effective(cs.regime)
@@ -120,6 +141,8 @@ class RiskManager:
             return True
 
         # ── Drawdown ──
+        if cs.peak_capital <= 1e-10:
+            cs.peak_capital = current_equity
         drawdown = (cs.peak_capital - current_equity) / max(1e-10, cs.peak_capital)
         cs.cb.max_drawdown_pct = drawdown
         if drawdown > self.max_drawdown_limit:
@@ -208,7 +231,12 @@ class RiskManager:
     def position_size(self, state: CoreState, capital: float, allocation_pct: float = 1.0) -> float:
         """Position size = min(Kelly size, VaR budget)."""
         kelly = self.kelly_fraction(state)
-        max_var_risk = capital * 0.02 / (state.var.var_95_1h + 1e-10)
+        var = state.var.var_95_1h
+        if not (var > 1e-6):
+            # A12: senza VaR si usa un default conservativo invece di un cap
+            # di fatto infinito.
+            var = _DEFAULT_VAR_95_1H
+        max_var_risk = capital * 0.02 / (var + 1e-10)
         kelly_size = capital * allocation_pct * kelly
 
         if not self.v7_enabled:

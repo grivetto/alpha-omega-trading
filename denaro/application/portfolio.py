@@ -116,7 +116,8 @@ class PortfolioManager:
     # --- pre-flight dedup -----------------------------------------------------
 
     def preflight(self, symbol: str, min_notional: float,
-                  per_level: float, price: float, free: Optional[float] = None) -> tuple:
+                  per_level: float, price: float, free: Optional[float] = None,
+                  n_levels: int = 1) -> tuple:
         """Verifica di fattibilita' prima di piazzare un nuovo livello.
 
         Ritorna (ok: bool, reason: str, speculative: List[str]).
@@ -149,8 +150,16 @@ class PortfolioManager:
             return (False,
                     f"preflight: min_notional {min_notional:.4f} > available "
                     f"{available:.4f}", speculative)
-        if per_level > free_now:
+        # A21 (revisione esterna 2026-09-15): il vincolo e' sul TOTALE dei
+        # livelli che stanno per essere piazzati, non sul singolo. Con
+        # per_level <= free il tick poteva piazzare fino a `levels` ordini il
+        # cui notional complessivo superava il cash disponibile; gli eccedenti
+        # venivano rifiutati dall'exchange come InsufficientFunds, sprecando
+        # chiamate API e inquinando i log. Default n_levels=1 mantiene il
+        # comportamento precedente per i chiamanti che non lo passano.
+        need = per_level * max(1, int(n_levels))
+        if need > free_now:
             return (False,
-                    f"preflight: per_level {per_level:.4f} > free reale "
-                    f"{free_now:.4f}", speculative)
+                    f"preflight: {n_levels} livelli x {per_level:.4f} = "
+                    f"{need:.4f} > free reale {free_now:.4f}", speculative)
         return (True, "ok", speculative)

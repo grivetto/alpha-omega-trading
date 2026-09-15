@@ -81,6 +81,17 @@ class RateLimiterRegistry:
         self._buckets: dict = {}
 
     def register(self, exchange: str, capacity: float, refill_rate: float) -> TokenBucket:
+        """Registra il bucket di un exchange, o RIUSA quello esistente.
+
+        C2 (revisione esterna 2026-09-15): prima creava sempre un TokenBucket
+        nuovo e sovrascriveva quello nel registry. Poiche' viene chiamato una
+        volta per bot live, N bot producevano N bucket indipendenti: il budget
+        API effettivo era N volte quello configurato, e il limite non esisteva.
+        Un bucket per nome di exchange, condiviso da tutti i bot.
+        """
+        existing = self._buckets.get(exchange)
+        if existing is not None:
+            return existing
         bucket = TokenBucket(capacity, refill_rate)
         self._buckets[exchange] = bucket
         return bucket

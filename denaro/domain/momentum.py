@@ -74,7 +74,9 @@ class MomentumPolicy(Policy):
         rsi = AdvancedIndicators.rsi(prices, 14)
         # bullish: EMA fast > slow E RSI > 50 (momentum confermato, non solo
         # incrocio; RSI > 70 resta valido: il trend forte non viene escluso)
-        if fast > slow and rsi.value > 50.0:
+        # M19 (revisione esterna 2026-09-15): la soglia era hardcoded a 50 e il
+        # parametro rsi_confirm non aveva alcun effetto.
+        if fast > slow and rsi.value > self.params.rsi_confirm:
             return "bullish"
         if fast < slow:
             return "bearish"

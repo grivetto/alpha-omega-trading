@@ -132,6 +132,12 @@ class TestRiskManager(unittest.TestCase):
     def test_daily_loss_apre_il_breaker(self):
         rm = RiskManager(daily_loss_limit=0.05)
         s = self._state(100.0)
+        # Pin del reset, come nel test del drawdown sotto: senza questo il
+        # default last_daily_reset=0 fa scattare un reset giornaliero al primo
+        # check e la baseline diventa l'equity corrente (M14: e' il
+        # comportamento corretto — un nuovo giorno riparte dall'equity di
+        # apertura, non dal massimo del giorno prima).
+        s.last_daily_reset = 1_000_000.0
         # -6% in giornata → OPEN
         opened = rm.check_circuit_breaker(s, 94.0, now=1_000_000.0)
         self.assertTrue(opened)
