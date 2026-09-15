@@ -131,13 +131,18 @@ handle_problem() {
   # disattivazione intenzionale e riportando in vita nodi senza capitale.
   # Vale anche per kill_zombies: su un trigger 'zombie' faceva pkill di TUTTI
   # i denaro_node dell'host.
+  # NB: `systemctl is-enabled` esce != 0 per una unit 'disabled' E stampa
+  # comunque "disabled" su stdout. La forma "|| echo unknown" accoderebbe
+  # "unknown" e renderebbe il confronto sempre falso: si prende la prima riga
+  # e si ripulisce lo whitespace.
   local enabled_state
   if [ "$node" = "local" ]; then
-    enabled_state="$(systemctl is-enabled "$service" 2>/dev/null || echo unknown)"
+    enabled_state="$(systemctl is-enabled "$service" 2>/dev/null | head -n1)"
   else
     enabled_state="$(ssh -o ConnectTimeout=8 -o BatchMode=yes "${SSH_USER[$node]:-sergio}@$node" \
-      "systemctl is-enabled $service" 2>/dev/null || echo unknown)"
+      "systemctl is-enabled $service 2>/dev/null | head -n1" 2>/dev/null)"
   fi
+  enabled_state="$(printf '%s' "${enabled_state:-unknown}" | tr -d '[:space:]')"
   if [ "$enabled_state" = "disabled" ]; then
     log "SKIP $service su $host: unit disabilitata (decommissionata)"
     return
