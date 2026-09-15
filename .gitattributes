@@ -3,3 +3,7 @@
 *.service text eol=lf
 *.yaml text eol=lf
 *.yml text eol=lf
+
+# Python e documentazione: sempre LF (PowerShell scrive CRLF)
+*.py text eol=lf
+*.md text eol=lf
