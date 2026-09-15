@@ -27,28 +27,34 @@ def build():
     # stessa fonte di /infra.json: un unico set di verita'.
     bots = agg.collect_node_bots()
     data["bots"] = bots
-    snap_path = HEALTH_DIR / "kraken_snapshot.json"
-    snap = None
-    if snap_path.exists():
-        try:
-            snap = json.loads(snap_path.read_text())
-        except Exception:
-            snap = None
-
     balances = {}
-    for label, path in agg.ENV_FILES.items():
+    for label, (path, prefix) in agg.ENV_FILES.items():
         env = agg.load_env(path)
-        if env.get("OKX_API_KEY"):
-            balances[label] = agg.fetch_okx_balance(env)
+        acct = {k[len(prefix):]: v for k, v in env.items() if k.startswith(prefix)} if prefix else env
+        if acct.get("OKX_API_KEY"):
+            balances[label] = agg.fetch_okx_balance(acct)
         else:
             balances[label] = {"ok": False, "error": "no key"}
-    if snap_path.exists() and snap:
-        balances["kraken (nuvola)"] = {
-            "ok": True,
-            "total": snap.get("balance", {}),
-            "total_eur": snap.get("total_eur", 0),
-        }
+    for label, (ssh_target, ssh_port, remote_env, remote_py) in agg.REMOTE_ENV_SOURCES.items():
+        res = agg.fetch_remote_okx_balance(ssh_target, ssh_port, remote_env, remote_py)
+        balances[label] = res if res else {"ok": False, "error": "ssh/ccxt fallito"}
+    for path, key_attr, sec_attr in agg.KRAKEN_ENV_FILES:
+        e = agg.load_env(path)
+        k, s = e.get(key_attr), e.get(sec_attr)
+        if not k or not s:
+            continue
+        r = agg.fetch_kraken_balance({key_attr: k, sec_attr: s}, key_attr, sec_attr)
+        if r.get("ok"):
+            if not any(v.get("acct") and v.get("acct") == r.get("acct")
+                       for kk, v in balances.items() if kk.lower().startswith("kraken")):
+                balances["kraken"] = r
+            break
     data["balances"] = balances
+
+    real_total, equity_detail, unpriced = agg.balance_eur(balances)
+    data["equity_breakdown"] = equity_detail
+    data["equity_unpriced"] = unpriced
+
     data["prices"] = agg.fetch_prices()
     data["nodes"] = {n: {"reachable": agg.ping_host(h, p), "host": h} for n, (h, p) in agg.NODES.items()}
     data["zabbix"] = agg.zabbix_state()
@@ -59,7 +65,9 @@ def build():
     node_bots = agg.collect_node_bots()
     data["node_bots"] = node_bots
 
-    # CAPITALE TOTALE REALE = bot LIVE del Node (okx:* + kraken:* + trend-live:*)
+    # CAPITALE TOTALE REALE = somma dei SALDI reali (account deduplicati),
+    # non piu' la somma dei total_equity per-bot (che duplica il saldo del
+    # subaccount su ogni bot e non vede i conti non presidiati da un bot).
     okx_eq = sum(b.get("total_equity", 0) for k, b in node_bots.items()
                  if k.startswith("okx:") and b.get("status") == "running")
     kraken_eq = sum(b.get("total_equity", 0) for k, b in node_bots.items()
@@ -67,7 +75,12 @@ def build():
                     and b.get("status") == "running")
     data["bot_equity"] = round(okx_eq, 2)
     data["kraken_equity"] = round(kraken_eq, 2)
-    data["total_equity"] = round(okx_eq + kraken_eq, 2)
+    if real_total > 0:
+        data["total_equity"] = round(real_total, 2)
+        data["equity_source"] = "balances"
+    else:
+        data["total_equity"] = round(okx_eq + kraken_eq, 2)
+        data["equity_source"] = "bots"
 
     node_running = [b for b in node_bots.values() if b.get("status") == "running"]
     data["node_total_pnl"] = round(sum(b.get("pnl", 0) for b in node_running), 4)

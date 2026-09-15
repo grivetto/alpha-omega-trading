@@ -202,9 +202,9 @@ footer { margin-top: 30px; text-align: center; color: var(--dim); font-size: 11p
   <div class="grid">
     <div class="card"><h2><span class="ico">▒</span> PREZZI LIVE</h2><div id="prices"></div></div>
     <div class="card"><h2><span class="ico">▒</span> SALDI EXCHANGE</h2><div id="balances"></div></div>
-    <div class="card"><h2><span class="ico">▒</span> NODI</h2><div id="nodes"></div></div>
+    
     <div class="card"><h2><span class="ico">▒</span> ZABBIX</h2><div id="zabbix"></div>
-      <a class="zabbix-btn" href="/" target="_blank">APRI ZABBIX ▸</a>
+      <a class="zabbix-btn" href="https://mgrivett.ddns.net/zabbix" target="_blank">APRI ZABBIX ▸</a>
     </div>
     <div class="card"><h2><span class="ico">▒</span> SISTEMA</h2><div class="kv-grid" id="system"></div></div>
     <div class="card"><h2><span class="ico">▒</span> CONTAINER</h2><div id="docker"></div></div>
@@ -231,8 +231,10 @@ const BOT_META = {
   'trend-live:XRP/EUR': {sym: 'XRP/EUR', ex: 'KRAKEN·LIVE', color: '#0aff9d'},
   'mc2:okx:DOGE/EUR': {sym: 'DOGE/EUR', ex: 'OKX·MC2SUB1', color: '#ff2bd6'},
   'mc2:okx:SOL/EUR': {sym: 'SOL/EUR', ex: 'OKX·MC2SUB1', color: '#ffe600'},
+  'nuvola:okx:XRP/EUR': {sym: 'XRP/EUR', ex: 'OKX·NUVOLA', color: '#0aff9d'},
+  'nuvola:okx:ETH/EUR': {sym: 'ETH/EUR', ex: 'OKX·NUVOLA', color: '#00f3ff'},
 };
-const ORDER = ['trend-live:SOL/EUR', 'trend-live:XRP/EUR', 'mc2:okx:DOGE/EUR', 'mc2:okx:SOL/EUR'];
+const ORDER = ['trend-live:SOL/EUR', 'trend-live:XRP/EUR', 'mc2:okx:DOGE/EUR', 'mc2:okx:SOL/EUR', 'nuvola:okx:XRP/EUR', 'nuvola:okx:ETH/EUR'];
 
 async function load() {
   try {
@@ -251,7 +253,16 @@ function render(d) {
   const te = d.total_equity || 0;
   $('totaleq').textContent = fmt(te);
   const be = d.bot_equity ?? 0, ke = d.kraken_equity ?? 0;
-  $('eqbreak').innerHTML = `OKX LIVE (MC2) <b>€${fmt(be)}</b> + KRAKEN LIVE (MARCODG1) <b>€${fmt(ke)}</b>`;
+  // Ripartizione REALE per conto (equity_breakdown dall'aggregator). Fallback ai
+  // vecchi totali per bot se il campo non e' disponibile.
+  const eb = d.equity_breakdown || {};
+  const ebKeys = Object.keys(eb).filter(k => eb[k] && eb[k].ok && eb[k].eur !== null && eb[k].eur !== undefined);
+  $('eqbreak').innerHTML = ebKeys.length
+    ? ebKeys.map(k => `${esc(k)} <b>€${fmt(eb[k].eur)}</b>`).join(' · ')
+    : `OKX LIVE (MC2) <b>€${fmt(be)}</b> + KRAKEN LIVE (MARCODG1) <b>€${fmt(ke)}</b>`;
+  if (d.equity_unpriced && d.equity_unpriced.length) {
+    $('eqdetail').innerHTML += ' · non valorizzate: ' + esc(d.equity_unpriced.join(', '));
+  }
   const bal = d.balances || {};
   const labels = Object.keys(bal).filter(k => bal[k] && bal[k].ok);
   $('eqdetail').innerHTML = 'CHANNELS: ' + labels.map(esc).join(' ⏺ ');
@@ -463,6 +474,7 @@ function renderTrend(d) {
   const W = 1200, H = 110, PAD = 8;
   const eqs = t.map(p => p.equity || 0);
   const pnls = t.map(p => p.node_pnl || 0);
+  const wrs = t.map(p => p.win_rate || 0);
   const lo = Math.min(...eqs), hi = Math.max(...eqs);
   const range = (hi - lo) || 1;
   const px = i => PAD + (i / (t.length - 1)) * (W - PAD * 2);
@@ -470,22 +482,26 @@ function renderTrend(d) {
   const line = eqs.map((v, i) => `${px(i).toFixed(1)},${py(v).toFixed(1)}`).join(' ');
   const pnlMax = Math.max(...pnls.map(Math.abs), 1);
   const pnlLine = pnls.map((v, i) => `${px(i).toFixed(1)},${(H/2 - (v / pnlMax) * (H/2 - PAD)).toFixed(1)}`).join(' ');
+  const wrMax = Math.max(...wrs.map(Math.abs), 1);
+  const wrLine = wrs.map((v, i) => `${px(i).toFixed(1)},${(H/2 - (v / wrMax) * (H/2 - PAD)).toFixed(1)}`).join(' ');
   const last = t[t.length - 1];
   wrap.innerHTML = `
     <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--dim);margin-bottom:6px">
       <span>CAPITALE TOTALE (€) — min ${fmt(lo,1)} · max ${fmt(hi,1)}</span>
-      <span>ULTIMO: <b style="color:var(--neon-cyan)">${fmt(last.equity,1)}€</b> · PnL Node ${fmt(last.node_pnl,2)}€</span>
+      <span>ULTIMO: <b style="color:var(--neon-cyan)">${fmt(last.equity,1)}€</b> · PnL Node ${fmt(last.node_pnl,2)}€ · WR ${fmt(last.win_rate,1)}%</b></span>
     </div>
     <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="width:100%;height:110px;background:rgba(0,243,255,0.03);border:1px solid rgba(0,243,255,0.15)">
       <polyline points="${line}" fill="none" stroke="var(--neon-cyan)" stroke-width="2"/>
       <polyline points="${pnlLine}" fill="none" stroke="var(--neon-green)" stroke-width="1.2" stroke-dasharray="4 3"/>
+      <polyline points="${wrLine}" fill="none" stroke="var(--neon-yellow)" stroke-width="1" stroke-dasharray="2 2"/>
     </svg>
     <div style="font-size:10px;color:var(--dim);margin-top:4px;display:flex;gap:14px">
       <span><b style="color:var(--neon-cyan)">■</b> EQUITY</span>
       <span><b style="color:var(--neon-green)">■</b> PnL NODE (scala centrata)</span>
-    </div>`;
+      <span><b style="color:var(--neon-yellow)">■</b> WIN RATE %</span>
+    </div>
+  `;
 }
-
 function renderErrors(d) {
   const er = d.node_errors || {};
   const wrap = $('errors');

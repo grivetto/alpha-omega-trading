@@ -1,15 +1,32 @@
+# Denaro - dashboard server mc2 (:8913)
+# Serve dashboard_infra.html e fa da proxy verso l'Infra Aggregator.
+#
+# AGG_URLS (in ordine di preferenza):
+#   1) http://[::1]:8912  -> aggregatore COMPLETO su MARCODG1, esposto dal tunnel
+#      inverso zabbix-tunnel-reverse (-L 8912:127.0.0.1:8912). E' l'unico che
+#      legge tutti i conti (OKX main/marcosub1/mc2sub1/nuvolasub1 + Kraken).
+#   2) http://127.0.0.1:8912 -> aggregatore locale mc2 (fallback).
+# Incident 2026-09-10: la unit puntava a serve_dashboard.py, file cancellato ->
+# al restart sarebbe andata in crash-loop. Il codice sta nel repo versionato.
 [Unit]
-Description=Denaro — Dashboard server mc2 (:8913, HTML + proxy /api/infra.json)
+Description=Denaro - Dashboard server mc2 (:8913, HTML + proxy /api/infra.json)
 After=network-online.target denaro-aggregator-mc2.service
-Wants=network-online.target
+Wants=network-online.target denaro-aggregator-mc2.service
 
 [Service]
 Type=simple
 User=sergio
-ExecStart=/usr/bin/python3 /home/sergio/denaro/serve_dashboard.py
-WorkingDirectory=/home/sergio/denaro
+WorkingDirectory=/home/sergio/alpha-omega-trading
+Environment=DASH_HOST=127.0.0.1
+Environment=DASH_PORT=8913
+Environment=DASH_HTML_DIR=/home/sergio/denaro/denaro
+Environment=DASH_HTML_FILE=dashboard_infra.html
+Environment="AGG_URLS=http://[::1]:8912/infra.json,http://127.0.0.1:8912/infra.json"
+Environment=AGG_TIMEOUT=8
+Environment=DASH_CACHE_FILE=/home/sergio/denaro/health/infra_last_good.json
+ExecStart=/usr/bin/python3 /home/sergio/alpha-omega-trading/serve_dashboard.py
 Restart=always
-RestartSec=10
+RestartSec=5
 StandardOutput=journal
 StandardError=journal
 

@@ -45,22 +45,28 @@ REMOTE_NODES = {
     },
 }
 
-# Conti OKX (per saldi reali)
+# Conti OKX letti dai .env LOCALI a MARCODG1: label -> (path, prefisso chiavi).
+# Il prefisso seleziona le chiavi del subaccount (es. MARCOSUB1_OKX_API_KEY);
+# senza prefisso si usano le chiavi del conto master.
 ENV_FILES = {
-    "denaro (main)": "/home/marco/denaro/.env",
-    "alpha (marcosub1)": "/home/marco/alpha-omega-trading/.env",
+    "OKX main": ("/home/marco/denaro/.env", ""),
+    "OKX marcosub1": ("/home/marco/alpha-omega-trading/.env", "MARCOSUB1_"),
 }
 
-# Sub-account con chiavi IP-bound sul nodo di origine: il file si legge via SSH
-SUB_ENV_SOURCES = {
-    "denaro (mc2sub1)": ("sergio@127.0.0.1", "/home/sergio/alpha-omega-trading/.env", 2222),
+# Sub-account con chiavi IP-bound: il .env deve essere letto SULLA macchina di
+# origine. label -> (ssh_target, ssh_port, remote_env_path, remote_python)
+REMOTE_ENV_SOURCES = {
+    "OKX mc2sub1": ("sergio@127.0.0.1", 2222, "/home/sergio/alpha-omega-trading/.env", "/usr/bin/python3"),
+    "OKX nuvolasub1": ("sergio@87.106.3.15", 22, "/home/sergio/denaro/.env", "/home/sergio/denaro/venv/bin/python"),
 }
 
-# Sub-account che usano chiavi prefissate MC2SUB1_*/NUVOLASUB1_*
-SUB_PREFIXES = {
-    "denaro (mc2sub1)": "MC2SUB1_",
-    "nuvola (nuvolasub1)": "NUVOLASUB1_",
-}
+# Kraken: piu' chiavi API possono puntare allo STESSO conto -> si deduplica per
+# fingerprint della chiave, altrimenti il capitale verrebbe contato piu' volte.
+KRAKEN_ENV_FILES = [
+    ("/home/marco/denaro/.env", "KRAKEN_API_KEY", "KRAKEN_API_SECRET"),
+    ("/home/marco/alpha-omega-trading/.env", "TRENDSUB_KRAKEN_API_KEY", "TRENDSUB_KRAKEN_API_SECRET"),
+    ("/home/marco/alpha-omega-trading/.env", "NUVOLASUB1_KRAKEN_API_KEY", "NUVOLASUB1_KRAKEN_API_SECRET"),
+]
 
 NODES = {
     "nuvola": ("87.106.3.15", 22),
@@ -165,6 +171,134 @@ def fetch_kraken_balance(env, key_attr="KRAKEN_API_KEY", secret_attr="KRAKEN_API
         return val
     except Exception as e:
         return {"ok": False, "error": str(e)[:200]}
+
+
+def _acct_fp(*parts):
+    """Fingerprint non reversibile di una chiave API: serve a deduplicare gli account."""
+    import hashlib
+    return hashlib.md5("|".join(p or "" for p in parts).encode()).hexdigest()[:12]
+
+
+def _remote_okx_snippet(env_path):
+    """Snippet Python eseguito SUL nodo di origine per leggere il saldo OKX."""
+    return (
+        "import json\n"
+        "env = {}\n"
+        "for line in open(" + repr(env_path) + "):\n"
+        "    if '=' in line and not line.strip().startswith('#'):\n"
+        "        k, v = line.strip().split('=', 1)\n"
+        "        env[k.strip()] = v.strip().strip(chr(34)).strip(chr(39))\n"
+        "import ccxt\n"
+        "ex = ccxt.okx({'apiKey': env.get('OKX_API_KEY'), 'secret': env.get('OKX_API_SECRET'),"
+        " 'password': env.get('OKX_PASSPHRASE'), 'hostname': 'eea.okx.com'})\n"
+        "b = ex.fetch_balance()\n"
+        "print(json.dumps({'ok': True, 'total': b.get('total', {}), 'free': b.get('free', {})}))\n"
+    )
+
+
+def fetch_remote_okx_balance(ssh_target, ssh_port, remote_env, remote_python="/usr/bin/python3", ttl=30.0):
+    """Saldo OKX di un subaccount con chiavi IP-bound, letto sul nodo di origine."""
+    cache_key = "remoteokx:%s:%s" % (ssh_target, remote_env)
+    now = time.time()
+    hit = _balance_cache.get(cache_key)
+    if hit and now - hit[0] < ttl:
+        return hit[1]
+    try:
+        # NB: niente "bash -c" locale: passando l'argv direttamente a ssh, il
+        # quoting sopravvive al doppio parsing (locale + shell remota).
+        cmd = ["ssh", "-p", str(ssh_port), "-o", "BatchMode=yes", "-o", "ConnectTimeout=6",
+               ssh_target, remote_python, "-c", shlex.quote(_remote_okx_snippet(remote_env))]
+        r = subprocess.run(cmd, capture_output=True, text=True, timeout=25)
+        if r.returncode != 0 or not r.stdout.strip():
+            return None
+        val = json.loads(r.stdout.strip().splitlines()[-1])
+        if val.get("ok"):
+            val["total"] = {k: v for k, v in (val.get("total") or {}).items() if v and float(v) > 0}
+            val["acct"] = _acct_fp(ssh_target, remote_env)
+            _balance_cache[cache_key] = (now, val)
+        return val
+    except Exception:
+        return None
+
+
+_EUR_FIAT = {"EUR"}
+_EUR_STABLES = {"USDC", "USDT", "USD", "DAI", "TUSD", "BUSD", "USDE"}
+_rate_cache = {}
+_RATE_TTL = 60.0
+
+
+def fetch_eur_rate(cur, _depth=0):
+    """Quanto vale 1 unita' della valuta indicata in EUR (cache 60s)."""
+    if cur in _EUR_FIAT:
+        return 1.0
+    now = time.time()
+    hit = _rate_cache.get(cur)
+    if hit and now - hit[0] < _RATE_TTL:
+        return hit[1]
+    rate = None
+    pairs = [("%s/EUR" % cur, False), ("EUR/%s" % cur, True)]
+    if cur not in _EUR_STABLES and _depth < 2:
+        pairs += [("%s/USDT" % cur, False), ("%s/USDC" % cur, False)]
+    try:
+        import ccxt
+        ex = ccxt.okx({"enableRateLimit": True, "hostname": "eea.okx.com"})
+        for pair, invert in pairs:
+            try:
+                last = float(ex.fetch_ticker(pair)["last"])
+            except Exception:
+                continue
+            if not last:
+                continue
+            if pair.endswith("/EUR"):
+                rate = last
+            elif invert:
+                rate = 1.0 / last
+            else:
+                base_rate = fetch_eur_rate(pair.split("/")[1], _depth + 1)
+                rate = last * base_rate if base_rate else None
+            if rate:
+                break
+    except Exception:
+        rate = None
+    _rate_cache[cur] = (now, rate)
+    return rate
+
+
+def balance_eur(balances):
+    """Valorizza in EUR i saldi reali deduplicando gli account identici.
+
+    Ritorna (totale_eur, dettaglio_per_etichetta, quote_non_valutate).
+    """
+    seen = []
+    detail = {}
+    total = 0.0
+    unpriced = []
+    for label, bal in balances.items():
+        if not isinstance(bal, dict) or not bal.get("ok"):
+            err = bal.get("error", "") if isinstance(bal, dict) else "n/d"
+            detail[label] = {"ok": False, "eur": None, "error": str(err)[:80]}
+            continue
+        fp = bal.get("acct") or label
+        if fp in seen:
+            detail[label] = {"ok": True, "eur": None, "dedup": True}
+            continue
+        seen.append(fp)
+        tot = 0.0
+        for cur, amt in (bal.get("total") or {}).items():
+            try:
+                amt = float(amt)
+            except Exception:
+                continue
+            if amt <= 0:
+                continue
+            rate = fetch_eur_rate(cur)
+            if rate is None:
+                unpriced.append("%s:%s" % (label, cur))
+                continue
+            tot += amt * rate
+        detail[label] = {"ok": True, "eur": round(tot, 2)}
+        total += tot
+    return round(total, 2), detail, unpriced
 
 
 def fetch_prices():
@@ -467,46 +601,42 @@ def collect():
                 bots[bot_id] = {"status": "no_file"}
     data["bots"] = bots
 
-    # 2) Saldi OKX reali + Kraken LIVE
+    # 2) Saldi REALI: OKX main + subaccount (locale e via SSH) + Kraken
     balances = {}
-    for label, path in ENV_FILES.items():
+
+    # 2a) conti con .env locale su MARCODG1
+    for label, (path, prefix) in ENV_FILES.items():
         env = load_env(path)
-        if env.get("OKX_API_KEY"):
-            balances[label] = fetch_okx_balance(env)
+        acct = {k[len(prefix):]: v for k, v in env.items() if k.startswith(prefix)} if prefix else env
+        if acct.get("OKX_API_KEY"):
+            balances[label] = fetch_okx_balance(acct)
         else:
             balances[label] = {"ok": False, "error": "no key"}
-    # Saldo subaccount mc2 via SSH
-    try:
-        remote_py = (
-            "import ccxt, os, json\n"
-            "env = {}\n"
-            "for line in open('/home/sergio/alpha-omega-trading/.env'):\n"
-            "    if '=' in line and not line.strip().startswith('#'):\n"
-            "        k, v = line.strip().split('=', 1)\n"
-            "        env[k.strip()] = v.strip().strip('\\\"')\n"
-            "ex = ccxt.okx({'apiKey': env.get('OKX_API_KEY'), 'secret': env.get('OKX_API_SECRET'), 'password': env.get('OKX_PASSPHRASE'), 'hostname': 'eea.okx.com'})\n"
-            "b = ex.fetch_balance()\n"
-            "print(json.dumps({'ok': True, 'free': b.get('free', {}), 'total': b.get('total', {})}))\n"
-        )
-        r = subprocess.run(["ssh", "-p", "2222", "-o", "BatchMode=yes", "-o", "ConnectTimeout=5",
-                            "sergio@127.0.0.1", f"python3 -c {shlex.quote(remote_py)}"],
-                           capture_output=True, text=True, timeout=10)
-        if r.returncode == 0 and r.stdout.strip():
-            balances["denaro (mc2sub1)"] = json.loads(r.stdout.strip().splitlines()[-1])
-    except Exception:
-        pass
 
-    # Saldo Kraken LIVE
-    for env_path in [HEALTH_DIR.parent / ".env", Path("/home/marco/alpha-omega-trading/.env")]:
-        e = load_env(env_path)
-        k = e.get("TRENDSUB_KRAKEN_API_KEY") or e.get("KRAKEN_API_KEY")
-        s = e.get("TRENDSUB_KRAKEN_API_SECRET") or e.get("KRAKEN_API_SECRET")
-        if k and s:
-            r = fetch_kraken_balance({"KRAKEN_API_KEY": k, "KRAKEN_API_SECRET": s})
-            if r.get("ok"):
+    # 2b) sub-account con chiavi IP-bound: letti sul nodo di origine via SSH
+    for label, (ssh_target, ssh_port, remote_env, remote_py) in REMOTE_ENV_SOURCES.items():
+        res = fetch_remote_okx_balance(ssh_target, ssh_port, remote_env, remote_py)
+        balances[label] = res if res else {"ok": False, "error": "ssh/ccxt fallito"}
+
+    # 2c) Kraken: una sola voce per conto reale (dedup per fingerprint chiave)
+    for path, key_attr, sec_attr in KRAKEN_ENV_FILES:
+        e = load_env(path)
+        k, s = e.get(key_attr), e.get(sec_attr)
+        if not k or not s:
+            continue
+        r = fetch_kraken_balance({key_attr: k, sec_attr: s}, key_attr, sec_attr)
+        if r.get("ok"):
+            if not any(v.get("acct") and v.get("acct") == r.get("acct")
+                       for kk, v in balances.items() if kk.lower().startswith("kraken")):
                 balances["kraken"] = r
-                break
+            break
+
     data["balances"] = balances
+
+    # Capitale reale valorizzato dai saldi (account deduplicati)
+    real_total, equity_detail, unpriced = balance_eur(balances)
+    data["equity_breakdown"] = equity_detail
+    data["equity_unpriced"] = unpriced
 
     # 3) Prezzi
     data["prices"] = fetch_prices()
@@ -528,19 +658,21 @@ def collect():
     node_bots = collect_node_bots()
     data["node_bots"] = node_bots
 
-    # 7) CAPITALE TOTALE REALE = somma del capitale reale dei 4 bot live
-    #    Kraken (SOL 12.70 + XRP 12.70 = 25.40€) + OKX mc2 (DOGE 12.00 + SOL 12.00 = 24.00€)
+    # 7) CAPITALE TOTALE REALE = somma dei SALDI reali (account deduplicati).
+    #    Prima esistevano due costanti hardcoded (24.0 e 25.47): con 75 EUR
+    #    investiti la dashboard mostrava sempre 24 EUR.
     okx_eq = sum(b.get("total_equity", 0) for k, b in node_bots.items()
                  if "mc2:okx" in k and b.get("status") == "running")
-    if okx_eq == 0:
-        okx_eq = 24.0
     kraken_eq = sum(b.get("total_equity", 0) for k, b in node_bots.items()
                     if "trend-live" in k and b.get("status") == "running")
-    if kraken_eq > 30.0:
-        kraken_eq = 25.47
     data["bot_equity"] = round(okx_eq, 2)
     data["kraken_equity"] = round(kraken_eq, 2)
-    data["total_equity"] = round(okx_eq + kraken_eq, 2)
+    if real_total > 0:
+        data["total_equity"] = round(real_total, 2)
+        data["equity_source"] = "balances"
+    else:
+        data["total_equity"] = round(okx_eq + kraken_eq, 2)
+        data["equity_source"] = "bots"
 
     node_running = [b for b in node_bots.values() if b.get("status") == "running"]
     data["node_total_pnl"] = round(sum(b.get("pnl", 0) for b in node_running), 4)
