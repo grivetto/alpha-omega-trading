@@ -124,6 +124,25 @@ handle_problem() {
     return
   fi
 
+  # GUARDIA (2026-09-15): NON resuscitare unit DISABILITATE.
+  # Da quando i conti sono consolidati sull'account OKX master, alcune unit
+  # sono decommissionate di proposito ('disabled'). Senza questa guardia
+  # l'healer le riavviava comunque ogni ~10 minuti, combattendo ogni
+  # disattivazione intenzionale e riportando in vita nodi senza capitale.
+  # Vale anche per kill_zombies: su un trigger 'zombie' faceva pkill di TUTTI
+  # i denaro_node dell'host.
+  local enabled_state
+  if [ "$node" = "local" ]; then
+    enabled_state="$(systemctl is-enabled "$service" 2>/dev/null || echo unknown)"
+  else
+    enabled_state="$(ssh -o ConnectTimeout=8 -o BatchMode=yes "${SSH_USER[$node]:-sergio}@$node" \
+      "systemctl is-enabled $service" 2>/dev/null || echo unknown)"
+  fi
+  if [ "$enabled_state" = "disabled" ]; then
+    log "SKIP $service su $host: unit disabilitata (decommissionata)"
+    return
+  fi
+
   case "$trigger" in
     *zombie*|*hung*|*unresponsive*|*multi*|*fork*)
       kill_zombies "$node" "$host"; restart_service "$node" "$service" "$host" ;;
