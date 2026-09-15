@@ -1,0 +1,5 @@
+# Script shell eseguiti su Linux: forzare LF (PowerShell scrive CRLF)
+*.sh text eol=lf
+*.service text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf

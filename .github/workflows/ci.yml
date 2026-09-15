@@ -2,39 +2,48 @@ name: Denaro CI
 
 on:
   push:
-    branches: [main, Prod-V1]
+    branches: ["**"]
   pull_request:
     branches: [main]
 
+# La CI deve rispondere a UNA domanda: il motore e' corretto?
+# Prima del 2026-09-15 questa pipeline puntava a file inesistenti
+# (test_denaro_core.py, mock_runner.py) e non ha mai eseguito un test.
 jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with: {python-version: '3.12'}
-      - run: pip install ruff
-      - run: ruff check . --ignore=E501,E731 --exclude=_archive,venv,__pycache__,.ruff_cache
+        with: {python-version: "3.12"}
+      - run: pip install "ruff>=0.5"
+      - run: ruff check denaro scripts --no-cache
 
-  test-core:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with: {python-version: '3.12'}
-      - run: pip install pytest websockets ccxt
-      - run: PYTHONPATH=. python -m pytest test_denaro_core.py test_kraken_engine.py -v --tb=short
+        with: {python-version: "3.12"}
+      - name: Installa il pacchetto e le dipendenze di test
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+      - name: Suite completa
+        run: python -m pytest denaro/tests -q
 
-  mock-sim:
+  honesty-gate:
+    # I test che impediscono la regressione dei bug che hanno reso il sistema
+    # incapace di operare o incapace di misurare le perdite:
+    #   - adapter senza load_markets() -> min_amount = 0 -> ordini dust
+    #   - errori di tick azzerati prima di finire in health
+    #   - backtest che non rispetta fee/minimi/free-vs-locked
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with: {python-version: '3.12'}
-      - run: pip install websockets ccxt pytest
-      - run: PYTHONPATH=. MOCK_MODE=1 python -c "
-from mock_runner import run_mock_test
-r = run_mock_test(cycles=50, verbose=False)
-print(f'Trades: {r[\"total_trades\"]}, WinRate: {r[\"win_rate\"]*100:.0f}%, PnL: {r[\"final_pnl_pct\"]:+.2f}%')
-assert r['total_trades'] > 3, f'Too few trades: {r[\"total_trades\"]}'
-"
+        with: {python-version: "3.12"}
+      - run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+      - run: python -m pytest denaro/tests/test_backtest.py denaro/tests/test_runtime_guards.py -q

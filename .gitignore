@@ -1,83 +1,93 @@
+# ─────────────────────────────────────────────────────────────
+# Denaro / Alpha-Omega — .gitignore
+# Regola: nel repo entra SOLO codice e configurazione. Mai stato,
+# segreti, log, backup o artefatti di run.
+# ─────────────────────────────────────────────────────────────
+
 # Python
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
+*.egg-info/
 
 # Virtual environments
 venv/
 env/
+.venv/
+
+# ── Segreti: MAI committare ──
 .env
 .env.*
 !.env.example
-
-# State files
-*_state.json
-*_state.json.*
-
-# Logs
-*.log
-*.out
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Test coverage
-.coverage
-htmlcov/
-.pytest_cache/
-
-# Archives
-*.tar.gz
-*.zip
-
-# Backup
-*.bak
-*.backup
-  
-# Tooling state  
-.deepseek/  
-
-# Keys vault (MAI committare)
 .denaro_vault/
 keys_master.env
 *_API_KEY=
 *_API_SECRET=
 *_PASSPHRASE=
 
-# File temporanei di diagnostica/operativi (non fanno parte del codice)
-# NOTA: non usare `_*.py` — ignora anche i __init__.py del package
+# ── Stato di esecuzione (rigenerabile, specifico della macchina) ──
+node_data/
+node_data_*/
+paper_state/
+health/*.json
+!health/.gitkeep
+*.sqlite
+*.sqlite3
+*.db
+
+# ── Log e output ──
+*.log
+*.out
+logs/
+
+# ── Backup: qualunque variante ──
+*.bak
+*.bak.*
+*.bak-*
+*.backup
+*.orig
+*~
+
+# ── IDE / OS ──
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ── Test / coverage ──
+.coverage
+htmlcov/
+.pytest_cache/
+.abtest/
+.pytmp/
+
+# ── Tooling agenti (config locali, non fanno parte del progetto) ──
+.deepseek/
+.dsh_push/
+.dsh_*
+hermes-moa-free-presets.yaml
+
+# ── File temporanei di diagnostica/operativi ──
+# NOTA: non usare `_*.py` — ignorerebbe anche i __init__.py del package
 _*.sh
 _*.bat
 _*.md
 _*.tmp.py
 _*.bak.py
 
-
-*.sql.gz
-
-# Operational and execution run artifacts
-node_data/
-node_data_*/
-health/*.json
-!health/.gitkeep
-# Backtest: cache dati di mercato e output dei run (rigenerabili)
+# ── Cache dati di mercato e output dei backtest (rigenerabili) ──
 backtest_data/
 backtest_out/
-.pytmp/
-.abtest/
-.dsh_push/
+
+# ── Artefatti di orchestrazione legacy ──
+orchestration/
+orchestration*.json*
+comunicazione_ai/
 deepseek_*.json*
 deploy_decisions_*.json
 fase*.json*
-orchestration*.json*
-orchestration/
-comunicazione_ai/
 strategies/*.json
+*.sql.gz
