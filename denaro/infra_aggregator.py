@@ -89,6 +89,11 @@ def load_env(path):
 _remote_cache = {}
 _REMOTE_TTL = 30.0  # secondi
 
+# Dopo quanti secondi un health file e' considerato VECCHIO. Un bot ticka ogni
+# 30 s: 5 minuti di silenzio significano che quel bot non sta lavorando.
+# Serve a non presentare come "running" un nodo spento giorni prima.
+BOT_STALE_S = 300.0
+
 
 def fetch_remote_json(host, remote_path, cmd=None):
     """Legge un JSON da una macchina remota via SSH, con cache TTL (30s)."""
@@ -399,6 +404,7 @@ def collect_node_bots():
         for p in sorted(NODE_DIR.glob("*_health.json")):
             try:
                 h = json.loads(p.read_text())
+                h["mode"] = "paper"
                 bots[h.get("symbol", p.stem)] = h
             except Exception:
                 continue
@@ -410,6 +416,7 @@ def collect_node_bots():
         for p in sorted(trend_dir.glob("*_health.json")):
             try:
                 h = json.loads(p.read_text())
+                h["mode"] = "paper"
                 bots[f"trend:{h.get('symbol', p.stem)}"] = h
             except Exception:
                 continue
@@ -430,13 +437,30 @@ def collect_node_bots():
         try:
             h = json.loads(p.read_text())
             if h.get("timestamp"):
+                h["mode"] = "live"
                 bots[key] = h
         except Exception:
             continue
     # Nodi remoti: chiavi "nuvola:paper:ADA/EUR", "mc2:paper:ADA/EUR" ecc.
     for node_name, cfg in REMOTE_NODES.items():
         for sym, h in fetch_remote_node_bots(node_name).items():
+            h.setdefault("mode", "paper")
             bots[f"{node_name}:{sym}"] = h
+    # Freschezza REALE: un health file vecchio non e' un bot che sta lavorando.
+    # Prima la dashboard mostrava come "running" nodi spenti da giorni (es.
+    # trend_sol_kraken.json fermo al 24 agosto, nuvola da 23 ore).
+    now = time.time()
+    for _key, h in bots.items():
+        if not isinstance(h, dict):
+            continue
+        try:
+            ts = float(h.get("timestamp") or 0.0)
+        except (TypeError, ValueError):
+            ts = 0.0
+        age = (now - ts) if ts else None
+        h["age_s"] = round(age, 1) if age is not None else None
+        h["stale"] = (age is None) or (age > BOT_STALE_S)
+        h.setdefault("mode", "paper")
     return bots
 
 
@@ -662,9 +686,11 @@ def collect():
     #    Prima esistevano due costanti hardcoded (24.0 e 25.47): con 75 EUR
     #    investiti la dashboard mostrava sempre 24 EUR.
     okx_eq = sum(b.get("total_equity", 0) for k, b in node_bots.items()
-                 if "mc2:okx" in k and b.get("status") == "running")
+                 if "mc2:okx" in k and b.get("status") == "running"
+                 and not b.get("stale"))
     kraken_eq = sum(b.get("total_equity", 0) for k, b in node_bots.items()
-                    if "trend-live" in k and b.get("status") == "running")
+                    if "trend-live" in k and b.get("status") == "running"
+                    and not b.get("stale"))
     data["bot_equity"] = round(okx_eq, 2)
     data["kraken_equity"] = round(kraken_eq, 2)
     if real_total > 0:
@@ -674,11 +700,28 @@ def collect():
         data["total_equity"] = round(okx_eq + kraken_eq, 2)
         data["equity_source"] = "bots"
 
-    node_running = [b for b in node_bots.values() if b.get("status") == "running"]
-    data["node_total_pnl"] = round(sum(b.get("pnl", 0) for b in node_running), 4)
-    data["node_total_trades"] = sum(b.get("trades", 0) for b in node_running)
-    wins = sum(b.get("wins", 0) for b in node_running)
-    losses = sum(b.get("losses", 0) for b in node_running)
+    # ONESTA' DELLA TELEMETRIA (2026-09-16). Due difetti osservati dal vivo:
+    #  1) il PnL dei bot PAPER (equity virtuali, capitali da 100-300 EUR) veniva
+    #     sommato al PnL reale: la dashboard mostrava +26,44 EUR mentre il
+    #     risultato realizzato era circa -0,30 EUR;
+    #  2) i bot con health vecchio (nodi spenti) contavano come "running".
+    # Ora: "running" = vivo, non stale e recente; paper e live separati.
+    live_running = [b for b in node_bots.values()
+                    if b.get("status") == "running" and not b.get("stale")
+                    and b.get("mode") == "live"]
+    paper_running = [b for b in node_bots.values()
+                     if b.get("status") == "running" and not b.get("stale")
+                     and b.get("mode") != "live"]
+    node_running = live_running
+    data["node_total_pnl"] = round(sum(b.get("pnl", 0) for b in live_running), 4)
+    data["node_paper_pnl"] = round(sum(b.get("pnl", 0) for b in paper_running), 4)
+    data["node_live_bots"] = len(live_running)
+    data["node_paper_bots"] = len(paper_running)
+    data["node_stale_bots"] = sorted(k for k, b in node_bots.items()
+                                     if isinstance(b, dict) and b.get("stale"))
+    data["node_total_trades"] = sum(b.get("trades", 0) for b in live_running)
+    wins = sum(b.get("wins", 0) for b in live_running)
+    losses = sum(b.get("losses", 0) for b in live_running)
     data["node_win_rate"] = round(wins / (wins + losses) * 100, 1) if (wins + losses) else 0
     data["node_errors"] = {sym: b.get("error", "")
                            for sym, b in node_bots.items() if b.get("error")}

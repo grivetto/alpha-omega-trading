@@ -262,8 +262,15 @@ class BotTask:
         # cancellati prima della scrittura (bug: errori di piazzamento invisibili)
         self._last_error = ""
         # equity reale: get_equity puo' fare I/O (fetch live) → to_thread
-        equity = await asyncio.to_thread(self._get_equity)
-        equity = await self._guard_equity(equity)
+        raw_equity = await asyncio.to_thread(self._get_equity)
+        equity = await self._guard_equity(raw_equity)
+        if equity is None:
+            # C7: equity inattendibile ⇒ NESSUN ordine in questo tick e nessuna
+            # baseline aggiornata. In health si scrive il valore GREZZO letto
+            # (non un sostituto), cosi' la telemetria resta fedele al conto.
+            await self._persist(raw_equity if raw_equity == raw_equity else 0.0,
+                                blocked=True)
+            return
         if equity > self.state.peak_equity:
             self.state.peak_equity = equity
         dd = (self.state.peak_equity - equity) / max(1e-10, self.state.peak_equity)
@@ -524,12 +531,21 @@ class BotTask:
             self._err_log_ts[key] = now
             log.warning("%s %s: %s", self.cfg.symbol, key, msg[:300])
 
-    async def _guard_equity(self, equity: float) -> float:
-        """P2 — sanity dell'equity: letture impossibili (spike/dip da fetch
-        sporco) sostituite con l'ultimo valore valido. Range plausibile per
-        conti micro: [5% , 30×] del capitale — evita che una lettura sporca
-        avveleni peak/daily/weekly baseline (bug weekly_loss_-99% visto in
-        produzione su DOGE nuvola).
+    async def _guard_equity(self, equity: float) -> "float | None":
+        """P2 — sanity dell'equity. Ritorna l'equity se plausibile, **None** se
+        inattendibile: in quel caso il tick viene saltato e nessun ordine parte.
+
+        Range plausibile per conti micro: [5% , 30×] del capitale — evita che
+        una lettura sporca avveleni peak/daily/weekly baseline (bug
+        weekly_loss_-99% visto in produzione su DOGE nuvola).
+
+        C7 (revisione esterna 2026-09-15): prima, su lettura sospetta, si
+        restituiva l'ultimo valore valido o — in mancanza — il capitale di
+        configurazione. Cosi' drawdown, circuit breaker e stop-loss venivano
+        calcolati su un numero inventato e *stabile*, e il rischio reale
+        spariva dalla metrica. Osservato dal vivo su mc2: "equity sospetta
+        0.0852 per SOL/EUR -> uso 12.0000" migliaia di volte, con 0.0005 EUR
+        liberi reali. Ora non si sostituisce nulla: si salta il tick.
 
         Fix B1 (2026-09-07): per exchange live (Kraken/OKX), se l'equity bassa
         e' coerente con free+asset*price (capitale reale spostato in asset),
@@ -576,10 +592,12 @@ class BotTask:
                         return equity
             except Exception:  # noqa: BLE001
                 pass  # fallback al comportamento originale
-        prev = getattr(self, "_last_sane_equity", cap)
-        log.warning("equity sospetta %.4f per %s → uso %.4f",
-                    equity, self.cfg.symbol, prev)
-        return prev
+        # C7: nessun valore sostitutivo. Un'equity che non si riesce a
+        # verificare non e' un'equity su cui decidere.
+        log.warning("equity inattendibile %.4f per %s: tick saltato "
+                    "(nessun valore sostitutivo)", equity, self.cfg.symbol)
+        self._last_error = f"equity inattendibile: {equity:.4f}"
+        return None
 
     async def _persist(self, equity: float, blocked: bool,
                        free_quote: float = 0.0) -> None:

@@ -184,3 +184,56 @@ def test_m19_rsi_confirm_alto_impedisce_il_segnale_bullish():
 
 def test_m19_rsi_confirm_zero_consente_il_segnale_bullish():
     assert _fed_policy(0.0)._signal() == "bullish"
+
+
+# ── C7: equity inattendibile ⇒ tick saltato, nessun valore sostitutivo ─────
+
+def _bare_task(capital: float = 12.0, symbol: str = "SOL/EUR"):
+    """BotTask minimale per esercitare _guard_equity senza I/O reale.
+
+    Si scrivono i test in forma sincrona con asyncio.run(): il venv di
+    produzione non ha pytest-asyncio installato (pytest segnala "Unknown
+    config option: asyncio_mode"), quindi un @pytest.mark.asyncio verrebbe
+    ignorato in silenzio.
+    """
+    from types import SimpleNamespace
+    from denaro.application.orchestrator import BotTask
+
+    task = BotTask.__new__(BotTask)
+    task.cfg = SimpleNamespace(capital=capital, symbol=symbol)
+    task.ex = object()          # non e' un PaperExchange -> ramo live
+    task._price_source = None
+    task._last_error = ""
+    return task
+
+
+def test_c7_equity_inattendibile_ritorna_none_e_non_sostituisce():
+    """Su lettura fuori range NON si restituisce un valore inventato.
+
+    Prima si proseguiva con l'ultimo valore valido o, in mancanza, con
+    `cfg.capital`: drawdown, circuit breaker e stop-loss venivano calcolati su
+    un numero stabile e falso. Osservato dal vivo su mc2 ("equity sospetta
+    0.0852 per SOL/EUR -> uso 12.0000") con 0.0005 EUR liberi reali.
+    """
+    import asyncio
+
+    task = _bare_task()
+    res = asyncio.run(task._guard_equity(0.0852))   # 0,7% del capitale
+    assert res is None, "un'equity inattendibile non deve produrre un valore"
+    assert "inattendibile" in task._last_error
+
+
+def test_c7_equity_fuori_range_alto_ritorna_none():
+    import asyncio
+
+    task = _bare_task()
+    assert asyncio.run(task._guard_equity(500.0)) is None    # oltre 30x
+    assert asyncio.run(task._guard_equity(float("nan"))) is None
+
+
+def test_c7_equity_plausibile_viene_restituita():
+    import asyncio
+
+    task = _bare_task()
+    assert asyncio.run(task._guard_equity(12.0)) == 12.0
+    assert asyncio.run(task._guard_equity(40.0)) == 40.0

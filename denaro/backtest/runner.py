@@ -254,15 +254,17 @@ def run_backtest(cfg: BacktestConfig, bars: Sequence[Sequence[float]],
         # 0) i fill avvengono meccanicamente nella barra (il bot li scopre al tick)
         pending.extend(sim.advance_bar(bar, ts))
 
-        # 1) equity mark-to-market + guardia (replica _guard_equity)
+        # 1) equity mark-to-market + guardia (replica _guard_equity del live).
+        # C7: se l'equity e' fuori range il live SALTA il tick — non sostituisce
+        # il valore, non aggiorna peak/drawdown e non decide. Il backtest deve
+        # fare lo stesso, altrimenti misura una strategia che non esiste.
         equity = sim.equity(price)
         if cfg.guard_equity:
             lo, hi = cfg.capital * 0.05, cfg.capital * 30.0
             if equity <= lo or equity > hi:
                 res.equity_guard_hits += 1
-                equity = last_sane_equity
-            else:
-                last_sane_equity = equity
+                continue
+            last_sane_equity = equity
 
         # 2) peak / drawdown
         if equity > peak:
