@@ -69,10 +69,11 @@ def build():
     # non piu' la somma dei total_equity per-bot (che duplica il saldo del
     # subaccount su ogni bot e non vede i conti non presidiati da un bot).
     okx_eq = sum(b.get("total_equity", 0) for k, b in node_bots.items()
-                 if k.startswith("okx:") and b.get("status") == "running")
+                 if k.startswith("okx:") and b.get("status") == "running"
+                 and not b.get("stale"))
     kraken_eq = sum(b.get("total_equity", 0) for k, b in node_bots.items()
                     if (k.startswith("kraken:") or k.startswith("trend-live:"))
-                    and b.get("status") == "running")
+                    and b.get("status") == "running" and not b.get("stale"))
     data["bot_equity"] = round(okx_eq, 2)
     data["kraken_equity"] = round(kraken_eq, 2)
     if real_total > 0:
@@ -82,12 +83,36 @@ def build():
         data["total_equity"] = round(okx_eq + kraken_eq, 2)
         data["equity_source"] = "bots"
 
-    node_running = [b for b in node_bots.values() if b.get("status") == "running"]
-    data["node_total_pnl"] = round(sum(b.get("pnl", 0) for b in node_running), 4)
-    data["node_total_trades"] = sum(b.get("trades", 0) for b in node_running)
-    wins = sum(b.get("wins", 0) for b in node_running)
-    losses = sum(b.get("losses", 0) for b in node_running)
-    data["node_win_rate"] = round(wins / (wins + losses) * 100, 1) if (wins + losses) else 0
+    # Totali ONESTI: unica implementazione condivisa con l'aggregatore
+    # (live/paper separati, stale esclusi). Prima questa logica era duplicata
+    # qui e le due copie potevano divergere: e' il motivo per cui la dashboard
+    # pubblica mostrava +74,99 EUR di PnL contro -0,30 reali.
+    # Totali ONESTI. Osservato dal vivo il 2026-09-16: la dashboard pubblica
+    # mostrava +74,99 EUR di PnL mentre il risultato realizzato era ~-0,30 EUR.
+    # Due cause:
+    #  - i bot con health VECCHIO contavano come "running" (nodi spenti da
+    #    giorni apparivano attivi): ora serve health non stale;
+    #  - il PnL dei bot PAPER (equity virtuali da 100-300 EUR) veniva sommato a
+    #    quello reale: ora e' una voce separata.
+    # Logica volutamente inline e non importata dall'aggregatore: il cron che
+    # genera lo snapshot deve restare autonomo.
+    _live = [b for b in node_bots.values()
+             if b.get("status") == "running" and not b.get("stale")
+             and b.get("mode") == "live"]
+    _paper = [b for b in node_bots.values()
+              if b.get("status") == "running" and not b.get("stale")
+              and b.get("mode") != "live"]
+    data["node_total_pnl"] = round(sum(b.get("pnl", 0) for b in _live), 4)
+    data["node_paper_pnl"] = round(sum(b.get("pnl", 0) for b in _paper), 4)
+    data["node_live_bots"] = len(_live)
+    data["node_paper_bots"] = len(_paper)
+    data["node_stale_bots"] = sorted(k for k, b in node_bots.items()
+                                     if isinstance(b, dict) and b.get("stale"))
+    data["node_total_trades"] = sum(b.get("trades", 0) for b in _live)
+    _wins = sum(b.get("wins", 0) for b in _live)
+    _losses = sum(b.get("losses", 0) for b in _live)
+    data["node_win_rate"] = (round(_wins / (_wins + _losses) * 100, 1)
+                             if (_wins + _losses) else 0)
     data["node_errors"] = {sym: b.get("error", "")
                            for sym, b in node_bots.items() if b.get("error")}
 
@@ -102,7 +127,8 @@ def build():
         else:
             prefix = f"{node_name}:"
             nb = {k: v for k, v in node_bots.items() if k.startswith(prefix)}
-        running = [b for b in nb.values() if b.get("status") == "running"]
+        running = [b for b in nb.values()
+                   if b.get("status") == "running" and not b.get("stale")]
         node_totals[node_name] = {
             "bots": len(nb),
             "running": len(running),
