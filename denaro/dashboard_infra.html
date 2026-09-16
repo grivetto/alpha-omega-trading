@@ -227,14 +227,14 @@ const fmt = (v, d=2) => (v === undefined || v === null) ? '—' : Number(v).toLo
 const esc = (s) => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 const BOT_META = {
-  'trend-live:SOL/EUR': {sym: 'SOL/EUR', ex: 'KRAKEN·LIVE', color: '#00f3ff'},
-  'trend-live:XRP/EUR': {sym: 'XRP/EUR', ex: 'KRAKEN·LIVE', color: '#0aff9d'},
+  // [kraken rimosso 2026-09-17] 'trend-live:SOL/EUR': {sym: 'SOL/EUR', ex: 'KRAKEN·LIVE', color: '#00f3ff'},
+  // [kraken rimosso 2026-09-17] 'trend-live:XRP/EUR': {sym: 'XRP/EUR', ex: 'KRAKEN·LIVE', color: '#0aff9d'},
   'mc2:okx:DOGE/EUR': {sym: 'DOGE/EUR', ex: 'OKX·MC2SUB1', color: '#ff2bd6'},
   'mc2:okx:SOL/EUR': {sym: 'SOL/EUR', ex: 'OKX·MC2SUB1', color: '#ffe600'},
   'nuvola:okx:XRP/EUR': {sym: 'XRP/EUR', ex: 'OKX·NUVOLA', color: '#0aff9d'},
   'nuvola:okx:ETH/EUR': {sym: 'ETH/EUR', ex: 'OKX·NUVOLA', color: '#00f3ff'},
 };
-const ORDER = ['trend-live:SOL/EUR', 'trend-live:XRP/EUR', 'mc2:okx:DOGE/EUR', 'mc2:okx:SOL/EUR', 'nuvola:okx:XRP/EUR', 'nuvola:okx:ETH/EUR'];
+const ORDER = ['mc2:okx:DOGE/EUR', 'mc2:okx:SOL/EUR', 'nuvola:okx:XRP/EUR', 'nuvola:okx:ETH/EUR'];
 
 async function load() {
   try {
@@ -256,7 +256,11 @@ function render(d) {
   // Ripartizione REALE per conto (equity_breakdown dall'aggregator). Fallback ai
   // vecchi totali per bot se il campo non e' disponibile.
   const eb = d.equity_breakdown || {};
-  const ebKeys = Object.keys(eb).filter(k => eb[k] && eb[k].ok && eb[k].eur !== null && eb[k].eur !== undefined);
+    // KRAKEN temporaneamente escluso dalla dashboard (richiesta 2026-09-17):
+  // il conto ha solo polvere e il nodo live e' fermo. Per riattivarlo
+  // basta svuotare HIDE_EXCHANGES.
+  const HIDE_EXCHANGES = ['kraken'];
+const ebKeys = Object.keys(eb).filter(k => eb[k] && eb[k].ok && eb[k].eur !== null && eb[k].eur !== undefined && !HIDE_EXCHANGES.some(x => String(k).toLowerCase().includes(x)));
   $('eqbreak').innerHTML = ebKeys.length
     ? ebKeys.map(k => `${esc(k)} <b>€${fmt(eb[k].eur)}</b>`).join(' · ')
     : `OKX LIVE (MC2) <b>€${fmt(be)}</b> + KRAKEN LIVE (MARCODG1) <b>€${fmt(ke)}</b>`;
