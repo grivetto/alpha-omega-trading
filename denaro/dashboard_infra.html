@@ -263,7 +263,7 @@ function render(d) {
 const ebKeys = Object.keys(eb).filter(k => eb[k] && eb[k].ok && eb[k].eur !== null && eb[k].eur !== undefined && !HIDE_EXCHANGES.some(x => String(k).toLowerCase().includes(x)));
   $('eqbreak').innerHTML = ebKeys.length
     ? ebKeys.map(k => `${esc(k)} <b>€${fmt(eb[k].eur)}</b>`).join(' · ')
-    : `OKX LIVE (MC2) <b>€${fmt(be)}</b> + KRAKEN LIVE (MARCODG1) <b>€${fmt(ke)}</b>`;
+    : `OKX LIVE <b>€${fmt(be)}</b>`;
   if (d.equity_unpriced && d.equity_unpriced.length) {
     $('eqdetail').innerHTML += ' · non valorizzate: ' + esc(d.equity_unpriced.join(', '));
   }
