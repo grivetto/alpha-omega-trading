@@ -686,3 +686,87 @@ reali. Corretto il harness (quattro tick al giorno per riprodurre l'OHLC), le
 discrepanze sono scese a zero. E' lo stesso tipo di errore di misura che ha
 caratterizzato i round precedenti: prima di accusare il codice, verificare
 l'harness.
+
+
+## 12. Round 10-11 — Quanto capitale serve davvero
+
+### 12.1 Il difetto trovato dal live check, prima che mordesse
+
+Il 2026-09-17 il tool di verifica live ha rivelato che **6 bot su 15 non
+avrebbero mai piazzato un ordine**, in silenzio. Con `capital: 5.0` per bot e
+rischio 2%, il sizing sul rischio produceva posizioni di 0.84-1.75 EUR, mentre i
+minimi REALI dell'exchange (mai controllati prima) sono:
+
+| asset | minimo ordine | in EUR |
+|---|---|---|
+| BTC | 0.0001 | **6.67** |
+| ETH | 0.001 | 2.14 |
+| ADA | 10 | 1.76 |
+| XLM | 10 | 1.62 |
+| ARB | 10 | 1.51 |
+| XRP | 1 | 1.13 |
+| AAVE | 0.01 | 1.12 |
+| LINK | 0.1 | 0.99 |
+| DOT | 1 | 0.93 |
+| SOL | 0.01 | 0.88 |
+| DOGE | 10 | 0.71 |
+| UNI | 0.1 | 0.67 |
+| AVAX | 0.1 | 0.66 |
+| LTC | 0.01 | 0.47 |
+| ATOM | 0.1 | 0.14 |
+
+Correzione: **ogni bot riceve il capitale del CONTO**, non un quinto.
+L'orchestratore usa `_available = max(0, min(capital_config, free_balance))`,
+quindi il sizing resta limitato dalla cassa libera reale: l'esposizione totale
+non puo' superare il conto, e ogni asset rischia il 2% del capitale disponibile,
+che e' il modello di rischio della strategia misurata.
+
+### 12.2 Capitale minimo perche' la strategia funzioni
+
+`tools/trend_capital.py` calcola, per ogni asset, il capitale necessario
+perche' la posizione calcolata superi il minimo reale:
+
+    capitale_min = min_eur x (stop_mult x ATR%) / risk_pct
+
+| conto | perche' OGNI bot possa piazzare | perche' TUTTI siano in posizione | attuale |
+|---|---|---|---|
+| mc2 | 19.03 EUR (BTC) | 42.12 EUR | 24.90 |
+| nuvola | 5.98 EUR (DOT) | 21.59 EUR | 24.83 |
+| MARCODG1 | 14.03 EUR (ARB) | 42.04 EUR | 24.81 |
+
+Lettura: **con il capitale attuale ogni bot puo' piazzare**, ma su mc2 e
+MARCODG1 non tutti e cinque possono essere in posizione insieme. Quando piu'
+segnali scattano contemporaneamente, il limite della cassa libera riduce le
+posizioni successive: alcune possono scendere sotto il minimo dell'exchange e
+venire scartate. La strategia funziona, ma con un tetto di capacita'.
+
+**Il numero da ricordare: ~42 EUR per conto (126 EUR in totale) e' il capitale
+al quale la flotta esprime la strategia misurata senza vincoli di capacita'.**
+
+### 12.3 Capitale e rendimento atteso
+
+L'edge misurato e' ~+7% annuo (mean del portafoglio a 19 asset, netto fee
+taker). Il rendimento atteso e' proporzionale al capitale:
+
+| capitale | rendimento atteso |
+|---|---|
+| 25 EUR | 1.75 EUR/anno (0.15/mese) |
+| 100 EUR | 7 EUR/anno |
+| 500 EUR | 35 EUR/anno |
+| 1.000 EUR | 70 EUR/anno |
+| 10.000 EUR | 700 EUR/anno (58/mese) |
+
+Questa e' la risposta quantificata alla domanda "rendere il sistema
+redditizio": **il sistema ha un edge misurato e verificato, ma il suo valore
+assoluto dipende interamente dal capitale.** Non c'e' ulteriore lavoro di
+strategia che cambi l'ordine di grandezza: a fee Lv1 (maker 0.20%, taker 0.35%)
+e con un segnale che vale ~7% annuo, il collo di bottiglia e' la scala.
+
+Le due leve che restano, entrambe fuori dalla ricerca:
+
+1. **piu' capitale sullo stesso edge** — e piu' capitale significa anche un tier
+   di commissioni migliore, che a sua volta AUMENTA l'alpha misurato (a fee
+   maker 0.20% l'alpha del trend passa da +12.33% a +34.98% nei test);
+2. **fonti di rendimento non direzionali** (funding rate, basis), dove il premio
+   non e' una previsione di prezzo ma un pagamento strutturale: richiedono
+   derivati.
