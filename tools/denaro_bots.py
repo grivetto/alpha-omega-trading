@@ -68,9 +68,14 @@ METRICHE = [
     ("error",         "ultimo errore",             4, ""),
     ("free",          "free EUR",                  0, "EUR"),
     ("hurst",         "Hurst",                     0, ""),
+    # round 28: la posizione detenuta non era visibile. Con lo stop monitorato
+    # non ci sono ordini aperti quando si e' in posizione, quindi buys/sells
+    # restano 0 e un bot in posizione era indistinguibile da uno flat.
+    ("in_posizione",  "posizione detenuta (1=si)", 3, ""),
     ("kelly",         "kelly fraction",            0, ""),
     ("losses",        "trade perdenti",            3, ""),
     ("pnl",           "PnL realizzato EUR",        0, "EUR"),
+    ("pos_stop",      "livello di stop monitorato", 0, ""),
     ("profit_factor", "profit factor",             0, ""),
     ("regime",        "regime (stringa)",          4, ""),
     ("rsi",           "RSI",                       0, ""),
@@ -104,6 +109,11 @@ MAPPA = [
     ("adx", "adx"), ("atr_pct", "atr_pct"), ("rsi", "rsi"),
     ("ema200", "ema200"), ("hurst", "hurst"), ("strategy", "strategy"),
     ("regime", "regime"), ("error", "error"),
+    # round 28: posizione detenuta e suo livello di stop. Si scrivono SEMPRE
+    # (0 quando flat), perche' il feeder salta le chiavi assenti e l'item
+    # andrebbe in "nessun dato" a ogni chiusura di posizione.
+    ("in_posizione", "in_posizione"), ("pos_entry", "pos_entry"),
+    ("pos_stop", "pos_stop"),
 ]
 
 # Oltre questa eta' (secondi) il file health e' considerato FERMO e il bot

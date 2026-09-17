@@ -324,6 +324,48 @@ class TestTrendIntegrazione(unittest.TestCase):
         assert pol.in_posizione is False, "la policy doveva tornare FLAT"
         assert pol.stop == 0.0, "lo stop stantio doveva sparire"
 
+    def test_health_espone_la_posizione(self):
+        """L'health deve dire se il bot detiene una posizione.
+
+        Con lo stop monitorato, quando si e' in posizione NON ci sono ordini
+        aperti: buys e sells restano 0 e la dashboard non poteva distinguere un
+        bot in posizione da uno flat. Il campo in_posizione (con entry e stop)
+        colma il buco di telemetria.
+        """
+        import json
+        orol = Orologio(GIORNO * 10)
+        pol = self._policy()
+        pol.atr = 2.0
+        ex = FakeExchange(price=110.0, free_quote=0.0)
+        bot = self._bot(orol, pol, ex)
+
+        async def flat():
+            await bot._persist(100.0, blocked=False, free_quote=0.0)
+        asyncio.run(flat())
+        h = json.loads((Path(self.dir) / "health.json").read_text())
+        assert h.get("in_posizione") == 0, "flat: in_posizione doveva essere 0"
+
+        # ora con una posizione detenuta
+        (Path(self.dir) / "state.json").write_text(json.dumps({
+            "symbol": "SOL/EUR", "open_buys": {}, "open_sells": {},
+            "total_pnl": 0.0, "total_trades": 0, "wins": 0, "losses": 0,
+            "volume": 0.0, "peak_equity": 0.0, "max_dd": 0.0,
+            "start_ts": 0.0, "stop_loss_triggered": False,
+            "posizione_aperta": {"entry": 100.0, "amount": 1.0, "stop": 96.0},
+        }), encoding="utf-8")
+        ex.asset = 1.0
+        pol2 = self._policy()
+        pol2.atr = 2.0
+        bot2 = self._bot(orol, pol2, ex)
+
+        async def in_pos():
+            await bot2._persist(110.0, blocked=False, free_quote=0.0)
+        asyncio.run(in_pos())
+        h2 = json.loads((Path(self.dir) / "health.json").read_text())
+        assert h2.get("in_posizione") == 1, "in posizione: in_posizione doveva essere 1"
+        assert h2.get("pos_entry") == 100.0
+        assert h2.get("pos_stop") == 96.0
+
     def test_non_compra_senza_breakout(self):
         """Serie piatta: nessun ordine, nessun errore."""
         orol = Orologio(GIORNO * 10)

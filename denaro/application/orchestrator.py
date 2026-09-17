@@ -1179,6 +1179,21 @@ class BotTask:
             "error": self._last_error,
             "timestamp": self._now(),
         }
+        # POSIZIONE DETENUTA. Per le policy a STOP MONITORATO (trend) quando si e'
+        # in posizione NON ci sono ordini aperti: buys e sells restano 0 e la
+        # dashboard non poteva distinguere "in posizione" da "flat". Qui si
+        # espone lo stato vero, con entry e livello di stop.
+        pos = self.state.posizione_aperta or {}
+        payload["in_posizione"] = 1 if pos else 0
+        # I campi si scrivono SEMPRE (0 quando flat): il feeder Zabbix salta le
+        # chiavi assenti, quindi un item che sparisce quando si e' flat andrebbe
+        # in "nessun dato" e farebbe scattare il trigger a vuoto.
+        try:
+            payload["pos_entry"] = round(float(pos.get("entry") or 0.0), 8)
+            payload["pos_stop"] = round(float(pos.get("stop") or 0.0), 8)
+        except (TypeError, ValueError):
+            payload["pos_entry"] = 0.0
+            payload["pos_stop"] = 0.0
         # ATLAS v6: strategia + regime (se la policy e' adattiva) + risk info
         payload["strategy"] = self.policy.__class__.__name__.replace("Policy", "").lower()
         regime = getattr(self.policy, "regime", None)
