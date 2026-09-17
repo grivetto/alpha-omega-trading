@@ -427,9 +427,10 @@ def collect_node_bots():
         "okx:SOL/EUR": HEALTH_DIR / "sol.json",
         "okx:DOGE/EUR": HEALTH_DIR / "doge.json",
         "okx:ETH/EUR": HEALTH_DIR / "eth.json",
-        "kraken:SOL/EUR": HEALTH_DIR / "sol_kraken.json",
-        "trend-live:SOL/EUR": HEALTH_DIR / "trend_sol_kraken.json",
-        "trend-live:XRP/EUR": HEALTH_DIR / "trend_xrp_kraken.json",
+        # KRAKEN RIMOSSO (2026-09-17): sol_kraken.json, trend_sol_kraken.json e
+        # trend_xrp_kraken.json sono fossili della generazione precedente. Il
+        # file esiste ancora, quindi il bot veniva aggiunto alla dashboard come
+        # card VUOTA ("stale" non valorizzato) accanto ai 15 bot vivi.
         "mc2:okx:DOGE/EUR": HEALTH_DIR / "doge_mc2.json",
         "mc2:okx:SOL/EUR": HEALTH_DIR / "sol_mc2.json",
     }
@@ -671,8 +672,7 @@ def collect():
     # 1) Bot health files (I 4 BOT REALI ATTIVI)
     bots = {}
     live_bots_map = {
-        "trend-live:SOL/EUR": HEALTH_DIR / "trend_sol_kraken.json",
-        "trend-live:XRP/EUR": HEALTH_DIR / "trend_xrp_kraken.json",
+        # Kraken rimosso: le voci trend-live:* erano fossili (vedi sopra).
         "mc2:okx:BTC/EUR": Path("/home/sergio/denaro/health/btc_mc2.json"),
         "mc2:okx:ETH/EUR": Path("/home/sergio/denaro/health/eth_mc2.json"),
         "mc2:okx:SOL/EUR": Path("/home/sergio/denaro/health/sol_mc2.json"),
