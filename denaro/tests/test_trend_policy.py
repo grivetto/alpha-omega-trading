@@ -211,3 +211,61 @@ def test_equivalenza_dell_atr_su_dati_reali():
                             [b["c"] for b in barre], 14)[-1]
         peggiore = max(peggiore, abs(pol.atr - atteso))
     assert peggiore < 1e-12, "ATR divergente di %.3e" % peggiore
+
+def test_precarica_barre_ordina_e_calcola():
+    """Lo storico va accettato in qualunque ordine (OKX lo da' decrescente)."""
+    pol = TrendPolicy(TrendParams(canale=3, atr_period=3, trend_ema=0))
+    righe = [[(i + 1) * 86_400.0, 100.0 + i, 101.0 + i, 99.0 + i, 100.5 + i, 1000.0]
+             for i in range(10 - 1, -1, -1)]          # decrescente come OKX
+    n = pol.precarica_barre(righe)
+    assert n == 10
+    ts = [b["ts"] for b in pol.barre]
+    assert ts == sorted(ts), "le barre devono essere in ordine crescente"
+    assert pol.atr > 0, "dopo il precaricamento l'ATR deve essere calcolato"
+    barre = list(pol.barre)
+    atteso = atr_wilder([b["h"] for b in barre], [b["l"] for b in barre],
+                        [b["c"] for b in barre], 3)[-1]
+    assert pol.atr == pytest.approx(atteso)
+
+
+def test_precarica_barre_scarta_le_voci_invalide():
+    pol = TrendPolicy(TrendParams(canale=2, atr_period=2, trend_ema=0))
+    righe = [[86400.0, 100, 101, 99, 100, 10],
+             ["x", 1, 2, 3, 4, 5],
+             [172800.0, 0, 0, 0, 0, 0],
+             [259200.0, 100, 99, 101, 100, 10],     # high < low
+             [345600.0, 100, 101, 99, 100, 10]]
+    n = pol.precarica_barre(righe)
+    assert n == 2, "attese 2 barre valide, accettate %d" % n
+
+
+def test_precarica_barre_lista_vuota():
+    pol = TrendPolicy()
+    assert pol.precarica_barre([]) == 0
+    assert pol.precarica_barre(None) == 0
+
+
+def test_precarica_barre_abilita_il_segnale_su_dati_reali():
+    """Dopo il seeding la policy deve poter valutare il breakout come il backtest."""
+    import pathlib
+
+    from denaro.research import eval as E
+
+    f = pathlib.Path("/home/sergio/alpha-omega-trading/backtest_data/dl_BTC_1D.csv")
+    if not f.exists():
+        pytest.skip("dati reali non disponibili")
+    candele = E.load_csv(f)
+    canale, atr_n, ema_n = 40, 14, 100
+    righe = [[c["ts"] / 1000.0 if c["ts"] > 1e11 else c["ts"], c["o"], c["h"],
+              c["l"], c["c"], c["v"]] for c in candele]
+    righe.reverse()                                   # come le da' OKX
+    pol = TrendPolicy(TrendParams(canale=canale, atr_period=atr_n, trend_ema=ema_n))
+    n = pol.precarica_barre(righe)
+    assert n == len(candele)
+    assert pol.atr > 0 and pol.ema > 0 and pol.donchian > 0
+    # la condizione deve coincidere con quella calcolata dal rig di ricerca
+    chiusure = [c["c"] for c in candele]
+    alti = [c["h"] for c in candele]
+    ema_l = ema_series(chiusure, ema_n)
+    atteso = (chiusure[-1] > max(alti[-1 - canale:-1]) and chiusure[-1] > ema_l[-1])
+    assert pol.segnale_breakout() == atteso

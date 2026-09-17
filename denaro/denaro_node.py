@@ -370,6 +370,22 @@ class NodeApp:
                 **paths,
             )
             policy = build_policy(bot, exchange)
+            # Le policy che costruiscono le barre dai tick (TrendPolicy) partono
+            # senza storico: senza precaricamento servirebbero ~150 giorni prima
+            # del primo segnale. L'I/O sta QUI, il dominio resta puro.
+            _precarica = getattr(policy, "precarica_barre", None)
+            if _precarica is not None:
+                _fetch = (getattr(exchange, "fetch_ohlcv_raw", None)
+                          or getattr(exchange, "fetch_ohlcv", None))
+                if _fetch is not None:
+                    try:
+                        _storico = _fetch(bot["symbol"], "1d", 300)
+                        _n = _precarica(_storico)
+                        log.info("policy %s: precaricate %d barre giornaliere",
+                                 bot["symbol"], _n)
+                    except Exception as _e:  # noqa: BLE001
+                        log.warning("policy %s: precarica storico fallita: %s",
+                                    bot["symbol"], _e)
             risk = RiskManager(
                 daily_loss_limit=float(bot.get("daily_loss_limit", 0.05)),
                 max_drawdown_limit=float(bot.get("max_drawdown_limit", 0.15)),

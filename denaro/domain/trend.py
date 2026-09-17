@@ -156,6 +156,50 @@ class TrendPolicy(Policy):
 
     # --- contratto Policy ----------------------------------------------------
 
+
+
+    def precarica_barre(self, barre) -> int:
+        """Riempie lo storico con barre giornaliere GIA' CHIUSE.
+
+        Serve perche' la policy costruisce le barre dai tick: partendo da zero
+        avrebbe bisogno di canale+ATR+media (~150 barre) prima di poter operare,
+        cioe' circa cinque mesi di attivita' a vuoto. Il Node scarica lo storico
+        all'avvio e lo inietta qui: l'I/O resta nell'infrastruttura, il dominio
+        resta puro.
+
+        Accetta sia [[ts, o, h, l, c, v], ...] con ts in SECONDI sia dict.
+        Le barre vengono ordinate per timestamp crescente (l'API OKX le ritorna
+        dalla piu' recente) e le voci non valide sono scartate.
+        Ritorna il numero di barre accettate.
+        """
+        lette = []
+        for b in barre or []:
+            try:
+                if isinstance(b, dict):
+                    ts = float(b["ts"])
+                    o, h, l, c = (float(b["o"]), float(b["h"]),
+                                  float(b["l"]), float(b["c"]))
+                elif len(b) >= 5:
+                    ts = float(b[0])
+                    o, h, l, c = (float(b[1]), float(b[2]),
+                                  float(b[3]), float(b[4]))
+                else:
+                    continue
+            except (KeyError, TypeError, ValueError):
+                continue
+            if min(o, h, l, c) <= 0 or h < l:
+                continue
+            lette.append((ts, o, h, l, c))
+        if not lette:
+            return 0
+        lette.sort(key=lambda x: x[0])
+        # scarta l'ultima se e' la barra di oggi (non ancora chiusa): il suo
+        # massimo/minimo sarebbero parziali e falserebbero il canale
+        for ts, o, h, l, c in lette:
+            self.barre.append({"ts": ts, "o": o, "h": h, "l": l, "c": c})
+        self._aggiorna_indicatori()
+        return len(lette)
+
     def on_price(self, price: float) -> None:
         """No-op: le barre si costruiscono in decide(), dove c'e' il timestamp.
 
