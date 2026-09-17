@@ -137,6 +137,12 @@ handle_problem() {
       restart_service "$node" "$service" "$host" ;;
     *equity*|*profit*|*drawdown*|*balance*)
       log "alert finanziario — solo log, nessuna azione automatica" ;;
+    # Un MESSAGGIO d'errore non significa nodo morto: il bot e' vivo e sta
+    # riportando un problema (es. fondi insufficienti). Riavviarlo non cura
+    # nulla e rischia un loop. Si logga e basta: il restart scatta su
+    # down/nodata, cioe' quando il nodo e' davvero fermo.
+    *ERRORE*|*error*|*Error*)
+      log "errore riportato dal bot — solo log (nessun restart)" ;;
     *)
       log "trigger non riconosciuto — restart cautelativo"
       restart_service "$node" "$service" "$host" ;;
