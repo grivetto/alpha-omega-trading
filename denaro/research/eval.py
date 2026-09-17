@@ -655,11 +655,145 @@ def backtest_trend(candles: List[dict], p: Dict, capitale: float = 100.0,
     return r
 
 
+def backtest_pullback(candles: List[dict], p: Dict, capitale: float = 100.0,
+                      fee: float = 0.002, slippage_k: float = 0.02,
+                      fee_taker: float = 0.0035) -> Risultato:
+    """Compra il RITORNO dentro un trend, con ordini LIMITE su entrambi i lati.
+
+    Perche' esiste: il trend following classico entra sul breakout ed esce sul
+    trailing stop, cioe' con ordini a MERCATO: 0.35% per lato, 0.70% di round
+    trip. A quella fee il suo alpha misurato e' -1.97% (t=-0.30). Il segnale
+    pero' esiste: a fee zero l'alpha e' +34.98% con t=+4.51.
+
+    Qui si cattura lo stesso segnale pagando MAKER su entrambi i lati:
+    - si entra solo se il prezzo e' SOPRA la media lunga (trend rialzista);
+    - l'ingresso e' un ordine limite SOTTO il mercato: si compra sul ritorno,
+      non sull'inseguimento. Un ordine limite sotto il mercato resta in book
+      finche' non viene toccato, quindi e' maker (0.20%);
+    - l'uscita normale e' un ordine limite SOPRA l'ingresso: maker (0.20%);
+    - solo lo stop duro e il time-stop escono a mercato (taker 0.35%), e sono
+      eventi rari.
+
+    Round trip tipico: 0.40% invece di 0.70%.
+
+    Disciplina temporale: l'ordine si piazza sul close della barra i e diventa
+    attivo da i+1; si riempie solo se una barra successiva lo tocca. In caso di
+    barra che tocca sia il target sia lo stop si assume che scatti PRIMA lo
+    stop: scelta conservativa.
+    """
+    ema_n = int(p.get("trend_ema", 200))
+    atr_n = int(p.get("atr_period", 14))
+    entry_atr = float(p.get("entry_atr", 0.5))
+    exit_atr = float(p.get("exit_atr", 2.0))
+    stop_mult = float(p.get("stop_mult", 3.0))
+    max_hold = int(p.get("max_hold", 42))
+    rischio = float(p.get("risk_pct", 0.02))
+    esp_max = float(p.get("max_exposure", 1.0))
+    fee_buf = float(p.get("fee_buffer", 0.01))
+
+    closes = [c["c"] for c in candles]
+    highs = [c["h"] for c in candles]
+    lows = [c["l"] for c in candles]
+    atr_l = atr_wilder(highs, lows, closes, atr_n)
+    ema_l = ema(closes, ema_n) if ema_n else []
+    inizio = max(atr_n, ema_n) + 1
+
+    r = Risultato(nome="pullback", capitale=capitale)
+    cash = capitale
+    asset = 0.0
+    basis = 0.0
+    target = 0.0
+    stop = 0.0
+    barre_in_pos = 0
+    pending = None      # prezzo del limit buy in attesa
+    pending_da = 0
+
+    for i in range(inizio, len(candles)):
+        c = candles[i]
+        price, hi, lo = c["c"], c["h"], c["l"]
+        vol_med = _media_volumi(candles, i)
+
+        # --- posizione aperta: prima lo stop (conservativo), poi il target ---
+        if asset > 1e-12:
+            barre_in_pos += 1
+            if lo <= stop:
+                sl = slippage(asset * stop, vol_med, slippage_k)
+                incasso = asset * stop * (1.0 - fee_taker - sl)
+                cash += incasso
+                r.trade_pnls.append(incasso - asset * basis)
+                r.fee_pagate += asset * stop * fee_taker
+                asset = 0.0
+            elif hi >= target:
+                sl = slippage(asset * target, vol_med, slippage_k)
+                incasso = asset * target * (1.0 - fee - sl)
+                cash += incasso
+                r.trade_pnls.append(incasso - asset * basis)
+                r.fee_pagate += asset * target * fee
+                asset = 0.0
+            elif barre_in_pos >= max_hold:
+                sl = slippage(asset * price, vol_med, slippage_k)
+                incasso = asset * price * (1.0 - fee_taker - sl)
+                cash += incasso
+                r.trade_pnls.append(incasso - asset * basis)
+                r.fee_pagate += asset * price * fee_taker
+                asset = 0.0
+
+        # --- limit buy in attesa: si riempie se la barra lo tocca ---
+        if asset <= 1e-12 and pending is not None and i >= pending_da and lo <= pending:
+            a = atr_l[i - 1] if i - 1 >= 0 else 0.0
+            qty = 0.0
+            if a > 0 and pending > 0:
+                qty = (cash * rischio) / (stop_mult * a)
+                qty = min(qty, (cash * esp_max) / pending)
+                notional = qty * pending
+                sl = slippage(notional, vol_med, slippage_k)
+                costo = notional * (1.0 + fee + sl)
+                if costo > cash and costo > 0:
+                    qty *= cash / costo
+                    notional = qty * pending
+                    sl = slippage(notional, vol_med, slippage_k)
+                    costo = notional * (1.0 + fee + sl)
+            if qty > 1e-12 and costo <= cash * (1.0 + 1e-9):
+                cash -= costo
+                asset = qty
+                basis = costo / qty
+                target = pending + exit_atr * a
+                stop = pending - stop_mult * a
+                barre_in_pos = 0
+                r.fee_pagate += (qty * pending) * fee
+            pending = None
+
+        # --- decisione sul close: piazza il limit buy per la barra dopo ---
+        if asset <= 1e-12:
+            a = atr_l[i]
+            trend_su = (not ema_l) or (i < len(ema_l) and price > ema_l[i])
+            if a > 0 and trend_su:
+                nuovo = price - entry_atr * a
+                if nuovo > 0:
+                    pending = nuovo
+                    pending_da = i + 1
+            else:
+                pending = None
+        else:
+            pending = None
+
+        equity = cash + asset * price
+        r.equity.append(equity)
+        r.ts.append(c["ts"])
+        if asset > 0:
+            r.esposizione_bar += 1
+
+    r.barre = len(r.equity)
+    r.lordo = sum(r.trade_pnls) + r.fee_pagate
+    return r
+
+
 MOTORI: Dict[str, Callable] = {
     "grid": backtest_grid,
     "momentum": backtest_momentum,
     "meanrev": backtest_meanrev,
     "trend": backtest_trend,
+    "pullback": backtest_pullback,
 }
 
 

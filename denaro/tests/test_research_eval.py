@@ -289,3 +289,38 @@ def test_xsec_nessuna_selezione_sul_futuro():
     # con fee zero e un solo crollo, il selezionatore non puo' prevederlo:
     # il rendimento non deve essere positivo solo per aver scartato C
     assert r.ritorno <= 0.0, "ha evitato il crollo prima che accadesse: look-ahead"
+
+# ── 9. pullback maker-only ──────────────────────────────────────────────────
+
+def test_pullback_nessun_ingresso_sulla_barra_del_segnale():
+    """Il limit buy si piazza sul close e si riempie solo da barra successiva."""
+    base = _barre([100.0] * 300)
+    # ultima barra: un crollo che toccherebbe qualunque livello
+    base.append({"ts": 300 * 3_600_000, "o": 100.0, "h": 100.0, "l": 80.0,
+                 "c": 100.0, "v": 1000.0})
+    r = E.backtest_pullback(base, {"trend_ema": 50, "atr_period": 14,
+                                   "entry_atr": 0.5, "exit_atr": 2.0,
+                                   "stop_mult": 2.0, "max_hold": 10},
+                            capitale=100.0, fee=0.002)
+    assert r.trade == 0, ("il pullback ha comprato sulla barra del segnale: "
+                          "look-ahead (%d trade)" % r.trade)
+
+
+def test_pullback_compra_il_ritorno():
+    """Con un trend rialzista e un ritorno, il limit buy si riempie."""
+    prezzi = []
+    for i in range(400):
+        p = 100.0 * (1.004 ** i)
+        if i in (300, 301):          # ritorno locale
+            p *= 0.97
+        prezzi.append(p)
+    candele = []
+    for i, p in enumerate(prezzi):
+        candele.append({"ts": i * 3_600_000, "o": p, "h": p * 1.002,
+                        "l": p * 0.998, "c": p, "v": 1000.0})
+    r = E.backtest_pullback(candele, {"trend_ema": 50, "atr_period": 14,
+                                      "entry_atr": 0.5, "exit_atr": 2.0,
+                                      "stop_mult": 2.0, "max_hold": 20},
+                            capitale=100.0, fee=0.002)
+    assert r.trade >= 1, "il pullback non ha comprato nessun ritorno"
+    assert r.esposizione_pct > 0.0

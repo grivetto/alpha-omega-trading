@@ -480,3 +480,87 @@ Le direzioni residue, in ordine di realismo:
    strutturale. Richiedono derivati.
 3. **Smaltire le strategie live con alpha negativo**, che e' l'unica azione che
    oggi riduce la perdita attesa.
+
+
+## 10. Round 5 — Il segnale vive nel breakout, e il breakout paga taker
+
+### 10.1 L'idea
+
+Il round 4 aveva isolato il vincolo: il trend ha un segnale reale (alpha +34.98%
+con t=+4.51 a fee zero) ma paga TAKER su entrambi i lati, 0.70% di round trip.
+Domanda naturale: esiste una struttura che catturi lo stesso segnale pagando
+MAKER (0.40% di round trip)?
+
+Proposta: non inseguire il breakout, ma **comprare il ritorno dentro il trend**
+con un ordine limite sotto il mercato (maker in ingresso), e uscire con un
+ordine limite sopra (maker in uscita). Solo lo stop duro esce a mercato. Motore
+nuovo: backtest_pullback.
+
+### 10.2 Risultato: respinto in modo netto
+
+36 set di parametri FISSI (nessuna selezione), 19 asset, fee maker 0.20% in
+ingresso e uscita, taker 0.35% sullo stop:
+
+| metrica | valore |
+|---|---|
+| set con alpha > 0 | **0 su 36 (0%)** |
+| set con t > 2 | **0 su 36** |
+| alpha mediano | **−61.35%** |
+| t mediano | **−16.76** |
+
+E anche abbassando la fee maker a 0.10%: alpha mediano −60.64%, t −14.53. Non e'
+un problema di costo.
+
+### 10.3 Il motore e' sano: e' la strategia che perde
+
+Diagnostica su SOL (6189 barre, 2.8 anni, buy-and-hold +65.01%):
+
+| parametri | trade | win rate | fee pagate | ritorno | a fee ZERO |
+|---|---|---|---|---|---|
+| ea0.5 / xa2.5 / sm2.0 / mh42 | 257 | 43% | 30.65 EUR | **−73.61%** | **−48.27%** |
+| ea0.5 / xa4.0 / sm3.0 / mh84 | 130 | 43% | 17.55 EUR | −31.61% | −13.34% |
+
+La contabilita' e' corretta (fee proporzionali, PnL medio negativo coerente con
+win rate 43%). **A fee zero la strategia perde comunque il 48%.** Su un asset che
+nello stesso periodo e' SALITO del 65%: comprare i ritorni ha perso, perche' il
+ritorno e' spesso l'inizio del ribasso, non un'opportunita'.
+
+### 10.4 Conclusione: il segnale non e' separabile dal costo
+
+Il segnale del trend vive **nel breakout**, e il breakout e' per natura un ordine
+a mercato: non puo' essere maker, perche' un limite sopra il mercato viene
+eseguito subito. La versione maker della stessa idea (comprare il dip) ha un
+edge **diverso e negativo**. Non e' possibile avere il segnale e il costo maker
+insieme.
+
+Quindi la conclusione del round 4 non e' aggirabile per via di progettazione:
+**il trend ha un edge che e' inferiore al costo necessario a catturarlo.**
+
+### 10.5 Bilancio delle famiglie testate
+
+| famiglia | alpha | significativita' | verdetto |
+|---|---|---|---|
+| grid | **−7.48%** | t = −4.64 | nessun segnale: negativo anche a fee zero |
+| mean-reversion | ≈ 0 | t < 1 | nessun alpha |
+| momentum / trend | +34.98% a fee zero | t = +4.51 | segnale reale, mangiato dalle fee taker |
+| cross-sezionale | **−8.61%** | t = −2.55 | respinto |
+| pullback maker-only | **−61.35%** | t = −16.76 | respinto: negativo anche a fee zero |
+
+Su cinque famiglie e 19 asset, **una sola ha un segnale statisticamente reale**
+(il trend), e quel segnale e' strutturalmente inferiore al costo di catturarlo in
+questa configurazione (long-only spot, conto Lv1, ~75 EUR).
+
+### 10.6 Dove sta il problema, in una riga
+
+Non mancano le strategie: **mancano i margini**. Con fee maker 0.20% e taker
+0.35%, un segnale che vale ~+35% di alpha a costo zero su 2.4 anni (circa 14%
+annuo) viene azzerato da un costo di round trip dello 0.70% applicato ai
+passaggi necessari a catturarlo.
+
+Le uniche vie d'uscita restano quelle del round 4, e nessuna e' di ricerca:
+
+1. **ridurre la fee per lato** (tier superiore, piu' capitale, o un venue con
+   costi inferiori): e' l'unica leva che cambierebbe il segno del trend;
+2. **fonti non direzionali** (funding rate, basis), dove il premio non e' una
+   previsione di prezzo ma un pagamento strutturale: richiedono derivati;
+3. **smaltire le strategie live con alpha negativo**.
