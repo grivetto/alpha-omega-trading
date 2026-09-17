@@ -10,6 +10,13 @@ ZABBIX_PASS="${ZABBIX_PASS:-zabbix}"
 LOG_FILE="${HEALER_LOG:-/home/sergio/denaro/logs/zabbix_healer.log}"
 STATE_FILE="${HEALER_STATE:-/tmp/zabbix_healer_state.json}"
 HEAL_COOLDOWN="${HEAL_COOLDOWN:-300}"
+# GUARDIA ANTI-FLAP (per SERVIZIO, non per evento). Il cooldown sopra e' keyed
+# sull'eventid: quando un problema si RIPETE arriva un eventid NUOVO, quindi non
+# protegge da un trigger che oscilla. E' successo il 2026-09-17: i trigger dei
+# bot con dati stantii facevano riavviare denaro-node-nuvola-trade OGNI 2
+# MINUTI, in loop, su un nodo perfettamente sano. Questa finestra limita i
+# riavvii dello STESSO servizio a uno ogni FLAP_COOLDOWN secondi.
+FLAP_COOLDOWN="${FLAP_COOLDOWN:-1800}"
 DRY_RUN="${DRY_RUN:-false}"
 
 # Mapping host Zabbix -> (ssh alias | "local" | "skip", servizio da restartare)
@@ -24,9 +31,25 @@ declare -A HOST_SERVICE=(
   ["MARCODG1"]="MARCODG1|denaro-node-marcodg1-xrp"
   ["alpha-omega-mc2"]="local|denaro-node-mc2"
   ["mc2"]="local|denaro-node-mc2"
-  ["alpha-omega-bot-okx-doge"]="local|denaro-node-mc2"
-  ["alpha-omega-bot-nuvola-sol"]="nuvola|denaro-node-nuvola-trade"
-  ["alpha-omega-bot-marcodg1-xrp"]="MARCODG1|denaro-node-marcodg1-xrp"
+  # --- i 15 bot di TREND in produzione (5 per macchina) ---
+  # Host creati da tools/zabbix_setup.py a partire dal registro unico
+  # tools/denaro_bots.py. Gli host della generazione precedente
+  # (okx-doge, nuvola-sol, marcodg1-xrp) sono stati RIMOSSI da Zabbix.
+  ["alpha-omega-bot-mc2-btc"]="local|denaro-node-mc2"
+  ["alpha-omega-bot-mc2-eth"]="local|denaro-node-mc2"
+  ["alpha-omega-bot-mc2-sol"]="local|denaro-node-mc2"
+  ["alpha-omega-bot-mc2-xrp"]="local|denaro-node-mc2"
+  ["alpha-omega-bot-mc2-doge"]="local|denaro-node-mc2"
+  ["alpha-omega-bot-nuvola-link"]="nuvola|denaro-node-nuvola-trade"
+  ["alpha-omega-bot-nuvola-avax"]="nuvola|denaro-node-nuvola-trade"
+  ["alpha-omega-bot-nuvola-dot"]="nuvola|denaro-node-nuvola-trade"
+  ["alpha-omega-bot-nuvola-ltc"]="nuvola|denaro-node-nuvola-trade"
+  ["alpha-omega-bot-nuvola-uni"]="nuvola|denaro-node-nuvola-trade"
+  ["alpha-omega-bot-marcodg1-ada"]="MARCODG1|denaro-node-marcodg1-xrp"
+  ["alpha-omega-bot-marcodg1-atom"]="MARCODG1|denaro-node-marcodg1-xrp"
+  ["alpha-omega-bot-marcodg1-aave"]="MARCODG1|denaro-node-marcodg1-xrp"
+  ["alpha-omega-bot-marcodg1-arb"]="MARCODG1|denaro-node-marcodg1-xrp"
+  ["alpha-omega-bot-marcodg1-xlm"]="MARCODG1|denaro-node-marcodg1-xrp"
 )
 # SSH user per nodo remoto
 declare -A SSH_USER=(
@@ -35,18 +58,6 @@ declare -A SSH_USER=(
 )
 
 log() { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*" | tee -a "$LOG_FILE"; }
-
-# --- Interruttore di sospensione -------------------------------------------
-# Se questo file esiste il healer NON esegue alcuna azione di restart.
-# Serve quando un servizio viene fermato DI PROPOSITO — per esempio mentre si
-# corregge un difetto trovato in produzione. Senza, il healer lo riavvierebbe
-# entro 2 minuti e il difetto tornerebbe vivo: e' successo il 2026-09-17 con il
-# meccanismo di uscita del trend.
-PAUSE_FILE="/home/sergio/denaro/HEALER_PAUSE"
-if [ -f "$PAUSE_FILE" ]; then
-  log "healer SOSPESO: $PAUSE_FILE presente - nessuna azione"
-  exit 0
-fi
 
 zabbix_api() {
   local method="$1" params="$2" auth="$3"
@@ -71,9 +82,9 @@ get_active_problems() {
 }
 
 is_in_cooldown() {
-  local key="$1"
+  local key="$1" finestra="${2:-$HEAL_COOLDOWN}"
   [ -f "$STATE_FILE" ] || return 1
-  python3 - "$key" "$HEAL_COOLDOWN" "$STATE_FILE" << 'PYEOF'
+  python3 - "$key" "$finestra" "$STATE_FILE" << 'PYEOF'
 import json, sys, time
 key, cd, path = sys.argv[1], int(sys.argv[2]), sys.argv[3]
 try:
@@ -99,6 +110,20 @@ except Exception:
 st[key] = time.time()
 json.dump(st, open(path, "w"))
 PYEOF
+}
+
+# GUARDIA ANTI-FLAP: blocca il riavvio dello STESSO servizio se e' gia' stato
+# riavviato da meno di FLAP_COOLDOWN secondi, a prescindere dall'eventid. E' la
+# rete di sicurezza contro un trigger che oscilla (o un monitoraggio rotto):
+# senza, un problema che si riapre con un eventid nuovo riavvia il nodo
+# all'infinito.
+guardia_flap() {
+  local node="$1" service="$2"
+  if is_in_cooldown "flap|$node|$service" "$FLAP_COOLDOWN"; then
+    log "ANTI-FLAP: $service riavviato da meno di ${FLAP_COOLDOWN}s — nessuna azione"
+    return 1
+  fi
+  return 0
 }
 
 restart_service() {
@@ -144,9 +169,16 @@ handle_problem() {
 
   case "$trigger" in
     *zombie*|*hung*|*unresponsive*|*multi*|*fork*)
-      kill_zombies "$node" "$host"; restart_service "$node" "$service" "$host" ;;
-    *down*|*DOWN*|*CRASHED*|*crashed*|*dead*|*DEAD*|*stale*|*STALE*|*"not running"*|*inactive*)
-      restart_service "$node" "$service" "$host" ;;
+      if guardia_flap "$node" "$service"; then
+        kill_zombies "$node" "$host"
+        restart_service "$node" "$service" "$host"
+        mark_healed "flap|$node|$service"
+      fi ;;
+    *down*|*DOWN*|*CRASHED*|*crashed*|*dead*|*DEAD*|*stale*|*STALE*|*"not running"*|*inactive*|*"non in esecuzione"*|*"nessun dato"*)
+      if guardia_flap "$node" "$service"; then
+        restart_service "$node" "$service" "$host"
+        mark_healed "flap|$node|$service"
+      fi ;;
     *equity*|*profit*|*drawdown*|*balance*)
       log "alert finanziario — solo log, nessuna azione automatica" ;;
     # Un MESSAGGIO d'errore non significa nodo morto: il bot e' vivo e sta
@@ -156,8 +188,11 @@ handle_problem() {
     *ERRORE*|*error*|*Error*)
       log "errore riportato dal bot — solo log (nessun restart)" ;;
     *)
-      log "trigger non riconosciuto — restart cautelativo"
-      restart_service "$node" "$service" "$host" ;;
+      if guardia_flap "$node" "$service"; then
+        log "trigger non riconosciuto — restart cautelativo"
+        restart_service "$node" "$service" "$host"
+        mark_healed "flap|$node|$service"
+      fi ;;
   esac
   mark_healed "$key"
 }
