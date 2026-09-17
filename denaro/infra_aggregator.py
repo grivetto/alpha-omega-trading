@@ -63,7 +63,10 @@ def sorgenti_conti():
       locali[label] = (path_env, prefisso)
       remoti[label] = (ssh_target, porta, path_env, python_remoto, prefisso)
     """
-    nuvola = ("87.106.3.15", 22, "/home/sergio/denaro/.env",
+    # NB: l'UTENTE va specificato. Da mc2 l'utente corrente e' gia' sergio e
+    # funzionava; da MARCODG1 l'utente e' marco e ssh usava quello, quindi
+    # nuvolasub1 rispondeva "ssh/ccxt fallito" e 24.83 EUR sparivano dal totale.
+    nuvola = ("sergio@87.106.3.15", 22, "/home/sergio/denaro/.env",
               "/home/sergio/denaro/venv/bin/python", "")
     marco_main = ("MARCODG1", 22, "/home/marco/denaro/.env",
                   "/home/marco/denaro/venv/bin/python", "")
