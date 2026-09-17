@@ -36,6 +36,8 @@ import math
 import pathlib
 import statistics as st
 from dataclasses import dataclass, field
+
+from denaro.domain.indicators import atr_wilder, ema_series as ema
 from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
 GIORNO_MS = 86_400_000
@@ -59,16 +61,6 @@ def load_csv(path) -> List[dict]:
 
 
 # ── indicatori (minimi, senza dipendenze) ───────────────────────────────────
-
-def ema(values: Sequence[float], period: int) -> List[float]:
-    if not values:
-        return []
-    k = 2.0 / (period + 1.0)
-    out = [values[0]]
-    for v in values[1:]:
-        out.append((v - out[-1]) * k + out[-1])
-    return out
-
 
 def rsi(values: Sequence[float], period: int = 14) -> List[float]:
     n = len(values)
@@ -520,26 +512,6 @@ def backtest_meanrev(candles: List[dict], p: Dict, capitale: float = 100.0,
     r.barre = len(r.equity)
     r.lordo = sum(r.trade_pnls) + r.fee_pagate
     return r
-
-
-def atr_wilder(highs: List[float], lows: List[float], closes: List[float],
-               period: int = 14) -> List[float]:
-    """Average True Range (WildeR). Usa solo barre fino a i: niente look-ahead."""
-    n = len(closes)
-    out = [0.0] * n
-    if n <= period:
-        return out
-    tr = [0.0] * n
-    for i in range(1, n):
-        tr[i] = max(highs[i] - lows[i],
-                    abs(highs[i] - closes[i - 1]),
-                    abs(lows[i] - closes[i - 1]))
-    a = sum(tr[1:period + 1]) / period
-    out[period] = a
-    for i in range(period + 1, n):
-        a = (a * (period - 1) + tr[i]) / period
-        out[i] = a
-    return out
 
 
 def backtest_trend(candles: List[dict], p: Dict, capitale: float = 100.0,

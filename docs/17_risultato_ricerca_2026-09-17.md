@@ -641,3 +641,48 @@ Cosa serve perche' questo diventi remunerativo:
 
 Resta valida la raccomandazione di smaltire le strategie live attuali, che
 hanno alpha negativo provato (la griglia e' negativa anche a fee zero).
+
+
+### 11.5 La policy di produzione, con equivalenza dimostrata
+
+Implementata `denaro/domain/trend.py` — `TrendParams` e `TrendPolicy` —
+come versione di produzione di `backtest_trend`, e collegata a
+`build_policy` (strategia `trend`).
+
+Scelte di progetto:
+
+- **costruisce da sola le barre giornaliere dai tick**, accumulando o/h/l/c per
+  giorno UTC e valutando il segnale solo alla chiusura di una barra. Il dominio
+  resta puro (zero I/O) e non serve un feed OHLCV;
+- l'ingresso e' un limite appena sopra il mercato (di fatto taker, come nel
+  backtest); l'uscita normale e' il trailing stop, riposizionato con
+  `to_cancel_sell` + `to_sell` perche' l'orchestratore piazza la
+  protezione iniziale da `sell_target(entry)` ma il trailing deve salire.
+
+**Un solo ATR e una sola EMA per tutto il progetto.** `atr_wilder` e
+`ema_series` vivono ora in `denaro/domain/indicators.py`, e
+`denaro/research/eval.py` li IMPORTA da li' invece di avere copie proprie.
+Verificato nei test: `E.atr_wilder is indicators.atr_wilder` e' vero.
+Averne due copie renderebbe l'equivalenza tra backtest e live una coincidenza,
+non una garanzia.
+
+Test (`denaro/tests/test_trend_policy.py`, 12 test):
+
+- costruzione delle barre: una per giorno, OHLC corretti, nessuna barra chiusa
+  dentro lo stesso giorno;
+- ATR, EMA e canale identici a quelli del rig di ricerca, barra per barra;
+- `segnale_breakout()` rispecchia la condizione del backtest;
+- il trailing stop sale e non scende;
+- `sell_target` e' lo stop iniziale, non un target di profitto;
+- `on_fill` traccia la posizione;
+- **equivalenza su dati reali**: su BTC giornaliero, oltre 400 confronti tra la
+  condizione di breakout della policy viva e quella del backtest, **0
+  discrepanze**.
+
+Nota di metodo: la prima stesura del test di equivalenza dava 44 discrepanze.
+Non era la policy: il test alimentava la policy con un solo tick al giorno (la
+chiusura), quindi la policy vedeva high = close mentre il backtest usa gli high
+reali. Corretto il harness (quattro tick al giorno per riprodurre l'OHLC), le
+discrepanze sono scese a zero. E' lo stesso tipo di errore di misura che ha
+caratterizzato i round precedenti: prima di accusare il codice, verificare
+l'harness.

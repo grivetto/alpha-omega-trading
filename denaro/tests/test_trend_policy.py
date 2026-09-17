@@ -1,0 +1,213 @@
+#!/usr/bin/env python3
+"""TrendPolicy di produzione: barre, indicatori e equivalenza col backtest.
+
+Il test centrale e' l'equivalenza: la policy viva e il rig di ricerca devono
+calcolare gli STESSI numeri sugli stessi dati. E' la differenza tra "il backtest
+diceva cosi'" e "il backtest e la produzione fanno la stessa cosa".
+"""
+import sys
+sys.path.insert(0, "/home/sergio/alpha-omega-trading")
+
+import pytest
+
+from denaro.domain.indicators import atr_wilder, ema_series
+from denaro.domain.trend import TrendParams, TrendPolicy
+
+
+def _tick(prezzi):
+    """Un tick al giorno, a meta' giornata (now distinto per ogni giorno)."""
+    return [(float(p), i * 86_400.0 + 3_600.0) for i, p in enumerate(prezzi)]
+
+
+def _guida(pol, prezzi, **kw):
+    ultimo = None
+    for p, now in _tick(prezzi):
+        ultimo = pol.decide(price=p, open_buys=kw.get("open_buys", {}),
+                            open_sells=kw.get("open_sells", {}), cash=100.0,
+                            capital_config=100.0, free_balance=100.0, now=now)
+    return ultimo
+
+
+def test_costruisce_una_barra_per_giorno():
+    pol = TrendPolicy(TrendParams(canale=3, atr_period=3, trend_ema=0))
+    prezzi = [100, 101, 102, 103, 104, 105, 106]
+    _guida(pol, prezzi)
+    assert len(pol.barre) == len(prezzi) - 1, (
+        "attese %d barre chiuse, ottenute %d" % (len(prezzi) - 1, len(pol.barre)))
+
+
+def test_barra_ha_ohlc_del_giorno():
+    """Dentro lo stesso giorno piu' tick aggiornano h/l/c, non creano barre."""
+    pol = TrendPolicy(TrendParams(canale=2, atr_period=2, trend_ema=0))
+    giorno = 20_000 * 86_400.0
+    for p in (100.0, 105.0, 95.0, 102.0):
+        pol.decide(price=p, open_buys={}, open_sells={}, cash=100.0,
+                   capital_config=100.0, free_balance=100.0, now=giorno + 100.0)
+    assert len(pol.barre) == 0, "non deve chiudere barre lo stesso giorno"
+    # il giorno dopo si chiude quella precedente
+    pol.decide(price=103.0, open_buys={}, open_sells={}, cash=100.0,
+               capital_config=100.0, free_balance=100.0, now=giorno + 86_400.0)
+    b = list(pol.barre)[0]
+    assert b["o"] == 100.0 and b["h"] == 105.0 and b["l"] == 95.0 and b["c"] == 102.0
+
+
+def test_atr_identico_a_quello_del_backtest():
+    """La policy e il rig di ricerca devono calcolare lo STESSO ATR."""
+    prezzi = [100 + 3 * ((i % 7) - 3) + i * 0.4 for i in range(60)]
+    pol = TrendPolicy(TrendParams(canale=5, atr_period=5, trend_ema=0))
+    _guida(pol, prezzi)
+    barre = list(pol.barre)
+    atteso = atr_wilder([b["h"] for b in barre], [b["l"] for b in barre],
+                        [b["c"] for b in barre], 5)[-1]
+    assert pol.atr == pytest.approx(atteso), "ATR diverso tra policy e backtest"
+    assert pol.atr > 0
+
+
+def test_ema_identica_a_quella_del_backtest():
+    prezzi = [100 + i * 0.5 for i in range(80)]
+    pol = TrendPolicy(TrendParams(canale=5, atr_period=5, trend_ema=20))
+    _guida(pol, prezzi)
+    barre = list(pol.barre)
+    atteso = ema_series([b["c"] for b in barre], 20)[-1]
+    assert pol.ema == pytest.approx(atteso)
+
+
+def test_segnale_breakout_rispecchia_la_condizione_del_backtest():
+    """segnale = chiusura > massimo degli high delle N barre precedenti."""
+    pol = TrendPolicy(TrendParams(canale=3, atr_period=3, trend_ema=0))
+    # barre costruite a mano: 5 piatte poi una in forte rialzo
+    prezzi = [100.0, 100.5, 100.2, 100.8, 100.4, 130.0]
+    for i, c in enumerate(prezzi):
+        pol.barre.append({"ts": i * 86_400.0, "o": c, "h": c, "l": c, "c": c})
+    pol._aggiorna_indicatori()
+    barre = list(pol.barre)
+    canale = max(b["h"] for b in barre[-4:-1])
+    assert pol.donchian == pytest.approx(canale), "il canale deve escludere l'ultima barra"
+    assert pol.atr > 0
+    assert pol.segnale_breakout() is True, "chiusura sopra il canale: breakout"
+
+    # con una chiusura sotto il canale il segnale deve spegnersi
+    pol.barre[-1] = dict(barre[-1], c=canale * 0.5)
+    pol._aggiorna_indicatori()
+    assert pol.segnale_breakout() is False
+
+
+def test_emette_un_buy_sul_breakout():
+    """Con un breakout netto la policy deve proporre un acquisto."""
+    pol = TrendPolicy(TrendParams(canale=3, atr_period=3, trend_ema=0))
+    prezzi = [100.0] * 8 + [100.0, 140.0, 140.0]
+    d = _guida(pol, prezzi)
+    assert len(pol.barre) > 3
+    assert d is not None
+
+
+def test_trailing_stop_sale_e_non_scende():
+    pol = TrendPolicy(TrendParams(canale=3, atr_period=3, trail_mult=2.0, trend_ema=0))
+    _guida(pol, [100 + 2 * i for i in range(20)])
+    pol.stop = 100.0
+    alto = pol.trailing_stop(200.0)
+    assert alto > pol.stop, "il trailing stop doveva salire"
+    pol.stop = alto
+    basso = pol.trailing_stop(150.0)
+    assert basso == alto, "il trailing stop non deve mai scendere"
+
+
+def test_sell_target_e_lo_stop_iniziale_non_un_profit_target():
+    pol = TrendPolicy(TrendParams(atr_period=3, stop_atr_mult=2.0, trend_ema=0))
+    pol.atr = 5.0
+    st = pol.sell_target(100.0)
+    assert st == pytest.approx(90.0), "stop iniziale = entry - 2*ATR"
+
+
+def test_on_fill_traccia_la_posizione():
+    pol = TrendPolicy(TrendParams(atr_period=3, stop_atr_mult=2.0, trend_ema=0))
+    pol.atr = 5.0
+    pol.on_fill("o1", "buy", 100.0, 1.0)
+    assert pol.in_posizione is True
+    assert pol.entrata == 100.0
+    assert pol.stop == pytest.approx(90.0)
+    pol.on_fill("o2", "sell", 120.0, 1.0)
+    assert pol.in_posizione is False
+    assert pol.stop == 0.0
+
+
+def test_non_compra_fuori_dalla_chiusura_giornaliera():
+    """Solo alla chiusura di una barra si valuta il segnale."""
+    pol = TrendPolicy(TrendParams(canale=3, atr_period=3, trend_ema=0))
+    giorno = 20_000 * 86_400.0
+    for i in range(10):
+        pol.decide(price=100.0 + i, open_buys={}, open_sells={}, cash=100.0,
+                   capital_config=100.0, free_balance=100.0, now=giorno + i)
+    # tutti nello stesso giorno: nessuna barra chiusa, nessun ordine
+    assert len(pol.barre) == 0
+
+def test_equivalenza_del_segnale_su_dati_reali():
+    """LA prova: su dati reali, la policy viva e il backtest devono coincidere.
+
+    NB sul metodo: la policy si alimenta con QUATTRO tick al giorno (open, high,
+    low, close) per riprodurre l'OHLC reale. Con un solo tick (la chiusura) la
+    policy vedrebbe high = close e il confronto col backtest sarebbe tra mele e
+    arance: la prima stesura di questo test produceva 44 finti disallineamenti
+    per questo motivo.
+    """
+    import pathlib
+
+    from denaro.research import eval as E
+
+    f = pathlib.Path("/home/sergio/alpha-omega-trading/backtest_data/dl_BTC_1D.csv")
+    if not f.exists():
+        pytest.skip("dati reali non disponibili")
+    candele = E.load_csv(f)
+    canale, atr_n, ema_n = 20, 14, 100
+    pol = TrendPolicy(TrendParams(canale=canale, atr_period=atr_n, trend_ema=ema_n))
+    chiusure = [c["c"] for c in candele]
+    alti = [c["h"] for c in candele]
+    ema_l = ema_series(chiusure, ema_n)
+
+    confronti = 0
+    discrepanze = []
+    for i in range(len(candele)):
+        c = candele[i]
+        for j, p in enumerate((c["o"], c["h"], c["l"], c["c"])):
+            pol.decide(price=p, open_buys={}, open_sells={}, cash=100.0,
+                       capital_config=100.0, free_balance=100.0,
+                       now=i * 86_400.0 + j * 60.0)
+        k = i - 1                       # barra chiusa dal primo tick del giorno i
+        if k < max(canale, atr_n, ema_n) + 2 or pol.atr <= 0:
+            continue
+        atteso = (chiusure[k] > max(alti[k - canale:k]) and chiusure[k] > ema_l[k])
+        avuto = pol.segnale_breakout()
+        confronti += 1
+        if atteso != avuto:
+            discrepanze.append((k, atteso, avuto, chiusure[k], pol.donchian, pol.ema))
+    assert confronti > 400, "confronti insufficienti: %d" % confronti
+    assert not discrepanze, (
+        "%d discrepanze su %d confronti, la prima: %r"
+        % (len(discrepanze), confronti, discrepanze[0]))
+
+
+def test_equivalenza_dell_atr_su_dati_reali():
+    """Anche l'ATR della policy deve combaciare col backtest, barra per barra."""
+    import pathlib
+
+    from denaro.research import eval as E
+
+    f = pathlib.Path("/home/sergio/alpha-omega-trading/backtest_data/dl_SOL_1D.csv")
+    if not f.exists():
+        pytest.skip("dati reali non disponibili")
+    candele = E.load_csv(f)
+    pol = TrendPolicy(TrendParams(canale=20, atr_period=14, trend_ema=0))
+    peggiore = 0.0
+    for i in range(min(len(candele), 400)):
+        c = candele[i]
+        for j, p in enumerate((c["o"], c["h"], c["l"], c["c"])):
+            pol.decide(price=p, open_buys={}, open_sells={}, cash=100.0,
+                       capital_config=100.0, free_balance=100.0,
+                       now=i * 86_400.0 + j * 60.0)
+        if i < 17:
+            continue
+        barre = list(pol.barre)
+        atteso = atr_wilder([b["h"] for b in barre], [b["l"] for b in barre],
+                            [b["c"] for b in barre], 14)[-1]
+        peggiore = max(peggiore, abs(pol.atr - atteso))
+    assert peggiore < 1e-12, "ATR divergente di %.3e" % peggiore

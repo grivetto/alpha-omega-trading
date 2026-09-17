@@ -80,7 +80,7 @@ def build_grid_params(bot: dict) -> GridParams:
 
 def build_policy(bot: dict, exchange):
     """Costruisce la strategia del bot in base a `strategy`:
-    grid (default) | momentum | meanrev | adaptive | irmr | vagr. I minimi dell'exchange vengono
+    grid (default) | momentum | meanrev | adaptive | irmr | vagr | trend. I minimi dell'exchange vengono
     passati alla policy per scartare ordini non piazzabili."""
     strategy = bot.get("strategy", "grid")
     fn = getattr(exchange, "min_amount_for", None)
@@ -149,6 +149,23 @@ def build_policy(bot: dict, exchange):
                 max_daily_loss_pct=float(bot.get("max_daily_loss_pct", 0.10)),
                 kill_switch_drawdown_pct=float(bot.get("kill_switch_drawdown_pct", 0.15)),
                 fee_rate=float(bot.get("fee_rate", 0.0016)),
+            ),
+            min_amount=min_amount,
+        )
+    if strategy == "trend":
+        # Trend following GIORNALIERO: breakout + trailing stop ATR + size sul
+        # rischio. E' la versione di produzione di research/eval.py:backtest_trend,
+        # con lo stesso ATR (denaro/domain/indicators.py) e gli stessi parametri.
+        from denaro.domain.trend import TrendParams, TrendPolicy
+        return TrendPolicy(
+            TrendParams(
+                canale=int(bot.get("canale", 40)),
+                atr_period=int(bot.get("atr_period", 14)),
+                trail_mult=float(bot.get("trail_mult", 3.0)),
+                stop_atr_mult=float(bot.get("stop_atr_mult", 2.0)),
+                trend_ema=int(bot.get("trend_ema", 100)),
+                risk_pct=float(bot.get("risk_pct", 0.02)),
+                max_exposure=float(bot.get("max_exposure", 1.0)),
             ),
             min_amount=min_amount,
         )

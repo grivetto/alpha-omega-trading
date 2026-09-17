@@ -297,3 +297,49 @@ class AdvancedIndicators:
             signal = "bearish"
             level = "strong" if normalized < -0.7 else "moderate"
         return AdvancedIndicator(normalized, signal, abs(normalized), level)
+
+
+def atr_wilder(highs: Sequence[float], lows: Sequence[float],
+               closes: Sequence[float], period: int = 14) -> List[float]:
+    """Average True Range con smoothing di Wilder, in VALORE (non percentuale).
+
+    Unica implementazione del progetto: la usano sia il rig di ricerca
+    (denaro/research/eval.py) sia la policy di produzione
+    (denaro/domain/trend.py). Averne due copie renderebbe l'equivalenza tra
+    backtest e live una coincidenza, non una garanzia.
+
+    Usa solo barre fino a i: nessun look-ahead. Ritorna una lista allineata
+    all'input, con 0.0 dove i dati non bastano.
+    """
+    n = len(closes)
+    out = [0.0] * n
+    if n <= period or len(highs) < n or len(lows) < n:
+        return out
+    tr = [0.0] * n
+    for i in range(1, n):
+        tr[i] = max(highs[i] - lows[i],
+                    abs(highs[i] - closes[i - 1]),
+                    abs(lows[i] - closes[i - 1]))
+    a = sum(tr[1:period + 1]) / period
+    out[period] = a
+    for i in range(period + 1, n):
+        a = (a * (period - 1) + tr[i]) / period
+        out[i] = a
+    return out
+
+
+def ema_series(values: Sequence[float], period: int) -> List[float]:
+    """EMA come SERIE allineata all'input (non un solo valore finale).
+
+    Unica implementazione del progetto: la usano sia il rig di ricerca sia la
+    policy di produzione, cosi' l'equivalenza tra backtest e live e' garantita
+    invece che sperata. Il seme e' il primo valore, come nella convenzione con
+    cui erano stati tarati i parametri.
+    """
+    if not values or period <= 0:
+        return []
+    k = 2.0 / (period + 1.0)
+    out = [float(values[0])]
+    for v in values[1:]:
+        out.append((v - out[-1]) * k + out[-1])
+    return out
