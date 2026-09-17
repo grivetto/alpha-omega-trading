@@ -29,6 +29,17 @@ class Policy:
     opzionale (usato dalle strategie con memoria storica).
     """
 
+    # True per le policy che escono con uno STOP MONITORATO (trigger sul prezzo)
+    # invece che con un ordine LIMITE di vendita. Quando e' True l'orchestratore
+    # NON piazza la vendita protettiva dopo il fill: il livello di stop arriva a
+    # ogni tick in GridDecision.stop_price e la chiusura avviene a MERCATO.
+    #
+    # Serve perche' uno stop e' un livello SOTTO il mercato: come limite di
+    # vendita si riempirebbe IMMEDIATAMENTE al miglior bid, vendendo al prezzo
+    # sbagliato. E' il difetto trovato il 2026-09-17 sulla policy trend.
+    # Default False: nessuna policy esistente cambia comportamento.
+    STOP_MONITORATO: bool = False
+
     def decide(self, price: float, open_buys: Dict[str, dict],
                open_sells: Dict[str, dict], cash: float,
                capital_config: float, free_balance: float,

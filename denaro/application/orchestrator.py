@@ -74,6 +74,10 @@ class BotState:
     max_dd: float = 0.0
     start_ts: float = 0.0
     stop_loss_triggered: bool = False   # persistente: stop-loss gia' eseguito
+    # Posizione detenuta da una policy a STOP MONITORATO (trend): non esiste un
+    # ordine di vendita a cui appoggiarsi, quindi entry/amount vivono qui.
+    # Servono alla contabilita' del PnL e alla riconciliazione dopo un restart.
+    posizione_aperta: Optional[dict] = None
 
     @property
     def open_count(self) -> int:
@@ -385,6 +389,23 @@ class BotTask:
             log.info("IRFMR %s: price=%.6f z=%.2f inv=%.4f reason=%s to_place=%d to_sell=%d",
                      self.cfg.symbol, price, z_val, self.policy._inventory,
                      decision.reason, len(decision.to_place), len(decision.to_sell))
+
+        # 3a-0) STOP MONITORATO: le policy che escono a trigger (trend) NON
+        #       emettono una vendita limite — un limite sotto il mercato si
+        #       riempirebbe SUBITO al miglior bid, vendendo al prezzo sbagliato.
+        #       Emettono un LIVELLO: se il prezzo lo attraversa, la posizione si
+        #       chiude a MERCATO. Si esegue anche in SafeMode: e' la gestione di
+        #       una posizione esistente, non un trade nuovo.
+        stop_price = getattr(decision, "stop_price", None)
+        if (stop_price and float(stop_price) > 0 and price > 0
+                and price <= float(stop_price)):
+            chiuso = await self._esegui_stop_monitorato(price, float(stop_price))
+            if chiuso:
+                decision.to_place = []
+                decision.to_sell = []
+                decision.to_cancel_sell = []
+                decision.reason = ("trend: STOP %.6f attraversato (prezzo %.6f)"
+                                   % (float(stop_price), price))
 
         # 3a) SafeMode (TODO punto 3): nessun NUOVO trade se la RAM e' critica;
         #     le posizioni esistenti continuano a essere gestite (fill/exit)
@@ -730,6 +751,103 @@ class BotTask:
         except Exception:
             return 0.0
 
+    async def _esegui_stop_monitorato(self, price: float,
+                                      stop_price: float) -> bool:
+        """Chiude a MERCATO la posizione perche' il prezzo ha toccato lo stop.
+
+        Ritorna True se la posizione risulta chiusa (o se non c'era nulla da
+        chiudere), False se il tentativo va ritentato al tick successivo.
+
+        Perche' a MERCATO e non con un ordine limite: lo stop e' un livello
+        SOTTO il prezzo, e un limite di vendita sotto il mercato si riempie
+        immediatamente al miglior bid — cioe' subito, al prezzo sbagliato. Il
+        costo dell'uscita a mercato e' limitato dal guard di spread, lo stesso
+        usato dallo stop-loss di bot.
+        """
+        # 1) nessuna vendita limite deve restare in giro
+        for oid in list(self.state.open_sells):
+            try:
+                await asyncio.to_thread(self.ex.cancel_order, oid, self.cfg.symbol)
+            except Exception:  # noqa: BLE001
+                pass
+            self.state.open_sells.pop(oid, None)
+
+        # 2) guard di spread: non vendere in un mercato impazzito
+        max_slip = getattr(self.cfg, "max_slippage", 0.0) or 0.0
+        if max_slip > 0:
+            try:
+                t = await asyncio.to_thread(self.ex.fetch_ticker, self.cfg.symbol)
+                bid = float(t.get("bid") or 0.0)
+                ask = float(t.get("ask") or 0.0)
+                if bid > 0 and ask > 0:
+                    spread = (ask - bid) / ((ask + bid) / 2.0)
+                    if spread > max_slip:
+                        await self._journal("trend_stop_blocked_slippage",
+                                            spread=round(spread, 6),
+                                            max_slippage=max_slip)
+                        return False
+            except Exception:  # noqa: BLE001
+                pass  # fail-open: meglio uscire che restare esposti
+
+        # 3) quantita' da vendere = saldo LIBERO del base asset
+        base = self.cfg.symbol.split("/")[0]
+        try:
+            bal = await asyncio.to_thread(self.ex.fetch_balance)
+            amount = float((bal.get("free", {}) or {}).get(base, 0.0) or 0.0)
+        except Exception as e:  # noqa: BLE001
+            self._last_error = f"trend stop balance: {e}"
+            return False
+
+        pos = self.state.posizione_aperta or {}
+        entrata = float(pos.get("entry") or 0.0)
+        if amount > 0:
+            try:
+                await asyncio.to_thread(self.ex.sell_market, self.cfg.symbol, amount)
+            except Exception as e:  # noqa: BLE001
+                self._last_error = f"trend stop sell: {e}"
+                log.error("TREND STOP %s: vendita fallita: %s", self.cfg.symbol, e)
+                return False
+        else:
+            log.warning("TREND STOP %s: nessun %s libero da vendere (amount=0); "
+                        "controlla ordini aperti/posizioni residue",
+                        self.cfg.symbol, base)
+
+        # 4) contabilita' fee-aware, identica al fill di una vendita tracciata
+        profit = 0.0
+        if amount > 0:
+            cost = amount * entrata * (1 + self.cfg.fee) if entrata > 0 else 0.0
+            proceeds = amount * price * (1 - self.cfg.fee)
+            profit = proceeds - cost if entrata > 0 else 0.0
+            self.state.total_pnl += profit
+            self.state.total_trades += 1
+            if profit >= 0:
+                self.state.wins += 1
+            else:
+                self.state.losses += 1
+            self.state.volume += amount * price
+            if entrata > 0:
+                # P5: metriche di performance (Sharpe/Sortino/Calmar)
+                self.risk_state.trade_results.append(profit)
+                try:
+                    self.risk_state.perf.update(
+                        profit / max(1e-9, self.cfg.capital))
+                    self.risk_state.perf.recalc_ratios(
+                        self.risk_state.trade_results,
+                        self.risk_state.peak_capital,
+                        self.risk_state.current_capital,
+                        self.risk_state.initial_capital)
+                except Exception:  # noqa: BLE001
+                    pass
+        self.state.posizione_aperta = None
+        await self._journal("trend_stop_sell", amount=amount, price=price,
+                            stop=stop_price, entry=entrata or None,
+                            profit=round(profit, 8))
+        # notifica la policy: con side="sell" azzera in_posizione e stop, quindi
+        # il tick successivo riparte flat e puo' cercare un nuovo breakout.
+        await self._notify_fill("stop", "sell", price, amount,
+                                fee=amount * price * self.cfg.fee)
+        return True
+
     async def _trigger_stop_loss(self, equity: float, drawdown: float,
                                  price: Optional[float]) -> None:
         """STOP-LOSS: cancella tutti gli ordini, vende tutto l'asset disponibile
@@ -873,26 +991,41 @@ class BotTask:
             if st in ("closed", "filled"):
                 entry = float(info["price"])
                 amount = float(info["amount"])
-                target = self.policy.sell_target(entry)
-                try:
-                    sell = await asyncio.to_thread(
-                        self.ex.create_limit_order, self.cfg.symbol, "sell",
-                        amount, target)
-                    if sell:
-                        # `kind="tp"` distingue le vendite da take-profit dalla
-                        # scala ladder (grid.py conta solo le ladder) e `price`
-                        # le rende deduplicabili.
-                        self.state.open_sells[sell["id"]] = {
-                            "amount": amount, "entry_price": entry,
-                            "price": target, "target_price": target,
-                            "kind": "tp", "timestamp": self._now()}
-                        await self._journal("buy_filled", order_id=oid, entry=entry,
-                                            amount=amount, sell_target=target)
-                        await self._notify_fill(
-                            oid, "buy", entry, amount,
-                            fee=amount * entry * self.cfg.fee)
-                except Exception as e:  # noqa: BLE001
-                    self._last_error = f"place sell: {e}"
+                if getattr(self.policy, "STOP_MONITORATO", False):
+                    # La protezione e' uno stop monitorato: NESSUN ordine limite
+                    # da piazzare (essendo sotto il mercato si riempirebbe
+                    # subito, al prezzo sbagliato). Si registra la posizione: il
+                    # livello di stop arriva a ogni tick in stop_price.
+                    self.state.posizione_aperta = {
+                        "entry": entry, "amount": amount, "ts": self._now()}
+                    await self._journal("buy_filled", order_id=oid, entry=entry,
+                                        amount=amount, sell_target=None,
+                                        protezione="stop_monitorato")
+                    await self._notify_fill(
+                        oid, "buy", entry, amount,
+                        fee=amount * entry * self.cfg.fee)
+                else:
+                    target = self.policy.sell_target(entry)
+                    try:
+                        sell = await asyncio.to_thread(
+                            self.ex.create_limit_order, self.cfg.symbol, "sell",
+                            amount, target)
+                        if sell:
+                            # `kind="tp"` distingue le vendite da take-profit
+                            # dalla scala ladder (grid.py conta solo le ladder) e
+                            # `price` le rende deduplicabili.
+                            self.state.open_sells[sell["id"]] = {
+                                "amount": amount, "entry_price": entry,
+                                "price": target, "target_price": target,
+                                "kind": "tp", "timestamp": self._now()}
+                            await self._journal("buy_filled", order_id=oid,
+                                                entry=entry, amount=amount,
+                                                sell_target=target)
+                            await self._notify_fill(
+                                oid, "buy", entry, amount,
+                                fee=amount * entry * self.cfg.fee)
+                    except Exception as e:  # noqa: BLE001
+                        self._last_error = f"place sell: {e}"
                 self.state.open_buys.pop(oid, None)
             elif st in ("canceled", "expired", "rejected"):
                 self.state.open_buys.pop(oid, None)

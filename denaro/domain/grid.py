@@ -68,6 +68,14 @@ class GridDecision:
     # il mercato si allontana oltre la banda: evita che la scala venda al
     # prezzo sbagliato dopo un movimento ampio)
     to_cancel_sell: List[str] = field(default_factory=list)
+    # LIVELLO DI STOP MONITORATO. Se valorizzato, la posizione va chiusa a
+    # MERCATO quando il prezzo scende fino a questo livello. NON e' un ordine
+    # limite: un limite di vendita sotto il mercato si riempirebbe SUBITO al
+    # miglior bid, quindi non proteggerebbe nulla (difetto trovato il
+    # 2026-09-17, prima che arrivasse il primo segnale live). L'esecuzione —
+    # market sell — e' responsabilita' dell'orchestratore, che vede il prezzo
+    # a ogni tick.
+    stop_price: Optional[float] = None
     reason: str = ""
 
 

@@ -62,6 +62,11 @@ class TrendPolicy(Policy):
     """Breakout + trailing stop ATR + size sul rischio, su barre giornaliere."""
 
     FEE_BUFFER = FEE_BUFFER
+    # L'uscita NON e' un ordine limite: lo stop e' un livello SOTTO il mercato,
+    # e un limite di vendita si riempirebbe SUBITO al miglior bid vendendo al
+    # prezzo sbagliato. Si pubblica il livello in GridDecision.stop_price e
+    # l'orchestratore chiude a MERCATO quando il prezzo lo attraversa.
+    STOP_MONITORATO = True
 
     def __init__(self, params: Optional[TrendParams] = None,
                  round_price: Optional[Callable[[float], float]] = None,
@@ -236,10 +241,12 @@ class TrendPolicy(Policy):
             self.stop = 0.0
 
     def sell_target(self, entry_price: float) -> float:
-        """Stop iniziale, piazzato dall'orchestratore subito dopo il fill del buy.
+        """Livello dello stop iniziale (informativo: NON genera un ordine).
 
-        Non e' un target di profitto: e' la protezione iniziale. Il trailing la
-        alza nel tempo tramite to_cancel_sell + to_sell.
+        Con STOP_MONITORATO=True l'orchestratore non piazza nessuna vendita dopo
+        il fill: il livello arriva a ogni tick in GridDecision.stop_price. Il
+        metodo resta nel contratto Policy e serve ai test per confrontare il
+        livello calcolato qui con quello pubblicato da decide().
         """
         dist = self.params.stop_atr_mult * self.atr
         if dist <= 0:
@@ -259,31 +266,52 @@ class TrendPolicy(Policy):
         if nuovo_giorno:
             self._aggiorna_indicatori()
 
-        # --- in posizione: alza il trailing stop e riposiziona la vendita ---
+        # --- in posizione: alza il trailing stop e ARMA lo stop monitorato ---
+        # La posizione NON si protegge con un ordine limite: lo stop e' un
+        # livello SOTTO il mercato e un limite di vendita si riempirebbe
+        # immediatamente al miglior bid. Si pubblica il livello (d.stop_price)
+        # e l'orchestratore chiude a MERCATO quando il prezzo lo attraversa.
         if self.in_posizione or open_sells:
             if open_sells:
+                # Compatibilita': vendita limite residua di una versione
+                # precedente. Il suo prezzo vale come PAVIMENTO (la protezione
+                # non si abbassa mai) e l'ordine viene CANCELLATO: da ora la
+                # protezione e' lo stop monitorato, non il limite.
                 oid, info = next(iter(open_sells.items()))
                 attuale = float(info.get("target_price") or info.get("price") or 0.0)
-                # RIPARTENZA: la policy e' nuova e self.stop vale 0, quindi il
-                # trailing ripartirebbe dal prezzo corrente ABBASSANDO la
-                # protezione gia' in essere. Lo stop esistente e' un PAVIMENTO:
-                # il trailing puo' solo alzarlo.
                 if attuale > 0 and self.stop < attuale:
                     self.stop = attuale
+                d.to_cancel_sell = [oid]
             if self.atr > 0:
                 self.stop = self.trailing_stop(price)
-            if open_sells:
-                amount = float(info.get("amount", 0.0))
-                if (self.stop > 0 and attuale > 0 and amount > 0
-                        and abs(self.stop - attuale) / attuale > 0.002):
-                    d.to_cancel_sell = [oid]
-                    d.to_sell = [(amount, self.round_price(self.stop))]
-                    d.reason = ("trend: trailing stop %.6f (era %.6f)"
-                                % (self.stop, attuale))
-                else:
-                    d.reason = "trend: stop %.6f invariato" % self.stop
+            if self.stop > 0:
+                d.stop_price = self.round_price(self.stop)
+                d.reason = ("trend: stop monitorato %.6f (chiusura a mercato "
+                            "se il prezzo lo attraversa)" % self.stop)
             else:
-                d.reason = "trend: in posizione senza vendita a mercato"
+                d.reason = "trend: in posizione senza stop calcolabile"
+            return d
+
+        # RIPARTENZA CON POSIZIONE NON TRACCIATA: se il processo muore fra il
+        # fill e la scrittura dello stato, o se l'ordine e' stato eseguito da
+        # fuori, il Node risulta FLAT pur avendo l'asset in mano — cioe' una
+        # posizione scoperta, senza stop. Si adotta al prezzo corrente, usando
+        # la soglia minima dell'exchange per non scambiare la polvere per una
+        # posizione (la polvere non e' vendibile e genererebbe un errore a ogni
+        # tick).
+        # `not open_buys` e' essenziale: un buy ancora tracciato puo' essere
+        # appena stato riempito e non ancora riconciliato (in decide gira PRIMA
+        # di _process_fills). Adottare li' userebbe il prezzo di mercato invece
+        # del prezzo di carico vero, che _process_fills conosce.
+        if (self.atr > 0 and free_asset > 0 and not open_buys
+                and (self.min_amount <= 0 or free_asset >= self.min_amount)):
+            dist = self.params.stop_atr_mult * self.atr
+            self.in_posizione = True
+            self.entrata = price
+            self.stop = price - dist if dist > 0 else price * 0.9
+            d.stop_price = self.round_price(self.stop)
+            d.reason = ("trend: POSIZIONE ADOTTATA (%.8f @ %.6f) — stop %.6f"
+                        % (free_asset, price, self.stop))
             return d
 
         # --- flat: valuta il breakout SOLO alla chiusura di una barra ---

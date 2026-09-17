@@ -153,33 +153,119 @@ class TestTrendIntegrazione(unittest.TestCase):
             assert 0 < notional <= 100.0, "notional fuori scala: %s" % notional
             assert info["price"] > 130.0, "l'ingresso e' un limite sopra il mercato"
 
-            # --- fill del buy ---
+            # --- fill del buy: con lo stop monitorato NON si piazza alcuna
+            #     vendita a riposo ---
             ex.market_trade(130.0)
             await bot.tick()
             assert not bot.state.open_buys, "il buy doveva risultare riempito"
-            assert bot.state.open_sells, "dopo il fill serve la protezione iniziale"
-            soid, sinfo = next(iter(bot.state.open_sells.items()))
-            stop0 = sinfo.get("target_price") or sinfo["price"]
+            # DIFETTO del 2026-09-17: qui si piazzava un LIMITE di vendita a
+            # entry - 2*ATR, cioe' SOTTO il mercato, che si sarebbe riempito
+            # subito al miglior bid. La protezione si pubblica come livello.
+            assert not bot.state.open_sells, (
+                "nessuna vendita a riposo: la protezione e' lo stop monitorato "
+                "(trovate %s)" % (bot.state.open_sells,))
+            pos = bot.state.posizione_aperta
+            assert pos, "la posizione doveva essere registrata nello stato"
+            assert abs(pos["entry"] - info["price"]) < 1e-9
+            stop0 = pol.stop
             atteso = info["price"] - 2.0 * pol.atr
             assert abs(stop0 - atteso) < 1.0, (
                 "stop iniziale %s, atteso %s (entry - 2*ATR)" % (stop0, atteso))
+            # nessun ordine di vendita puo' riposare SOTTO il mercato: si
+            # riempirebbe all'istante (era il difetto)
+            for o in ex.orders.values():
+                if o["side"] == "sell" and o["status"] == "open":
+                    assert o["price"] >= ex.price, (
+                        "vendita limite sotto il mercato: %s" % (o["price"],))
 
             # --- il prezzo sale: il trailing deve alzare lo stop ---
             orol.t = GIORNO * 11 + 3600
             ex.price = 150.0
             await bot.tick()
-            aperti = bot.state.open_sells
-            assert aperti, "lo stop non deve sparire"
-            soid2, sinfo2 = next(iter(aperti.items()))
-            stop1 = sinfo2.get("target_price") or sinfo2["price"]
+            assert not bot.state.open_sells, "lo stop non e' un ordine a riposo"
+            stop1 = pol.stop
             assert stop1 > stop0, (
                 "il trailing doveva salire: %s -> %s" % (stop0, stop1))
 
-            # --- il prezzo torna allo stop: si esce ---
-            ex.market_trade(stop1)
+            # --- il prezzo attraversa lo stop: si esce A MERCATO ---
+            ex.price = stop1
             await bot.tick()
-            assert not bot.state.open_sells, "allo stop si doveva uscire"
+            assert bot.state.posizione_aperta is None, (
+                "la posizione doveva chiudersi: %s" % (bot.state.posizione_aperta,))
             assert ex.asset < 1e-9, "posizione non chiusa: %s" % ex.asset
+            assert not bot.state.open_sells
+            assert pol.in_posizione is False, "la policy doveva tornare flat"
+
+        asyncio.run(scenario())
+
+    def test_lo_stop_non_vende_al_momento_del_piazzamento(self):
+        """Regressione del difetto del 2026-09-17.
+
+        Lo stop iniziale e' entry - 2*ATR, cioe' SOTTO il mercato. Un ordine
+        LIMITE di vendita a quel prezzo si riempie immediatamente al miglior
+        bid: il bot avrebbe comprato e rivenduto nello stesso istante,
+        perdendo spread + 2 fee a ogni ciclo. La protezione non esisteva.
+
+        Qui si verifica che dopo il fill NON resti alcuna vendita a riposo e
+        che la posizione sopravviva a un mercato FERMO al prezzo d'ingresso.
+        """
+        orol = Orologio(GIORNO * 10)
+        pol = self._policy()
+        pol.precarica_barre(_barre_piatte(10))
+        ex = FakeExchange(price=100.0, free_quote=100.0)
+        bot = self._bot(orol, pol, ex)
+
+        async def scenario():
+            await bot.tick()
+            # giorno 10: la chiusura sale a 130 (e' il breakout, ma la barra
+            # non e' ancora chiusa)
+            ex.price = 130.0
+            await bot.tick()
+            assert not bot.state.open_buys, "non compra a barra aperta"
+            # giorno 11: il cambio di giornata chiude la barra e rivela il
+            # breakout
+            orol.t = GIORNO * 11
+            await bot.tick()
+            assert bot.state.open_buys, "breakout: doveva piazzare un buy"
+            ex.market_trade(130.0)
+            await bot.tick()
+            assert bot.state.posizione_aperta, "posizione non registrata"
+            vendite = [o for o in ex.orders.values()
+                       if o["side"] == "sell" and o["status"] == "open"]
+            assert vendite == [], (
+                "il bot ha lasciato una vendita a riposo: %s" % (vendite,))
+            # mercato fermo al prezzo d'ingresso: non deve succedere NULLA
+            asset_prima = ex.asset
+            await bot.tick()
+            assert bot.state.posizione_aperta is not None, (
+                "la posizione si e' chiusa da sola: e' il difetto")
+            assert abs(ex.asset - asset_prima) < 1e-12, (
+                "l'asset e' cambiato senza un vero stop: %s -> %s"
+                % (asset_prima, ex.asset))
+            assert bot.state.open_sells == {}
+
+        asyncio.run(scenario())
+
+    def test_adozione_di_posizione_non_tracciata(self):
+        """Restart con asset in mano e stato assente: la posizione si adotta.
+
+        Senza adozione il bot resterebbe FLAT avendo l'asset, cioe' con una
+        posizione scoperta e senza alcuno stop.
+        """
+        orol = Orologio(GIORNO * 10)
+        pol = self._policy()
+        pol.precarica_barre(_barre_piatte(10))
+        pol.atr = 2.0
+        ex = FakeExchange(price=100.0, free_quote=0.0)
+        ex.asset = 1.0            # posizione rimasta da prima del riavvio
+        bot = self._bot(orol, pol, ex)
+
+        async def scenario():
+            await bot.tick()
+            assert pol.in_posizione is True, (
+                "la posizione doveva essere adottata (reason=%s)"
+                % getattr(pol, "_ultima_reason", ""))
+            assert pol.stop == 96.0, "stop adottato: %s" % pol.stop
 
         asyncio.run(scenario())
 

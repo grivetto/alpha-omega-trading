@@ -326,7 +326,11 @@ def test_riavvio_non_abbassa_lo_stop_esistente():
                    cash=0.0, capital_config=24.9, free_balance=0.0,
                    now=5 * 86_400.0)
     assert d.to_sell == [], "non doveva riposizionare lo stop: %s" % (d.to_sell,)
-    assert d.to_cancel_sell == []
+    # l'ordine limite residuo va CANCELLATO: la protezione e' lo stop
+    # monitorato, non una vendita a riposo (che si riempirebbe subito, essendo
+    # un livello SOTTO il mercato)
+    assert d.to_cancel_sell == ["s1"]
+    assert d.stop_price == 96.0, "stop pubblicato: %s" % (d.stop_price,)
     assert pol.stop >= 96.0, "lo stop non deve scendere sotto 96: %.4f" % pol.stop
 
     # e se il prezzo SALE, il trailing deve alzarlo normalmente
@@ -334,4 +338,62 @@ def test_riavvio_non_abbassa_lo_stop_esistente():
                     cash=0.0, capital_config=24.9, free_balance=0.0,
                     now=5 * 86_400.0 + 60)
     assert pol.stop > 96.0, "il trailing doveva salire: %.4f" % pol.stop
-    assert d2.to_sell and d2.to_sell[0][1] == pol.stop
+    assert d2.stop_price == pol.stop
+    assert d2.to_sell == [], "lo stop non e' un ordine limite: %s" % (d2.to_sell,)
+
+
+def test_lo_stop_non_e_una_vendita_limite():
+    """Regressione del difetto del 2026-09-17.
+
+    Lo stop e' entry - stop_atr_mult*ATR, cioe' un livello SOTTO il mercato. Un
+    ordine LIMITE di vendita a quel prezzo si riempie IMMEDIATAMENTE al miglior
+    bid: il bot avrebbe comprato e rivenduto nello stesso istante, perdendo
+    spread + 2 fee a ogni ciclo. La protezione non esisteva.
+
+    La policy deve quindi pubblicare un LIVELLO (stop_price) e non emettere mai
+    una vendita a riposo quando e' in posizione.
+    """
+    pol = TrendPolicy(TrendParams(canale=5, atr_period=3, trail_mult=3.0,
+                                  stop_atr_mult=2.0, trend_ema=0))
+    pol.atr = 2.0
+    pol.in_posizione = True
+    pol.entrata = 100.0
+    pol.stop = 96.0
+    d = pol.decide(price=100.0, open_buys={}, open_sells={}, cash=0.0,
+                   capital_config=25.0, free_balance=0.0, now=5 * 86_400.0)
+    assert d.stop_price == 96.0
+    assert d.to_sell == [], "uno stop non e' un ordine limite: %s" % (d.to_sell,)
+    assert d.to_place == []
+    # il livello e' SOTTO il prezzo: proprio per questo non puo' essere un
+    # ordine limite di vendita
+    assert d.stop_price < 100.0
+
+
+def test_adozione_di_posizione_non_tracciata():
+    """Restart con asset in mano ma policy flat: la posizione viene ADOTTATA.
+
+    Senza adozione il Node risulterebbe FLAT avendo l'asset in mano — una
+    posizione scoperta, senza alcuno stop. Succede se il processo muore fra il
+    fill e la scrittura dello stato, o se l'ordine e' stato eseguito da fuori.
+    """
+    pol = TrendPolicy(TrendParams(canale=5, atr_period=3, trail_mult=3.0,
+                                  stop_atr_mult=2.0, trend_ema=0),
+                      min_amount=0.001)
+    pol.atr = 2.0
+    d = pol.decide(price=100.0, open_buys={}, open_sells={}, cash=0.0,
+                   capital_config=25.0, free_balance=0.0,
+                   now=5 * 86_400.0, free_asset=1.0)
+    assert pol.in_posizione is True, "la posizione doveva essere adottata"
+    assert pol.entrata == 100.0
+    assert d.stop_price == 96.0, "stop dell'adozione: %s" % (d.stop_price,)
+
+    # la POLVERE (sotto il minimo dell'exchange) NON e' una posizione: non e'
+    # vendibile e genererebbe un errore a ogni tick
+    pol2 = TrendPolicy(TrendParams(canale=5, atr_period=3, trend_ema=0),
+                       min_amount=1.0)
+    pol2.atr = 2.0
+    d2 = pol2.decide(price=100.0, open_buys={}, open_sells={}, cash=0.0,
+                     capital_config=25.0, free_balance=0.0,
+                     now=5 * 86_400.0, free_asset=0.5)
+    assert pol2.in_posizione is False, "la polvere non e' una posizione"
+    assert d2.stop_price is None

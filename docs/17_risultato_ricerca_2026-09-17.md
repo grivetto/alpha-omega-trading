@@ -900,3 +900,84 @@ Questo e' il quarto difetto del percorso live trovato in quattro round, e il piu
 grave. Nessuno era visibile dai test unitari. Il rig di misura era corretto fin
 dal round 1; era il **collegamento fra rig e produzione** a essere fragile, e
 l'unico modo di trovarlo e' stato leggere il percorso reale ordine per ordine.
+
+
+## 14. CORREZIONE DEL DIFETTO 13 — stop monitorato instead of limit sell
+
+### 14.1 Il principio
+
+Uno stop e' un livello SOTTO il mercato. Su un exchange non si esprime con un
+ordine limite: un limite di vendita sotto il mercato si riempie immediatamente
+al miglior bid. Serve o un ordine condizionale (algo) o un **monitoraggio**
+dell'orchestratore, che vede il prezzo a ogni tick.
+
+Scelta: il monitoraggio. L'adapter non espone gli ordini algo, e il percorso
+market-sell esiste gia' (quello dello stop-loss di bot). Meno infrastruttura
+nuova, stesso risultato, coerente col resto del sistema.
+
+### 14.2 Il contratto
+
+- `GridDecision.stop_price` (nuovo campo, default `None`): livello di stop.
+  Se valorizzato e il prezzo lo attraversa, la posizione si chiude A MERCATO.
+- `Policy.STOP_MONITORATO` (default `False`): la policy dichiara di usare
+  questo meccanismo. `TrendPolicy` lo imposta a `True`.
+- Con `STOP_MONITORATO=True` l'orchestratore NON piazza la vendita
+  protettiva dopo il fill: registra la posizione in
+  `BotState.posizione_aperta` (entry/amount), perche' non c'e' piu' un ordine
+  a cui appoggiarsi per la contabilita' del PnL.
+
+Default invariati per tutte le altre policy: nessuna cambia comportamento.
+
+### 14.3 Cosa cambia, in concreto
+
+| | prima | dopo |
+|---|---|---|
+| dopo il fill | limite di vendita a entry − 2·ATR | nessun ordine; posizione registrata |
+| in posizione | `to_sell` + `to_cancel_sell` a ogni tick | `stop_price` a ogni tick |
+| allo stop | il limite si riempie subito | `sell_market` quando prezzo ≤ stop |
+| guard di spread | assente | lo stesso dello stop-loss (0.5%) |
+| ripartenza | posizione potenzialmente scoperta | adozione a prezzo corrente |
+
+L'ordine limite residuo di una versione precedente viene adottato come
+PAVIMENTO (lo stop non scende mai) e poi CANCELLATO.
+
+### 14.4 Adozione della posizione non tracciata
+
+Se il processo muore fra il fill e la scrittura dello stato, il Node risulta
+FLAT avendo l'asset in mano: una posizione scoperta, senza stop. La policy la
+adotta al prezzo corrente (stop = prezzo − 2·ATR), che e' la migliore stima
+disponibile e ripristina SUBITO la protezione.
+
+Guardie: non adotta se c'e' un buy ancora tracciato (potrebbe essere appena
+stato riempito e non ancora riconciliato, e `decide` gira PRIMA di
+`_process_fills`: il prezzo di carico vero lo conosce solo il secondo), e non
+adotta la polvere sotto il minimo dell'exchange (non e' vendibile e genererebbe
+un errore a ogni tick).
+
+### 14.5 Prove
+
+Quattro test nuovi, tutti verificati sul percorso REALE (`BotTask.tick` +
+`TrendPolicy` vera, non un mock della policy):
+
+1. `test_lo_stop_non_e_una_vendita_limite` — la policy in posizione non
+   emette mai `to_sell`, pubblica `stop_price`, e il livello e' sotto il
+   mercato (proprio per questo non puo' essere un ordine limite).
+2. `test_lo_stop_non_vende_al_momento_del_piazzamento` — dopo il fill NON
+   resta alcuna vendita a riposo, e con il mercato FERMO al prezzo d'ingresso
+   non succede nulla. E' la regressione esatta del difetto: prima, il limite
+   sotto il mercato si sarebbe riempito all'istante.
+3. `test_ciclo_completo_breakout_trailing_uscita` — ciclo completo:
+   breakout → fill → trailing che sale → uscita A MERCATO allo stop, con la
+   posizione che torna flat nella policy.
+4. `test_adozione_di_posizione_non_tracciata` — adozione dopo un restart,
+   e rifiuto della polvere.
+
+**303 test verdi**, 0 fallimenti. I due test che asserivano il comportamento
+precedente (`to_sell` per lo stop) sono stati riscritti: asserivano il
+difetto.
+
+### 14.6 Nota
+
+Il rig di ricerca non e' cambiato: il backtest modellava gia' un'uscita a
+trigger (`if lo <= stop`). Era la produzione a non riprodurlo. Questa
+correzione allinea l'esecuzione al modello — non cambia l'edge misurato.
