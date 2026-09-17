@@ -17,7 +17,7 @@ CASA_SERGIO = "/home/sergio/alpha-omega-trading"
 
 # macchina -> (argomenti ssh, path del repo) oppure None se e la locale
 REPO_DIRS = {
-    "marcodg1": None,
+    "marcodg1": (["marco@87.106.222.123", "-p", "22"], CASA_MARCO),
     "mc2": (["sergio@127.0.0.1", "-p", "2222"], CASA_SERGIO),
     "nuvola": (["sergio@87.106.3.15", "-p", "22"], CASA_SERGIO),
 }
@@ -56,11 +56,10 @@ def stato_repo() -> dict:
     locale = nome_locale()
     fuori = {}
     for nome, cfg in REPO_DIRS.items():
+        ssh_args, base = cfg
         if nome == locale:
-            base = CASA_MARCO if nome == "marcodg1" else CASA_SERGIO
             cmd = _git_cmd(base)
         else:
-            ssh_args, base = cfg
             cmd = _ssh_cmd(ssh_args, base)
         try:
             r = subprocess.run(cmd, capture_output=True, text=True, timeout=20)
