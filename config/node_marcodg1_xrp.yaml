@@ -32,7 +32,7 @@ bots:
     capital: 24.4
     profit_target: 0.018
     entry_slip: 0.001
-    fee: 0.001
+    fee: 0.002
     tick_interval: 30
     env_prefix: MARCOSUB1_
     stop_loss_pct: 0.10

@@ -33,7 +33,7 @@ bots:
     capital: 24.84
     profit_target: 0.02
     entry_slip: 0.002
-    fee: 0.001
+    fee: 0.002
     tick_interval: 30
     env_prefix: ''
     stop_loss_pct: 0.10

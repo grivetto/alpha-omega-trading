@@ -120,3 +120,46 @@ OKX EEA spot:
 Ogni candidato va giudicato **solo** con `denaro/research/eval.py` e il suo gate.
 Nessuna strategia va in live senza >=3 fold, >=75% fold positivi, mediana OOS
 positiva e alpha positivo.
+
+
+## 6. Le commissioni reali sono il DOPPIO di quelle usate (2026-09-17)
+
+Verificato sui **fill reali** del conto, non sul config. Ogni fill, senza
+eccezioni, e' tassato allo **0.2000%**:
+
+    DOGE/EUR 2026-09-08 buy  notional 4.0002 fee 0.104484 DOGE -> 0.2000%
+    DOGE/EUR 2026-09-08 sell notional 2.0386 fee 0.004077 EUR  -> 0.2000%
+    SOL/EUR  2026-09-11 sell notional 2.0539 fee 0.004108 EUR  -> 0.2000%
+
+Il conto e' `level: Lv1`, `maker: -0.002`, `taker: -0.0035`.
+Il progetto usava `fee: 0.001` — **meta' del costo reale** — nei config, nei
+backtest e nel PnL del bot.
+
+Conseguenze misurate (griglia live, 2 anni, 1H):
+
+| coppia | fee 0.10% (usata) | fee 0.20% (reale maker) | fee/lordo |
+|---|---|---|---|
+| SOL/EUR | +27.27% | **−5.73%** | 11.9% -> 25.3% |
+| ETH/EUR | +27.37% | +21.93% | 10.6% -> 21.1% |
+| DOGE/EUR | −6.42% | −7.19% | 14.7% -> 28.8% |
+| XRP/EUR | −11.10% | −11.67% | 13.9% -> 27.2% |
+| ADA/EUR | −10.80% | −11.17% | 35.8% -> 65.2% |
+
+Il caso SOL e' il piu' grave: **il profitto era la fee sbagliata**. Con il costo
+vero diventa negativo.
+
+Effetti sul bot live:
+- il PnL registrato e' ottimistico di ~0.2% per round trip;
+- con centinaia di cicli questo e' una parte rilevante del capitale: sul bot
+  DOGE di mc2, 159 cicli su ~8 EUR per livello sono ~2.5 EUR di fee non
+  contabilizzate su un conto da 24 EUR;
+- i guard di drawdown e daily-loss scattano in ritardo, perche' calcolati su
+  un'equity gonfiata.
+
+Correzione applicata: `fee: 0.002` in `node_mc2.yaml`,
+`node_nuvola_trade.yaml`, `node_marcodg1_xrp.yaml`.
+
+Nota sugli spread (misurati in contemporanea): DOGE 0.056%, SOL 0.023%,
+XRP 0.035%. **Non sono lo spread il problema: sono le fee**, che con un round
+trip maker costano 0.40% contro 0.02-0.06% di spread. Qualunque strategia che
+faccia piu' di ~4 round trip al giorno paga piu' di fee che di spread.

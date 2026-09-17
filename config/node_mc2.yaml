@@ -27,7 +27,7 @@ bots:
     levels: 3
     buy_distance: 0.015
     profit_target: 0.02
-    fee: 0.001
+    fee: 0.002
     tick_interval: 30
     env_prefix: ''
     health_path: /home/sergio/denaro/health/doge_mc2.json
@@ -47,7 +47,7 @@ bots:
     levels: 3
     buy_distance: 0.015
     profit_target: 0.02
-    fee: 0.001
+    fee: 0.002
     tick_interval: 30
     env_prefix: ''
     health_path: /home/sergio/denaro/health/sol_mc2.json
