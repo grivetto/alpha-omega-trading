@@ -1288,12 +1288,21 @@ class TradeOrchestrator:
             raise ValueError(f"bot gia' registrato: {key}")
         self._bots[key] = bot
 
-    def add_ohlcv_source(self, symbol: str, exchange, callback) -> None:
-        """Alimenta la policy adattiva con OHLCV reale (candle 1h, refresh 60s)."""
-        self._ohlcv_sources[symbol] = (exchange, callback)
+    def add_ohlcv_source(self, symbol: str, exchange, callback,
+                         timeframe: str = "", limit: int = 0) -> None:
+        """Alimenta una policy con OHLCV reale (refresh 60s).
+
+        `timeframe` e `limit` sono per-simbolo: la policy adattiva vuole candele
+        1h, il trend giornaliero le candele 1d da 300 barre — le STESSE del
+        precaricamento all'avvio, altrimenti canale e ATR cambiano sotto i piedi
+        al primo refresh.
+        """
+        self._ohlcv_sources[symbol] = (exchange, callback, timeframe,
+                                       limit or self.OHLCV_LIMIT)
 
     async def _ohlcv_loop(self, symbol: str) -> None:
-        exchange, callback = self._ohlcv_sources[symbol]
+        exchange, callback, timeframe, limit = self._ohlcv_sources[symbol]
+        timeframe = timeframe or self.OHLCV_TIMEFRAME
         # preferisce fetch_ohlcv_raw (bypassa il bug ccxt 4.5.x), fallback
         fetch = getattr(exchange, "fetch_ohlcv_raw", None) or getattr(
             exchange, "fetch_ohlcv", None)
@@ -1303,8 +1312,8 @@ class TradeOrchestrator:
             return
         while True:
             try:
-                ohlcv = await asyncio.to_thread(
-                    fetch, symbol, self.OHLCV_TIMEFRAME, self.OHLCV_LIMIT)
+                ohlcv = await asyncio.to_thread(fetch, symbol, timeframe,
+                                                limit)
                 if ohlcv:
                     if inspect.iscoroutinefunction(callback):
                         await callback(symbol, ohlcv)

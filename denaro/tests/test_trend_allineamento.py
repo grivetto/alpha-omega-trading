@@ -89,3 +89,59 @@ def test_offset_esplicito_accettato_dal_costruttore():
     assert p.offset_barre_s == 0.0          # 57600 % 14400
     p2 = TrendParams(offset_barre_s=57_600.0)
     assert p2.offset_barre_s == 57_600.0
+
+
+# --- refresh periodico dallo storico dell'exchange (round 29) ---------------
+
+def _confine_recente():
+    """Confine 16:00 UTC piu' recente secondo l'orologio reale."""
+    import time as _t
+    return int((_t.time() - 57_600.0) // GIORNO) * GIORNO + 57_600.0
+
+
+def test_aggiorna_storico_sostituisce_la_barra_dei_tick():
+    """La candela vera dell'exchange prende il posto della barra dei tick."""
+    pol = _policy()
+    candele = _candele(150, BASE - GIORNO)
+    pol.precarica_barre(candele, BASE + 3_600.0)
+    # barra provvisoria dei tick, con un massimo che l'exchange non ha mai visto
+    pol._aggiorna(200.0, BASE + 3_600.0)
+    pol._aggiorna(201.0, BASE + GIORNO)
+    tick = list(pol.barre)[-1]
+    assert tick["ts"] == BASE and tick["h"] == 200.0
+
+    vera = [BASE, 100.0, 110.0, 95.0, 105.0, 1.0]
+    n = pol.aggiorna_storico(candele + [vera], BASE + GIORNO + 60.0)
+    assert n == 151
+    ultima = list(pol.barre)[-1]
+    assert (ultima["ts"], ultima["h"], ultima["c"]) == (BASE, 110.0, 105.0)
+    # la barra dei tick era piatta (o=h=l=c=200): non deve essere rimasta
+    piatta = [b for b in pol.barre if b["o"] == b["h"] == b["l"] == b["c"]]
+    assert not piatta, "barra dei tick rimasta: %s" % (piatta,)
+
+
+def test_aggiorna_storico_payload_corto_non_lascia_ciechi():
+    """Un payload inutilizzabile non deve azzerare canale e ATR."""
+    pol = _policy()
+    pol.precarica_barre(_candele(150, BASE - GIORNO), BASE + 3_600.0)
+    prima, atr_prima = len(list(pol.barre)), pol.atr
+    assert prima == 150 and atr_prima > 0
+    assert pol.aggiorna_storico(_candele(10, BASE - GIORNO), BASE + 3_600.0) == 0
+    assert pol.aggiorna_storico([], BASE + 3_600.0) == 0
+    assert len(list(pol.barre)) == prima
+    assert pol.atr == atr_prima
+
+
+def test_on_ohlcv_accetta_le_due_firme():
+    """Contratto canale del Node: (symbol, ohlcv) e anche (ohlcv)."""
+    conf = _confine_recente()
+    reali = _candele(151, conf - GIORNO)
+    pol = _policy()
+    pol.precarica_barre(_candele(150, BASE - GIORNO), BASE + 3_600.0)
+    pol.on_ohlcv("UNI/EUR", reali)
+    assert len(list(pol.barre)) == 151
+    pol2 = _policy()
+    pol2.precarica_barre(_candele(150, BASE - GIORNO), BASE + 3_600.0)
+    pol2.on_ohlcv(reali)
+    assert len(list(pol2.barre)) == 151
+    assert list(pol2.barre)[-1]["ts"] == conf - GIORNO

@@ -422,8 +422,14 @@ class NodeApp:
             # AdaptiveEngine: alimenta il regime ADX/ATR con OHLCV reale (1h)
             on_ohlcv = getattr(task.policy, "on_ohlcv", None)
             if on_ohlcv is not None:
+                # Il trend vuole le STESSE candele del precaricamento (1d, 300
+                # barre): il refresh sostituisce la barra provvisoria dei tick
+                # con la candela vera dell'exchange.
+                _tf_ohlcv = (str(bot.get("timeframe", "1d")).lower()
+                             if str(bot.get("strategy", "")) == "trend" else "")
                 self.orchestrator.add_ohlcv_source(
-                    bot["symbol"], exchange, on_ohlcv)
+                    bot["symbol"], exchange, on_ohlcv, _tf_ohlcv,
+                    300 if _tf_ohlcv else 0)
             self.orchestrator.add_bot(task)
             log.info("bot %s (%s) registrato", bot["symbol"], bot.get("mode", "paper"))
 

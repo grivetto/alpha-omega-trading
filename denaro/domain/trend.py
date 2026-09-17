@@ -22,6 +22,7 @@ il timestamp e' disponibile.
 """
 from __future__ import annotations
 
+import time
 from collections import deque
 from typing import Callable, Dict, Optional
 
@@ -262,6 +263,47 @@ class TrendPolicy(Policy):
             self.barre.append({"ts": ts, "o": o, "h": h, "l": l, "c": c})
         self._aggiorna_indicatori()
         return len(lette)
+
+    def aggiorna_storico(self, barre, now: Optional[float] = None) -> int:
+        """Sostituisce lo storico con le candele CHIUSE appena scaricate.
+
+        Serve al refresh periodico: a differenza di precarica_barre (che
+        AGGIUNGE in coda all'avvio) questa RIMPIAZZA, cosi' la barra
+        provvisoria costruita dai tick viene sostituita dalla candela VERA
+        dell'exchange. Senza questo la barra dei tick resta quella vista dal
+        processo (parziale dopo ogni riavvio) e il canale si abbassa lentamente
+        rispetto a quello misurato nel backtest.
+
+        Se il payload e' corto o illeggibile lo storico precedente viene
+        RIPRISTINATO: senza canale e ATR la policy non entra e non protegge,
+        e restare ciechi e' peggio che tenere dati vecchi di un minuto.
+        """
+        if not barre:
+            return 0
+        vecchie = list(self.barre)
+        self.barre.clear()
+        try:
+            n = self.precarica_barre(barre, now)
+        except Exception:  # noqa: BLE001 - payload sporco: si tiene lo storico
+            n = 0
+        minimo = max(self.params.canale, self.params.atr_period,
+                     self.params.trend_ema) + 5
+        if n < minimo:
+            self.barre.clear()
+            self.barre.extend(vecchie)
+            self._aggiorna_indicatori()
+            return 0
+        return n
+
+    def on_ohlcv(self, symbol_or_ohlcv, ohlcv=None) -> None:
+        """Contratto canale OHLCV del Node: `(symbol, ohlcv)`.
+
+        Tiene le barre della policy allineate alle candele reali: il refresh
+        gira ogni 60s e sostituisce la barra dei tick con la candela chiusa.
+        Accetta anche la chiamata diretta `on_ohlcv(ohlcv)`.
+        """
+        candele = ohlcv if ohlcv is not None else symbol_or_ohlcv
+        self.aggiorna_storico(candele, time.time())
 
     def on_price(self, price: float) -> None:
         """No-op: le barre si costruiscono in decide(), dove c'e' il timestamp.
