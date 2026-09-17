@@ -21,7 +21,11 @@ Environment=DASH_HOST=127.0.0.1
 Environment=DASH_PORT=8913
 Environment=DASH_HTML_DIR=/home/sergio/denaro/denaro
 Environment=DASH_HTML_FILE=dashboard_infra.html
-Environment="AGG_URLS=http://[::1]:8912/infra.json,http://127.0.0.1:8912/infra.json"
+# 2026-09-17: l'aggregatore LOCALE di mc2 e' quello completo (contiene i 15
+# bot trend della flotta). Quello su MARCODG1, raggiunto via tunnel, era
+# rimasto a 3 bot con codice vecchio: preferirlo lasciava la dashboard
+# incompleta. Ora si preferisce il locale, il tunnel resta come riserva.
+Environment="AGG_URLS=http://127.0.0.1:8912/infra.json,http://[::1]:8912/infra.json"
 Environment=AGG_TIMEOUT=8
 Environment=DASH_CACHE_FILE=/home/sergio/denaro/health/infra_last_good.json
 ExecStart=/usr/bin/python3 /home/sergio/alpha-omega-trading/serve_dashboard.py
