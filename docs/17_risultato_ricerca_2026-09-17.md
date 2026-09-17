@@ -249,3 +249,71 @@ mean-reversion, tutte con alpha NEGATIVO e drawdown 60-99%) con il portafoglio
 trend e' un miglioramento netto anche se il rendimento atteso resta modesto.
 Per guadagnare davvero in un orso servirebbe la capacita' di stare short
 (swap/futures), che e' una decisione di rischio, non di codice.
+
+
+### 7.5 Correzione: i numeri di 7.2 e 7.3 erano sottostimati
+
+Il motore trend aveva un difetto: il cap di esposizione calcolava la size
+massima affondabile con una stima FISSA di slippage (0.0005) mentre lo slippage
+vero dipende dal notional (k*sqrt(notional/volume)). Quando la size calcolata
+sul rischio si avvicinava al limite di capitale, il costo risultava maggiore
+del cash disponibile e l'ordine veniva **rifiutato invece che ridotto**: trade
+validi persi in silenzio. Corretto con uno scaling a due passaggi (calcolo il
+costo vero e riduco la size).
+
+I numeri di 7.2 e 7.3 vanno quindi sostituiti. Ricalcolo con il motore corretto:
+
+| metrica | valore bacato | **valore corretto** |
+|---|---|---|
+| rendimento composto OOS 4H | +47.93% | **+44.75%** |
+| buy&hold equal-weight | +14.90% | +14.90% |
+| alpha composto | +33.03% | **+29.85%** |
+| peggior fold | −5.65% | **−6.15%** |
+| fold positivi | 56% | **44%** |
+| sharpe sui fold | 1.07 | **0.99** |
+| composto senza il fold migliore | +4.37% | **+1.23%** |
+
+Robustezza ricalcolata (l'alpha regge in TUTTE le 11 configurazioni):
+
+| prova | comp | senza fold migliore | alpha | peggior fold |
+|---|---|---|---|---|
+| train 500 / test 250 (20 fold) | +8.44% | −4.41% | +26.35% | −7.40% |
+| train 750 / test 375 (12 fold) | +54.89% | +8.95% | +78.89% | −8.45% |
+| train 1000 / test 500 (9 fold) | +44.75% | +1.23% | +29.85% | −6.15% |
+| train 1500 / test 750 (5 fold) | +6.69% | −12.60% | +64.86% | −6.88% |
+| train 2000 / test 1000 (3 fold) | +2.80% | −12.72% | +70.26% | −12.74% |
+| senza SOL/EUR | +56.89% | +4.54% | +28.25% | −5.62% |
+| senza DOGE/EUR | +50.16% | +1.68% | +38.10% | −5.87% |
+| senza XRP/EUR | +40.91% | +0.09% | +86.42% | −5.71% |
+| senza ETH/EUR | +58.78% | +10.04% | +47.25% | −6.65% |
+| senza ADA/EUR | +33.61% | +6.46% | **+1.31%** | −6.28% |
+| fee taker 0.35%/lato | +40.07% | +6.86% | +25.16% | −6.11% |
+
+Le conclusioni di 7.4 restano valide, con una precisazione: l'alpha e' positivo
+ovunque ma in un caso (senza ADA) scende a +1.31%, quindi non e' indistruttibile.
+Il rendimento assoluto resta debole e dipendente dalla finestra, e togliendo il
+fold migliore e' positivo solo in 2 configurazioni su 5.
+
+**Nota di metodo**: questa correzione e' esattamente il motivo per cui il rig
+esiste. I numeri bacati erano plausibili e la conclusione qualitativa non
+cambiava; senza il test che ha fallito non me ne sarei accorto. E' lo stesso
+tipo di errore che ha reso inutilizzabili un anno e mezzo di risultati.
+
+### 7.6 Conclusione del round 2
+
+Il trend following con rischio per volatilita', valutato su un portafoglio con
+UN SOLO set di parametri per 5 asset:
+
+- **batte il buy-and-hold in modo consistente**: alpha positivo in tutte le 11
+  configurazioni di robustezza, regge al leave-one-out, regge alla fee taker;
+- **non guadagna in modo affidabile in assoluto**: circa in pareggio, con forte
+  dipendenza dalla finestra;
+- il motivo e' nel mercato: il buy-and-hold equal-weight ha reso da −18% a −67%
+  sui periodi di test. Era un orso, e una strategia long-only su spot in un orso
+  puo' perdere meno, non guadagnare.
+
+Sul piano operativo: le strategie live attuali (grid su DOGE, momentum su SOL,
+mean-reversion su XRP) hanno alpha NEGATIVO e drawdown 60-99%. Sostituirle con
+il portafoglio trend e' un miglioramento netto anche se il rendimento atteso
+resta modesto. Per guadagnare davvero in un orso servirebbe la capacita' di
+stare short (swap/futures): e' una decisione di rischio, non di codice.
