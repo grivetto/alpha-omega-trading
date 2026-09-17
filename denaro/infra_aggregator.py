@@ -749,6 +749,20 @@ def collect():
         if _k.startswith(("mc2:okx:", "nuvola:okx:", "marcodg1:okx:")):
             if _k not in bots or bots[_k].get("status") in (None, "no_file", "error"):
                 bots[_k] = _v
+    # Alcune fonti etichettano gli stessi bot in modo diverso: il glob dei nodi
+    # remoti produce "mc2:<SIMBOLO>", la lettura esplicita "mc2:okx:<SIMBOLO>".
+    # Se la chiave esplicita manca ma esiste quella per simbolo con dati vivi,
+    # si usa quella: senza, il bot e' VIVO ma la sua card non compare.
+    for _pref in ("mc2", "nuvola", "marcodg1"):
+        for _k, _v in list(node_bots.items()):
+            if not _k.startswith(_pref + ":") or _k.startswith(_pref + ":okx:"):
+                continue
+            if not isinstance(_v, dict) or _v.get("stale"):
+                continue
+            _sim = _k[len(_pref) + 1:]
+            _expl = "%s:okx:%s" % (_pref, _sim)
+            if _expl not in bots or bots[_expl].get("status") in (None, "no_file", "error"):
+                bots[_expl] = _v
 
     # 7) CAPITALE TOTALE REALE = somma dei SALDI reali (account deduplicati).
     #    Prima esistevano due costanti hardcoded (24.0 e 25.47): con 75 EUR

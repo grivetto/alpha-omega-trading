@@ -286,7 +286,9 @@ const ebKeys = Object.keys(eb).filter(k => eb[k] && eb[k].ok && eb[k].eur !== nu
   let shown = 0;
   for (const name of ORDER) {
     const b = bots[name];
-    if (!b) continue;
+    // una card per un bot fermo da ore mostrerebbe equity vecchie come
+    // stato attuale: meglio nessuna card.
+    if (!b || b.stale) continue;
     shown++;
     const meta = BOT_META[name] || {sym: b.symbol || name, ex: b.exchange || '', color: '#00f3ff'};
     const st = b.status || '?';
