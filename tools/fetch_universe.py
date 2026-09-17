@@ -21,7 +21,12 @@ Uso:
   python3 tools/fetch_universe.py --top 80 --timeframe 1D
   python3 tools/fetch_universe.py --top 80 --timeframe 4H
 
-Solo lettura sugli exchange: nessun ordine, nessuna chiave richiesta.
+NOTA (bug trovato 2026-09-18): il CLI usa 1D/4H MAIUSCOLI perche' i NOMI FILE
+devono restare dl_<BASE>_1D.csv / uni_<BASE>_4H.csv — e' il formato che
+tools/trend_universo_largo.py e tools/trend_4h_griglia.py leggono. Ma ccxt/OKX
+vuole "1d"/"4h" MINUSCOLI: passando "1D" fetch_ohlcv solleva
+"timeframe unit D is not supported" per OGNI simbolo, il fetcher salta tutto e
+scrive ZERO file restituendo comunque "FATTO". La traduzione e' in TF_CCXT.
 """
 from __future__ import annotations
 
@@ -39,6 +44,9 @@ DATI = Path("/home/sergio/alpha-omega-trading/backtest_data")
 # stablecoin e valute: non sono asset da trend
 ESCLUSI = {"USDC", "USDT", "DAI", "TUSD", "PYUSD", "EURT", "EURC", "AUSD",
            "EURQ", "EURR", "USDE", "FDUSD", "USDG", "EUR"}
+
+# CLI (per i nomi file) -> ccxt (per l'API). OKX accetta solo minuscolo.
+TF_CCXT = {"1D": "1d", "4H": "4h"}
 
 
 def mercato():
@@ -62,14 +70,25 @@ def universo(ex):
     return out
 
 
-def scarica(ex, sym, timeframe, massimo=2000):
-    """Pagina all'indietro con 'after' e restituisce le barre in ordine crescente."""
+def scarica(ex, sym, timeframe, massimo=6500):
+    """Pagina all'indietro con 'after' e restituisce le barre in ordine crescente.
+
+    'type': 'HistoryCandles' NON e' un dettaglio. Senza, ccxt/OKX rispondono dal
+    solo endpoint /market/candles che si ferma a 1440 barre: il 4H veniva troncato
+    a 240 giorni contro i 2.8 anni (6190 barre) dei file gia' presenti. E siccome
+    le griglie allineano tutti i simboli alla serie PIU' CORTA, UN SOLO simbolo
+    nuovo avrebbe accorciato l'intero universo senza dirlo.
+    Verificato il 2026-09-18: con HistoryCandles BTC/EUR 4H torna 6190 barre
+    (2023-11-21 -> 2026-09-17), esattamente come il file esistente.
+    """
     raccolte = {}
     cursor = None
-    for _ in range(60):
-        params = {"after": str(cursor)} if cursor is not None else {}
+    for _ in range(120):
+        params = {"type": "HistoryCandles"}
+        if cursor is not None:
+            params["after"] = str(cursor)
         try:
-            batch = ex.fetch_ohlcv(sym, timeframe, limit=100, params=params)
+            batch = ex.fetch_ohlcv(sym, TF_CCXT[timeframe], limit=100, params=params)
         except Exception as exc:
             print("    %s: stop (%s)" % (sym, str(exc)[:70]), flush=True)
             break
@@ -102,7 +121,9 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--top", type=int, default=80)
     ap.add_argument("--timeframe", default="1D", choices=["1D", "4H"])
-    ap.add_argument("--bars", type=int, default=2000)
+    # 4H: servono ~6200 barre per 2.8 anni, come i file gia' presenti. Il 1D
+    # si ferma da solo quando OKX esaurisce la storia (oggi ~1030 barre).
+    ap.add_argument("--bars", type=int, default=6500)
     args = ap.parse_args()
     prefisso = "dl" if args.timeframe == "1D" else "uni"
 
@@ -136,9 +157,21 @@ def main():
             continue
         scrivi(path, cand)
         ok += 1
-        print("[%d/%d] %s: %d barre" % (i, len(syms), sym, len(cand)), flush=True)
+        # Un 4H corto avvelena le griglie (allineano alla serie piu' corta):
+        # meglio vederlo ora che scoprirlo come "risultato".
+        if args.timeframe == "4H" and len(cand) < 1440:
+            print("[%d/%d] %s: %d barre SCRITTE ma corte (<1440): controlla la storia OKX"
+                  % (i, len(syms), sym, len(cand)), flush=True)
+        else:
+            print("[%d/%d] %s: %d barre" % (i, len(syms), sym, len(cand)), flush=True)
     print("FATTO: %d file in %s" % (ok, DATI), flush=True)
+    # Il bug del 1D maiuscolo scriveva zero file e usciva comunque con "FATTO".
+    if ok == 0:
+        print("ERRORE: nessun file scritto. Se TUTTI i simboli falliscono e' un "
+              "problema di codice/API, non di mercato.", flush=True)
+        return 1
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
