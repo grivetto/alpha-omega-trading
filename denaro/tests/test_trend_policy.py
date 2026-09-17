@@ -397,3 +397,47 @@ def test_adozione_di_posizione_non_tracciata():
                      now=5 * 86_400.0, free_asset=0.5)
     assert pol2.in_posizione is False, "la polvere non e' una posizione"
     assert d2.stop_price is None
+
+
+def test_periodo_barre_4h():
+    """Il periodo delle barre e' un parametro: su 4H servono 4 barre al giorno.
+
+    Perche' conta (round 16): lo STESSO trend su barre 4H ha 8 volte le
+    occasioni, e con le fee dei derivati (0.10% per giro invece di 0.70%) e'
+    l'unica configurazione risultata robusta in 4 finestre su 5. Rendere il
+    periodo un parametro e' cio' che permette di passare al 4H senza riscrivere
+    la policy.
+    """
+    pol = TrendPolicy(TrendParams(canale=2, atr_period=2, trend_ema=0,
+                                  periodo_barre_s=14_400.0))
+    base = 20_000 * 86_400.0          # multiplo esatto di 4 ore
+    for k in range(6):
+        pol.decide(price=100.0 + k, open_buys={}, open_sells={}, cash=100.0,
+                   capital_config=100.0, free_balance=100.0,
+                   now=base + k * 14_400.0)
+    assert len(pol.barre) == 5, "attese 5 barre 4H, ottenute %d" % len(pol.barre)
+    ts = [b["ts"] for b in pol.barre]
+    assert ts[1] - ts[0] == 14_400.0, "passo delle barre: %s" % (ts[1] - ts[0])
+
+
+def test_periodo_default_invariato():
+    """Il DEFAULT resta giornaliero: 4 tick nello stesso giorno = nessuna barra.
+
+    E' la garanzia che introdurre il parametro non ha cambiato il deploy attuale.
+    """
+    pol = TrendPolicy(TrendParams(canale=2, atr_period=2, trend_ema=0))
+    base = 20_000 * 86_400.0
+    for k in range(4):
+        pol.decide(price=100.0 + k, open_buys={}, open_sells={}, cash=100.0,
+                   capital_config=100.0, free_balance=100.0,
+                   now=base + k * 3_600.0)
+    assert len(pol.barre) == 0, "stesso giorno: nessuna barra chiusa"
+
+    # e il precaricamento scarta la barra IN CORSO, non "il giorno"
+    pol2 = TrendPolicy(TrendParams(canale=2, atr_period=2, trend_ema=0,
+                                   periodo_barre_s=14_400.0))
+    righe = [[base + j * 14_400.0, 100.0, 101.0, 99.0, 100.0, 1.0]
+             for j in range(5)]
+    # now dentro l'ultima barra: quella (e solo quella) va scartata
+    n = pol2.precarica_barre(righe, now=base + 4 * 14_400.0 + 60.0)
+    assert n == 4, "attese 4 barre su 5 (l'ultima e' in corso): %d" % n

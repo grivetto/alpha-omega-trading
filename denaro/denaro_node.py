@@ -78,6 +78,14 @@ def build_grid_params(bot: dict) -> GridParams:
     )
 
 
+# Durata in secondi delle barre supportate. Le chiavi sono i nomi che usa
+# l'exchange (ccxt/OKX) e sono le stesse che finiscono in fetch_ohlcv: cosi' il
+# config ha UN solo campo, timeframe, che governa sia lo storico sia la policy.
+TIMEFRAME_S = {"1m": 60.0, "5m": 300.0, "15m": 900.0, "30m": 1800.0,
+               "1h": 3600.0, "2h": 7200.0, "4h": 14400.0, "6h": 21600.0,
+               "12h": 43200.0, "1d": 86_400.0}
+
+
 def build_policy(bot: dict, exchange):
     """Costruisce la strategia del bot in base a `strategy`:
     grid (default) | momentum | meanrev | adaptive | irmr | vagr | trend. I minimi dell'exchange vengono
@@ -166,6 +174,12 @@ def build_policy(bot: dict, exchange):
                 trend_ema=int(bot.get("trend_ema", 100)),
                 risk_pct=float(bot.get("risk_pct", 0.02)),
                 max_exposure=float(bot.get("max_exposure", 1.0)),
+                # Default 1d: il comportamento non cambia. Il round 16 ha
+                # misurato che su barre 4H lo stesso trend ha 8 volte le
+                # occasioni e, con le fee dei derivati, e' l'unica
+                # configurazione robusta in 4 finestre su 5.
+                periodo_barre_s=TIMEFRAME_S.get(
+                    str(bot.get("timeframe", "1d")).lower(), 86_400.0),
             ),
             min_amount=min_amount,
         )
@@ -379,12 +393,15 @@ class NodeApp:
                           or getattr(exchange, "fetch_ohlcv", None))
                 if _fetch is not None:
                     try:
-                        _storico = _fetch(bot["symbol"], "1d", 300)
+                        # Il timeframe viene dal CONFIG del bot: lo stesso
+                        # valore che la policy usa per costruire le barre.
+                        _tf = str(bot.get("timeframe", "1d")).lower()
+                        _storico = _fetch(bot["symbol"], _tf, 300)
                         import time as _time
-                        # si passa now: la barra di OGGI e' incompleta e va esclusa
+                        # si passa now: la barra IN CORSO e' incompleta e va esclusa
                         _n = _precarica(_storico, _time.time())
-                        log.info("policy %s: precaricate %d barre giornaliere",
-                                 bot["symbol"], _n)
+                        log.info("policy %s: precaricate %d barre %s",
+                                 bot["symbol"], _n, _tf)
                     except Exception as _e:  # noqa: BLE001
                         log.warning("policy %s: precarica storico fallita: %s",
                                     bot["symbol"], _e)

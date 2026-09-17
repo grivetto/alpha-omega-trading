@@ -38,14 +38,15 @@ class TrendParams:
 
     __slots__ = ("canale", "atr_period", "trail_mult", "stop_atr_mult",
                  "trend_ema", "risk_pct", "max_exposure", "entry_slip",
-                 "fee_buffer", "max_barre")
+                 "fee_buffer", "max_barre", "periodo_barre_s")
 
     def __init__(self, canale: int = 40, atr_period: int = 14,
                  trail_mult: float = 3.0, stop_atr_mult: float = 2.0,
                  trend_ema: int = 100, risk_pct: float = 0.02,
                  max_exposure: float = 1.0, entry_slip: float = 0.0005,
                  fee_buffer: float = FEE_BUFFER,
-                 max_barre: int = 400) -> None:
+                 max_barre: int = 400,
+                 periodo_barre_s: float = GIORNO_S) -> None:
         self.canale = canale
         self.atr_period = atr_period
         self.trail_mult = trail_mult
@@ -56,6 +57,14 @@ class TrendParams:
         self.entry_slip = entry_slip
         self.fee_buffer = fee_buffer
         self.max_barre = max_barre
+        # Durata di UNA barra. Default giornaliero: il comportamento resta
+        # identico a prima. Il round 16 ha mostrato che su barre 4H il trend ha
+        # lo stesso segnale ma 8 volte piu' occasioni, e che era il COSTO (0.70%
+        # per giro sullo spot) a renderlo inutile: con le fee dei derivati
+        # (0.10%) diventa l'unica configurazione robusta in 4 finestre su 5.
+        # Rendere il periodo un parametro e' cio' che permette di passare al 4H
+        # senza riscrivere la policy.
+        self.periodo_barre_s = float(periodo_barre_s) or GIORNO_S
 
 
 class TrendPolicy(Policy):
@@ -97,21 +106,22 @@ class TrendPolicy(Policy):
         """
         if price <= 0 or now is None:
             return False
-        giorno = int(now // GIORNO_S)
+        periodo = self.params.periodo_barre_s or GIORNO_S
+        indice = int(now // periodo)
         if self._giorno is None:
-            self._giorno = giorno
+            self._giorno = indice
             self._ap = self._ma = self._mi = self._ch = price
             return False
-        if giorno == self._giorno:
+        if indice == self._giorno:
             if price > self._ma:
                 self._ma = price
             if price < self._mi or self._mi <= 0:
                 self._mi = price
             self._ch = price
             return False
-        self.barre.append({"ts": self._giorno * GIORNO_S, "o": self._ap,
+        self.barre.append({"ts": self._giorno * periodo, "o": self._ap,
                            "h": self._ma, "l": self._mi, "c": self._ch})
-        self._giorno = giorno
+        self._giorno = indice
         self._ap = self._ma = self._mi = self._ch = price
         return True
 
@@ -204,14 +214,15 @@ class TrendPolicy(Policy):
         if not lette:
             return 0
         lette.sort(key=lambda x: x[0])
+        periodo = self.params.periodo_barre_s or GIORNO_S
         if now is not None:
-            inizio_oggi = int(float(now) // GIORNO_S) * GIORNO_S
+            inizio_oggi = int(float(now) // periodo) * periodo
             lette = [x for x in lette if x[0] < inizio_oggi]
-        # dedup per giornata: tiene l'ULTIMA occorrenza (la piu' completa)
-        per_giorno = {}
+        # dedup per PERIODO: tiene l'ULTIMA occorrenza (la piu' completa)
+        per_periodo = {}
         for x in lette:
-            per_giorno[int(x[0] // GIORNO_S)] = x
-        lette = [per_giorno[k] for k in sorted(per_giorno)]
+            per_periodo[int(x[0] // periodo)] = x
+        lette = [per_periodo[k] for k in sorted(per_periodo)]
         # scarta l'ultima se e' la barra di oggi (non ancora chiusa): il suo
         # massimo/minimo sarebbero parziali e falserebbero il canale
         for ts, o, h, l, c in lette:
