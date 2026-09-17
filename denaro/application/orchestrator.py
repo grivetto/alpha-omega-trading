@@ -163,6 +163,10 @@ class BotTask:
                                     week_start_capital=config.capital)
 
         self._load_state()
+        # Se lo stato contiene una posizione aperta, va restituita alla policy
+        # CON il suo stop PRIMA di ogni altra cosa: senza, la policy la
+        # adotterebbe ancorando lo stop a 2 ATR invece del trailing che aveva.
+        self._ripristina_posizione()
         self._load_risk_state()
         self._rebuild_from_exchange()
 
@@ -174,6 +178,33 @@ class BotTask:
         data = self.store.load()
         if isinstance(data, dict) and data.get("symbol"):
             self.state = BotState.from_dict(data)
+
+    def _ripristina_posizione(self) -> None:
+        """Restituisce alla policy una posizione aperta sopravvissuta a un riavvio.
+
+        Lo stop monitorato vive solo in memoria. Senza questo ripristino, dopo un
+        riavvio la policy adotta la posizione ancorando lo stop a
+        prezzo - stop_atr_mult*ATR (2 ATR), mentre il trailing userebbe trail_mult
+        (3 ATR): la protezione diventa piu' STRETTA del dovuto e la posizione esce
+        in anticipo.
+        """
+        pos = self.state.posizione_aperta or {}
+        try:
+            entry = float(pos.get("entry") or 0.0)
+            stop = float(pos.get("stop") or 0.0)
+        except (TypeError, ValueError):
+            return
+        if entry <= 0:
+            return
+        fn = getattr(self.policy, "ripristina_posizione", None)
+        if fn is None:
+            return
+        try:
+            if fn(entry, stop):
+                log.info("%s: posizione RIPRISTINATA (entry %.6f, stop %.6f)",
+                         self.cfg.symbol, entry, stop)
+        except Exception as e:  # noqa: BLE001
+            log.warning("%s: ripristino posizione fallito: %s", self.cfg.symbol, e)
 
     def _load_risk_state(self) -> None:
         """Ripristina peak/daily/weekly baseline, CB e storico trade.
@@ -406,6 +437,17 @@ class BotTask:
                 decision.to_cancel_sell = []
                 decision.reason = ("trend: STOP %.6f attraversato (prezzo %.6f)"
                                    % (float(stop_price), price))
+
+        # 3a-1) Il livello di stop della posizione aperta va TENUTO AGGIORNATO
+        #       nello stato: e' l'unico posto in cui sopravvive a un riavvio.
+        #       Senza, al restart la policy ancorerebbe lo stop a 2 ATR invece
+        #       del trailing a 3 ATR che aveva (protezione piu' stretta del
+        #       dovuto, quindi uscita in anticipo).
+        if decision.stop_price and self.state.posizione_aperta:
+            try:
+                self.state.posizione_aperta["stop"] = float(decision.stop_price)
+            except (TypeError, ValueError):
+                pass
 
         # 3a) SafeMode (TODO punto 3): nessun NUOVO trade se la RAM e' critica;
         #     le posizioni esistenti continuano a essere gestite (fill/exit)
@@ -997,7 +1039,8 @@ class BotTask:
                     # subito, al prezzo sbagliato). Si registra la posizione: il
                     # livello di stop arriva a ogni tick in stop_price.
                     self.state.posizione_aperta = {
-                        "entry": entry, "amount": amount, "ts": self._now()}
+                        "entry": entry, "amount": amount,
+                        "stop": 0.0, "ts": self._now()}
                     await self._journal("buy_filled", order_id=oid, entry=entry,
                                         amount=amount, sell_target=None,
                                         protezione="stop_monitorato")

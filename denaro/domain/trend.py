@@ -269,6 +269,26 @@ class TrendPolicy(Policy):
             return self.round_price(entry_price * 0.9)
         return self.round_price(entry_price - dist)
 
+    def ripristina_posizione(self, entry: float, stop: float) -> bool:
+        """Ripristina una posizione APERTA sopravvissuta a un riavvio.
+
+        Perche' serve: con lo stop monitorato la protezione vive solo in memoria.
+        Dopo un riavvio self.stop vale 0 e la policy adotterebbe la posizione
+        ancorando lo stop a prezzo - stop_atr_mult*ATR (2 ATR). Ma il trailing usa
+        trail_mult (3 ATR): l'ancoraggio a 2 ATR e' piu' STRETTO del trailing che
+        la strategia avrebbe, quindi la posizione uscirebbe IN ANTICIPO, divergendo
+        dal backtest.
+
+        Il livello vero viene persistito dall'orchestratore e restituito qui.
+        Ritorna True se la posizione e' stata ripristinata.
+        """
+        if entry <= 0:
+            return False
+        self.in_posizione = True
+        self.entrata = float(entry)
+        self.stop = float(stop or 0.0)
+        return True
+
     def decide(self, price: float, open_buys: Dict[str, dict],
                open_sells: Dict[str, dict], cash: float,
                capital_config: float, free_balance: float,

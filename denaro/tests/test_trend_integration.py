@@ -269,6 +269,33 @@ class TestTrendIntegrazione(unittest.TestCase):
 
         asyncio.run(scenario())
 
+    def test_ripristino_posizione_al_riavvio(self):
+        """Un bot che riparte con una posizione APERTA nello stato la ripristina.
+
+        Il livello di stop vive solo nella policy. Senza ripristino, al riavvio
+        l'adozione lo ancorerebbe a 2 ATR invece del trailing a 3 ATR che aveva:
+        protezione piu' stretta del dovuto, quindi uscita in anticipo e
+        divergenza dal backtest.
+        """
+        import json
+        orol = Orologio(GIORNO * 10)
+        # stato lasciato da una sessione precedente: posizione aperta, stop a 96
+        (Path(self.dir) / "state.json").write_text(json.dumps({
+            "symbol": "SOL/EUR", "open_buys": {}, "open_sells": {},
+            "total_pnl": 0.0, "total_trades": 0, "wins": 0, "losses": 0,
+            "volume": 0.0, "peak_equity": 0.0, "max_dd": 0.0,
+            "start_ts": 0.0, "stop_loss_triggered": False,
+            "posizione_aperta": {"entry": 100.0, "amount": 1.0, "stop": 96.0},
+        }), encoding="utf-8")
+        pol = self._policy()
+        pol.atr = 2.0
+        ex = FakeExchange(price=110.0, free_quote=0.0)
+        ex.asset = 1.0
+        bot = self._bot(orol, pol, ex)
+        assert pol.in_posizione is True, "la posizione doveva essere ripristinata"
+        assert pol.stop == 96.0, "stop ripristinato: %s" % pol.stop
+        assert pol.entrata == 100.0, "entry ripristinata: %s" % pol.entrata
+
     def test_non_compra_senza_breakout(self):
         """Serie piatta: nessun ordine, nessun errore."""
         orol = Orologio(GIORNO * 10)

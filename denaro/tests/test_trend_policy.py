@@ -441,3 +441,51 @@ def test_periodo_default_invariato():
     # now dentro l'ultima barra: quella (e solo quella) va scartata
     n = pol2.precarica_barre(righe, now=base + 4 * 14_400.0 + 60.0)
     assert n == 4, "attese 4 barre su 5 (l'ultima e' in corso): %d" % n
+
+
+def test_ripristino_posizione_non_stringe_lo_stop():
+    """Dopo un riavvio lo stop NON deve diventare piu' STRETTO del trailing.
+
+    Difetto trovato il 2026-09-18. Con lo stop monitorato il livello vive solo in
+    memoria: dopo un riavvio self.stop vale 0 e la policy adotta la posizione
+    ancorando lo stop a prezzo - stop_atr_mult*ATR (2 ATR). Ma il trailing usa
+    trail_mult (3 ATR): 2 ATR e' un livello piu' ALTO, quindi la protezione
+    diventa piu' stretta del dovuto e la posizione esce in anticipo, divergendo
+    dal backtest. Il livello vero viene persistito e restituito con
+    ripristina_posizione().
+    """
+    P = dict(canale=5, atr_period=3, trail_mult=3.0, stop_atr_mult=2.0, trend_ema=0)
+    pol = TrendPolicy(TrendParams(**P))
+    pol.atr = 2.0
+    pol.decide(price=100.0, open_buys={}, open_sells={}, cash=0.0,
+               capital_config=25.0, free_balance=0.0, now=5 * 86_400.0,
+               free_asset=1.0)
+    assert pol.stop == 96.0, "stop iniziale: %s" % pol.stop
+    for i, px in enumerate((110.0, 120.0, 130.0)):
+        pol.decide(price=px, open_buys={}, open_sells={}, cash=0.0,
+                   capital_config=25.0, free_balance=0.0,
+                   now=5 * 86_400.0 + (i + 1) * 60)
+    stop_prima = pol.stop
+    assert stop_prima == 124.0, "trailing a 130 con 3 ATR da 2.0: %s" % stop_prima
+
+    # riavvio SENZA ripristino: l'adozione ancora a 2 ATR, cioe' PIU' STRETTO
+    senza = TrendPolicy(TrendParams(**P))
+    senza.atr = 2.0
+    senza.decide(price=130.0, open_buys={}, open_sells={}, cash=0.0,
+                 capital_config=25.0, free_balance=0.0, now=6 * 86_400.0,
+                 free_asset=1.0)
+    assert senza.stop == 126.0, "adozione a 2 ATR: %s" % senza.stop
+    assert senza.stop > stop_prima, "l'adozione doveva stringere lo stop"
+
+    # riavvio CON ripristino: lo stop resta quello vero
+    con = TrendPolicy(TrendParams(**P))
+    con.atr = 2.0
+    assert con.ripristina_posizione(entry=100.0, stop=stop_prima) is True
+    d = con.decide(price=130.0, open_buys={}, open_sells={}, cash=0.0,
+                   capital_config=25.0, free_balance=0.0, now=6 * 86_400.0,
+                   free_asset=1.0)
+    assert con.stop == stop_prima, "stop non ripristinato: %s" % con.stop
+    assert d.stop_price == stop_prima
+
+    # entry non valida: non ripristina
+    assert con.ripristina_posizione(0.0, 96.0) is False
