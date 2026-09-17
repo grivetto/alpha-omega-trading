@@ -296,6 +296,34 @@ class TestTrendIntegrazione(unittest.TestCase):
         assert pol.stop == 96.0, "stop ripristinato: %s" % pol.stop
         assert pol.entrata == 100.0, "entry ripristinata: %s" % pol.entrata
 
+    def test_stato_con_posizione_ma_asset_assente(self):
+        """Stato "in posizione" ma asset NON presente: si azzera.
+
+        Scenario reale: il nodo e' fermo e l'asset viene venduto (a mano o da un
+        altro processo). Al riavvio lo stato direbbe "long" per sempre: la policy
+        pubblicherebbe uno stop SOTTO il mercato che, con il trailing che sale
+        insieme al prezzo, non scatterebbe mai — e il bot NON entrerebbe piu' su
+        quel simbolo. E' un blocco definitivo, non un errore transitorio.
+        """
+        import json
+        orol = Orologio(GIORNO * 10)
+        (Path(self.dir) / "state.json").write_text(json.dumps({
+            "symbol": "SOL/EUR", "open_buys": {}, "open_sells": {},
+            "total_pnl": 0.0, "total_trades": 0, "wins": 0, "losses": 0,
+            "volume": 0.0, "peak_equity": 0.0, "max_dd": 0.0,
+            "start_ts": 0.0, "stop_loss_triggered": False,
+            "posizione_aperta": {"entry": 100.0, "amount": 1.0, "stop": 96.0},
+        }), encoding="utf-8")
+        pol = self._policy()
+        pol.atr = 2.0
+        ex = FakeExchange(price=110.0, free_quote=0.0)
+        ex.asset = 0.0                      # posizione sparita mentre era fermo
+        bot = self._bot(orol, pol, ex)
+        assert bot.state.posizione_aperta is None, (
+            "la posizione stantia doveva essere azzerata, non lasciata")
+        assert pol.in_posizione is False, "la policy doveva tornare FLAT"
+        assert pol.stop == 0.0, "lo stop stantio doveva sparire"
+
     def test_non_compra_senza_breakout(self):
         """Serie piatta: nessun ordine, nessun errore."""
         orol = Orologio(GIORNO * 10)

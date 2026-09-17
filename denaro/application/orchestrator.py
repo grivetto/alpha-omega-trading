@@ -280,6 +280,50 @@ class BotTask:
                         "kind": "unknown", "timestamp": self._now()}
         except Exception as e:  # noqa: BLE001
             log.warning("rebuild open orders fallito: %s", e)
+        # 3) la posizione detenuta va riconciliata con l'ASSET REALE
+        self._riconcilia_posizione()
+
+    def _riconcilia_posizione(self) -> None:
+        """Azzera una posizione che lo stato dice aperta ma che non esiste.
+
+        Se mentre il nodo era fermo l'asset e' stato venduto (a mano, o da un
+        altro processo), lo stato resta "in posizione" per sempre: la policy
+        pubblica uno stop SOTTO il mercato che, con il trailing che sale insieme
+        al prezzo, non scattera' mai, e il bot non entrera' mai piu' su questo
+        simbolo. E' un blocco definitivo, non un errore transitorio.
+
+        Se il saldo non e' leggibile NON si azzera nulla: meglio uno stato
+        prudente che una posizione vera dimenticata.
+        """
+        if self.state.posizione_aperta is None:
+            return
+        base = self.cfg.symbol.split("/")[0]
+        try:
+            bal = self.ex.fetch_balance()
+            libero = float((bal.get("free", {}) or {}).get(base, 0.0) or 0.0)
+        except Exception as e:  # noqa: BLE001
+            log.warning("%s: riconciliazione posizione impossibile (%s): "
+                        "lo stato resta", self.cfg.symbol, e)
+            return
+        soglia = 0.0
+        mfn = getattr(self.ex, "min_amount_for", None)
+        if mfn is not None:
+            try:
+                soglia = float(mfn(self.cfg.symbol) or 0.0)
+            except Exception:  # noqa: BLE001
+                soglia = 0.0
+        if libero > 0 and (soglia <= 0 or libero >= soglia):
+            return                      # la posizione c'e' davvero
+        log.warning("%s: stato con posizione aperta ma solo %.8f %s liberi "
+                    "(soglia %.8f) - posizione AZZERATA per non restare bloccati",
+                    self.cfg.symbol, libero, base, soglia)
+        self.state.posizione_aperta = None
+        fn = getattr(self.policy, "azzera_posizione", None)
+        if fn is not None:
+            try:
+                fn()
+            except Exception as e:  # noqa: BLE001
+                log.warning("%s: azzera_posizione fallito: %s", self.cfg.symbol, e)
 
     # --- equity --------------------------------------------------------------
 

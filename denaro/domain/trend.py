@@ -289,6 +289,17 @@ class TrendPolicy(Policy):
         self.stop = float(stop or 0.0)
         return True
 
+    def azzera_posizione(self) -> None:
+        """Riporta la policy FLAT: la posizione NON esiste piu' sul conto.
+
+        Serve quando lo stato dice "in posizione" ma l'asset e' sparito (venduto
+        mentre il nodo era fermo). Senza, la policy resterebbe long per sempre e
+        il bot non entrerebbe mai piu' su questo simbolo.
+        """
+        self.in_posizione = False
+        self.entrata = 0.0
+        self.stop = 0.0
+
     def decide(self, price: float, open_buys: Dict[str, dict],
                open_sells: Dict[str, dict], cash: float,
                capital_config: float, free_balance: float,
