@@ -45,20 +45,56 @@ REMOTE_NODES = {
     },
 }
 
-# Conti OKX letti dai .env LOCALI a MARCODG1: label -> (path, prefisso chiavi).
+# Conti OKX. I .env stanno su macchine DIVERSE e le chiavi sono IP-bound, quindi
+# ogni conto va letto SULLA macchina che lo possiede: vedi sorgenti_conti().
 # Il prefisso seleziona le chiavi del subaccount (es. MARCOSUB1_OKX_API_KEY);
 # senza prefisso si usano le chiavi del conto master.
-ENV_FILES = {
-    "OKX main": ("/home/marco/denaro/.env", ""),
-    "OKX marcosub1": ("/home/marco/alpha-omega-trading/.env", "MARCOSUB1_"),
-}
 
-# Sub-account con chiavi IP-bound: il .env deve essere letto SULLA macchina di
-# origine. label -> (ssh_target, ssh_port, remote_env_path, remote_python)
-REMOTE_ENV_SOURCES = {
-    "OKX mc2sub1": ("sergio@127.0.0.1", 2222, "/home/sergio/alpha-omega-trading/.env", "/usr/bin/python3"),
-    "OKX nuvolasub1": ("sergio@87.106.3.15", 22, "/home/sergio/denaro/.env", "/home/sergio/denaro/venv/bin/python"),
-}
+
+def sorgenti_conti():
+    """Sorgenti dei conti OKX, scelte in base alla MACCHINA su cui giriamo.
+
+    Difetto trovato il 2026-09-17: i path erano fissi per MARCODG1, ma lo stesso
+    file gira anche su mc2. L'aggregator di mc2 rispondeva "no key" per due conti
+    su tre e la dashboard web mostrava 24.83 EUR invece di 74.58 — un terzo del
+    capitale, con due subaccount vivi e invisibili.
+
+    Ritorna (locali, remoti):
+      locali[label] = (path_env, prefisso)
+      remoti[label] = (ssh_target, porta, path_env, python_remoto, prefisso)
+    """
+    nuvola = ("87.106.3.15", 22, "/home/sergio/denaro/.env",
+              "/home/sergio/denaro/venv/bin/python", "")
+    marco_main = ("MARCODG1", 22, "/home/marco/denaro/.env",
+                  "/home/marco/denaro/venv/bin/python", "")
+    marco_sub = ("MARCODG1", 22, "/home/marco/alpha-omega-trading/.env",
+                 "/home/marco/denaro/venv/bin/python", "MARCOSUB1_")
+
+    if Path("/home/marco/alpha-omega-trading/.env").exists():
+        # ── MARCODG1: main e marcosub1 hanno il .env locale ──
+        locali = {
+            "OKX main": ("/home/marco/denaro/.env", ""),
+            "OKX marcosub1": ("/home/marco/alpha-omega-trading/.env", "MARCOSUB1_"),
+        }
+        remoti = {
+            "OKX mc2sub1": ("sergio@127.0.0.1", 2222,
+                            "/home/sergio/alpha-omega-trading/.env",
+                            "/usr/bin/python3", ""),
+            "OKX nuvolasub1": nuvola,
+        }
+    elif Path("/home/sergio/alpha-omega-trading/.env").exists():
+        # ── mc2: qui gira la dashboard web; mc2sub1 e' locale ──
+        locali = {"OKX mc2sub1": ("/home/sergio/alpha-omega-trading/.env", "")}
+        remoti = {
+            "OKX main": marco_main,
+            "OKX marcosub1": marco_sub,
+            "OKX nuvolasub1": nuvola,
+        }
+    else:
+        # ── nuvola ──
+        locali = {"OKX nuvolasub1": ("/home/sergio/denaro/.env", "")}
+        remoti = {"OKX main": marco_main, "OKX marcosub1": marco_sub}
+    return locali, remoti
 
 # Kraken: piu' chiavi API possono puntare allo STESSO conto -> si deduplica per
 # fingerprint della chiave, altrimenti il capitale verrebbe contato piu' volte.
@@ -184,8 +220,13 @@ def _acct_fp(*parts):
     return hashlib.md5("|".join(p or "" for p in parts).encode()).hexdigest()[:12]
 
 
-def _remote_okx_snippet(env_path):
-    """Snippet Python eseguito SUL nodo di origine per leggere il saldo OKX."""
+def _remote_okx_snippet(env_path, prefix=""):
+    """Snippet Python eseguito SUL nodo di origine per leggere il saldo OKX.
+
+    `prefix` seleziona le chiavi di un SUBACCOUNT nello stesso file (es.
+    MARCOSUB1_OKX_API_KEY): senza, si userebbero le chiavi master e si
+    leggerebbe il conto sbagliato.
+    """
     return (
         "import json\n"
         "env = {}\n"
@@ -193,17 +234,20 @@ def _remote_okx_snippet(env_path):
         "    if '=' in line and not line.strip().startswith('#'):\n"
         "        k, v = line.strip().split('=', 1)\n"
         "        env[k.strip()] = v.strip().strip(chr(34)).strip(chr(39))\n"
+        "P = " + repr(prefix) + "\n"
+        "g = lambda n: env.get(P + n)\n"
         "import ccxt\n"
-        "ex = ccxt.okx({'apiKey': env.get('OKX_API_KEY'), 'secret': env.get('OKX_API_SECRET'),"
-        " 'password': env.get('OKX_PASSPHRASE'), 'hostname': 'eea.okx.com'})\n"
+        "ex = ccxt.okx({'apiKey': g('OKX_API_KEY'), 'secret': g('OKX_API_SECRET'),"
+        " 'password': g('OKX_PASSPHRASE'), 'hostname': 'eea.okx.com'})\n"
         "b = ex.fetch_balance()\n"
         "print(json.dumps({'ok': True, 'total': b.get('total', {}), 'free': b.get('free', {})}))\n"
     )
 
 
-def fetch_remote_okx_balance(ssh_target, ssh_port, remote_env, remote_python="/usr/bin/python3", ttl=30.0):
+def fetch_remote_okx_balance(ssh_target, ssh_port, remote_env, remote_python="/usr/bin/python3",
+                            prefix="", ttl=30.0):
     """Saldo OKX di un subaccount con chiavi IP-bound, letto sul nodo di origine."""
-    cache_key = "remoteokx:%s:%s" % (ssh_target, remote_env)
+    cache_key = "remoteokx:%s:%s:%s" % (ssh_target, remote_env, prefix)
     now = time.time()
     hit = _balance_cache.get(cache_key)
     if hit and now - hit[0] < ttl:
@@ -212,7 +256,8 @@ def fetch_remote_okx_balance(ssh_target, ssh_port, remote_env, remote_python="/u
         # NB: niente "bash -c" locale: passando l'argv direttamente a ssh, il
         # quoting sopravvive al doppio parsing (locale + shell remota).
         cmd = ["ssh", "-p", str(ssh_port), "-o", "BatchMode=yes", "-o", "ConnectTimeout=6",
-               ssh_target, remote_python, "-c", shlex.quote(_remote_okx_snippet(remote_env))]
+               ssh_target, remote_python, "-c",
+               shlex.quote(_remote_okx_snippet(remote_env, prefix))]
         r = subprocess.run(cmd, capture_output=True, text=True, timeout=25)
         if r.returncode != 0 or not r.stdout.strip():
             return None
@@ -715,8 +760,9 @@ def collect():
     # 2) Saldi REALI: OKX main + subaccount (locale e via SSH) + Kraken
     balances = {}
 
-    # 2a) conti con .env locale su MARCODG1
-    for label, (path, prefix) in ENV_FILES.items():
+    # 2a) conti con .env LOCALE su questa macchina
+    locali, remoti = sorgenti_conti()
+    for label, (path, prefix) in locali.items():
         env = load_env(path)
         acct = {k[len(prefix):]: v for k, v in env.items() if k.startswith(prefix)} if prefix else env
         if acct.get("OKX_API_KEY"):
@@ -724,9 +770,10 @@ def collect():
         else:
             balances[label] = {"ok": False, "error": "no key"}
 
-    # 2b) sub-account con chiavi IP-bound: letti sul nodo di origine via SSH
-    for label, (ssh_target, ssh_port, remote_env, remote_py) in REMOTE_ENV_SOURCES.items():
-        res = fetch_remote_okx_balance(ssh_target, ssh_port, remote_env, remote_py)
+    # 2b) conti con chiavi IP-bound: letti SULLA macchina che le possiede
+    for label, (ssh_target, ssh_port, remote_env, remote_py, prefix) in remoti.items():
+        res = fetch_remote_okx_balance(ssh_target, ssh_port, remote_env,
+                                       remote_py, prefix)
         balances[label] = res if res else {"ok": False, "error": "ssh/ccxt fallito"}
 
     # 2c) Kraken: una sola voce per conto reale (dedup per fingerprint chiave)

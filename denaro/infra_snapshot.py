@@ -28,15 +28,19 @@ def build():
     bots = agg.collect_node_bots()
     data["bots"] = bots
     balances = {}
-    for label, (path, prefix) in agg.ENV_FILES.items():
+    # Sorgenti dei conti scelte in base alla MACCHINA (vedi agg.sorgenti_conti):
+    # i .env stanno su macchine diverse e le chiavi sono IP-bound.
+    locali, remoti = agg.sorgenti_conti()
+    for label, (path, prefix) in locali.items():
         env = agg.load_env(path)
         acct = {k[len(prefix):]: v for k, v in env.items() if k.startswith(prefix)} if prefix else env
         if acct.get("OKX_API_KEY"):
             balances[label] = agg.fetch_okx_balance(acct)
         else:
             balances[label] = {"ok": False, "error": "no key"}
-    for label, (ssh_target, ssh_port, remote_env, remote_py) in agg.REMOTE_ENV_SOURCES.items():
-        res = agg.fetch_remote_okx_balance(ssh_target, ssh_port, remote_env, remote_py)
+    for label, (ssh_target, ssh_port, remote_env, remote_py, prefix) in remoti.items():
+        res = agg.fetch_remote_okx_balance(ssh_target, ssh_port, remote_env,
+                                           remote_py, prefix)
         balances[label] = res if res else {"ok": False, "error": "ssh/ccxt fallito"}
     for path, key_attr, sec_attr in agg.KRAKEN_ENV_FILES:
         e = agg.load_env(path)
