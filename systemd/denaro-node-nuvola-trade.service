@@ -1,0 +1,19 @@
+[Unit]
+Description=Denaro Node — TRADING nuvola (OKX nuvolasub1, momentum SOL/EUR)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=sergio
+WorkingDirectory=/home/sergio/alpha-omega-trading
+EnvironmentFile=/home/sergio/alpha-omega-trading/.env
+ExecStart=/home/sergio/denaro/venv/bin/python -m denaro.denaro_node --config config/node_nuvola_trade.yaml
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+

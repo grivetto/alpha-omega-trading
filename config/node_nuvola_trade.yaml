@@ -1,0 +1,45 @@
+# Denaro — nodo TRADING su nuvola (OKX, conto nuvolasub1)
+# UNA strategia, UN conto, UN bot: nessuna condivisione di equity.
+# Strategia: MOMENTUM su SOL/EUR (trend-following) — diversa da grid (mc2)
+# e da mean-reversion (MARCODG1).
+data_dir: node_data_trade
+# nessun override automatico: il file non esiste -> _apply_overrides lascia il bot com'e'
+overrides_file: config/nessun_override.json
+supervisor:
+  ram_critical_pct: 0.85
+  ram_throttle_pct: 0.70
+  cpu_critical_pct: 0.90
+  tick_max_factor: 5.0
+safemode:
+  caution_pct: 70.0
+  safe_pct: 85.0
+  emergency_pct: 95.0
+  interval_s: 10.0
+hub:
+  ws_enabled: false
+  poll_interval: 10
+  price_ttl: 30
+exchange_rest:
+  name: okx
+  eea: true
+rate_limits:
+  okx:
+    capacity: 10.0
+    refill_rate: 5.0
+bots:
+  - symbol: SOL/EUR
+    mode: okx
+    strategy: momentum
+    capital: 24.84
+    profit_target: 0.02
+    entry_slip: 0.002
+    fee: 0.001
+    tick_interval: 30
+    env_prefix: ''
+    stop_loss_pct: 0.10
+    daily_loss_limit: 0.05
+    max_drawdown_limit: 0.15
+    max_slippage: 0.005
+    health_path: /home/sergio/denaro/health/sol_nuvola_live.json
+    enabled: true
+

@@ -1,0 +1,44 @@
+# Denaro — nodo TRADING su MARCODG1 (OKX, conto marcosub1)
+# UNA strategia, UN conto, UN bot.
+# Strategia: MEAN-REVERSION su XRP/EUR — diversa da grid (mc2) e momentum (nuvola).
+data_dir: node_data_xrp
+# nessun override automatico: il file non esiste, quindi il bot resta com'e' configurato
+overrides_file: config/nessun_override.json
+supervisor:
+  ram_critical_pct: 0.85
+  ram_throttle_pct: 0.70
+  cpu_critical_pct: 0.90
+  tick_max_factor: 5.0
+safemode:
+  caution_pct: 70.0
+  safe_pct: 85.0
+  emergency_pct: 95.0
+  interval_s: 10.0
+hub:
+  ws_enabled: false
+  poll_interval: 10
+  price_ttl: 30
+exchange_rest:
+  name: okx
+  eea: true
+rate_limits:
+  okx:
+    capacity: 10.0
+    refill_rate: 5.0
+bots:
+  - symbol: XRP/EUR
+    mode: okx
+    strategy: meanrev
+    capital: 24.83
+    profit_target: 0.018
+    entry_slip: 0.001
+    fee: 0.001
+    tick_interval: 30
+    env_prefix: MARCOSUB1_
+    stop_loss_pct: 0.10
+    daily_loss_limit: 0.05
+    max_drawdown_limit: 0.15
+    max_slippage: 0.005
+    health_path: /home/marco/denaro/health/xrp_marcodg1_live.json
+    enabled: true
+

@@ -441,6 +441,54 @@ def collect_node_bots():
                 bots[key] = h
         except Exception:
             continue
+    # ── mc2 (LIVE OKX): i suoi health vivono su mc2, non su MARCODG1 ──────
+    # Il glob generico dei nodi remoti perde questi file o li confonde con i
+    # fossili (*_nuvola.json, stesso symbol ma fermi da giorni): li leggiamo
+    # PER NOME, che e' l'unica cosa che distingue un bot vivo da un residuo.
+    _mcfg = REMOTE_NODES.get("mc2")
+    if _mcfg:
+        _ssh = " ".join(_mcfg["ssh"])
+        for _fn in ("doge_mc2.json", "sol_mc2.json"):
+            _rp = _mcfg["data_dir"].rstrip("/") + "/" + _fn
+            _cmd = ("ssh -o BatchMode=yes -o ConnectTimeout=5 " + _ssh +
+                    " 'cat " + _rp + " 2>/dev/null'")
+            try:
+                _r = subprocess.run(["bash", "-c", _cmd], capture_output=True,
+                                    text=True, timeout=15)
+                if _r.returncode == 0 and _r.stdout.strip():
+                    _h = json.loads(_r.stdout.strip().splitlines()[-1])
+                    _sym = _h.get("symbol", "")
+                    if _sym:
+                        _h["mode"] = "live"
+                        bots["mc2:okx:" + _sym] = _h
+            except Exception:
+                continue
+
+    # ── Bot LIVE nuovi (2026-09-17) ────────────────────────────────────────
+    # nuvola  : momentum SOL/EUR su nuvolasub1 -> health su nuvola
+    # marcodg1: mean-reversion XRP/EUR su marcosub1 -> health locale
+    # Ognuno scrive in una dir dedicata (node_data_trade / node_data_xrp) che
+    # il collector generico non guarda: li leggiamo per path esplicito.
+    _extra_live = [
+        ("nuvola:okx:SOL/EUR",   "ssh",  "nuvola",  "/home/sergio/denaro/health/sol_nuvola_live.json"),
+        ("marcodg1:okx:XRP/EUR", "file", None,      "/home/marco/denaro/health/xrp_marcodg1_live.json"),
+    ]
+    for _k, _kind, _alias, _path in _extra_live:
+        try:
+            if _kind == "file":
+                _raw = Path(_path).read_text()
+            else:
+                _pr = subprocess.run(["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=5",
+                                      _alias, "cat " + _path],
+                                     capture_output=True, text=True, timeout=15)
+                _raw = _pr.stdout if _pr.returncode == 0 else ""
+            if _raw.strip():
+                _h = json.loads(_raw.strip().splitlines()[-1])
+                _h["mode"] = "live"
+                bots[_k] = _h
+        except Exception:
+            continue
+
     # Nodi remoti: chiavi "nuvola:paper:ADA/EUR", "mc2:paper:ADA/EUR" ecc.
     for node_name, cfg in REMOTE_NODES.items():
         for sym, h in fetch_remote_node_bots(node_name).items():

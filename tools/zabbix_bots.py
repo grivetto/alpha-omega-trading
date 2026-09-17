@@ -1,44 +1,50 @@
 #!/usr/bin/env python3
 """Pusha le metriche dei bot Denaro su Zabbix (trapper :10051).
 
-Legge gli health file dei bot attivi e manda una metrica per item.
-Nessuna dipendenza esterna: protocollo trapper ZBXD/1.0 su socket.
+2 bot locali (mc2) + 2 remoti (nuvola, MARCODG1) letti via SSH.
 """
 from __future__ import annotations
-
-import json
-import socket
-import struct
-import sys
-import time
+import json, socket, struct, subprocess, sys, time
 from pathlib import Path
 
-ZABBIX_SERVER = "127.0.0.1"
-ZABBIX_PORT = 10051
+ZABBIX_SERVER, ZABBIX_PORT = "127.0.0.1", 10051
 
-# host Zabbix -> path dell'health file -> prefisso chiave item
 BOTS = [
-    ("alpha-omega-bot-okx-doge", "/home/sergio/denaro/health/doge_mc2.json", "okx_doge"),
-    ("alpha-omega-bot-okx-sol",  "/home/sergio/denaro/health/sol_mc2.json",  "okx_sol"),
+    ("alpha-omega-bot-okx-doge",     "okx_doge",     ("file", "/home/sergio/denaro/health/doge_mc2.json")),
+    ("alpha-omega-bot-okx-sol",      "okx_sol",      ("file", "/home/sergio/denaro/health/sol_mc2.json")),
+    ("alpha-omega-bot-nuvola-sol",   "nuvola_sol",   ("ssh", "nuvola", "/home/sergio/denaro/health/sol_nuvola_live.json")),
+    ("alpha-omega-bot-marcodg1-xrp", "marcodg1_xrp", ("ssh", "MARCODG1", "/home/marco/denaro/health/xrp_marcodg1_live.json")),
 ]
-
-# chiave item <- campo dell'health file
-MAP = [
-    ("equity", "total_equity"), ("free", "free_quote"), ("pnl", "pnl"),
-    ("volume", "volume"), ("trades", "trades"), ("wins", "wins"),
-    ("losses", "losses"), ("buys", "buys"), ("sells", "sells"),
-    ("drawdown", "drawdown"), ("uptime", "uptime"),
-    ("cap_locked", "cap_locked"), ("cap_available", "cap_available"),
-    ("win_rate", "win_rate_pct"), ("profit_factor", "profit_factor"),
-    ("sharpe", "sharpe"), ("sortino", "sortino"), ("calmar", "calmar"),
-    ("kelly", "kelly"), ("adx", "adx"), ("atr_pct", "atr_pct"),
-    ("rsi", "rsi"), ("ema200", "ema200"), ("hurst", "hurst"),
-    ("strategy", "strategy"), ("regime", "regime"), ("error", "error"),
-]
+MAP = [("equity","total_equity"),("free","free_quote"),("pnl","pnl"),("volume","volume"),("trades","trades"),
+       ("wins","wins"),("losses","losses"),("buys","buys"),("sells","sells"),("drawdown","drawdown"),
+       ("uptime","uptime"),("cap_locked","cap_locked"),("cap_available","cap_available"),
+       ("win_rate","win_rate_pct"),("profit_factor","profit_factor"),("sharpe","sharpe"),("sortino","sortino"),
+       ("calmar","calmar"),("kelly","kelly"),("adx","adx"),("atr_pct","atr_pct"),("rsi","rsi"),
+       ("ema200","ema200"),("hurst","hurst"),("strategy","strategy"),("regime","regime"),("error","error")]
 
 
-def send(metrics: list) -> bool:
-    """Trapper con cache offline: la perdita di un invio non e' fatale."""
+def load(src):
+    if src[0] == "file":
+        p = Path(src[1])
+        if not p.is_file():
+            return None
+        try:
+            return json.loads(p.read_text(encoding="utf-8"))
+        except Exception:
+            return None
+    alias, path = src[1], src[2]
+    try:
+        r = subprocess.run(["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=5",
+                            alias, "cat " + path],
+                           capture_output=True, text=True, timeout=15)
+        if r.returncode == 0 and r.stdout.strip():
+            return json.loads(r.stdout.strip().splitlines()[-1])
+    except Exception:
+        pass
+    return None
+
+
+def send(metrics):
     if not metrics:
         return True
     payload = json.dumps({"request": "sender data", "data": metrics}).encode()
@@ -50,27 +56,22 @@ def send(metrics: list) -> bool:
         s.recv(1024)
         s.close()
         return True
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         print("zabbix_bots: invio fallito: %s" % exc, file=sys.stderr)
         return False
 
 
-def main() -> int:
+def main():
     clock = int(time.time())
     metrics = []
-    for host, path, prefix in BOTS:
-        p = Path(path)
-        if not p.is_file():
+    for host, prefix, src in BOTS:
+        h = load(src)
+        if not h:
             continue
-        try:
-            h = json.loads(p.read_text(encoding="utf-8"))
-        except Exception:
-            continue
-        # status: 1 = running, 0 = altro. stop_loss: 1 se scattato.
         h["_status"] = 1 if h.get("status") == "running" else 0
         h["_stop_loss"] = 1 if h.get("stop_loss_triggered") else 0
-        for key, field in MAP + [("status", "_status"), ("stop_loss", "_stop_loss")]:
-            v = h.get(field)
+        for key, fld in MAP + [("status", "_status"), ("stop_loss", "_stop_loss")]:
+            v = h.get(fld)
             if v is None or v == "":
                 continue
             if isinstance(v, str) and key not in ("strategy", "regime", "error"):
