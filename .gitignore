@@ -125,3 +125,6 @@ _last_gen.txt
 # (snapshot ogni minuto). Il pattern health/*.json qui sopra e' ancorato
 # alla radice: non la copriva, e il file finiva tracciato.
 denaro/health/
+
+# cartella morta rimossa: se ricreata non deve finire in git
+_dead/
