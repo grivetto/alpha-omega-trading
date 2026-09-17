@@ -821,6 +821,142 @@ def walk_forward_portafoglio(serie: Dict[str, List[dict]], motore: str,
     return folds, {}, ""
 
 
+# ── momentum cross-sezionale (portafoglio) ─────────────────────────────────
+
+def backtest_xsec(serie: Dict[str, List[dict]], p: Dict, capitale: float = 100.0,
+                  fee: float = 0.002, slippage_k: float = 0.02) -> Risultato:
+    """Momentum CROSS-SEZIONALE: non "questo sale?", ma "quale sale piu' degli altri?".
+
+    Ogni N barre (parametro rebalance) si rankano gli asset per rendimento
+    passato su M barre (parametro lookback) e si tiene equal-weight il paniere
+    dei primi k; il resto a cash. E' una scommessa RELATIVA, non direzionale:
+    se tutto scende, si sceglie chi scende meno.
+
+    Perche' e' adatto a questo conto, a differenza di grid e trend:
+    - il ribilanciamento e' raro (settimanale), quindi il turnover e' basso e
+      le fee (0.20% per lato) non mangiano il premio. Il grid pagava il 25-65%
+      del lordo in commissioni; qui il costo e' proporzionale al turnover.
+    - il filtro di mercato opzionale (cash_filter_ma) manda tutto a cash
+      quando il paniere equal-weight e' sotto la sua media: in un mercato orso
+      non si resta long per forza.
+
+    Costi: a ogni ribilanciamento si paga fee x turnover, dove turnover e' la
+    somma dei valori assoluti delle variazioni di peso: vendere 0.2 e comprare
+    0.2 costa 0.4 x fee.
+    """
+    simboli = sorted(serie)
+    if len(simboli) < 3:
+        return Risultato(nome="xsec", capitale=capitale, errore="meno di 3 simboli")
+    n = min(len(serie[s]) for s in simboli)
+    lookback = int(p.get("lookback", 180))
+    k = int(p.get("k", 5))
+    rebalance = int(p.get("rebalance", 42))
+    filtro_ma = int(p.get("cash_filter_ma", 0))
+    inizio = max(lookback, filtro_ma) + 1
+    if n <= inizio + 10:
+        return Risultato(nome="xsec", capitale=capitale, errore="serie troppo corta")
+
+    prezzi = {s: [c["c"] for c in serie[s][-n:]] for s in simboli}
+    ts = [c["ts"] for c in serie[simboli[0]][-n:]]
+
+    equity = capitale
+    pesi = {s: 0.0 for s in simboli}
+    r = Risultato(nome="xsec", capitale=capitale)
+    picco = capitale
+    periodo = capitale
+
+    for i in range(inizio, n):
+        if i > inizio:
+            ret = sum(pesi[s] * (prezzi[s][i] / prezzi[s][i - 1] - 1.0)
+                      for s in simboli if prezzi[s][i - 1] > 0)
+            equity *= (1.0 + ret)
+        if (i - inizio) % rebalance == 0:
+            mom = {}
+            for s in simboli:
+                p0 = prezzi[s][i - lookback]
+                if p0 > 0:
+                    mom[s] = prezzi[s][i] / p0 - 1.0
+            nuovo = {s: 0.0 for s in simboli}
+            if mom:
+                vai_cash = False
+                if filtro_ma:
+                    if i >= filtro_ma:
+                        media = sum(sum(prezzi[x][i - filtro_ma:i]) / filtro_ma
+                                    for x in simboli) / len(simboli)
+                        paniere = sum(prezzi[x][i] for x in simboli) / len(simboli)
+                        vai_cash = paniere < media
+                    else:
+                        vai_cash = True
+                if not vai_cash:
+                    top = sorted(mom, key=lambda s: -mom[s])[:k]
+                    for s in top:
+                        nuovo[s] = 1.0 / len(top)
+            turnover = sum(abs(nuovo[s] - pesi[s]) for s in simboli)
+            equity *= (1.0 - fee * turnover)
+            if turnover > 1e-9:
+                r.trade_pnls.append(equity - periodo)
+                periodo = equity
+            pesi = nuovo
+        if any(w > 1e-9 for w in pesi.values()):
+            r.esposizione_bar += 1
+        r.equity.append(equity)
+        r.ts.append(ts[i])
+        if equity > picco:
+            picco = equity
+
+    r.barre = len(r.equity)
+    r.fee_pagate = 0.0
+    r.lordo = sum(r.trade_pnls)
+    return r
+
+
+def walk_forward_xsec(serie: Dict[str, List[dict]], griglia: List[Dict],
+                      capitale: float = 100.0, fee: float = 0.002,
+                      barre_train: int = 1000, barre_test: int = 500,
+                      slippage_k: float = 0.02) -> Tuple[List["Fold"], Dict, str]:
+    """Walk-forward per il cross-sezionale: un set di parametri per tutti gli asset."""
+    simboli = sorted(serie)
+    n = min(len(serie[s]) for s in simboli)
+    if n < barre_train + barre_test + 50:
+        return [], {}, ("dati comuni insufficienti: il simbolo piu' corto ha "
+                        "%d barre, servono %d" % (n, barre_train + barre_test + 50))
+    dati = {s: serie[s][-n:] for s in simboli}
+    folds: List[Fold] = []
+    inizio, idx = 0, 0
+    while inizio + barre_train + barre_test <= n:
+        tr_da, tr_a = inizio, inizio + barre_train
+        te_da, te_a = tr_a, tr_a + barre_test
+        migliore, miglior_p = None, -1e18
+        for p in griglia:
+            rr = backtest_xsec({s: dati[s][tr_da:tr_a] for s in simboli}, p,
+                               capitale, fee, slippage_k)
+            if rr.errore or rr.trade < 2:
+                continue
+            punteggio = rr.ritorno - rr.max_dd
+            if punteggio > miglior_p:
+                migliore, miglior_p = p, punteggio
+        if migliore is None:
+            inizio += barre_test
+            continue
+        te = backtest_xsec({s: dati[s][te_da:te_a] for s in simboli}, migliore,
+                           capitale, fee, slippage_k)
+        bhs = []
+        for s in simboli:
+            c = dati[s]
+            bhs.append(c[te_a - 1]["c"] / c[te_da]["c"] - 1.0 if c[te_da]["c"] > 0 else 0.0)
+        bh = sum(bhs) / len(bhs)
+        folds.append(Fold(indice=idx, train_da=tr_da, train_a=tr_a,
+                          test_da=te_da, test_a=te_a,
+                          ritorno_train=miglior_p, ritorno_test=te.ritorno,
+                          dd_test=te.max_dd, trade_test=te.trade,
+                          bh_test=bh, bench_risk=(te.esposizione_pct / 100.0) * bh))
+        idx += 1
+        inizio += barre_test
+    if not folds:
+        return [], {}, "nessun fold producibile"
+    return folds, {}, ""
+
+
 # ── punteggio di robustezza (sostituisce score()) ───────────────────────────
 
 @dataclass

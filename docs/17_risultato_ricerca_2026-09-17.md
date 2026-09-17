@@ -388,3 +388,95 @@ conclusioni sono falsificabili. Le direzioni non ancora esplorate:
 3. **Esplorare fonti di rendimento non direzionali**: funding rate, basis,
    market making (ma la fee maker 0.20% rende il market making strutturalmente
    in perdita: lo spread e' 0.02-0.06%, la fee 0.20%).
+
+
+## 9. Round 4 — Il collo di bottiglia sono i COSTI, non le strategie
+
+### 9.1 Momentum cross-sezionale: respinto
+
+Non "questo sale?", ma "quale sale piu' degli altri?": si rankano i 19 asset per
+rendimento passato e si tiene equal-weight il paniere dei primi k, con
+ribilanciamento settimanale (turnover basso, quindi fee contenute).
+
+| finestra | fold | comp OOS | senza fold migliore | alpha Jensen | t |
+|---|---|---|---|---|---|
+| train 1000 / test 500 | 8 | **−51.11%** | −156.51% | **−8.61%** | **−2.55** |
+| train 500 / test 250 | 18 | +7.04% | −140.90% | +1.02% | +0.33 |
+| train 1500 / test 750 | 4 | −32.12% | −151.25% | +14.82% | +8.45 (n=4) |
+
+Alpha significativamente negativo alla finestra di riferimento, e in ogni
+configurazione il risultato dipende da un solo fold (senza-migl da −140% a
+−156%). Il momentum settimanale in crypto compra i vincitori recenti subito
+prima del reversal, e paga fee a ogni ribilanciamento.
+
+### 9.2 La diagnostica decisiva: segnale mancante o costo eccessivo?
+
+Regressione di Jensen per asset (n=19), a fee decrescenti. Se l'alpha resta
+negativo a fee zero, manca il segnale. Se diventa positivo a fee basse, il
+costo e' il collo di bottiglia.
+
+| fee per lato | GRID alpha (t) | TREND alpha (t) |
+|---|---|---|
+| 0.00% | **−5.77% (−2.56)** | +104.13% (+3.92) |
+| 0.05% | −6.88% (−3.37) | +95.59% (+3.68) |
+| 0.10% | −6.45% (−3.01) | +86.73% (+3.40) |
+| 0.20% (maker reale) | −7.48% (−4.64) | +72.72% (+2.99) |
+| 0.35% (taker) | −9.09% (−7.06) | +54.43% (+2.41) |
+
+**La griglia non ha segnale**: e' negativa anche a fee ZERO, con t = −2.56. Non
+sono le commissioni, e' che non predice nulla. I valori del trend in questa
+tabella sono gonfiati dalla selezione dei parametri per asset: vedi 9.3.
+
+### 9.3 Trend con parametri FISSI: nessuna selezione, nessun bias
+
+Parametri scelti a priori, gli stessi per tutti i 19 asset, mai ottimizzati:
+
+| fee per lato | canale40/trail3/stop2 | t | canale60/trail4/stop2 | t |
+|---|---|---|---|---|
+| 0.00% | +34.98% | **+4.51** | +61.63% | +2.37 |
+| 0.20% (maker) | +12.33% | **+1.73** | +42.16% | +1.78 |
+| 0.35% (taker) | −1.97% | **−0.30** | +29.20% | +1.33 |
+
+Lettura: **il trend ha un segnale reale** — a fee zero e' significativo, con t
+fino a 4.51, quindi non e' solo beta. **Ma la fee reale lo porta sotto la soglia
+di significativita'** (t < 2), e alla fee taker sparisce.
+
+### 9.4 Correzione: il trend paga TAKER, non maker
+
+Il backtest del trend applicava 0.20% (maker) a tutti i fill. Ma la strategia
+entra sul **breakout** ed esce sul **trailing stop**: sono ordini a mercato, che
+tolgono liquidita'. La fee vera e' **0.35% per lato = 0.70% di round trip**, non
+0.40%.
+
+A quella fee l'alpha del trend e' **−1.97% con t = −0.30**: nessun edge. E non e'
+aggirabile: un ingresso su breakout non puo' essere maker, perche' un ordine
+limite al di sopra del mercato viene eseguito subito. Servirebbe un ordine
+stop-limit che diventa maker quando scatta, cosa non affidabile.
+
+### 9.5 Conclusione del round 4
+
+Il collo di bottiglia **non e' la ricerca di strategie: e' la struttura dei
+costi**, insieme a un segnale debole.
+
+- **GRID**: nessun segnale a qualunque fee (t = −2.56 a fee zero).
+  Strutturalmente rotto, non riparabile abbassando i costi.
+- **TREND**: segnale reale (t = 4.51 a fee zero) ma mangiato dalle fee reali. A
+  fee maker 0.20% e' marginale (t = 1.73), a fee taker 0.35% sparisce.
+- **MEAN-REVERSION**: nessun alpha (round 2).
+- **CROSS-SEZIONALE**: alpha negativo significativo (t = −2.55).
+
+Punto di rottura economico: il trend diventa significativo con fee <= 0.20% per
+lato **a condizione di poter essere maker**. Il conto e' Lv1 (maker 0.20%,
+taker 0.35%) e con ~75 EUR di capitale non puo' raggiungere un tier migliore,
+che su OKX richiede volumi mensili di ordini di grandezza superiori.
+
+Le direzioni residue, in ordine di realismo:
+
+1. **Ridurre la fee per lato** e' la leva con il miglior rapporto
+   beneficio/rischio: cambierebbe il segno del trend. Richiede piu' capitale, un
+   tier superiore, o un venue con costi inferiori.
+2. **Fonti di rendimento non direzionali e a basso turnover** (funding rate,
+   basis), dove il premio non e' un segnale di prezzo ma un pagamento
+   strutturale. Richiedono derivati.
+3. **Smaltire le strategie live con alpha negativo**, che e' l'unica azione che
+   oggi riduce la perdita attesa.
