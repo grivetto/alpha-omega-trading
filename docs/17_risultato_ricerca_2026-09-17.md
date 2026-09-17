@@ -317,3 +317,74 @@ mean-reversion su XRP) hanno alpha NEGATIVO e drawdown 60-99%. Sostituirle con
 il portafoglio trend e' un miglioramento netto anche se il rendimento atteso
 resta modesto. Per guadagnare davvero in un orso servirebbe la capacita' di
 stare short (swap/futures): e' una decisione di rischio, non di codice.
+
+
+## 8. Round 3 — L'alpha non c'e', e la griglia live e' provata dannosa
+
+### 8.1 L'universo ampio uccide il risultato del round 2
+
+Ipotesi: il trend following e' a coda grossa, quindi con piu' asset la legge dei
+grandi numeri avrebbe stabilizzato il rendimento. Smentita.
+
+| universo | comp OOS | senza fold migliore | peggior fold | fold positivi |
+|---|---|---|---|---|
+| 5 asset | +44.75% | +1.23% | −6.15% | 44% |
+| 19 asset | **+3.93%** | **−34.47%** | **−15.08%** | **12%** |
+
+Con 19 asset invece di 5, **gli stessi parametri** producono +3.93% invece di
++44.75%, e senza il fold migliore −34.47%. Il risultato del round 2 era quindi
+**fortuna nella scelta degli asset** (SOL, XRP, DOGE, ETH, ADA erano quelli con
+i trend piu' forti), non un effetto robusto. Leave-one-out sul 19 asset: togliere
+BTC, ETH, XRP o SOL lascia +1.90%..+6.46%, cioe' nulla.
+
+### 8.2 Alpha di Jensen: era beta, non abilita'
+
+Una strategia long-only che sta fuori dal mercato gran parte del tempo batte il
+buy-and-hold in un mercato che scende **senza avere alcun edge**: e' solo beta
+piu' basso. La misura corretta e' la regressione:
+
+    r_strategia = alpha + beta * r_buyhold
+
+| campione | n | beta | alpha | t(alpha) | R2 |
+|---|---|---|---|---|---|
+| trend 5 asset (fold OOS) | 9 | +0.28 | +2.11% | +1.41 | 0.93 |
+| trend 19 asset (fold OOS) | 8 | +0.37 | +0.36% | +0.09 | 0.79 |
+| trend 5 asset (per asset) | 5 | +0.21 | +24.30% | +4.70 | 0.62 |
+| trend 19 asset (per asset) | 19 | +0.10 | +12.33% | +1.73 | 0.06 |
+| **grid ottimizzato (per asset)** | 18 | +0.09 | **−7.48%** | **−4.64** | 0.52 |
+
+Lettura:
+
+- **Il trend following non ha alpha.** R2 = 0.79..0.93: i suoi rendimenti sono
+  spiegati per l'80-93% dal beta di mercato. L'alpha e' +0.36%..+2.11% con
+  t <= 1.41, statisticamente indistinguibile da zero. Il caso "5 asset per
+  asset" (+24.30%, t=4.70) ha n=5: con 3 gradi di liberta' il t-stat non e'
+  credibile.
+- **La griglia live ha alpha significativamente NEGATIVO**: −7.48% con
+  t = −4.64 su 18 osservazioni. Ed e' la versione OTTIMIZZATA in-sample per
+  ogni asset, quindi ottimisticamente distorta. La griglia che gira su mc2,
+  nuvola e MARCODG1 distrugge valore in modo statisticamente solido.
+
+### 8.3 Stato dell'obiettivo
+
+Dopo tre round di misura rigorosa:
+
+- **grid / momentum / mean-reversion**: nessun alpha, e per la grid alpha
+  significativamente negativo (t = −4.64);
+- **trend following con rischio per volatilita'**: alpha non significativo
+  (+0.36%..+2.11%, t <= 1.41) e risultato dipendente dalla selezione degli
+  asset;
+- **nessuna strategia con alpha positivo statisticamente significativo** e'
+  stata trovata.
+
+Il rig di misura e' pero' ora affidabile (17 test di regressione) e le
+conclusioni sono falsificabili. Le direzioni non ancora esplorate:
+
+1. **Verificare se OKX EEA consente lo short** (swap/futures): e' l'unica leva
+   che cambierebbe il segno in un mercato orso, ma introduce leva e
+   liquidazione — decisione di rischio, non di codice.
+2. **Smaltire le strategie live con alpha negativo** invece di continuare a
+   farle girare mentre si cerca un edge.
+3. **Esplorare fonti di rendimento non direzionali**: funding rate, basis,
+   market making (ma la fee maker 0.20% rende il market making strutturalmente
+   in perdita: lo spread e' 0.02-0.06%, la fee 0.20%).

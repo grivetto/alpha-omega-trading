@@ -677,10 +677,19 @@ class Fold:
     dd_test: float
     trade_test: int
     bh_test: float
+    # benchmark corretto per il rischio: esposizione media x buy&hold.
+    # Se la strategia sta fuori dal mercato meta' del tempo, il confronto
+    # giusto con il buy&hold e' meta' del suo rendimento, non tutto.
+    bench_risk: float = 0.0
 
     @property
     def alpha_test(self) -> float:
         return self.ritorno_test - self.bh_test
+
+    @property
+    def alpha_risk(self) -> float:
+        """Alpha contro il benchmark corretto per l'esposizione."""
+        return self.ritorno_test - self.bench_risk
 
 
 def walk_forward(candles: List[dict], motore: str, griglia: List[Dict],
@@ -788,18 +797,23 @@ def walk_forward_portafoglio(serie: Dict[str, List[dict]], motore: str,
             inizio += barre_test
             continue
         # valutazione OUT-OF-SAMPLE aggregata
-        test_ret, test_bh = [], []
+        test_ret, test_bh, test_bench = [], [], []
         for s in simboli:
             r = fn(dati[s][te_da:te_a], migliore, capitale, fee, slippage_k)
             test_ret.append(r.ritorno)
             c = dati[s]
-            test_bh.append(c[te_a - 1]["c"] / c[te_da]["c"] - 1.0 if c[te_da]["c"] > 0 else 0.0)
+            bh_s = c[te_a - 1]["c"] / c[te_da]["c"] - 1.0 if c[te_da]["c"] > 0 else 0.0
+            test_bh.append(bh_s)
+            # benchmark corretto: la strategia guadagna bh_s solo per la
+            # frazione di tempo in cui e' effettivamente esposta
+            test_bench.append((r.esposizione_pct / 100.0) * bh_s)
         folds.append(Fold(indice=idx, train_da=tr_da, train_a=tr_a,
                           test_da=te_da, test_a=te_a,
                           ritorno_train=miglior_p,
                           ritorno_test=sum(test_ret) / len(test_ret),
                           dd_test=0.0, trade_test=0,
-                          bh_test=sum(test_bh) / len(test_bh)))
+                          bh_test=sum(test_bh) / len(test_bh),
+                          bench_risk=sum(test_bench) / len(test_bench)))
         idx += 1
         inizio += barre_test
     if not folds:
