@@ -819,3 +819,84 @@ Due modi per rientrare, entrambi con un costo:
 Nessuna delle due e' gratuita: e' un compromesso fra fedelta' alla strategia
 misurata (che assumeva di poter prendere tutti i segnali) e capitale
 disponibile. Con €126 (42 per conto) il problema non esisterebbe.
+
+
+## 13. DIFETTO CRITICO — il meccanismo di uscita del trend non funziona
+
+Trovato il 2026-09-17 con l'audit del percorso live, **prima che sparasse**.
+
+### 13.1 Cosa fa il backtest
+
+In `backtest_trend` lo stop e' modellato come un ordine che scatta quando il
+prezzo SCENDE sotto il livello:
+
+    if lo <= stop: uscita al prezzo di stop
+
+E' il comportamento di un ordine STOP.
+
+### 13.2 Cosa fa la produzione
+
+Il `TrendPolicy` emette lo stop come `decision.to_sell = [(amount, stop)]`.
+L'orchestratore esegue ogni voce di `to_sell` cosi':
+
+    await self.ex.create_limit_order(self.cfg.symbol, "sell", amount, sell_price)
+
+Cioe' un ordine **LIMITE**. Ma il prezzo di stop e' `entry - stop_atr_mult*ATR`,
+**sotto il mercato**. E un limite di vendita sotto il mercato **si riempie
+immediatamente** al miglior bid disponibile (price improvement).
+
+### 13.3 Conseguenza
+
+Il bot, al primo segnale:
+
+1. compra a mercato (limite sopra il mercato: si esegue subito come taker);
+2. l'orchestratore chiama `sell_target(entry)` e piazza un limite di vendita
+   a `entry - 2*ATR`, cioe' ~8% sotto il mercato;
+3. **quell'ordine si riempie nello stesso istante** al bid corrente;
+4. risultato: compra e vende immediatamente, perdendo spread + 2 commissioni.
+
+La stessa cosa vale per ogni riposizionamento del trailing: il nuovo stop e' a
+`prezzo - trail*ATR`, sempre sotto il mercato, quindi si esegue subito.
+
+**La protezione non esiste: e' un take-profit al contrario.** Con un ciclo al
+giorno e ~0.7% di costo per ciclo, il risultato atteso era una perdita
+dell'ordine di centinaia di punti percentuali all'anno.
+
+### 13.4 Perche' nessun test l'aveva visto
+
+I test unitari verificano la LOGICA della policy. Il test di integrazione usa un
+`FakeExchange` che riempie gli ordini **solo** su `market_trade()`, quindi non
+riproduce la semantica reale degli ordini limite. La differenza sta nella
+semantica dell'EXCHANGE, non nella policy.
+
+### 13.5 Azione immediata
+
+1. **Nodi di trading fermati** su tutte e tre le macchine.
+2. Conti verificati: **nessun ordine, nessuna posizione, EUR 24.83 / 24.83 /
+   24.81 intatti.** Il segnale non era ancora arrivato: il difetto e' stato
+   trovato prima che muovesse denaro.
+3. **Healer sospeso** con un interruttore nuovo
+   (`/home/sergio/denaro/HEALER_PAUSE`): senza, il healer che gira ogni 2
+   minuti avrebbe riavviato i nodi e il difetto sarebbe tornato vivo.
+4. Le dashboard e i servizi di infrastruttura restano attivi.
+
+### 13.6 La correzione necessaria
+
+Serve un vero meccanismo di STOP, non un limite. Due strade:
+
+1. **ordine condizionale (algo) su OKX**: l'adapter non lo espone ancora
+   (`ExchangePort` ha solo `create_limit_order` e `sell_market`);
+2. **stop gestito dall'orchestratore**: la policy espone il proprio stop, e
+   l'orchestratore fa `sell_market` quando il prezzo lo attraversa. La
+   macchina esiste gia' — e' quella usata per lo `stop_loss_pct` di bot
+   (riga ~822: `await asyncio.to_thread(self.ex.sell_market, ...)`).
+
+La seconda e' quella che richiede meno infrastruttura nuova ed e' coerente con
+il resto del sistema.
+
+### 13.7 Nota di metodo
+
+Questo e' il quarto difetto del percorso live trovato in quattro round, e il piu'
+grave. Nessuno era visibile dai test unitari. Il rig di misura era corretto fin
+dal round 1; era il **collegamento fra rig e produzione** a essere fragile, e
+l'unico modo di trovarlo e' stato leggere il percorso reale ordine per ordine.

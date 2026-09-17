@@ -36,6 +36,18 @@ declare -A SSH_USER=(
 
 log() { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*" | tee -a "$LOG_FILE"; }
 
+# --- Interruttore di sospensione -------------------------------------------
+# Se questo file esiste il healer NON esegue alcuna azione di restart.
+# Serve quando un servizio viene fermato DI PROPOSITO — per esempio mentre si
+# corregge un difetto trovato in produzione. Senza, il healer lo riavvierebbe
+# entro 2 minuti e il difetto tornerebbe vivo: e' successo il 2026-09-17 con il
+# meccanismo di uscita del trend.
+PAUSE_FILE="/home/sergio/denaro/HEALER_PAUSE"
+if [ -f "$PAUSE_FILE" ]; then
+  log "healer SOSPESO: $PAUSE_FILE presente - nessuna azione"
+  exit 0
+fi
+
 zabbix_api() {
   local method="$1" params="$2" auth="$3"
   curl -s -m 10 -X POST "$ZABBIX_URL" -H 'Content-Type: application/json-rpc' \

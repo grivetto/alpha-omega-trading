@@ -261,11 +261,18 @@ class TrendPolicy(Policy):
 
         # --- in posizione: alza il trailing stop e riposiziona la vendita ---
         if self.in_posizione or open_sells:
-            if self.atr > 0:
-                self.stop = self.trailing_stop(price)
             if open_sells:
                 oid, info = next(iter(open_sells.items()))
                 attuale = float(info.get("target_price") or info.get("price") or 0.0)
+                # RIPARTENZA: la policy e' nuova e self.stop vale 0, quindi il
+                # trailing ripartirebbe dal prezzo corrente ABBASSANDO la
+                # protezione gia' in essere. Lo stop esistente e' un PAVIMENTO:
+                # il trailing puo' solo alzarlo.
+                if attuale > 0 and self.stop < attuale:
+                    self.stop = attuale
+            if self.atr > 0:
+                self.stop = self.trailing_stop(price)
+            if open_sells:
                 amount = float(info.get("amount", 0.0))
                 if (self.stop > 0 and attuale > 0 and amount > 0
                         and abs(self.stop - attuale) / attuale > 0.002):

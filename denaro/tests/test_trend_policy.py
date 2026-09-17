@@ -307,3 +307,31 @@ def test_precarica_deduplica_per_giornata():
     giorni = [b["ts"] / 86_400.0 for b in pol.barre]
     assert len(giorni) == len(set(giorni)), "giornate duplicate: %s" % giorni
     assert len(pol.barre) == 2, "attese 2 giornate, trovate %d" % len(pol.barre)
+
+def test_riavvio_non_abbassa_lo_stop_esistente():
+    """Alla ripartenza lo stop gia' in essere e' un PAVIMENTO.
+
+    Difetto trovato il 2026-09-17 con l'audit del percorso live: la policy nuova
+    ha self.stop = 0, quindi il trailing ripartiva dal prezzo corrente e
+    ABBASSAVA la protezione (da 96.00 a 92.00, -4.17%) cancellando attivamente
+    lo stop buono. Succede a ogni deploy, riavvio o crash con posizione aperta.
+    """
+    pol = TrendPolicy(TrendParams(canale=5, atr_period=3, trail_mult=3.0,
+                                  stop_atr_mult=2.0, trend_ema=0, risk_pct=0.02))
+    pol.atr = 2.0
+    assert pol.stop == 0.0 and pol.in_posizione is False   # policy appena nata
+    # posizione aperta da prima del riavvio: comprata a 100, stop a 96
+    open_sells = {"s1": {"amount": 1.0, "price": 96.0, "target_price": 96.0}}
+    d = pol.decide(price=98.0, open_buys={}, open_sells=dict(open_sells),
+                   cash=0.0, capital_config=24.9, free_balance=0.0,
+                   now=5 * 86_400.0)
+    assert d.to_sell == [], "non doveva riposizionare lo stop: %s" % (d.to_sell,)
+    assert d.to_cancel_sell == []
+    assert pol.stop >= 96.0, "lo stop non deve scendere sotto 96: %.4f" % pol.stop
+
+    # e se il prezzo SALE, il trailing deve alzarlo normalmente
+    d2 = pol.decide(price=110.0, open_buys={}, open_sells=dict(open_sells),
+                    cash=0.0, capital_config=24.9, free_balance=0.0,
+                    now=5 * 86_400.0 + 60)
+    assert pol.stop > 96.0, "il trailing doveva salire: %.4f" % pol.stop
+    assert d2.to_sell and d2.to_sell[0][1] == pol.stop
