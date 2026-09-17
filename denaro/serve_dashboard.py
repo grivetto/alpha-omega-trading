@@ -111,9 +111,9 @@ class AggregatorClient:
     def fetch(self) -> tuple[bytes, dict]:
         """Ritorna (json_bytes, meta). Non solleva mai: degrada sulla cache."""
         errors = []
+        # Si prova SEMPRE nell'ordine configurato: la preferenza sticky faceva
+        # restare la dashboard sul ripiego anche dopo il ritorno del primario.
         order = list(range(len(self.urls)))
-        if self._preferred:
-            order = [self._preferred] + [i for i in order if i != self._preferred]
         for i in order:
             url = self.urls[i]
             try:
