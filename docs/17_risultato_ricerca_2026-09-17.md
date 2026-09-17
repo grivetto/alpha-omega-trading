@@ -564,3 +564,80 @@ Le uniche vie d'uscita restano quelle del round 4, e nessuna e' di ricerca:
 2. **fonti non direzionali** (funding rate, basis), dove il premio non e' una
    previsione di prezzo ma un pagamento strutturale: richiedono derivati;
 3. **smaltire le strategie live con alpha negativo**.
+
+
+## 11. Round 5b — Il primo edge reale: trend giornaliero
+
+### 11.1 Perche' il giornaliero cambia tutto
+
+Su barre 4H il trend ha un segnale reale (alpha +34.98% a fee zero, t=+4.51) ma
+paga 0.70% di round trip a ogni passaggio, e il costo lo azzera. Su barre
+GIORNALIERE lo stesso segnale cattura movimenti molto piu' grandi rispetto al
+costo: **~10 trade per asset in 2.5 anni** invece di centinaia.
+
+36 set di parametri FISSI (nessuna selezione), 19 asset, fee taker reale 0.35%
+su entrambi i lati:
+
+| metrica | valore |
+|---|---|
+| set con alpha > 0 | **36 su 36 (100%)** |
+| set con t > 2 | 22 su 36 |
+| alpha mediano | **+19.99%** |
+| t mediano | **+2.24** |
+| range alpha tra i set | +13.58% .. +26.96% |
+
+Che l'alpha sia positivo in **tutti** i set, e non solo nei migliori, e' la
+differenza sostanziale rispetto a tutto cio' che era stato testato prima: non
+serve selezionare parametri, quindi non c'e' selection bias.
+
+### 11.2 Verifiche
+
+**Leave-one-out** (set canale40/trail3/stop2/ema100, fee taker): togliendo un
+asset qualsiasi l'alpha resta tra +15.22% e +18.24%, con t tra 1.78 e 2.15.
+Nessun singolo asset trascina il risultato.
+
+**Stabilita' nel tempo**: prima meta' alpha +20.07% (t=+1.34, rendimento
+assoluto medio +23.24%), seconda meta' alpha +6.62% (t=+1.73, rendimento
+assoluto medio **−0.77%**). L'effetto e' concentrato nella prima meta'.
+
+**Ampiezza economica**: il rendimento ASSOLUTO mediano per asset e' +6.32% in
+2.5 anni, il MEDIO e' +19.35%. Un portafoglio equal-weight a 19 asset rende la
+media, quindi circa **+7.3% annuo netto fee taker**, mentre il buy-and-hold
+equal-weight nello stesso periodo ha reso circa −8% medio.
+
+### 11.3 Lettura onesta
+
+Questo e' il **primo edge reale** trovato in cinque round: positivo in tutti i
+36 set di parametri, robusto al leave-one-out, e sopravvive alla fee taker.
+
+Ma va letto per quello che e':
+
+- l'ampiezza e' **modesta**: ~+7% annuo sul portafoglio (media), +2.5% annuo
+  sulla mediana degli asset;
+- la **seconda meta' del periodo e' piatta** (−0.77% di media): l'effetto e'
+  concentrato nel tempo, e con ~5 trade per asset per meta' il campione e' corto;
+- i t-stat sono **marginali** (~2.0-2.2), non schiaccianti.
+
+### 11.4 La conclusione cambia di natura
+
+Per cinque round la domanda era "esiste una strategia con edge?". Ora la
+risposta e': **si', ma e' piccolo in percentuale, e su ~75 EUR di capitale vale
+2-6 EUR all'anno.**
+
+Il collo di bottiglia non e' piu' la ricerca: e' **il capitale**. Un edge del
++7% annuo su 75 EUR e' 5 EUR; lo stesso edge su 10.000 EUR sono 700 EUR. Per la
+prima volta il problema e' di scala, non di strategia.
+
+Cosa serve perche' questo diventi remunerativo:
+
+1. **piu' capitale** sul medesimo edge, che e' anche la leva per accedere a un
+   tier di commissioni migliore (e quindi a un edge ancora maggiore: a fee maker
+   0.20% l'alpha sale);
+2. **piu' asset** in portafoglio per ridurre la dipendenza dagli episodi (19 e'
+   il massimo con 2.4+ anni di storia su OKX EEA; se ne possono aggiungere
+   accettando una finestra comune piu' corta);
+3. **accettare l'ampiezza**: +7% annuo e' un rendimento da gestione
+   patrimoniale, non da trading speculativo. Con 75 EUR non e' visibile.
+
+Resta valida la raccomandazione di smaltire le strategie live attuali, che
+hanno alpha negativo provato (la griglia e' negativa anche a fee zero).
