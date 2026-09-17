@@ -1,8 +1,10 @@
-# 39 — Fee reali delle due venue: la migrazione si giustifica? NO
+# 40 — Fee reali delle due venue: la migrazione si giustifica? NO
 
 Data: 2026-09-18. Ricerca riproducibile: `tools/trend_4h_venue.py`.
+Versione breve con la lista delle azioni: docs/39_fee_e_venue_2026-09-17.md.
+Qui il dettaglio: numeri per blocco, universo largo, difetti di codice trovati.
 
-## 39.1 La domanda, posta in modo da poter ricevere un no
+## 40.1 La domanda, posta in modo da poter ricevere un no
 
 Bybit EU costa meno di OKX EEA sulle fee spot misurate sull'account:
 
@@ -17,14 +19,14 @@ Docs/20 aveva stabilito che sul 4H il verdetto della griglia passa da 3/24 a 20/
 cambiando SOLO la fee. Se a 0.25%/lato il 4H fosse diventato robusto, valevano il
 trasloco di 17 bot e le chiavi nuove. Non lo e'.
 
-## 39.2 Criterio (identico a tools/trend_4h_griglia.py)
+## 40.2 Criterio (identico a tools/trend_4h_griglia.py)
 
 4 canali (20/40/60/80) x 3 EMA (50/100/200) x 2 (long-only, long/short) = 24
 configurazioni. Serie divisa in blocchi uguali; "robusta" = rendimento composto
 positivo in almeno (blocchi-1) blocchi. "pieno" = rendimento sull'intera serie con
 la configurazione deployata (canale 40, EMA 100, long-only).
 
-## 39.3 4H — 19 asset del documento 20, 5181 barre, 5 blocchi da 1036
+## 40.3 4H — 19 asset del documento 20, 5181 barre, 5 blocchi da 1036
 
 | fee per lato | robuste | comp. mediano | pieno media | pieno mediana |
 |---|---|---|---|---|
@@ -38,7 +40,7 @@ la configurazione deployata (canale 40, EMA 100, long-only).
 La riga OKX taker riproduce esattamente i 3/24 di docs/20 e la riga swap i 20/24:
 il rigore di misura e' confermato.
 
-## 39.4 4H — universo largo, 28 asset, 5181 barre, 5 blocchi
+## 40.4 4H — universo largo, 28 asset, 5181 barre, 5 blocchi
 
 | fee per lato | robuste | comp. mediano | pieno media | pieno mediana |
 |---|---|---|---|---|
@@ -59,7 +61,7 @@ che esce in market e' **taker per costruzione**. Il maker qui non e' un'ipotesi
 prudente, e' un'ipotesi impossibile. (La famiglia "maker-only" e' gia' stata
 misurata a -61.35%, t=-16.76, docs/17 10.5.)
 
-## 39.5 Il giornaliero, cioe' quello che gira davvero — 911 barre, 3 blocchi
+## 40.5 Il giornaliero, cioe' quello che gira davvero — 911 barre, 3 blocchi
 
 | fee per lato | robuste | comp. mediano | pieno media | pieno mediana |
 |---|---|---|---|---|
@@ -88,7 +90,7 @@ Allargare da 18 a 47 asset fa SCENDERE la mediana del pieno da +6.75% a +2.44% e
 configurazioni robuste da 14/24 a 7/24. Il campione delle 19 era un campione
 fortunato: l'universo largo e' il verdetto onesto.
 
-## 39.6 Il vero problema, che la fee non tocca
+## 40.6 Il vero problema, che la fee non tocca
 
 Blocchi del giornaliero, configurazione deployata, fee reale Bybit 0.27%/lato:
 
@@ -108,7 +110,7 @@ Con 19-47 asset e 5 posizioni per conto il campione resta la fortuna di un
 trimestre; il numero di configurazioni robuste SALE con l'universo largo (4/24 ->
 14/24 sul 4H), che e' l'unico segnale positivo di tutta questa misura.
 
-## 39.7 Verdetto
+## 40.7 Verdetto
 
 1. **Non migrare per le fee.** Sul timeframe deployato la differenza e' +0.36 punti
    su 2.5 anni; sul 4H migliora (4/24 -> 11/24 con spread) ma resta una minoranza.
@@ -122,7 +124,7 @@ trimestre; il numero di configurazioni robuste SALE con l'universo largo (4/24 -
    tre, e sul campione largo le configurazioni robuste sono 7/24. La leva e' la
    larghezza dell'universo e il numero di scommesse indipendenti.
 
-## 39.8 Due difetti di codice trovati e corretti mentre si misurava
+## 40.8 Due difetti di codice trovati e corretti mentre si misurava
 
 `tools/fetch_universe.py` aveva DUE difetti che si mascheravano a vicenda:
 
