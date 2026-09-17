@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Pusha le metriche dei bot Denaro su Zabbix (trapper :10051).
 
-2 bot locali (mc2) + 2 remoti (nuvola, MARCODG1) letti via SSH.
+1 bot locale (mc2, DOGE) + 2 remoti (nuvola, MARCODG1) letti via SSH.
 """
 from __future__ import annotations
 import json, socket, struct, subprocess, sys, time
@@ -11,7 +11,6 @@ ZABBIX_SERVER, ZABBIX_PORT = "127.0.0.1", 10051
 
 BOTS = [
     ("alpha-omega-bot-okx-doge",     "okx_doge",     ("file", "/home/sergio/denaro/health/doge_mc2.json")),
-    ("alpha-omega-bot-okx-sol",      "okx_sol",      ("file", "/home/sergio/denaro/health/sol_mc2.json")),
     ("alpha-omega-bot-nuvola-sol",   "nuvola_sol",   ("ssh", "nuvola", "/home/sergio/denaro/health/sol_nuvola_live.json")),
     ("alpha-omega-bot-marcodg1-xrp", "marcodg1_xrp", ("ssh", "MARCODG1", "/home/marco/denaro/health/xrp_marcodg1_live.json")),
 ]
@@ -72,7 +71,13 @@ def main():
         h["_stop_loss"] = 1 if h.get("stop_loss_triggered") else 0
         for key, fld in MAP + [("status", "_status"), ("stop_loss", "_stop_loss")]:
             v = h.get(fld)
-            if v is None or v == "":
+            # NB: per gli item di TESTO (strategia/regime/errore) si pusha
+            # anche la stringa VUOTA: serve a PULIRE il valore quando il
+            # problema e' risolto. Saltandola, un errore vecchio resta
+            # sull'item per sempre e il trigger continua a scattare.
+            if v is None:
+                continue
+            if v == "" and key not in ("strategy", "regime", "error"):
                 continue
             if isinstance(v, str) and key not in ("strategy", "regime", "error"):
                 try:
@@ -88,4 +93,3 @@ def main():
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
