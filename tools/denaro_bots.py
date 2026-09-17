@@ -34,13 +34,10 @@ BOTS = [
     ("nuvola_link",  "LINK", "nuvola",   ("ssh", "nuvola",   HEALTH + "/link_nuvola_live.json")),
     ("nuvola_avax",  "AVAX", "nuvola",   ("ssh", "nuvola",   HEALTH + "/avax_nuvola_live.json")),
     ("nuvola_dot",   "DOT",  "nuvola",   ("ssh", "nuvola",   HEALTH + "/dot_nuvola_live.json")),
-    ("nuvola_ltc",   "LTC",  "nuvola",   ("ssh", "nuvola",   HEALTH + "/ltc_nuvola_live.json")),
     ("nuvola_uni",   "UNI",  "nuvola",   ("ssh", "nuvola",   HEALTH + "/uni_nuvola_live.json")),
     ("nuvola_sui",   "SUI",  "nuvola",   ("ssh", "nuvola",   HEALTH + "/sui_nuvola_live.json")),
 
     ("marcodg1_ada",  "ADA",  "MARCODG1", ("ssh", "MARCODG1", HEALTH_MARCO + "/ada_marcodg1_live.json")),
-    ("marcodg1_atom", "ATOM", "MARCODG1", ("ssh", "MARCODG1", HEALTH_MARCO + "/atom_marcodg1_live.json")),
-    ("marcodg1_aave", "AAVE", "MARCODG1", ("ssh", "MARCODG1", HEALTH_MARCO + "/aave_marcodg1_live.json")),
     ("marcodg1_arb",  "ARB",  "MARCODG1", ("ssh", "MARCODG1", HEALTH_MARCO + "/arb_marcodg1_live.json")),
     ("marcodg1_xlm",  "XLM",  "MARCODG1", ("ssh", "MARCODG1", HEALTH_MARCO + "/xlm_marcodg1_live.json")),
     ("marcodg1_algo", "ALGO", "MARCODG1", ("ssh", "MARCODG1", HEALTH_MARCO + "/algo_marcodg1_live.json")),

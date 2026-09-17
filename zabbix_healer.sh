@@ -47,11 +47,8 @@ declare -A HOST_SERVICE=(
   ["alpha-omega-bot-nuvola-link"]="nuvola|denaro-node-nuvola-trade"
   ["alpha-omega-bot-nuvola-avax"]="nuvola|denaro-node-nuvola-trade"
   ["alpha-omega-bot-nuvola-dot"]="nuvola|denaro-node-nuvola-trade"
-  ["alpha-omega-bot-nuvola-ltc"]="nuvola|denaro-node-nuvola-trade"
   ["alpha-omega-bot-nuvola-uni"]="nuvola|denaro-node-nuvola-trade"
   ["alpha-omega-bot-marcodg1-ada"]="MARCODG1|denaro-node-marcodg1-xrp"
-  ["alpha-omega-bot-marcodg1-atom"]="MARCODG1|denaro-node-marcodg1-xrp"
-  ["alpha-omega-bot-marcodg1-aave"]="MARCODG1|denaro-node-marcodg1-xrp"
   ["alpha-omega-bot-marcodg1-arb"]="MARCODG1|denaro-node-marcodg1-xrp"
   ["alpha-omega-bot-marcodg1-xlm"]="MARCODG1|denaro-node-marcodg1-xrp"
 )
