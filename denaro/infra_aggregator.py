@@ -448,7 +448,11 @@ def collect_node_bots():
     _mcfg = REMOTE_NODES.get("mc2")
     if _mcfg:
         _ssh = " ".join(_mcfg["ssh"])
-        for _fn in ("doge_mc2.json", "sol_mc2.json"):
+        # 2026-09-17: mc2 e' passato dalla griglia al TREND GIORNALIERO su
+        # 5 asset. I nomi sono espliciti perche' il glob generico perde
+        # questi file o li confonde con i fossili.
+        for _fn in ("btc_mc2.json", "eth_mc2.json", "sol_mc2.json",
+                    "xrp_mc2.json", "doge_mc2.json"):
             _rp = _mcfg["data_dir"].rstrip("/") + "/" + _fn
             _cmd = ("ssh -o BatchMode=yes -o ConnectTimeout=5 " + _ssh +
                     " 'cat " + _rp + " 2>/dev/null'")
@@ -648,8 +652,11 @@ def collect():
     live_bots_map = {
         "trend-live:SOL/EUR": HEALTH_DIR / "trend_sol_kraken.json",
         "trend-live:XRP/EUR": HEALTH_DIR / "trend_xrp_kraken.json",
-        "mc2:okx:DOGE/EUR": Path("/home/sergio/denaro/health/doge_mc2.json"),
+        "mc2:okx:BTC/EUR": Path("/home/sergio/denaro/health/btc_mc2.json"),
+        "mc2:okx:ETH/EUR": Path("/home/sergio/denaro/health/eth_mc2.json"),
         "mc2:okx:SOL/EUR": Path("/home/sergio/denaro/health/sol_mc2.json"),
+        "mc2:okx:XRP/EUR": Path("/home/sergio/denaro/health/xrp_mc2.json"),
+        "mc2:okx:DOGE/EUR": Path("/home/sergio/denaro/health/doge_mc2.json"),
     }
     for bot_id, p in live_bots_map.items():
         if p.exists():
