@@ -1082,9 +1082,23 @@ class BotTask:
                     # da piazzare (essendo sotto il mercato si riempirebbe
                     # subito, al prezzo sbagliato). Si registra la posizione: il
                     # livello di stop arriva a ogni tick in stop_price.
+                    # Lo stop iniziale si registra SUBITO: la policy lo
+                    # conosce (entry - stop_atr_mult*ATR). Lasciandolo a 0,
+                    # un riavvio nella finestra fra il fill e il primo tick
+                    # ripristinerebbe un trailing a 2.5 ATR invece dello
+                    # stop a 2 ATR su cui e' misurata la strategia.
+                    stop_iniziale = 0.0
+                    _fn_stop = getattr(self.policy, "sell_target", None)
+                    if _fn_stop is not None:
+                        try:
+                            stop_iniziale = float(_fn_stop(entry) or 0.0)
+                        except Exception:  # noqa: BLE001
+                            stop_iniziale = 0.0
+                    if not (0.0 < stop_iniziale < entry):
+                        stop_iniziale = 0.0
                     self.state.posizione_aperta = {
                         "entry": entry, "amount": amount,
-                        "stop": 0.0, "ts": self._now()}
+                        "stop": stop_iniziale, "ts": self._now()}
                     await self._journal("buy_filled", order_id=oid, entry=entry,
                                         amount=amount, sell_target=None,
                                         protezione="stop_monitorato")

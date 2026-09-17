@@ -357,6 +357,14 @@ class TrendPolicy(Policy):
         self.in_posizione = True
         self.entrata = float(entry)
         self.stop = float(stop or 0.0)
+        # Stop assente o incoerente: NON deve diventare un trailing piu'
+        # largo del misurato. Il trailing usa trail_mult (2.5 ATR), quindi
+        # con self.stop a 0 la protezione si ancorerebbe a 2.5 ATR invece
+        # dei 2 ATR dello stop iniziale: rischio 25% piu' alto del dovuto.
+        if not (0.0 < self.stop < self.entrata):
+            dist = self.params.stop_atr_mult * self.atr
+            self.stop = (self.entrata - dist if dist > 0
+                         else self.entrata * 0.9)
         return True
 
     def azzera_posizione(self) -> None:
