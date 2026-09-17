@@ -594,13 +594,25 @@ def backtest_trend(candles: List[dict], p: Dict, capitale: float = 100.0,
             a = atr_l[i - 1]
             if a > 0 and c["o"] > 0:
                 dist = stop_mult * a
-                qty = (cash * rischio) / dist
-                qty = min(qty, (cash * esposizione_max) / c["o"])
                 prezzo_entry = c["o"] * (1.0 + 0.0005)
+                # Il cap di esposizione deve tenere conto di fee e slippage,
+                # altrimenti l'ordine viene RIFIUTATO invece che ridotto alla
+                # size massima affondabile: cosi' si perdono trade validi.
+                qty_esposizione = (cash * esposizione_max) / prezzo_entry
+                qty = min((cash * rischio) / dist, qty_esposizione)
+                # Due passaggi: lo slippage dipende dal notional, quindi una
+                # stima a priori resta o troppo ottimista (l'ordine viene
+                # rifiutato e il trade si perde) o troppo prudente. Si calcola
+                # il costo vero e si riduce la size di conseguenza.
                 notional = qty * prezzo_entry
                 sl = slippage(notional, vol_med, slippage_k)
                 costo = notional * (1.0 + fee + sl)
-                if qty > 0 and costo <= cash:
+                if costo > cash and costo > 0:
+                    qty *= cash / costo
+                    notional = qty * prezzo_entry
+                    sl = slippage(notional, vol_med, slippage_k)
+                    costo = notional * (1.0 + fee + sl)
+                if qty > 1e-12 and costo <= cash * (1.0 + 1e-9):
                     cash -= costo
                     asset = qty
                     basis = costo / qty

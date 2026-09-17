@@ -204,8 +204,18 @@ def test_portafoglio_produce_fold_allineati():
     """Portafoglio a 3 asset: fold prodotti e test subito dopo il train."""
     serie = {}
     for k, base in (("A/EUR", 100.0), ("B/EUR", 50.0), ("C/EUR", 10.0)):
-        prezzi = [base * (1.0 + 0.003 * i + 0.02 * ((i % 11) - 5) / 5.0)
-                  for i in range(2400)]
+        # trend rialzista con crolli periodici: cosi' il trailing stop esce e
+        # il breakout rientra piu' volte (una serie monotona fa UN solo trade
+        # e il portafoglio scarterebbe il parametro per trade < 2).
+        prezzi, p = [], base
+        for i in range(2400):
+            if i % 60 == 59:
+                p *= 0.92
+            elif i % 60 < 40:
+                p *= 1.006
+            else:
+                p *= 0.998
+            prezzi.append(p)
         serie[k] = _barre(prezzi)
     griglia = [{"strategy": "trend", "canale": 20, "atr_period": 14,
                 "trail_mult": 3.0, "stop_atr_mult": 2.0, "trend_ema": 0,
