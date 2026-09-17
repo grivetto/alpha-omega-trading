@@ -100,3 +100,10 @@ deploy_decisions_*.json
 fase*.json*
 strategies/*.json
 *.sql.gz
+
+# ── Segreti: varianti senza punto (config/.env_nuvola) ──
+# Regola 2026-09-17: il pattern .env.* NON copriva .env_nuvola. Quel file
+# conteneva chiavi OKX live ed era untracked-ma-non-ignorato: un "git add -A"
+# lo avrebbe committato. Non e' mai finito nella storia, ma la falla va chiusa.
+.env_*
+*.env_*
