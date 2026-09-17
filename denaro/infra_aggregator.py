@@ -487,6 +487,9 @@ def collect_node_bots():
         # card VUOTA ("stale" non valorizzato) accanto ai 15 bot vivi.
         "mc2:okx:DOGE/EUR": HEALTH_DIR / "doge_mc2.json",
         "mc2:okx:SOL/EUR": HEALTH_DIR / "sol_mc2.json",
+        # round 17: universo allargato da 15 a 19 asset
+        "mc2:okx:TRX/EUR": HEALTH_DIR / "trx_mc2.json",
+        "mc2:okx:CRV/EUR": HEALTH_DIR / "crv_mc2.json",
     }
     for key, p in live.items():
         try:
@@ -542,6 +545,8 @@ def collect_node_bots():
          "/home/sergio/denaro/health/ltc_nuvola_live.json"),
         ("nuvola:okx:UNI/EUR", "ssh", "nuvola",
          "/home/sergio/denaro/health/uni_nuvola_live.json"),
+        ("nuvola:okx:SUI/EUR", "ssh", "nuvola",
+         "/home/sergio/denaro/health/sui_nuvola_live.json"),
         ("marcodg1:okx:ADA/EUR", "ssh", "MARCODG1",
          "/home/marco/denaro/health/ada_marcodg1_live.json"),
         ("marcodg1:okx:ATOM/EUR", "ssh", "MARCODG1",
@@ -552,6 +557,8 @@ def collect_node_bots():
          "/home/marco/denaro/health/arb_marcodg1_live.json"),
         ("marcodg1:okx:XLM/EUR", "ssh", "MARCODG1",
          "/home/marco/denaro/health/xlm_marcodg1_live.json"),
+        ("marcodg1:okx:ALGO/EUR", "ssh", "MARCODG1",
+         "/home/marco/denaro/health/algo_marcodg1_live.json"),
     ]
     for _k, _kind, _alias, _path in _extra_live:
         try:
@@ -732,16 +739,20 @@ def collect():
         "mc2:okx:SOL/EUR": Path("/home/sergio/denaro/health/sol_mc2.json"),
         "mc2:okx:XRP/EUR": Path("/home/sergio/denaro/health/xrp_mc2.json"),
         "mc2:okx:DOGE/EUR": Path("/home/sergio/denaro/health/doge_mc2.json"),
+        "mc2:okx:TRX/EUR": Path("/home/sergio/denaro/health/trx_mc2.json"),
+        "mc2:okx:CRV/EUR": Path("/home/sergio/denaro/health/crv_mc2.json"),
         "nuvola:okx:LINK/EUR": Path("/home/sergio/denaro/health/link_nuvola_live.json"),
         "nuvola:okx:AVAX/EUR": Path("/home/sergio/denaro/health/avax_nuvola_live.json"),
         "nuvola:okx:DOT/EUR": Path("/home/sergio/denaro/health/dot_nuvola_live.json"),
         "nuvola:okx:LTC/EUR": Path("/home/sergio/denaro/health/ltc_nuvola_live.json"),
         "nuvola:okx:UNI/EUR": Path("/home/sergio/denaro/health/uni_nuvola_live.json"),
+        "nuvola:okx:SUI/EUR": Path("/home/sergio/denaro/health/sui_nuvola_live.json"),
         "marcodg1:okx:ADA/EUR": Path("/home/marco/denaro/health/ada_marcodg1_live.json"),
         "marcodg1:okx:ATOM/EUR": Path("/home/marco/denaro/health/atom_marcodg1_live.json"),
         "marcodg1:okx:AAVE/EUR": Path("/home/marco/denaro/health/aave_marcodg1_live.json"),
         "marcodg1:okx:ARB/EUR": Path("/home/marco/denaro/health/arb_marcodg1_live.json"),
         "marcodg1:okx:XLM/EUR": Path("/home/marco/denaro/health/xlm_marcodg1_live.json"),
+        "marcodg1:okx:ALGO/EUR": Path("/home/marco/denaro/health/algo_marcodg1_live.json"),
     }
     for bot_id, p in live_bots_map.items():
         if p.exists():

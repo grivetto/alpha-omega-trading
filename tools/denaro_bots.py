@@ -24,18 +24,26 @@ BOTS = [
     ("mc2_sol",      "SOL",  "mc2",      ("file", HEALTH + "/sol_mc2.json")),
     ("mc2_xrp",      "XRP",  "mc2",      ("file", HEALTH + "/xrp_mc2.json")),
     ("mc2_doge",     "DOGE", "mc2",      ("file", HEALTH + "/doge_mc2.json")),
+    # aggiunti 2026-09-17 (round 17): allargare l'universo da 15 a 19 asset porta,
+# nel simulatore a capitale condiviso, il rendimento di periodo da +34.90% a
+# +48.89% e lo Sharpe da 0.79 a 1.06, col drawdown che SCENDE e zero segnali
+# rifiutati. Ogni asset aggiunto migliora da solo.
+    ("mc2_trx",      "TRX",  "mc2",      ("file", HEALTH + "/trx_mc2.json")),
+    ("mc2_crv",      "CRV",  "mc2",      ("file", HEALTH + "/crv_mc2.json")),
 
     ("nuvola_link",  "LINK", "nuvola",   ("ssh", "nuvola",   HEALTH + "/link_nuvola_live.json")),
     ("nuvola_avax",  "AVAX", "nuvola",   ("ssh", "nuvola",   HEALTH + "/avax_nuvola_live.json")),
     ("nuvola_dot",   "DOT",  "nuvola",   ("ssh", "nuvola",   HEALTH + "/dot_nuvola_live.json")),
     ("nuvola_ltc",   "LTC",  "nuvola",   ("ssh", "nuvola",   HEALTH + "/ltc_nuvola_live.json")),
     ("nuvola_uni",   "UNI",  "nuvola",   ("ssh", "nuvola",   HEALTH + "/uni_nuvola_live.json")),
+    ("nuvola_sui",   "SUI",  "nuvola",   ("ssh", "nuvola",   HEALTH + "/sui_nuvola_live.json")),
 
     ("marcodg1_ada",  "ADA",  "MARCODG1", ("ssh", "MARCODG1", HEALTH_MARCO + "/ada_marcodg1_live.json")),
     ("marcodg1_atom", "ATOM", "MARCODG1", ("ssh", "MARCODG1", HEALTH_MARCO + "/atom_marcodg1_live.json")),
     ("marcodg1_aave", "AAVE", "MARCODG1", ("ssh", "MARCODG1", HEALTH_MARCO + "/aave_marcodg1_live.json")),
     ("marcodg1_arb",  "ARB",  "MARCODG1", ("ssh", "MARCODG1", HEALTH_MARCO + "/arb_marcodg1_live.json")),
     ("marcodg1_xlm",  "XLM",  "MARCODG1", ("ssh", "MARCODG1", HEALTH_MARCO + "/xlm_marcodg1_live.json")),
+    ("marcodg1_algo", "ALGO", "MARCODG1", ("ssh", "MARCODG1", HEALTH_MARCO + "/algo_marcodg1_live.json")),
 ]
 
 # Host Zabbix e chiave per ogni bot.
