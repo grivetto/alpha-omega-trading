@@ -229,14 +229,20 @@ const fmt = (v, d=2) => (v === undefined || v === null) ? '—' : Number(v).toLo
 const esc = (s) => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 const BOT_META = {
-  // [kraken rimosso 2026-09-17] 'trend-live:SOL/EUR': {sym: 'SOL/EUR', ex: 'KRAKEN·LIVE', color: '#00f3ff'},
-  // [kraken rimosso 2026-09-17] 'trend-live:XRP/EUR': {sym: 'XRP/EUR', ex: 'KRAKEN·LIVE', color: '#0aff9d'},
-  'mc2:okx:DOGE/EUR': {sym: 'DOGE/EUR', ex: 'OKX·MC2SUB1', color: '#ff2bd6'},
-  'mc2:okx:SOL/EUR': {sym: 'SOL/EUR', ex: 'OKX·MC2SUB1', color: '#ffe600'},
+  // [kraken rimosso 2026-09-17]
+  // [griglia mc2 -> trend giornaliero 2026-09-17: la griglia aveva alpha
+  //  NEGATIVO (t=-4.64) e negativo anche a fee zero]
+  'mc2:okx:BTC/EUR': {sym: 'BTC/EUR', ex: 'OKX·MC2SUB1·TREND', color: '#ff9500'},
+  'mc2:okx:ETH/EUR': {sym: 'ETH/EUR', ex: 'OKX·MC2SUB1·TREND', color: '#b026ff'},
+  'mc2:okx:SOL/EUR': {sym: 'SOL/EUR', ex: 'OKX·MC2SUB1·TREND', color: '#ffe600'},
+  'mc2:okx:XRP/EUR': {sym: 'XRP/EUR', ex: 'OKX·MC2SUB1·TREND', color: '#00f3ff'},
+  'mc2:okx:DOGE/EUR': {sym: 'DOGE/EUR', ex: 'OKX·MC2SUB1·TREND', color: '#ff2bd6'},
   'nuvola:okx:SOL/EUR': {sym: 'SOL/EUR', ex: 'OKX·NUVOLASUB1', color: '#0aff9d'},
   'marcodg1:okx:XRP/EUR': {sym: 'XRP/EUR', ex: 'OKX·MARCOSUB1', color: '#00f3ff'},
 };
-const ORDER = ['mc2:okx:DOGE/EUR', 'mc2:okx:SOL/EUR', 'nuvola:okx:SOL/EUR', 'marcodg1:okx:XRP/EUR'];
+const ORDER = ['mc2:okx:BTC/EUR', 'mc2:okx:ETH/EUR', 'mc2:okx:SOL/EUR',
+               'mc2:okx:XRP/EUR', 'mc2:okx:DOGE/EUR',
+               'nuvola:okx:SOL/EUR', 'marcodg1:okx:XRP/EUR'];
 
 async function load() {
   try {
@@ -440,6 +446,10 @@ function renderNodeBots(d) {
     </span>`;
   wrap.appendChild(totals);
   for (const [sym, b] of Object.entries(nb)) {
+    // un bot senza aggiornamenti da >5 minuti non e' un bot che sta
+    // lavorando: mostrarlo significa riportare equity di giorni fa
+    // come se fosse lo stato attuale.
+    if (b && b.stale) continue;
     const color = meta[sym] || '#00f3ff';
     const st = b.status === 'running' ? '<span class="pill ok">RUN</span>' : `<span class="pill bad">${esc(b.status||'?')}</span>`;
     const pnl = b.pnl || 0;

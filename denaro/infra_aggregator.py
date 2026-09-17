@@ -738,6 +738,18 @@ def collect():
     node_bots = collect_node_bots()
     data["node_bots"] = node_bots
 
+    # Le card in evidenza della dashboard leggono data["bots"], che si costruisce
+    # da live_bots_map: se una lettura locale/SSH li' fallisce, il bot sparisce
+    # dalla dashboard pur essendo VIVO e presente in node_bots. Qui si completa.
+    for _k, _v in node_bots.items():
+        if not isinstance(_v, dict):
+            continue
+        if _v.get("stale"):
+            continue
+        if _k.startswith(("mc2:okx:", "nuvola:okx:", "marcodg1:okx:")):
+            if _k not in bots or bots[_k].get("status") in (None, "no_file", "error"):
+                bots[_k] = _v
+
     # 7) CAPITALE TOTALE REALE = somma dei SALDI reali (account deduplicati).
     #    Prima esistevano due costanti hardcoded (24.0 e 25.47): con 75 EUR
     #    investiti la dashboard mostrava sempre 24 EUR.
