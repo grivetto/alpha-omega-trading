@@ -41,7 +41,12 @@ class TrendParams:
                  "fee_buffer", "max_barre", "periodo_barre_s")
 
     def __init__(self, canale: int = 40, atr_period: int = 14,
-                 trail_mult: float = 3.0, stop_atr_mult: float = 2.0,
+                 # trail 2.5 e non 3.0: misurato il 2026-09-18 sul capitale reale
+                 # e sui 19 asset, il trailing piu' stretto rende +6.94 punti in
+                 # piu' sulla storia e +0.71 sulla media delle finestre recenti, e
+                 # vince su 14 asset su 19. La regione 2.25-2.75 batte 3.0 in modo
+                 # uniforme: si prende il CENTRO, non il massimo.
+                 trail_mult: float = 2.5, stop_atr_mult: float = 2.0,
                  trend_ema: int = 100, risk_pct: float = 0.02,
                  max_exposure: float = 1.0, entry_slip: float = 0.0005,
                  fee_buffer: float = FEE_BUFFER,

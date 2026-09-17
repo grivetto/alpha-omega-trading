@@ -40,7 +40,7 @@ bots:
     capital: 24.81
     canale: 40
     atr_period: 14
-    trail_mult: 3.0
+    trail_mult: 2.5
     stop_atr_mult: 2.0
     trend_ema: 100
     risk_pct: 0.02
@@ -60,7 +60,7 @@ bots:
     capital: 24.81
     canale: 40
     atr_period: 14
-    trail_mult: 3.0
+    trail_mult: 2.5
     stop_atr_mult: 2.0
     trend_ema: 100
     risk_pct: 0.02
@@ -80,7 +80,7 @@ bots:
     capital: 24.81
     canale: 40
     atr_period: 14
-    trail_mult: 3.0
+    trail_mult: 2.5
     stop_atr_mult: 2.0
     trend_ema: 100
     risk_pct: 0.02
@@ -100,7 +100,7 @@ bots:
     capital: 24.81
     canale: 40
     atr_period: 14
-    trail_mult: 3.0
+    trail_mult: 2.5
     stop_atr_mult: 2.0
     trend_ema: 100
     risk_pct: 0.02
@@ -120,7 +120,7 @@ bots:
     capital: 24.81
     canale: 40
     atr_period: 14
-    trail_mult: 3.0
+    trail_mult: 2.5
     stop_atr_mult: 2.0
     trend_ema: 100
     risk_pct: 0.02
@@ -140,7 +140,7 @@ bots:
     capital: 24.81
     canale: 40
     atr_period: 14
-    trail_mult: 3.0
+    trail_mult: 2.5
     stop_atr_mult: 2.0
     trend_ema: 100
     risk_pct: 0.02
