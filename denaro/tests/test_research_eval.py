@@ -186,3 +186,47 @@ def test_gate_promuove_solo_con_alpha_positivo():
               for i in range(8)]
     assert v.mediana_alpha > 0
     assert v.robusto is True
+
+# ── 7. portafoglio: un solo set di parametri per piu' asset ─────────────────
+
+def test_portafoglio_rifiuta_serie_corte():
+    """Se un simbolo e' corto, il portafoglio lo deve dire."""
+    serie = {"A/EUR": _barre([100.0] * 100),
+             "B/EUR": _barre([100.0] * 50)}
+    folds, _, motivo = E.walk_forward_portafoglio(serie, "trend",
+                                                  [{"strategy": "trend"}],
+                                                  barre_train=1000, barre_test=500)
+    assert folds == []
+    assert "insufficient" in motivo.lower()
+
+
+def test_portafoglio_produce_fold_allineati():
+    """Portafoglio a 3 asset: fold prodotti e test subito dopo il train."""
+    serie = {}
+    for k, base in (("A/EUR", 100.0), ("B/EUR", 50.0), ("C/EUR", 10.0)):
+        prezzi = [base * (1.0 + 0.003 * i + 0.02 * ((i % 11) - 5) / 5.0)
+                  for i in range(2400)]
+        serie[k] = _barre(prezzi)
+    griglia = [{"strategy": "trend", "canale": 20, "atr_period": 14,
+                "trail_mult": 3.0, "stop_atr_mult": 2.0, "trend_ema": 0,
+                "risk_pct": 0.02, "max_exposure": 1.0}]
+    folds, _, motivo = E.walk_forward_portafoglio(serie, "trend", griglia,
+                                                  barre_train=800, barre_test=400)
+    assert len(folds) >= 3, "pochi fold: %d (%s)" % (len(folds), motivo)
+    for f in folds:
+        assert f.test_da == f.train_a, "il test deve iniziare dove finisce il train"
+        assert f.test_a > f.test_da
+
+
+def test_metriche_oos_composte():
+    """Il composto OOS e' il prodotto dei fold, non la somma."""
+    v = E.Valutazione(simbolo="X", motore="trend", barre_totali=1000, fold=[],
+                      migliore_params={}, motivo="", ritorno_intero=0.0,
+                      alpha_intero=0.0, dd_intero=0.0, sharpe_intero=0.0,
+                      trade_intero=0, fee_su_lordo=0.0, esposizione=0.0)
+    v.fold = [E.Fold(0, 0, 100, 100, 200, 0.0, 0.10, 0.0, 5, 0.05),
+              E.Fold(1, 0, 100, 100, 200, 0.0, 0.10, 0.0, 5, 0.05)]
+    assert v.ritorno_oos_composto == pytest.approx(0.21)      # 1.1*1.1-1
+    assert v.bh_oos_composto == pytest.approx(0.1025)         # 1.05*1.05-1
+    assert v.alpha_oos_composto == pytest.approx(0.21 - 0.1025)
+    assert v.peggior_fold == pytest.approx(0.10)

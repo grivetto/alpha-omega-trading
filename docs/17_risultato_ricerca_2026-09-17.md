@@ -163,3 +163,89 @@ Nota sugli spread (misurati in contemporanea): DOGE 0.056%, SOL 0.023%,
 XRP 0.035%. **Non sono lo spread il problema: sono le fee**, che con un round
 trip maker costano 0.40% contro 0.02-0.06% di spread. Qualunque strategia che
 faccia piu' di ~4 round trip al giorno paga piu' di fee che di spread.
+
+
+## 7. Trend following con rischio per volatilita' (round 2, 2026-09-17)
+
+Motore nuovo: `backtest_trend` in `denaro/research/eval.py`.
+Differenze sostanziali dal momentum naif che perdeva −77..−98%:
+
+- ingresso sul breakout del massimo delle ultime N barre (canale Donchian),
+  non su un incrocio di medie;
+- uscita con **trailing stop a k*ATR**, non con un target fisso;
+- **size calcolata sul rischio**: qty = equity*risk / (stop_mult*ATR), quindi
+  la posizione si stringe quando la volatilita' sale. Sul momentum la size era
+  fissa.
+
+### 7.1 Asset per asset: nessuno passa il gate
+
+Su 4H e 1D, 5 coppie, fee reali 0.20%: nessun candidato singolo passa il gate
+(fold positivi >=75%). Ma il profilo e' molto migliore del grid: drawdown
+18-37% invece di 75%, fee/lordo 8-26% invece di 25-65%, e **alpha OOS positivo
+in tutti e 10 i casi** (+19%..+190%).
+
+Il trend following e' a coda grossa: pochi periodi molto positivi e molti
+piccoli negativi. La percentuale di fold positivi e' quindi una statistica
+povera per questa famiglia — XRP 4H ha il 56% di fold positivi ma un
+rendimento composto OOS di +93%.
+
+### 7.2 Portafoglio: la misura corretta
+
+`walk_forward_portafoglio`: **un solo set di parametri per tutti i simboli**,
+scelto sul train AGGREGATO e valutato sul test AGGREGATO. Cinque ottimizzazioni
+indipendenti su cinque asset sono cinque occasioni di overfittare; una sola e'
+una sola. E' anche cio' che si puo' fare davvero in live.
+
+Portafoglio 4H, 5 asset equal-weight, 9 fold:
+
+| metrica | valore |
+|---|---|
+| rendimento composto OOS | **+47.93%** |
+| buy&hold equal-weight sugli stessi periodi | +14.90% |
+| **alpha composto** | **+33.03%** |
+| peggior fold | **−5.65%** |
+| fold positivi | 56% |
+| sharpe sui fold | 1.07 |
+| composto escludendo il fold migliore | +4.37% |
+
+### 7.3 Robustezza
+
+| prova | comp | senza fold migliore | alpha | peggior fold |
+|---|---|---|---|---|
+| train 500 / test 250 (20 fold) | +3.85% | −9.07% | +21.75% | −6.45% |
+| train 750 / test 375 (12 fold) | +58.26% | +12.90% | +82.26% | −5.04% |
+| train 1000 / test 500 (9 fold) | +47.93% | +4.37% | +33.03% | −5.65% |
+| train 1500 / test 750 (5 fold) | +2.55% | −14.68% | +60.72% | −6.75% |
+| train 2000 / test 1000 (3 fold) | +0.47% | −12.92% | +67.93% | −11.72% |
+| senza SOL/EUR | +62.31% | +9.60% | +33.67% | −5.62% |
+| senza DOGE/EUR | +24.00% | +7.69% | +11.94% | −5.39% |
+| senza XRP/EUR | +35.95% | +1.41% | +81.46% | −5.71% |
+| senza ETH/EUR | +60.20% | +6.74% | +48.68% | −6.65% |
+| senza ADA/EUR | +50.25% | +10.34% | +17.94% | −6.28% |
+| fee taker 0.35%/lato | +41.80% | +1.18% | +26.89% | −6.11% |
+
+**Cosa regge:** l'alpha e' positivo in TUTTE le 11 configurazioni (+11.9%..+82.3%).
+Il leave-one-out non crolla: nessun singolo asset trascina. Regge anche alla fee
+taker peggiore. Il peggior fold resta sempre tra −5% e −12%.
+
+**Cosa non regge:** il rendimento ASSOLUTO dipende molto dalla finestra
+(+0.47%..+58.26%) e in 4 configurazioni su 5 diventa negativo togliendo il fold
+migliore. La percentuale di fold positivi e' 20-56%, sotto qualsiasi soglia
+ragionevole.
+
+### 7.4 Lettura onesta
+
+Il trend following 4H su portafoglio ha un **edge relativo reale e robusto**
+(batte il buy-and-hold in modo consistente, con downside contenuto) ma un
+**rendimento assoluto debole e instabile**: circa in pareggio.
+
+Il motivo sta nei dati, non nella strategia: il buy-and-hold equal-weight ha
+reso **da −18% a −67%** sui periodi di test. Era un **mercato orso**. Una
+strategia long-only su spot ha un tetto strutturale in un orso: puo' perdere
+meno, non guadagnare.
+
+Conseguenza operativa: sostituire le strategie live attuali (grid, momentum,
+mean-reversion, tutte con alpha NEGATIVO e drawdown 60-99%) con il portafoglio
+trend e' un miglioramento netto anche se il rendimento atteso resta modesto.
+Per guadagnare davvero in un orso servirebbe la capacita' di stare short
+(swap/futures), che e' una decisione di rischio, non di codice.

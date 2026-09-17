@@ -522,10 +522,132 @@ def backtest_meanrev(candles: List[dict], p: Dict, capitale: float = 100.0,
     return r
 
 
+def atr_wilder(highs: List[float], lows: List[float], closes: List[float],
+               period: int = 14) -> List[float]:
+    """Average True Range (WildeR). Usa solo barre fino a i: niente look-ahead."""
+    n = len(closes)
+    out = [0.0] * n
+    if n <= period:
+        return out
+    tr = [0.0] * n
+    for i in range(1, n):
+        tr[i] = max(highs[i] - lows[i],
+                    abs(highs[i] - closes[i - 1]),
+                    abs(lows[i] - closes[i - 1]))
+    a = sum(tr[1:period + 1]) / period
+    out[period] = a
+    for i in range(period + 1, n):
+        a = (a * (period - 1) + tr[i]) / period
+        out[i] = a
+    return out
+
+
+def backtest_trend(candles: List[dict], p: Dict, capitale: float = 100.0,
+                   fee: float = 0.001, slippage_k: float = 0.02) -> Risultato:
+    """Trend following: breakout, trailing stop ATR, posizione dimensionata sul RISCHIO.
+
+    Differenza sostanziale dal momentum naif testato in precedenza (target
+    fisso, size fissa, nessun trailing):
+    - si entra sul breakout del massimo delle ultime N barre (canale Donchian),
+      con filtro di tendenza opzionale (solo long sopra la media lunga);
+    - la size si calcola sul rischio: si perde al massimo risk_pct dell'equity
+      se lo stop iniziale scatta, quindi qty = equity*risk / (stop_mult*ATR).
+      Cosi' la posizione si stringe quando la volatilita' sale;
+    - l'uscita e' un trailing stop a trail_mult*ATR dal massimo, non un target.
+    Con fee reali a 0.20% per lato servono movimenti grandi: questa famiglia
+    trada poco, ed e' esattamente cio' che serve.
+
+    Disciplina temporale: il segnale nasce sul close della barra i e l'ingresso
+    avviene all'OPEN della barra i+1. Lo stop iniziale e' fissato all'ingresso,
+    quindi controllarlo sul low della stessa barra di ingresso e' lecito (la
+    posizione esiste dall'apertura). Il trailing si aggiorna dopo, sul close.
+    """
+    canale = int(p.get("canale", 20))
+    atr_n = int(p.get("atr_period", 14))
+    trail = float(p.get("trail_mult", 3.0))
+    rischio = float(p.get("risk_pct", 0.01))
+    ema_n = int(p.get("trend_ema", 0))
+    esposizione_max = float(p.get("max_exposure", 1.0))
+    stop_mult = float(p.get("stop_atr_mult", 2.0))
+
+    closes = [c["c"] for c in candles]
+    highs = [c["h"] for c in candles]
+    lows = [c["l"] for c in candles]
+    atr_l = atr_wilder(highs, lows, closes, atr_n)
+    ema_l = ema(closes, ema_n) if ema_n else []
+    inizio = max(canale, atr_n, ema_n) + 1
+
+    r = Risultato(nome="trend", capitale=capitale)
+    cash = capitale
+    asset = 0.0
+    basis = 0.0
+    stop = 0.0
+    pending = False
+
+    for i in range(inizio, len(candles)):
+        c = candles[i]
+        price, hi, lo = c["c"], c["h"], c["l"]
+        vol_med = _media_volumi(candles, i)
+
+        # ingresso deciso ieri, eseguito all'open di oggi
+        if pending and asset <= 1e-12:
+            a = atr_l[i - 1]
+            if a > 0 and c["o"] > 0:
+                dist = stop_mult * a
+                qty = (cash * rischio) / dist
+                qty = min(qty, (cash * esposizione_max) / c["o"])
+                prezzo_entry = c["o"] * (1.0 + 0.0005)
+                notional = qty * prezzo_entry
+                sl = slippage(notional, vol_med, slippage_k)
+                costo = notional * (1.0 + fee + sl)
+                if qty > 0 and costo <= cash:
+                    cash -= costo
+                    asset = qty
+                    basis = costo / qty
+                    stop = prezzo_entry - dist
+                    r.fee_pagate += notional * fee
+            pending = False
+
+        # trailing stop / uscita
+        if asset > 1e-12:
+            if lo <= stop:
+                sl = slippage(asset * stop, vol_med, slippage_k)
+                incasso = asset * stop * (1.0 - fee - sl)
+                cash += incasso
+                r.trade_pnls.append(incasso - asset * basis)
+                r.fee_pagate += asset * stop * fee
+                asset = 0.0
+                stop = 0.0
+            else:
+                a = atr_l[i]
+                if a > 0:
+                    nuovo_stop = price - trail * a
+                    if nuovo_stop > stop:
+                        stop = nuovo_stop
+
+        # segnale sul close di oggi -> ingresso domani
+        if asset <= 1e-12 and not pending and i >= canale:
+            massimo = max(highs[i - canale:i])
+            sopra_ema = (not ema_l) or price > ema_l[i]
+            if price > massimo and sopra_ema and atr_l[i] > 0:
+                pending = True
+
+        equity = cash + asset * price
+        r.equity.append(equity)
+        r.ts.append(c["ts"])
+        if asset > 0:
+            r.esposizione_bar += 1
+
+    r.barre = len(r.equity)
+    r.lordo = sum(r.trade_pnls) + r.fee_pagate
+    return r
+
+
 MOTORI: Dict[str, Callable] = {
     "grid": backtest_grid,
     "momentum": backtest_momentum,
     "meanrev": backtest_meanrev,
+    "trend": backtest_trend,
 }
 
 
@@ -600,6 +722,79 @@ def walk_forward(candles: List[dict], motore: str, griglia: List[Dict],
     return folds, {}, ""
 
 
+def walk_forward_portafoglio(serie: Dict[str, List[dict]], motore: str,
+                             griglia: List[Dict], capitale: float = 100.0,
+                             fee: float = 0.001,
+                             barre_train: int = 1000, barre_test: int = 500,
+                             slippage_k: float = 0.02) -> Tuple[List["Fold"], Dict, str]:
+    """Walk-forward su un PORTAFOGLIO con un solo set di parametri.
+
+    Perche' e' la misura giusta per il trend following:
+
+    1. UN SOLO set di parametri per tutti i simboli, scelto sul train
+       AGGREGATO e valutato sul test AGGREGATO. Cinque ottimizzazioni
+       indipendenti su cinque asset sono cinque occasioni di overfittare; una
+       sola e' una sola. E' anche cio' che si puo' fare davvero in live.
+    2. Il trend following e' a coda grossa: pochi periodi molto positivi e
+       molti piccoli negativi. La percentuale di fold positivi e' quindi una
+       statistica povera. Conta il rendimento COMPOSTO del portafoglio e
+       l'alpha contro il buy-and-hold equal-weight sugli stessi periodi.
+    3. Ogni simbolo riceve 1/N del capitale (equal weight), quindi il
+       rendimento di portafoglio e' la MEDIA dei rendimenti dei simboli.
+
+    I simboli vengono allineati sulla CODA comune (stessa timeframe, stessa
+    finestra), cosi' gli indici dei fold corrispondono agli stessi istanti.
+    """
+    fn = MOTORI[motore]
+    simboli = sorted(serie)
+    n_comune = min(len(serie[s]) for s in simboli)
+    if n_comune < barre_train + barre_test + 50:
+        return [], {}, ("dati comuni insufficienti: il simbolo piu' corto ha "
+                        "%d barre, servono %d" % (n_comune, barre_train + barre_test + 50))
+    dati = {s: serie[s][-n_comune:] for s in simboli}
+    folds: List[Fold] = []
+    inizio, idx = 0, 0
+    while inizio + barre_train + barre_test <= n_comune:
+        tr_da, tr_a = inizio, inizio + barre_train
+        te_da, te_a = tr_a, tr_a + barre_test
+        # ottimizzazione sul TRAIN aggregato
+        migliore, miglior_p = None, -1e18
+        for p in griglia:
+            tot, ok = 0.0, True
+            for s in simboli:
+                r = fn(dati[s][tr_da:tr_a], p, capitale, fee, slippage_k)
+                if r.trade < 2:
+                    ok = False
+                    break
+                tot += r.ritorno
+            if not ok:
+                continue
+            punteggio = tot / len(simboli)
+            if punteggio > miglior_p:
+                migliore, miglior_p = p, punteggio
+        if migliore is None:
+            inizio += barre_test
+            continue
+        # valutazione OUT-OF-SAMPLE aggregata
+        test_ret, test_bh = [], []
+        for s in simboli:
+            r = fn(dati[s][te_da:te_a], migliore, capitale, fee, slippage_k)
+            test_ret.append(r.ritorno)
+            c = dati[s]
+            test_bh.append(c[te_a - 1]["c"] / c[te_da]["c"] - 1.0 if c[te_da]["c"] > 0 else 0.0)
+        folds.append(Fold(indice=idx, train_da=tr_da, train_a=tr_a,
+                          test_da=te_da, test_a=te_a,
+                          ritorno_train=miglior_p,
+                          ritorno_test=sum(test_ret) / len(test_ret),
+                          dd_test=0.0, trade_test=0,
+                          bh_test=sum(test_bh) / len(test_bh)))
+        idx += 1
+        inizio += barre_test
+    if not folds:
+        return [], {}, "nessun fold producibile"
+    return folds, {}, ""
+
+
 # ── punteggio di robustezza (sostituisce score()) ───────────────────────────
 
 @dataclass
@@ -645,6 +840,30 @@ class Valutazione:
         return st.pstdev([f.ritorno_test for f in self.fold])
 
     @property
+    def ritorno_oos_composto(self) -> float:
+        """Rendimento COMPOSTO dei periodi out-of-sample (cosa sarebbe successo)."""
+        v = 1.0
+        for f in self.fold:
+            v *= (1.0 + f.ritorno_test)
+        return v - 1.0
+
+    @property
+    def bh_oos_composto(self) -> float:
+        """Buy-and-hold composto sugli STESSI periodi di test."""
+        v = 1.0
+        for f in self.fold:
+            v *= (1.0 + f.bh_test)
+        return v - 1.0
+
+    @property
+    def alpha_oos_composto(self) -> float:
+        return self.ritorno_oos_composto - self.bh_oos_composto
+
+    @property
+    def peggior_fold(self) -> float:
+        return min((f.ritorno_test for f in self.fold), default=0.0)
+
+    @property
     def trade_oos(self) -> int:
         return sum(f.trade_test for f in self.fold)
 
@@ -655,20 +874,24 @@ class Valutazione:
         # buy-and-hold NON e' un edge, per quanti fold positivi abbia. Senza
         # questo requisito il gate promuoveva rumore con segno favorevole
         # (caso ETH-EUR, 1H: 75% fold positivi ma alpha -2.5%).
+        # Tre condizioni, tutte fuori campione: i fold positivi in maggioranza,
+        # il rendimento COMPOSTO positivo (cosa sarebbe successo davvero) e
+        # l'alpha composto positivo (battere il semplice buy-and-hold).
         return (len(self.fold) >= 3 and self.fold_positivi >= 0.75
-                and self.mediana_oos > 0 and self.mediana_alpha > 0
-                and self.trade_oos >= 30)
+                and self.mediana_oos > 0 and self.trade_oos >= 30
+                and self.ritorno_oos_composto > 0
+                and self.alpha_oos_composto > 0)
 
     def riga(self) -> str:
-        return ("%-9s %-9s fold=%2d pos=%4.0f%% medOOS=%+6.2f%% disp=%5.2f%% "
-                "alphaOOS=%+6.2f%% trOOS=%4d | intero ret=%+7.2f%% alpha=%+7.2f%% "
+        return ("%-9s %-5s fold=%2d pos=%3.0f%% medOOS=%+6.2f%% compOOS=%+8.2f%% "
+                "alphaComp=%+8.2f%% pegg=%+6.2f%% trOOS=%4d | intero ret=%+7.2f%% "
                 "dd=%5.1f%% sh=%5.2f tr=%4d feeL=%5.1f%% %s"
                 % (self.simbolo, self.motore, len(self.fold),
                    100 * self.fold_positivi, 100 * self.mediana_oos,
-                   100 * self.dispersione_oos, 100 * self.mediana_alpha,
-                    self.trade_oos, 100 * self.ritorno_intero,
-                   100 * self.alpha_intero, 100 * self.dd_intero,
-                    self.sharpe_intero, self.trade_intero, self.fee_su_lordo,
+                   100 * self.ritorno_oos_composto, 100 * self.alpha_oos_composto,
+                   100 * self.peggior_fold, self.trade_oos, 100 * self.ritorno_intero,
+                   100 * self.dd_intero, self.sharpe_intero, self.trade_intero,
+                   self.fee_su_lordo,
                     "ROBUSTO" if self.robusto else ""))
 
 
