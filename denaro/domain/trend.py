@@ -158,7 +158,7 @@ class TrendPolicy(Policy):
 
 
 
-    def precarica_barre(self, barre) -> int:
+    def precarica_barre(self, barre, now: Optional[float] = None) -> int:
         """Riempie lo storico con barre giornaliere GIA' CHIUSE.
 
         Serve perche' la policy costruisce le barre dai tick: partendo da zero
@@ -170,6 +170,12 @@ class TrendPolicy(Policy):
         Accetta sia [[ts, o, h, l, c, v], ...] con ts in SECONDI sia dict.
         Le barre vengono ordinate per timestamp crescente (l'API OKX le ritorna
         dalla piu' recente) e le voci non valide sono scartate.
+
+        Se si passa now, scarta la barra del giorno CORRENTE: e' ancora
+        incompleta e la policy valuta solo a barra chiusa. Senza questo filtro la
+        giornata in corso finisce due volte nella storia (una dal precaricamento,
+        una costruita dai tick al primo cambio di giornata) e canale e ATR
+        risultano falsati.
         Ritorna il numero di barre accettate.
         """
         lette = []
@@ -193,6 +199,14 @@ class TrendPolicy(Policy):
         if not lette:
             return 0
         lette.sort(key=lambda x: x[0])
+        if now is not None:
+            inizio_oggi = int(float(now) // GIORNO_S) * GIORNO_S
+            lette = [x for x in lette if x[0] < inizio_oggi]
+        # dedup per giornata: tiene l'ULTIMA occorrenza (la piu' completa)
+        per_giorno = {}
+        for x in lette:
+            per_giorno[int(x[0] // GIORNO_S)] = x
+        lette = [per_giorno[k] for k in sorted(per_giorno)]
         # scarta l'ultima se e' la barra di oggi (non ancora chiusa): il suo
         # massimo/minimo sarebbero parziali e falserebbero il canale
         for ts, o, h, l, c in lette:

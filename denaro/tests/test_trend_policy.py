@@ -269,3 +269,41 @@ def test_precarica_barre_abilita_il_segnale_su_dati_reali():
     ema_l = ema_series(chiusure, ema_n)
     atteso = (chiusure[-1] > max(alti[-1 - canale:-1]) and chiusure[-1] > ema_l[-1])
     assert pol.segnale_breakout() == atteso
+
+def test_precarica_esclude_la_giornata_in_corso():
+    """La barra di OGGI e' incompleta e non deve entrare nella storia.
+
+    Difetto trovato il 2026-09-17 ragionando sul percorso LIVE: OKX restituisce
+    come prima riga la barra di oggi, ancora incompleta. Il Node la passava a
+    precarica_barre, che la accettava; al primo cambio di giornata la policy
+    appendeva la barra di oggi costruita dai tick, e la stessa giornata finiva
+    DUE volte nel canale e nell'ATR, facendo divergere la policy viva dal
+    backtest. Il test di equivalenza non lo vedeva perche' alimentava le barre
+    direttamente, senza passare dal precaricamento del Node.
+    """
+    pol = TrendPolicy(TrendParams(canale=2, atr_period=2, trend_ema=0))
+    righe = [[(i + 1) * 86_400.0, 100.0, 101.0, 99.0, 100.0, 1000.0] for i in range(3)]
+    righe.insert(0, [4 * 86_400.0, 100.0, 105.0, 99.0, 104.0, 1000.0])
+    n = pol.precarica_barre(righe, now=4 * 86_400.0 + 3600.0)
+    assert n == 3, "la barra di oggi doveva essere scartata: accettate %d" % n
+    assert 4.0 not in [b["ts"] / 86_400.0 for b in pol.barre]
+
+    # il bot parte oggi, domani cambia giornata: nessun duplicato
+    pol.decide(price=104.5, open_buys={}, open_sells={}, cash=100.0,
+               capital_config=100.0, free_balance=100.0, now=4 * 86_400.0 + 3600.0)
+    pol.decide(price=105.0, open_buys={}, open_sells={}, cash=100.0,
+               capital_config=100.0, free_balance=100.0, now=5 * 86_400.0 + 3600.0)
+    giorni = [b["ts"] / 86_400.0 for b in pol.barre]
+    assert len(giorni) == len(set(giorni)), "giornate duplicate: %s" % giorni
+
+
+def test_precarica_deduplica_per_giornata():
+    """Anche senza now, due barre dello stesso giorno non devono coesistere."""
+    pol = TrendPolicy(TrendParams(canale=2, atr_period=2, trend_ema=0))
+    righe = [[86_400.0, 100.0, 101.0, 99.0, 100.0, 1.0],
+             [86_400.0 + 3600.0, 100.0, 102.0, 99.0, 101.0, 1.0],
+             [2 * 86_400.0, 101.0, 103.0, 100.0, 102.0, 1.0]]
+    pol.precarica_barre(righe)
+    giorni = [b["ts"] / 86_400.0 for b in pol.barre]
+    assert len(giorni) == len(set(giorni)), "giornate duplicate: %s" % giorni
+    assert len(pol.barre) == 2, "attese 2 giornate, trovate %d" % len(pol.barre)

@@ -380,7 +380,9 @@ class NodeApp:
                 if _fetch is not None:
                     try:
                         _storico = _fetch(bot["symbol"], "1d", 300)
-                        _n = _precarica(_storico)
+                        import time as _time
+                        # si passa now: la barra di OGGI e' incompleta e va esclusa
+                        _n = _precarica(_storico, _time.time())
                         log.info("policy %s: precaricate %d barre giornaliere",
                                  bot["symbol"], _n)
                     except Exception as _e:  # noqa: BLE001
