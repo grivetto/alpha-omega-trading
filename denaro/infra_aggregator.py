@@ -126,6 +126,7 @@ def load_env(path):
 
 
 _remote_cache = {}
+_extra_cache = {}   # bot live extra: ultima lettura buona
 _REMOTE_TTL = 30.0  # secondi
 
 # Dopo quanti secondi un health file e' considerato VECCHIO. Un bot ticka ogni
@@ -556,21 +557,57 @@ def collect_node_bots():
         ("marcodg1:okx:ALGO/EUR", "ssh", "MARCODG1",
          "/home/marco/denaro/health/algo_marcodg1_live.json"),
     ]
+    # UNA ssh per HOST, non una per bot: prima erano 10 connessioni per ciclo
+    # e bastava che UNA fallisse per far sparire la card di quel bot dalla
+    # dashboard per un ciclo intero (visto il 2026-09-17 su nuvola/AVAX). Se
+    # la lettura fallisce si tiene l ultima buona per 300s: un singolo
+    # timeout non deve spegnere un bot che sta lavorando.
+    _per_host = {}
     for _k, _kind, _alias, _path in _extra_live:
-        try:
-            if _kind == "file":
-                _raw = Path(_path).read_text()
-            else:
-                _pr = subprocess.run(["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=5",
-                                      _alias, "cat " + _path],
-                                     capture_output=True, text=True, timeout=15)
-                _raw = _pr.stdout if _pr.returncode == 0 else ""
-            if _raw.strip():
-                _h = json.loads(_raw.strip().splitlines()[-1])
+        if _kind == "file":
+            try:
+                _blocchi = _parse_dump("===FILE===" + Path(_path).read_text())
+                _h = json.loads(_blocchi[0])
                 _h["mode"] = "live"
                 bots[_k] = _h
-        except Exception:
+                _extra_cache[_k] = (time.time(), _h)
+            except Exception:
+                pass
             continue
+        _per_host.setdefault(_alias, []).append((_k, _path))
+
+    for _alias, _voci in _per_host.items():
+        _lista = " ".join(_pp for _, _pp in _voci)
+        _q = chr(34)
+        # niente [ -f ]: se un file manca, cat non stampa nulla e il blocco
+        # resta vuoto. Un test malformato faceva uscire ssh con errore e
+        # TUTTI i bot di quell host sparivano dalla dashboard.
+        _cmd = ("for f in " + _lista + "; do echo ===FILE===; cat "
+                + _q + "$f" + _q + " 2>/dev/null; echo; done")
+        try:
+            _pr = subprocess.run(["ssh", "-o", "BatchMode=yes",
+                                  "-o", "ConnectTimeout=5", _alias, _cmd],
+                                 capture_output=True, text=True, timeout=25)
+            _blocchi = _parse_dump(_pr.stdout) if _pr.returncode == 0 else []
+        except Exception:
+            _blocchi = []
+        for _i, (_k, _path) in enumerate(_voci):
+            _raw = _blocchi[_i] if _i < len(_blocchi) else ""
+            _h = None
+            if _raw.strip():
+                try:
+                    _h = json.loads(_raw)
+                except Exception:
+                    _h = None
+            if _h is None:
+                _vecchio = _extra_cache.get(_k)
+                if _vecchio and time.time() - _vecchio[0] <= 300:
+                    _h = _vecchio[1]
+            if _h is not None:
+                _h = dict(_h)
+                _h["mode"] = "live"
+                bots[_k] = _h
+                _extra_cache[_k] = (time.time(), _h)
 
     # Nodi remoti: chiavi "nuvola:paper:ADA/EUR", "mc2:paper:ADA/EUR" ecc.
     for node_name, cfg in REMOTE_NODES.items():
@@ -593,6 +630,15 @@ def collect_node_bots():
         h["stale"] = (age is None) or (age > BOT_STALE_S)
         h.setdefault("mode", "paper")
     return bots
+
+
+def _parse_dump(testo):
+    """Estrae i JSON da un dump ===FILE===<json> (uno o piu file)."""
+    fuori = []
+    for blocco in (testo or "").split("===FILE===")[1:]:
+        i0, i1 = blocco.find("{"), blocco.rfind("}")
+        fuori.append(blocco[i0:i1 + 1] if 0 <= i0 < i1 else "")
+    return fuori
 
 
 def fetch_remote_node_bots(node_name):
