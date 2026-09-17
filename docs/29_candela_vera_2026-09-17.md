@@ -52,3 +52,31 @@ ultimo tick, entro l'intervallo di poll) e il sizing usa l'ATR di quel momento.
 - Prima valutazione con la catena completa e allineata: chiusura delle **16:00
   UTC del 2026-09-18** (18:00 CEST). Candidato piu' vicino: **UNI**, sopra il
   canale a 40 barre.
+
+## 29.5 Pre-flight del primo ingresso (23:03 UTC)
+
+`tools/trend_preflight.py` costruisce la STESSA policy del Node, forza il confine
+di barra e chiede alla policy cosa farebbe, senza piazzare nulla. Al prossimo
+confine (09-18 16:00 UTC):
+
+| asset | prezzo ora | canale | sopra | entry | amount | nozionale | stop | rischio |
+|---|---|---|---|---|---|---|---|---|
+| UNI | 6.6410 | 6.4440 | **SI** | 6.6443 | 0.4945 | 3.29 EUR | 5.6502 | 0.492 EUR (1.98%) |
+| LINK | 9.9000 | 11.7870 | - | 11.9108 | 0.3706 | 4.41 EUR | 10.5842 | 0.492 EUR |
+| AVAX | 6.6170 | 7.1120 | - | 7.1867 | 0.7633 | 5.49 EUR | 6.5426 | 0.492 EUR |
+| DOT | 0.9400 | 1.1052 | - | 1.1168 | 3.5595 | 3.98 EUR | 0.9787 | 0.492 EUR |
+| SUI | 0.6417 | 0.8156 | - | 0.8242 | 4.8588 | 4.00 EUR | 0.7230 | 0.492 EUR |
+| MINA | 0.0854 | 0.0982 | - | 0.0992 | 31.095 | 3.08 EUR | 0.0834 | 0.492 EUR |
+| BTC | 66594 | 70760 | - | 71504 | 0.000199 | 14.21 EUR | 67307 | 0.834 EUR (1.98%) |
+| TRX | 0.2914 | 0.3000 | - | 0.3032 | 87.683 | 26.58 EUR | 0.2937 | 0.834 EUR |
+
+Tutti e **17** gli asset passano il controllo del **minimo reale
+dell'exchange** (il piu' stretto: BTC 0.0001 = 6.67 EUR, coperto da 14.21 EUR) e
+il sizing esce a **1.98% del capitale** di rischio, cioe' il 2% previsto meno il
+buffer fee. Il rischio e' quello misurato: nessun parametro e' stato ritoccato
+per far entrare il primo ordine.
+
+Nota di capacita': su mc2 il nozionale di TRX (26.58 EUR su 42.12) e di BTC
+(14.21 EUR) dice che **due** posizioni a bassa volatilita' riempiono il conto.
+E' esattamente il vincolo che il simulatore a capitale condiviso misura; se piu'
+segnali scattano insieme, i successivi vengono ridotti dalla cassa libera.
