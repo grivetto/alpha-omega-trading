@@ -13,14 +13,20 @@ HEAL_COOLDOWN="${HEAL_COOLDOWN:-300}"
 DRY_RUN="${DRY_RUN:-false}"
 
 # Mapping host Zabbix -> (ssh alias | "local" | "skip", servizio da restartare)
+# Mappa aggiornata 2026-09-17: un nodo di TRADING per macchina.
+# Le unit decommissionate (denaro-node-nuvola, denaro-node-trend-live,
+# denaro-brain) restano fuori: la guardia 'disabled' le salta comunque.
 declare -A HOST_SERVICE=(
-  ["alpha-omega-nuvola"]="nuvola|denaro-node-nuvola"
-  ["nuvola"]="nuvola|denaro-node-nuvola"
-  ["alpha-omega-marcodg1"]="MARCODG1|denaro-node-paper"
-  ["marcodg1"]="MARCODG1|denaro-node-paper"
-  ["MARCODG1"]="MARCODG1|denaro-node-paper"
+  ["alpha-omega-nuvola"]="nuvola|denaro-node-nuvola-trade"
+  ["nuvola"]="nuvola|denaro-node-nuvola-trade"
+  ["alpha-omega-marcodg1"]="MARCODG1|denaro-node-marcodg1-xrp"
+  ["marcodg1"]="MARCODG1|denaro-node-marcodg1-xrp"
+  ["MARCODG1"]="MARCODG1|denaro-node-marcodg1-xrp"
   ["alpha-omega-mc2"]="local|denaro-node-mc2"
   ["mc2"]="local|denaro-node-mc2"
+  ["alpha-omega-bot-okx-doge"]="local|denaro-node-mc2"
+  ["alpha-omega-bot-nuvola-sol"]="nuvola|denaro-node-nuvola-trade"
+  ["alpha-omega-bot-marcodg1-xrp"]="MARCODG1|denaro-node-marcodg1-xrp"
 )
 # SSH user per nodo remoto
 declare -A SSH_USER=(
@@ -124,30 +130,6 @@ handle_problem() {
     return
   fi
 
-  # GUARDIA (2026-09-15): NON resuscitare unit DISABILITATE.
-  # Da quando i conti sono consolidati sull'account OKX master, alcune unit
-  # sono decommissionate di proposito ('disabled'). Senza questa guardia
-  # l'healer le riavviava comunque ogni ~10 minuti, combattendo ogni
-  # disattivazione intenzionale e riportando in vita nodi senza capitale.
-  # Vale anche per kill_zombies: su un trigger 'zombie' faceva pkill di TUTTI
-  # i denaro_node dell'host.
-  # NB: `systemctl is-enabled` esce != 0 per una unit 'disabled' E stampa
-  # comunque "disabled" su stdout. La forma "|| echo unknown" accoderebbe
-  # "unknown" e renderebbe il confronto sempre falso: si prende la prima riga
-  # e si ripulisce lo whitespace.
-  local enabled_state
-  if [ "$node" = "local" ]; then
-    enabled_state="$(systemctl is-enabled "$service" 2>/dev/null | head -n1)"
-  else
-    enabled_state="$(ssh -o ConnectTimeout=8 -o BatchMode=yes "${SSH_USER[$node]:-sergio}@$node" \
-      "systemctl is-enabled $service 2>/dev/null | head -n1" 2>/dev/null)"
-  fi
-  enabled_state="$(printf '%s' "${enabled_state:-unknown}" | tr -d '[:space:]')"
-  if [ "$enabled_state" = "disabled" ]; then
-    log "SKIP $service su $host: unit disabilitata (decommissionata)"
-    return
-  fi
-
   case "$trigger" in
     *zombie*|*hung*|*unresponsive*|*multi*|*fork*)
       kill_zombies "$node" "$host"; restart_service "$node" "$service" "$host" ;;
@@ -172,10 +154,12 @@ main() {
   if [ -z "$AUTH" ]; then log "ERROR: auth Zabbix fallita"; exit 1; fi
 
   RESP=$(get_active_problems "\"auth\":\"$AUTH\"")
-  echo "$RESP" | python3 - "$DRY_RUN" << 'PYEOF'
+  RESP_FILE="${HEALER_RESP:-/tmp/zabbix_healer_resp.json}"
+  printf %s "$RESP" > "$RESP_FILE"
+  python3 - "$DRY_RUN" << 'PYEOF'
 import sys, json
 try:
-    data = json.load(sys.stdin)
+    data = json.load(open(sys.argv[2] if len(sys.argv) > 2 else "/tmp/zabbix_healer_resp.json"))
 except Exception as e:
     print(f"parse error: {e}"); sys.exit(0)
 res = data.get("result", [])
@@ -190,7 +174,7 @@ PYEOF
 
   # Processa i problemi riga per riga (lastchange|desc|host|prio)
   # FILTRO: solo trigger Denaro/fleet/bot/health — mai restart per trigger generici Linux
-  echo "$RESP" | python3 -c "
+  python3 -c "
 import sys, json
 data = json.load(sys.stdin)
 res = data.get('result', []) if isinstance(data, dict) else []
@@ -203,7 +187,7 @@ for t in res:
         print(f'SKIP|{desc}|{host}|{t.get(\"priority\",\"0\")}')
         continue
     print(f\"{desc}|{host}|{t.get('priority','0')}\")
-" | while IFS='|' read -r trigger host prio; do
+ " | while IFS='|' read -r trigger host prio; do
     [ -z "$trigger" ] && continue
     if [ "$trigger" = "SKIP" ]; then
         log "ignoro trigger non-Denaro: $host: $prio"

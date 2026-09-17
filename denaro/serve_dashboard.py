@@ -55,6 +55,8 @@ from pathlib import Path
 
 HTML_ROUTES = {"/", "/dashboard", "/dashboard/", "/index.html"}
 JSON_ROUTES = {"/api/infra.json", "/infra.json", "/api/infra", "/infra"}
+# favicon a tema gioco (dado neon), servita come file statico
+FAVICON_ROUTES = {"/favicon.svg", "/favicon.ico", "/favicon.png"}
 
 
 def log(msg: str) -> None:
@@ -230,6 +232,15 @@ class DashboardHandler(BaseHTTPRequestHandler):
     # ---------- HTTP ----------
     def do_GET(self) -> None:  # noqa: N802
         path = self.path.split("?", 1)[0].rstrip("/") or "/"
+        if path in FAVICON_ROUTES:
+            _fav = Path(self.html_dir) / "favicon.svg"
+            try:
+                self._send(200, _fav.read_bytes(), "image/svg+xml",
+                           {"Cache-Control": "public, max-age=86400"})
+            except OSError as _exc:
+                log("favicon non leggibile: %s" % _exc)
+                self._send(404, b"", "image/svg+xml")
+            return
         if path in HTML_ROUTES or path == "":
             self._serve_html()
         elif path in {r.rstrip("/") or "/" for r in JSON_ROUTES}:
@@ -241,6 +252,15 @@ class DashboardHandler(BaseHTTPRequestHandler):
 
     def do_HEAD(self) -> None:  # noqa: N802
         path = self.path.split("?", 1)[0].rstrip("/") or "/"
+        if path in FAVICON_ROUTES:
+            _fav = Path(self.html_dir) / "favicon.svg"
+            try:
+                self._send(200, _fav.read_bytes(), "image/svg+xml",
+                           {"Cache-Control": "public, max-age=86400"})
+            except OSError as _exc:
+                log("favicon non leggibile: %s" % _exc)
+                self._send(404, b"", "image/svg+xml")
+            return
         if path in HTML_ROUTES:
             self._serve_html(head_only=True)
         elif path in {r.rstrip("/") or "/" for r in JSON_ROUTES}:

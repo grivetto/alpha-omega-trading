@@ -23,7 +23,7 @@ bots:
   # ── BOT LIVE 1: OKX DOGE/EUR (Capitale: 12.00 €) ──
   - symbol: DOGE/EUR
     mode: okx
-    capital: 12.0
+    capital: 24.5
     levels: 3
     buy_distance: 0.015
     profit_target: 0.02
@@ -58,4 +58,4 @@ bots:
     sell_distance: 0.02
     sell_step: 0.01
     min_notional: 1.0
-    enabled: true
+    enabled: false

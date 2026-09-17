@@ -579,19 +579,20 @@ SERVICE_UNITS = {
     "marcodg1": {
         "ssh": [],
         "units": [
-            "denaro-node-paper", "denaro-node-trend", "denaro-node-trend-live",
+            "denaro-node-marcodg1-xrp", "denaro-node-trend", "denaro-node-paper",
             "denaro-health-marcodg1", "denaro-aggregator-marcodg1",
-            "denaro-brain", "zabbix-agent",
+            "zabbix-agent",
         ],
     },
     "nuvola": {
         "ssh": ["sergio@87.106.3.15", "-p", "22"],
-        "units": ["denaro-node-nuvola", "denaro-health-nuvola",
+        "units": ["denaro-node-nuvola-trade", "denaro-health-nuvola",
                   "zabbix-agent", "zabbix-tunnel"],
     },
     "mc2": {
         "ssh": ["sergio@127.0.0.1", "-p", "2222"],  # tunnel inverso
         "units": ["denaro-node-mc2", "denaro-feeder-mc2", "denaro-health-mc2",
+                  "denaro-aggregator-mc2", "denaro-dashboard-mc2",
                   "zabbix-agent", "zabbix-tunnel-reverse"],
     },
 }
