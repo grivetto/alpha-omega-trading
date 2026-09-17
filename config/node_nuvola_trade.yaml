@@ -1,9 +1,16 @@
-# Denaro — nodo TRADING su nuvola (OKX, conto nuvolasub1)
-# UNA strategia, UN conto, UN bot: nessuna condivisione di equity.
-# Strategia: MOMENTUM su SOL/EUR (trend-following) — diversa da grid (mc2)
-# e da mean-reversion (MARCODG1).
+# Denaro — nodo TRADING su nuvola
+#
+# Cambio di strategia 2026-09-17: da strategia senza alpha misurato a TREND
+# GIORNALIERO. Su 19 asset e 36 set di parametri FISSI l'alpha e' positivo in 36
+# casi su 36 (mediano +19.99%, t mediano +2.24) e sopravvive alla fee taker.
+# Documentato in docs/17_risultato_ricerca_2026-09-17.md.
+#
+# Gli asset sono DIVERSI fra i tre conti: mc2 (BTC ETH SOL XRP DOGE), qui
+# (LINK AVAX DOT LTC UNI). Insieme i tre conti coprono 15 asset senza
+# sovrapposizioni: la flotta e' un portafoglio diversificato, non tre volte la
+# stessa scommessa.
+
 data_dir: node_data_trade
-# nessun override automatico: il file non esiste -> _apply_overrides lascia il bot com'e'
 overrides_file: config/nessun_override.json
 supervisor:
   ram_critical_pct: 0.85
@@ -27,19 +34,103 @@ rate_limits:
     capacity: 10.0
     refill_rate: 5.0
 bots:
-  - symbol: SOL/EUR
+  - symbol: LINK/EUR
     mode: okx
-    strategy: momentum
-    capital: 24.84
-    profit_target: 0.02
-    entry_slip: 0.002
+    strategy: trend
+    capital: 4.97
+    canale: 40
+    atr_period: 14
+    trail_mult: 3.0
+    stop_atr_mult: 2.0
+    trend_ema: 100
+    risk_pct: 0.02
     fee: 0.002
     tick_interval: 30
     env_prefix: ''
-    stop_loss_pct: 0.10
+    stop_loss_pct: 0.15
     daily_loss_limit: 0.05
-    max_drawdown_limit: 0.15
+    max_drawdown_limit: 0.20
     max_slippage: 0.005
-    health_path: /home/sergio/denaro/health/sol_nuvola_live.json
+    min_notional: 1.0
+    health_path: /home/sergio/denaro/health/link_nuvola_live.json
     enabled: true
-
+  - symbol: AVAX/EUR
+    mode: okx
+    strategy: trend
+    capital: 4.97
+    canale: 40
+    atr_period: 14
+    trail_mult: 3.0
+    stop_atr_mult: 2.0
+    trend_ema: 100
+    risk_pct: 0.02
+    fee: 0.002
+    tick_interval: 30
+    env_prefix: ''
+    stop_loss_pct: 0.15
+    daily_loss_limit: 0.05
+    max_drawdown_limit: 0.20
+    max_slippage: 0.005
+    min_notional: 1.0
+    health_path: /home/sergio/denaro/health/avax_nuvola_live.json
+    enabled: true
+  - symbol: DOT/EUR
+    mode: okx
+    strategy: trend
+    capital: 4.97
+    canale: 40
+    atr_period: 14
+    trail_mult: 3.0
+    stop_atr_mult: 2.0
+    trend_ema: 100
+    risk_pct: 0.02
+    fee: 0.002
+    tick_interval: 30
+    env_prefix: ''
+    stop_loss_pct: 0.15
+    daily_loss_limit: 0.05
+    max_drawdown_limit: 0.20
+    max_slippage: 0.005
+    min_notional: 1.0
+    health_path: /home/sergio/denaro/health/dot_nuvola_live.json
+    enabled: true
+  - symbol: LTC/EUR
+    mode: okx
+    strategy: trend
+    capital: 4.97
+    canale: 40
+    atr_period: 14
+    trail_mult: 3.0
+    stop_atr_mult: 2.0
+    trend_ema: 100
+    risk_pct: 0.02
+    fee: 0.002
+    tick_interval: 30
+    env_prefix: ''
+    stop_loss_pct: 0.15
+    daily_loss_limit: 0.05
+    max_drawdown_limit: 0.20
+    max_slippage: 0.005
+    min_notional: 1.0
+    health_path: /home/sergio/denaro/health/ltc_nuvola_live.json
+    enabled: true
+  - symbol: UNI/EUR
+    mode: okx
+    strategy: trend
+    capital: 4.97
+    canale: 40
+    atr_period: 14
+    trail_mult: 3.0
+    stop_atr_mult: 2.0
+    trend_ema: 100
+    risk_pct: 0.02
+    fee: 0.002
+    tick_interval: 30
+    env_prefix: ''
+    stop_loss_pct: 0.15
+    daily_loss_limit: 0.05
+    max_drawdown_limit: 0.20
+    max_slippage: 0.005
+    min_notional: 1.0
+    health_path: /home/sergio/denaro/health/uni_nuvola_live.json
+    enabled: true

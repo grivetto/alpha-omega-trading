@@ -474,8 +474,29 @@ def collect_node_bots():
     # Ognuno scrive in una dir dedicata (node_data_trade / node_data_xrp) che
     # il collector generico non guarda: li leggiamo per path esplicito.
     _extra_live = [
-        ("nuvola:okx:SOL/EUR",   "ssh",  "nuvola",  "/home/sergio/denaro/health/sol_nuvola_live.json"),
-        ("marcodg1:okx:XRP/EUR", "file", None,      "/home/marco/denaro/health/xrp_marcodg1_live.json"),
+        # 2026-09-17: la flotta e' passata al TREND GIORNALIERO su 15 asset
+        # (5 per conto, senza sovrapposizioni). Prima erano 2 bot con
+        # momentum e mean-reversion, entrambi senza alpha misurato.
+        ("nuvola:okx:LINK/EUR", "ssh", "nuvola",
+         "/home/sergio/denaro/health/link_nuvola_live.json"),
+        ("nuvola:okx:AVAX/EUR", "ssh", "nuvola",
+         "/home/sergio/denaro/health/avax_nuvola_live.json"),
+        ("nuvola:okx:DOT/EUR", "ssh", "nuvola",
+         "/home/sergio/denaro/health/dot_nuvola_live.json"),
+        ("nuvola:okx:LTC/EUR", "ssh", "nuvola",
+         "/home/sergio/denaro/health/ltc_nuvola_live.json"),
+        ("nuvola:okx:UNI/EUR", "ssh", "nuvola",
+         "/home/sergio/denaro/health/uni_nuvola_live.json"),
+        ("marcodg1:okx:ADA/EUR", "file", None,
+         "/home/marco/denaro/health/ada_marcodg1_live.json"),
+        ("marcodg1:okx:ATOM/EUR", "file", None,
+         "/home/marco/denaro/health/atom_marcodg1_live.json"),
+        ("marcodg1:okx:AAVE/EUR", "file", None,
+         "/home/marco/denaro/health/aave_marcodg1_live.json"),
+        ("marcodg1:okx:ARB/EUR", "file", None,
+         "/home/marco/denaro/health/arb_marcodg1_live.json"),
+        ("marcodg1:okx:XLM/EUR", "file", None,
+         "/home/marco/denaro/health/xlm_marcodg1_live.json"),
     ]
     for _k, _kind, _alias, _path in _extra_live:
         try:

@@ -229,18 +229,29 @@ const fmt = (v, d=2) => (v === undefined || v === null) ? '—' : Number(v).toLo
 const esc = (s) => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 const BOT_META = {
-  // [kraken rimosso 2026-09-17]
-  // [griglia mc2 -> trend giornaliero 2026-09-17: la griglia aveva alpha
-  //  NEGATIVO (t=-4.64) e negativo anche a fee zero]
   'mc2:okx:BTC/EUR': {sym: 'BTC/EUR', ex: 'OKX·MC2SUB1·TREND', color: '#ff9500'},
   'mc2:okx:ETH/EUR': {sym: 'ETH/EUR', ex: 'OKX·MC2SUB1·TREND', color: '#b026ff'},
   'mc2:okx:SOL/EUR': {sym: 'SOL/EUR', ex: 'OKX·MC2SUB1·TREND', color: '#ffe600'},
   'mc2:okx:XRP/EUR': {sym: 'XRP/EUR', ex: 'OKX·MC2SUB1·TREND', color: '#00f3ff'},
   'mc2:okx:DOGE/EUR': {sym: 'DOGE/EUR', ex: 'OKX·MC2SUB1·TREND', color: '#ff2bd6'},
-  'nuvola:okx:SOL/EUR': {sym: 'SOL/EUR', ex: 'OKX·NUVOLASUB1', color: '#0aff9d'},
-  'marcodg1:okx:XRP/EUR': {sym: 'XRP/EUR', ex: 'OKX·MARCOSUB1', color: '#00f3ff'},
+  'nuvola:okx:LINK/EUR': {sym: 'LINK/EUR', ex: 'OKX·NUVOLASUB1·TREND', color: '#0aff9d'},
+  'nuvola:okx:AVAX/EUR': {sym: 'AVAX/EUR', ex: 'OKX·NUVOLASUB1·TREND', color: '#ff9500'},
+  'nuvola:okx:DOT/EUR': {sym: 'DOT/EUR', ex: 'OKX·NUVOLASUB1·TREND', color: '#ff2bd6'},
+  'nuvola:okx:LTC/EUR': {sym: 'LTC/EUR', ex: 'OKX·NUVOLASUB1·TREND', color: '#00f3ff'},
+  'nuvola:okx:UNI/EUR': {sym: 'UNI/EUR', ex: 'OKX·NUVOLASUB1·TREND', color: '#e600ff'},
+  'marcodg1:okx:ADA/EUR': {sym: 'ADA/EUR', ex: 'OKX·MARCOSUB1·TREND', color: '#00f3ff'},
+  'marcodg1:okx:ATOM/EUR': {sym: 'ATOM/EUR', ex: 'OKX·MARCOSUB1·TREND', color: '#0aff9d'},
+  'marcodg1:okx:AAVE/EUR': {sym: 'AAVE/EUR', ex: 'OKX·MARCOSUB1·TREND', color: '#b026ff'},
+  'marcodg1:okx:ARB/EUR': {sym: 'ARB/EUR', ex: 'OKX·MARCOSUB1·TREND', color: '#ffe600'},
+  'marcodg1:okx:XLM/EUR': {sym: 'XLM/EUR', ex: 'OKX·MARCOSUB1·TREND', color: '#ff2bd6'},
 };
-const ORDER = ['mc2:okx:BTC/EUR', 'mc2:okx:ETH/EUR', 'mc2:okx:SOL/EUR',
+const ORDER = [
+  'mc2:okx:BTC/EUR', 'mc2:okx:ETH/EUR', 'mc2:okx:SOL/EUR',
+  'mc2:okx:XRP/EUR', 'mc2:okx:DOGE/EUR', 'nuvola:okx:LINK/EUR',
+  'nuvola:okx:AVAX/EUR', 'nuvola:okx:DOT/EUR', 'nuvola:okx:LTC/EUR',
+  'nuvola:okx:UNI/EUR', 'marcodg1:okx:ADA/EUR', 'marcodg1:okx:ATOM/EUR',
+  'marcodg1:okx:AAVE/EUR', 'marcodg1:okx:ARB/EUR', 'marcodg1:okx:XLM/EUR',
+];
                'mc2:okx:XRP/EUR', 'mc2:okx:DOGE/EUR',
                'nuvola:okx:SOL/EUR', 'marcodg1:okx:XRP/EUR'];
 
