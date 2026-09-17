@@ -136,6 +136,9 @@ class Risultato:
     esposizione_bar: int = 0
     barre: int = 0
     errore: str = ""
+    # timestamp delle barre in cui la strategia era IN POSIZIONE: serve a
+    # misurare quante posizioni sono aperte insieme su piu' asset.
+    ts_in_pos: List[int] = field(default_factory=list)
 
     # ---- metriche derivate ----
     @property
@@ -621,6 +624,7 @@ def backtest_trend(candles: List[dict], p: Dict, capitale: float = 100.0,
         r.ts.append(c["ts"])
         if asset > 0:
             r.esposizione_bar += 1
+            r.ts_in_pos.append(c["ts"])
 
     r.barre = len(r.equity)
     r.lordo = sum(r.trade_pnls) + r.fee_pagate

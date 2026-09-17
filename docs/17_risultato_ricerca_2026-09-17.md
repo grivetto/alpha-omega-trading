@@ -770,3 +770,52 @@ Le due leve che restano, entrambe fuori dalla ricerca:
 2. **fonti di rendimento non direzionali** (funding rate, basis), dove il premio
    non e' una previsione di prezzo ma un pagamento strutturale: richiedono
    derivati.
+
+
+### 12.4 Quante posizioni sono aperte insieme (e il tetto di capacita')
+
+Misurato con `tools/` e il nuovo campo `ts_in_pos` di `Risultato`
+(registra le barre in cui la strategia era in posizione):
+
+| conto | posizioni simultanee (media) | massima | tutte e 5 insieme |
+|---|---|---|---|
+| mc2 | 2.31 | 5 | **19% del tempo in posizione** |
+| nuvola | 2.17 | 5 | 10% |
+| MARCODG1 | 1.80 | 5 | 7% |
+
+L'esposizione media per asset e' ~19%, quindi con 5 asset indipendenti la media
+simultanea sarebbe 0.95. Il valore misurato e' 2.31: **le posizioni sono
+correlate 2.4 volte piu' dell'indipendenza**, perche' i breakout si concentrano
+nei movimenti di mercato ampi. E' esattamente quando servirebbe essere
+posizionati al massimo.
+
+**Il conto non li finanzia.** Fabbisogno per fondere tutte le posizioni
+simultanee, per conto:
+
+| conto | fabbisogno (tutte insieme) | disponibile |
+|---|---|---|
+| mc2 | 42.12 EUR | 24.90 |
+| nuvola | 21.59 EUR | 24.83 |
+| MARCODG1 | 42.04 EUR | 24.81 |
+| **totale** | **105.8 EUR** | **74.5 EUR** |
+
+Manca il 42%: **non e' risolvibile spostando asset fra i conti**, perche' il
+fabbisogno complessivo supera il capitale complessivo.
+
+I tre asset che pesano di piu': BTC 19.03, ARB 14.03, ADA 11.11 — da soli
+€44.17 su €105.8. La causa e' il minimo d'ordine dell'exchange rapportato al
+capitale: il minimo di BTC (€6.67) vale il 27% di un conto da €25.
+
+Due modi per rientrare, entrambi con un costo:
+
+1. **togliere i tre asset piu' esosi** (BTC, ARB, ADA): il fabbisogno scende a
+   €61.60 su €74.5 disponibili, quindi **tutti i 12 asset rimasti sarebbero
+   finanziabili insieme**. Si perdono tre simboli su quindici, e BTC in
+   particolare;
+2. **abbassare il rischio per trade da 2% a ~1.4%**: tutti e 15 gli asset
+   rientrano, ma ogni posizione e' piu' piccola e il rendimento atteso per euro
+   di capitale scende in proporzione.
+
+Nessuna delle due e' gratuita: e' un compromesso fra fedelta' alla strategia
+misurata (che assumeva di poter prendere tutti i segnali) e capitale
+disponibile. Con €126 (42 per conto) il problema non esisterebbe.
