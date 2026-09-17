@@ -651,8 +651,13 @@ class Valutazione:
     @property
     def robusto(self) -> bool:
         """Il gate: non basta un buon numero, serve che regga FUORI campione."""
+        # Serve anche l'alpha: una strategia che perde contro il semplice
+        # buy-and-hold NON e' un edge, per quanti fold positivi abbia. Senza
+        # questo requisito il gate promuoveva rumore con segno favorevole
+        # (caso ETH-EUR, 1H: 75% fold positivi ma alpha -2.5%).
         return (len(self.fold) >= 3 and self.fold_positivi >= 0.75
-                and self.mediana_oos > 0 and self.trade_oos >= 30)
+                and self.mediana_oos > 0 and self.mediana_alpha > 0
+                and self.trade_oos >= 30)
 
     def riga(self) -> str:
         return ("%-9s %-9s fold=%2d pos=%4.0f%% medOOS=%+6.2f%% disp=%5.2f%% "
@@ -690,6 +695,11 @@ def valuta(simbolo: str, candles: List[dict], motore: str, griglia: List[Dict],
                            0, 0, 0, 0, 0, 0, 0)
     r = fn(candles, migliore, capitale, fee, slippage_k)
     bh = buy_and_hold(candles)
+    if r.trade == 0:
+        return Valutazione(simbolo, motore, len(candles), fold, migliore,
+                           "NESSUN TRADE sull'intero periodo: i parametri "
+                           "migliori in-sample non operano (caso degenere)",
+                           0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0)
     return Valutazione(simbolo=simbolo, motore=motore, barre_totali=len(candles),
                        fold=fold, migliore_params=migliore, motivo=motivo,
                        ritorno_intero=r.ritorno, alpha_intero=r.ritorno - bh,

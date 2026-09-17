@@ -156,3 +156,33 @@ def test_gate_richiede_fold_e_mediana_positiva():
     # abbastanza trade e 3/3 fold positivi -> promuovibile
     v.fold = [E.Fold(i, 0, 100, 100, 200, 0.01, 0.02, 0.0, 20, 0.0) for i in range(3)]
     assert v.robusto is True
+
+def test_gate_rifiuta_chi_perde_contro_il_buy_and_hold():
+    """Fold positivi NON bastano: serve battere il semplice buy-and-hold.
+
+    Caso reale (ETH-EUR 1H, 2026-09-17): 75% di fold positivi, mediana OOS
+    +2.02%, ma alpha -2.50% e rendimento sull'intero periodo -13.87%. Il gate
+    lo promuoveva: rumore con segno favorevole.
+    """
+    v = E.Valutazione(simbolo="ETH/EUR", motore="grid", barre_totali=1000,
+                      fold=[], migliore_params={}, motivo="", ritorno_intero=-0.14,
+                      alpha_intero=-0.14, dd_intero=0.61, sharpe_intero=0.14,
+                      trade_intero=85, fee_su_lordo=10.5, esposizione=1.0)
+    # 6 fold su 8 positivi, abbondanti trade OOS, ma il buy&hold fa meglio
+    v.fold = [E.Fold(i, 0, 100, 100, 200, 0.01, 0.02, 0.0, 25, 0.045)
+              for i in range(8)]
+    assert v.fold_positivi >= 0.75
+    assert v.mediana_oos > 0
+    assert v.mediana_alpha < 0, "il buy&hold ha reso piu' della strategia"
+    assert v.robusto is False
+
+
+def test_gate_promuove_solo_con_alpha_positivo():
+    v = E.Valutazione(simbolo="X", motore="grid", barre_totali=1000, fold=[],
+                      migliore_params={}, motivo="", ritorno_intero=0.2,
+                      alpha_intero=0.2, dd_intero=0.1, sharpe_intero=1.0,
+                      trade_intero=100, fee_su_lordo=5.0, esposizione=1.0)
+    v.fold = [E.Fold(i, 0, 100, 100, 200, 0.01, 0.02, 0.0, 25, 0.005)
+              for i in range(8)]
+    assert v.mediana_alpha > 0
+    assert v.robusto is True
