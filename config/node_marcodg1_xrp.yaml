@@ -37,7 +37,7 @@ bots:
   - symbol: ADA/EUR
     mode: okx
     strategy: trend
-    capital: 24.81
+    capital: 42.04
     canale: 40
     atr_period: 14
     trail_mult: 2.5
@@ -57,7 +57,7 @@ bots:
   - symbol: ARB/EUR
     mode: okx
     strategy: trend
-    capital: 24.81
+    capital: 42.04
     canale: 40
     atr_period: 14
     trail_mult: 2.5
@@ -77,7 +77,7 @@ bots:
   - symbol: XLM/EUR
     mode: okx
     strategy: trend
-    capital: 24.81
+    capital: 42.04
     canale: 40
     atr_period: 14
     trail_mult: 2.5
@@ -97,7 +97,7 @@ bots:
   - symbol: ALGO/EUR
     mode: okx
     strategy: trend
-    capital: 24.81
+    capital: 42.04
     canale: 40
     atr_period: 14
     trail_mult: 2.5
