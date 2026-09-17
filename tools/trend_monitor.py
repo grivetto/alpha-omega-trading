@@ -52,9 +52,10 @@ def main():
                    "options": {"defaultType": "spot"}})
     ex.load_markets()
 
-    print("%-11s %10s %10s %10s %7s %9s %8s %s"
-          % ("ASSET", "chiusura", "canale", "media100", "ATR%", "al canale", "segnale", "stato live"))
-    print("-" * 104)
+    print("%-9s %10s %10s %7s %9s %8s %8s %8s %s"
+          % ("ASSET", "chiusura", "canale", "ATR%", "al canale",
+             "attuale", "CONFERM", "attivo?", "stato live"))
+    print("-" * 108)
     for b in bots:
         sym = b["symbol"]
         par = TrendParams(
@@ -71,12 +72,23 @@ def main():
             print("%-11s errore candele: %s" % (sym.split("/")[0], str(e)[:50])); continue
         if len(righe) < max(par.canale, par.atr_period, par.trend_ema) + 5:
             print("%-11s storico insufficiente (%d barre)" % (sym.split("/")[0], len(righe))); continue
+        # OKX ritorna dalla piu' recente: righe[0] e' la barra di OGGI, ancora
+        # INCOMPLETA. La policy non la vede mai, perche' valuta il breakout solo
+        # alla chiusura di una giornata: includerla mostrerebbe segnali che il
+        # bot non puo' avere. Si esclude dal calcolo del segnale.
+        righe_chiuse = righe[1:]
         pol = TrendPolicy(par)
-        pol.precarica_barre(righe)
-        chiusura = righe[0][4]          # OKX ritorna dalla piu' recente
+        pol.precarica_barre(righe_chiuse)
+        # l'ultima barra CHIUSA si legge dalle barre della policy: precarica_barre
+        # le ordina, mentre la lista grezza di OKX e' dalla piu' recente.
+        chiusura = list(pol.barre)[-1]["c"]
         atr_pct = 100.0 * pol.atr / chiusura if chiusura else 0.0
         dist = 100.0 * (pol.donchian - chiusura) / chiusura if chiusura else 0.0
         segnale = "ATTIVO" if pol.segnale_breakout() else "-"
+        # anteprima: il prezzo di ADESSO e' sopra il canale? Se si', alla
+        # prossima chiusura giornaliera il breakout si conferma.
+        attuale = righe[0][4]
+        anteprima = "SI" if attuale > pol.donchian else "-"
         # stato live dal file health
         stato = ""
         hp = b.get("health_path") or ""
@@ -91,9 +103,10 @@ def main():
                     " ERR=%s" % h["error"][:25] if h.get("error") else "")
             except Exception:
                 stato = "health illeggibile"
-        print("%-11s %10.4f %10.4f %10.4f %6.2f%% %8.2f%% %8s %s"
-              % (sym.split("/")[0], chiusura, pol.donchian, pol.ema, atr_pct,
-                 dist, segnale, stato))
+        dist_att = 100.0 * (pol.donchian - attuale) / attuale if attuale else 0.0
+        print("%-9s %10.4f %10.4f %6.2f%% %8.2f%% %8.2f%% %8s %8s %s"
+              % (sym.split("/")[0], chiusura, pol.donchian, atr_pct,
+                 dist, dist_att, segnale, anteprima, stato))
     return 0
 
 
