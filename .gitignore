@@ -128,3 +128,17 @@ denaro/health/
 
 # cartella morta rimossa: se ricreata non deve finire in git
 _dead/
+
+# ── Chiavi Bybit EU (2026-09-18) ──
+# ".bybit.env" NON era coperto: ".env.*" vuole il prefisso ".env." e ".env_*" vuole
+# un underscore finale. I file reali stanno fuori dal repo (/home/sergio/denaro/),
+# ma la regola serve: un "git add -A" da una copia di lavoro li committerebbe.
+.bybit.env
+.bybit.env.*
+*.bybit.env
+new-api-bybit
+new-api-bybit.*
+*-api-keys
+*-api-keys.*
+*.keys.env
+secrets/

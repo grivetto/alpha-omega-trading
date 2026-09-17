@@ -4,21 +4,31 @@
 DOMANDA. Meglio OKX EEA o Bybit EU? Le fee MISURATE sull'account vero sono:
     OKX EEA    maker 0.200%  taker 0.350%
     Bybit EU   maker 0.100%  taker 0.250%
-Alle spalle c'e' un'altra differenza, lo spread mediano misurato sugli alt:
-    OKX 0.0778%   Bybit 0.1183%
-cioe' Bybit costa ~2 bps/lato in piu' di spread. Il confronto onesto e' quindi
+Alle spalle c'e' anche lo spread mediano misurato sugli alt (OKX 0.0778%,
+Bybit 0.1183%): Bybit costa ~2 bps/lato in piu'. Il confronto onesto e' quindi
 0.25%+0.02% = 0.27%/lato Bybit contro 0.35%/lato OKX.
 
 PERCHE' CONTA. Docs/20: sul 4H il verdetto della griglia cambia RADICALMENTE
 cambiando solo la fee (3/24 configurazioni robuste a fee spot, 20/24 a fee swap).
-Se il 4H fosse robusto a 0.25%/lato, migrare avrebbe senso; a 0.35% no. Quindi il
-numero da produrre non e' "quanto rende", e' "quante configurazioni su 24 sono
-positive in almeno 4 finestre su 5" a ciascun livello di fee.
+Se il 4H fosse robusto a 0.25%/lato, migrare avrebbe senso; a 0.35% no.
 
-CRITERIO (identico a tools/trend_4h_griglia.py, per confrontabilita'):
-  4 canali (20/40/60/80) x 3 EMA (50/100/200) x 2 (long-only, long/short) = 24
-  configurazioni; serie divisa in 5 blocchi uguali; "robusta" = composta positiva
-  in >= 4 blocchi su 5.
+DUE CORREZIONI METODOLOGICHE (2026-09-18) — senza queste la tabella mente:
+
+1. CONFIGURAZIONI NON TESTABILI. trend_ls parte dopo max(canale, atr, EMA) barre.
+   In un blocco piu' corto del warm-up la configurazione non fa NESSUN trade e
+   la vecchia griglia le contava come "composto 0.00%" e "0 finestre positive":
+   8 delle 24 configurazioni (tutte quelle con EMA 200) sparivano dal conteggio
+   e la mediana crollava a 0.00% per un artefatto, non per un risultato. Qui le
+   configurazioni non testabili sono ESCLUSE dal denominatore e dichiarate.
+
+2. BLOCCHI ADEGUATI AL DATO. Il daily ha ~910 barre: 5 blocchi da 182 barre non
+   possono contenere un'EMA 200. Il daily si misura su 3 blocchi. Il taglio
+   "largo ma corto" (>=1000 barre su 4H = 1030) e' dichiarato NON testabile:
+   blocchi da 206 barre con EMA fino a 200 non dicono niente.
+
+Come si legge: "robuste" = configurazioni positive in >= (blocchi-1) blocchi.
+Poi "pieno" = rendimento sull'intera serie con la configurazione deployata
+(canale 40, EMA 100, long-only): e' il numero che si confronta con docs/18.
 
 Uso: python3 tools/trend_4h_venue.py
 """
@@ -35,27 +45,30 @@ from trend_longshort import trend_ls, BASE  # noqa: E402
 
 DATI = Path("/home/sergio/alpha-omega-trading/backtest_data")
 
-# Le 19 del documento 20 (per confrontare i numeri 3/24 e 20/24 gia' pubblicati).
 UNIVERSO_19 = ["AAVE", "ADA", "ALGO", "ARB", "ATOM", "AVAX", "BTC", "CRV", "DOGE",
                "DOT", "ETH", "LINK", "LTC", "SOL", "SUI", "TRX", "UNI", "XLM", "XRP"]
 
 # fee per lato: valori MISURATI sull'account, non listini pubblici.
 LIVELLI = [
-    ("OKX spot taker 0.35%  [deployato oggi]", 0.0035),
+    ("OKX spot taker 0.35% [deployato]", 0.0035),
     ("OKX spot maker 0.20%", 0.0020),
     ("Bybit EU taker 0.25%", 0.0025),
-    ("Bybit EU taker +spread 0.27%  [reale]", 0.0027),
-    ("Bybit EU maker 0.10%", 0.0010),
-    ("OKX swap taker 0.05%  [NON ottenibile: acctLv1]", 0.0005),
+    ("Bybit EU taker +spread 0.27% [reale]", 0.0027),
+    ("Bybit EU maker 0.10% [non ottenibile]", 0.0010),
+    ("OKX swap taker 0.05% [acctLv2, assente]", 0.0005),
 ]
 
 
-def carica(prefisso, suffisso, minimo):
-    """Tutti i CSV del prefisso con almeno `minimo` barre, allineati alla coda."""
+def carica(prefisso, suffisso, minimo, nomi=None):
+    """CSV con >= minimo barre, allineati alla coda della serie PIU' CORTA.
+
+    L'allineamento e' obbligatorio: i blocchi devono cadere sulle stesse date
+    per tutti i simboli, altrimenti la media cross-sezionale non confronta nulla.
+    """
     serie = {}
     for p in sorted(DATI.glob(prefisso + "*_" + suffisso + ".csv")):
         base = p.name[len(prefisso):-len("_" + suffisso + ".csv")]
-        if not base:
+        if not base or (nomi is not None and base not in nomi):
             continue
         try:
             c = E.load_csv(p)
@@ -69,11 +82,8 @@ def carica(prefisso, suffisso, minimo):
     return {s: c[-n:] for s, c in serie.items()}, n
 
 
-def seleziona(serie, nomi):
-    return {s: c for s, c in serie.items() if s in nomi}
-
-
 def griglia(serie, n, fee, blocchi=5):
+    """24 configurazioni su blocchi uguali. Ritorna (righe, non_testabili)."""
     passo = n // blocchi
     confini = []
     for k in range(blocchi):
@@ -81,9 +91,14 @@ def griglia(serie, n, fee, blocchi=5):
         a = (k + 1) * passo if k < blocchi - 1 else n
         confini.append((da, a))
     righe = []
+    non_test = 0
     for canale in (20, 40, 60, 80):
         for ema_n in (50, 100, 200):
             for short in (False, True):
+                # warm-up piu' lungo del blocco => nessun trade possibile
+                if max(canale, 14, ema_n) + 1 >= passo:
+                    non_test += 1
+                    continue
                 p = dict(BASE, canale=canale, trend_ema=ema_n, atr_period=14)
                 vals = []
                 for da, a in confini:
@@ -99,25 +114,48 @@ def griglia(serie, n, fee, blocchi=5):
                 righe.append({"canale": canale, "ema": ema_n, "short": short,
                               "vals": vals, "comp": comp - 1.0,
                               "pos": sum(1 for v in vals if v > 0)})
-    return righe
+    return righe, non_test
 
 
-def mostra(serie, n, titolo, blocchi=5):
+def pieno(serie, fee, canale=40, ema_n=100):
+    """Rendimento sull'intera serie, configurazione deployata, long-only."""
+    p = dict(BASE, canale=canale, trend_ema=ema_n, atr_period=14)
+    rend = []
+    for s, c in serie.items():
+        r = trend_ls(c, p, 1.0, fee, 0.02, permetti_short=False)
+        if r.equity and r.trade >= 1:
+            rend.append(r.ritorno)
+    if not rend:
+        return None, None, 0
+    return st.mean(rend), st.median(rend), len(rend)
+
+
+def mostra(serie, n, titolo, blocchi):
+    passo = n // blocchi
     print()
-    print("=" * 96)
-    print("%s — %d simboli, %d barre" % (titolo, len(serie), n))
-    print("=" * 96)
-    print("  %-46s %9s %10s %10s" % ("fee per lato", "robuste", "comp.med", "pos./24"))
+    print("=" * 104)
+    print("%s — %d simboli, %d barre, %d blocchi da %d barre"
+          % (titolo, len(serie), n, blocchi, passo))
+    print("=" * 104)
+    print("  %-40s %9s %10s %6s %11s %11s"
+          % ("fee per lato", "robuste", "comp.med", "pos.", "pieno media", "pieno med."))
     for nome, fee in LIVELLI:
-        righe = griglia(serie, n, fee, blocchi)
+        righe, non_test = griglia(serie, n, fee, blocchi)
         tot = len(righe)
         robusti = sum(1 for r in righe if r["pos"] >= blocchi - 1)
         fin_pos = sum(1 for r in righe if r["comp"] > 0)
-        med = st.median([r["comp"] for r in righe])
-        print("  %-46s %5d/%d %9.2f%% %10d" % (nome, robusti, tot, med * 100, fin_pos))
+        med = st.median([r["comp"] for r in righe]) if righe else 0.0
+        pm, pmd, k = pieno(serie, fee)
+        print("  %-40s %4d/%-3d %9.2f%% %4d/%-2d %10s %10s"
+              % (nome, robusti, tot, med * 100, fin_pos, tot,
+                 ("%+.2f%%" % (pm * 100)) if pm is not None else "n/d",
+                 ("%+.2f%%" % (pmd * 100)) if pmd is not None else "n/d"))
+    if non_test:
+        print("  (%d configurazioni su 24 NON testabili: warm-up EMA piu' lungo del blocco)"
+              % non_test)
 
 
-def per_blocco(serie, n, fee, etichetta, blocchi=5):
+def per_blocco(serie, n, fee, etichetta, blocchi):
     """Dove sta il rendimento: episodico o distribuito? (docs/18 18.2)"""
     passo = n // blocchi
     p = dict(BASE, canale=40, trend_ema=100, atr_period=14)
@@ -137,25 +175,37 @@ def per_blocco(serie, n, fee, etichetta, blocchi=5):
                      sum(1 for x in rend if x > 0), len(rend)))
 
 
+# Tagli. Il 4H ha 2.8 anni (blocchi da ~1000 barre: 5 blocchi regge). Il daily
+# ha ~910 barre: 5 blocchi da 182 non contengono un'EMA 200, quindi 3 blocchi.
+# Il taglio "largo ma corto" NON e' incluso: non e' misurabile, non e' un no.
+TAGLI = [
+    ("uni_", "4H", 5, [
+        ("LE 19 DEL DOCUMENTO 20", 4000, set(UNIVERSO_19)),
+        ("LARGO PROFONDO (>=4000 barre)", 4000, None),
+    ]),
+    ("dl_", "1D", 3, [
+        ("LE 19 DEL DOCUMENTO 20", 900, set(UNIVERSO_19)),
+        ("LARGO PROFONDO (>=900 barre)", 900, None),
+    ]),
+]
+
+
 def main():
     fatto = False
-    for prefisso, suffisso, minimo, titolo_tf in (
-            ("uni_", "4H", 4000, "4H"), ("dl_", "1D", 900, "1D")):
-        serie, n = carica(prefisso, suffisso, minimo)
-        if not serie:
-            print("(nessun file %s*_%s.csv con >= %d barre)" % (prefisso, suffisso, minimo))
-            continue
-        fatto = True
-        s19 = seleziona(serie, set(UNIVERSO_19))
-        if len(s19) >= 10:
-            n19 = min(len(c) for c in s19.values())
-            mostra({s: c[-n19:] for s, c in s19.items()}, n19,
-                   "%s — LE 19 DEL DOCUMENTO 20" % titolo_tf)
-        mostra(serie, n, "%s — UNIVERSO LARGO" % titolo_tf)
-        per_blocco(serie, n, 0.0027,
-                   "%s universo largo, Bybit EU taker reale" % titolo_tf)
-        per_blocco(serie, n, 0.0035,
-                   "%s universo largo, OKX taker deployato" % titolo_tf)
+    for prefisso, suffisso, blocchi, tagli in TAGLI:
+        for nome_taglio, minimo, nomi in tagli:
+            serie, n = carica(prefisso, suffisso, minimo, nomi)
+            if not serie:
+                print("(%s: nessun file con >= %d barre)" % (nome_taglio, minimo))
+                continue
+            fatto = True
+            mostra(serie, n, "%s — %s" % (suffisso, nome_taglio), blocchi)
+        serie, n = carica(prefisso, suffisso, tagli[0][1], None)
+        if serie:
+            per_blocco(serie, n, 0.0035,
+                       "%s, OKX taker deployato 0.35%%" % suffisso, blocchi)
+            per_blocco(serie, n, 0.0027,
+                       "%s, Bybit EU taker reale 0.27%%" % suffisso, blocchi)
     if not fatto:
         print("Nessun dato: lancia prima tools/fetch_universe.py")
         return 1
