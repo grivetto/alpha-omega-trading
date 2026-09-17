@@ -39,7 +39,7 @@ bots:
   - symbol: BTC/EUR
     mode: okx
     strategy: trend
-    capital: 5.0
+    capital: 24.9
     canale: 40
     atr_period: 14
     trail_mult: 3.0
@@ -59,7 +59,7 @@ bots:
   - symbol: ETH/EUR
     mode: okx
     strategy: trend
-    capital: 5.0
+    capital: 24.9
     canale: 40
     atr_period: 14
     trail_mult: 3.0
@@ -79,7 +79,7 @@ bots:
   - symbol: SOL/EUR
     mode: okx
     strategy: trend
-    capital: 5.0
+    capital: 24.9
     canale: 40
     atr_period: 14
     trail_mult: 3.0
@@ -99,7 +99,7 @@ bots:
   - symbol: XRP/EUR
     mode: okx
     strategy: trend
-    capital: 5.0
+    capital: 24.9
     canale: 40
     atr_period: 14
     trail_mult: 3.0
@@ -119,7 +119,7 @@ bots:
   - symbol: DOGE/EUR
     mode: okx
     strategy: trend
-    capital: 5.0
+    capital: 24.9
     canale: 40
     atr_period: 14
     trail_mult: 3.0

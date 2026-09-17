@@ -37,7 +37,7 @@ bots:
   - symbol: LINK/EUR
     mode: okx
     strategy: trend
-    capital: 4.97
+    capital: 24.83
     canale: 40
     atr_period: 14
     trail_mult: 3.0
@@ -57,7 +57,7 @@ bots:
   - symbol: AVAX/EUR
     mode: okx
     strategy: trend
-    capital: 4.97
+    capital: 24.83
     canale: 40
     atr_period: 14
     trail_mult: 3.0
@@ -77,7 +77,7 @@ bots:
   - symbol: DOT/EUR
     mode: okx
     strategy: trend
-    capital: 4.97
+    capital: 24.83
     canale: 40
     atr_period: 14
     trail_mult: 3.0
@@ -97,7 +97,7 @@ bots:
   - symbol: LTC/EUR
     mode: okx
     strategy: trend
-    capital: 4.97
+    capital: 24.83
     canale: 40
     atr_period: 14
     trail_mult: 3.0
@@ -117,7 +117,7 @@ bots:
   - symbol: UNI/EUR
     mode: okx
     strategy: trend
-    capital: 4.97
+    capital: 24.83
     canale: 40
     atr_period: 14
     trail_mult: 3.0

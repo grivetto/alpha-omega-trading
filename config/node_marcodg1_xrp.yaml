@@ -37,7 +37,7 @@ bots:
   - symbol: ADA/EUR
     mode: okx
     strategy: trend
-    capital: 4.97
+    capital: 24.81
     canale: 40
     atr_period: 14
     trail_mult: 3.0
@@ -57,7 +57,7 @@ bots:
   - symbol: ATOM/EUR
     mode: okx
     strategy: trend
-    capital: 4.97
+    capital: 24.81
     canale: 40
     atr_period: 14
     trail_mult: 3.0
@@ -77,7 +77,7 @@ bots:
   - symbol: AAVE/EUR
     mode: okx
     strategy: trend
-    capital: 4.97
+    capital: 24.81
     canale: 40
     atr_period: 14
     trail_mult: 3.0
@@ -97,7 +97,7 @@ bots:
   - symbol: ARB/EUR
     mode: okx
     strategy: trend
-    capital: 4.97
+    capital: 24.81
     canale: 40
     atr_period: 14
     trail_mult: 3.0
@@ -117,7 +117,7 @@ bots:
   - symbol: XLM/EUR
     mode: okx
     strategy: trend
-    capital: 4.97
+    capital: 24.81
     canale: 40
     atr_period: 14
     trail_mult: 3.0
