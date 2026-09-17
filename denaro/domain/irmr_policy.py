@@ -16,6 +16,7 @@ from typing import Any, Callable, Dict, List, Optional
 
 from .grid import GridDecision, GridLevel
 from .policy import Policy
+from .sizing import size_amount
 
 
 class IrmrParams:
@@ -157,7 +158,8 @@ class IrmrPolicy(Policy):
         if stop_dist <= 0.0:
             return 0.0
         size = risk_capital / stop_dist
-        size = min(size, self.params.max_inventory_pct * self.base_capital / price)
+        size = min(size, size_amount(self.params.max_inventory_pct * self.base_capital,
+                                     price, lambda a: a))
         if size < self.params.min_order_size:
             return 0.0
         return size

@@ -25,6 +25,7 @@ from typing import Any, Callable, Dict, Generator, List, Optional, Tuple
 
 from .grid import GridDecision, GridLevel
 from .policy import Policy
+from .sizing import size_amount
 
 logger = __import__("logging").getLogger(__name__)
 
@@ -189,7 +190,7 @@ class VagrPolicy(Policy):
         if notional <= 0:
             return None
 
-        amount = self.round_amount(notional / buy_price)
+        amount = size_amount(notional, buy_price, self.round_amount)
         if amount <= 0 or (self.min_amount and amount < self.min_amount):
             return None
 
@@ -212,7 +213,7 @@ class VagrPolicy(Policy):
             buy_price = self.round_price(price * (1 - distance))
             if buy_price <= 0:
                 continue
-            amount = self.round_amount(per_level / buy_price)
+            amount = size_amount(per_level, buy_price, self.round_amount)
             if amount <= 0 or (self.min_amount and amount < self.min_amount):
                 continue
             notional = buy_price * amount

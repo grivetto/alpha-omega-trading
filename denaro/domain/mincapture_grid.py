@@ -35,6 +35,7 @@ from typing import Callable, Dict, List, Optional
 
 from .grid import GridDecision, GridLevel
 from .policy import Policy
+from .sizing import size_amount
 
 
 @dataclass(frozen=True, slots=True)
@@ -199,7 +200,7 @@ class MinCaptureGridPolicy(Policy):
             b_price = self.round_price(price * (1 - dist))
             if b_price <= 0.0:
                 continue
-            amount = self.round_amount(per_level / b_price)
+            amount = size_amount(per_level, b_price, self.round_amount)
             if amount <= 0.0 or (self.min_amount and amount < self.min_amount):
                 continue
             notional = b_price * amount

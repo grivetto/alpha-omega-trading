@@ -28,11 +28,7 @@ class MeanReversionParams:
                  profit_target: float = 0.015,
                  entry_slip: float = 0.001,
                  max_dev_from_mean: float = 0.05,  # max distanza dalla SMA (frazione)
-                 min_history: int = 21,
-                 # Riserva fee/slippage: con amount = available/entry l'ordine
-                 # userebbe il 100% del saldo e l'exchange lo RIFIUTA
-                 # (InsufficientFunds, visto in produzione 2026-09-17 sul bot XRP).
-                 fee_buffer: float = 0.01) -> None:
+                 min_history: int = 21) -> None:
         self.rsi_period = rsi_period
         self.rsi_oversold = rsi_oversold
         self.rsi_exit = rsi_exit
@@ -41,7 +37,6 @@ class MeanReversionParams:
         self.entry_slip = entry_slip
         self.max_dev_from_mean = max_dev_from_mean
         self.min_history = min_history
-        self.fee_buffer = fee_buffer
 
 
 class MeanReversionPolicy(Policy):
@@ -106,7 +101,7 @@ class MeanReversionPolicy(Policy):
             return decision
 
         entry = self.round_price(price * (1 - self.params.entry_slip))
-        amount = self.round_amount(available * (1.0 - self.params.fee_buffer) / entry)
+        amount = self.size_amount(available, entry, self.round_amount)
         if amount <= 0 or (self.min_amount and amount < self.min_amount):
             decision.reason = f"meanrev: amount {amount} sotto minimo"
             return decision

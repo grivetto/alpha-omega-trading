@@ -27,20 +27,21 @@ from typing import Callable, Dict, List, Optional
 from .grid import GridDecision, GridLevel
 from .policy import Policy
 from .regime import Regime, RegimeFilter, RegimeParams
+from .sizing import size_amount
 
 
 class AdaptiveParams:
     __slots__ = (
         "levels", "base_buy_distance", "profit_target", "atr_multiplier",
         "level_step", "trailing_atr_mult", "max_trailing_atr",
-        "min_history", "regime_refresh_n",
+        "min_history", "regime_refresh_n", "fee_buffer",
     )
 
     def __init__(self, levels: int = 5, base_buy_distance: float = 0.01,
                  profit_target: float = 0.015, atr_multiplier: float = 2.0,
                  level_step: float = 0.005, trailing_atr_mult: float = 3.0,
                  max_trailing_atr: float = 6.0, min_history: int = 30,
-                 regime_refresh_n: int = 5) -> None:
+                 regime_refresh_n: int = 5, fee_buffer: float = 0.01) -> None:
         self.levels = levels
         self.base_buy_distance = base_buy_distance
         self.profit_target = profit_target
@@ -50,6 +51,7 @@ class AdaptiveParams:
         self.max_trailing_atr = max_trailing_atr
         self.min_history = min_history
         self.regime_refresh_n = regime_refresh_n
+        self.fee_buffer = fee_buffer
 
 
 class AdaptiveEngine(Policy):
@@ -171,7 +173,8 @@ class AdaptiveEngine(Policy):
                 decision.reason = "adaptive: saldo insufficiente"
                 return decision
             entry = self.round_price(price * (1 - self.params.base_buy_distance * 0.2))
-            amount = self.round_amount(available / entry)
+            amount = size_amount(available, entry, self.round_amount,
+                                 self.params.fee_buffer)
             if amount <= 0 or (self.min_amount and amount < self.min_amount):
                 decision.reason = f"adaptive: amount {amount} sotto minimo"
                 return decision
@@ -205,7 +208,7 @@ class AdaptiveEngine(Policy):
             buy_price = self.round_price(price * (1 - distance))
             if buy_price <= 0:
                 continue
-            amount = self.round_amount(per_level / buy_price)
+            amount = size_amount(per_level, buy_price, self.round_amount)
             if amount <= 0 or (self.min_amount and amount < self.min_amount):
                 continue
             decision.to_place.append(GridLevel(buy_price=buy_price,

@@ -21,6 +21,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import Callable, Dict, List, Optional
+from .sizing import size_amount
 
 
 @dataclass
@@ -99,7 +100,7 @@ class GridPolicy:
             buy_price = self.round_price(price * (1 - distance))
             if buy_price <= 0:
                 continue
-            amount = self.round_amount(per_level / buy_price)
+            amount = size_amount(per_level, buy_price, self.round_amount)
             if amount <= 0:
                 continue
             notional = buy_price * amount
@@ -293,7 +294,7 @@ class GridPolicy:
             buy_price = self.round_price(price * (1 - distance))
             if buy_price <= 0:
                 continue
-            amount = self.round_amount(per_level / buy_price)
+            amount = size_amount(per_level, buy_price, self.round_amount)
             if amount <= 0:
                 continue
             # minimo amount dell'exchange (es. Kraken SOL 0.06) — ordini piu'

@@ -33,9 +33,12 @@ class TestGridPlan(unittest.TestCase):
         self.assertAlmostEqual(prices[0], 99.0, places=3)
         self.assertAlmostEqual(prices[1], 98.5, places=3)
         self.assertAlmostEqual(prices[2], 98.0, places=3)
-        # notional per livello = capitale/livelli
+        # notional per livello = capitale/livelli, MENO la riserva fee
+        # (unica implementazione: denaro/domain/sizing.py)
+        from denaro.domain.sizing import FEE_BUFFER as _FB
+        per_livello = 10.0 * (1.0 - _FB)
         for l in plan:
-            self.assertAlmostEqual(l.notional, 10.0, places=3)
+            self.assertAlmostEqual(l.notional, per_livello, places=3)
         # TP: sell target > buy price
         self.assertGreater(pol.sell_target(prices[0]), prices[0])
 

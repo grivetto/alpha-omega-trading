@@ -106,9 +106,12 @@ class TestBotTask(unittest.IsolatedAsyncioTestCase):
         bot = make_bot(ex, self.dir)
         await bot.tick()
         self.assertEqual(len(bot.state.open_buys), 3)
-        # notional per livello = 10 (30/3)
+        # notional per livello = (30/3) meno la riserva fee
+        from denaro.domain.sizing import FEE_BUFFER as _FB
+        per_livello = 10.0 * (1.0 - _FB)
         for info in bot.state.open_buys.values():
-            self.assertAlmostEqual(info["price"] * info["amount"], 10.0, places=3)
+            self.assertAlmostEqual(info["price"] * info["amount"],
+                                   per_livello, places=3)
         # health scritta
         health = (Path(self.dir) / "health.json").read_text()
         self.assertIn('"status": "running"', health)

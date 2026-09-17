@@ -25,11 +25,7 @@ class MomentumParams:
                  history: int = 60, profit_target: float = 0.02,
                  entry_slip: float = 0.002,
                  rsi_confirm: float = 50.0,
-                 min_history: int = 21,
-                 # Riserva fee/slippage: con amount = available/entry l'ordine
-                 # userebbe il 100% del saldo e l'exchange lo RIFIUTA
-                 # (InsufficientFunds, visto in produzione 2026-09-17 su SOL/EUR).
-                 fee_buffer: float = 0.01) -> None:
+                 min_history: int = 21) -> None:
         self.fast_period = fast_period
         self.slow_period = slow_period
         self.history = history
@@ -37,7 +33,6 @@ class MomentumParams:
         self.entry_slip = entry_slip          # sconto entry vs mercato (limit)
         self.rsi_confirm = rsi_confirm        # RSI minimo per confermare il trend
         self.min_history = min_history        # prezzi minimi per un segnale valido
-        self.fee_buffer = fee_buffer          # riserva per fee/slippage sull'entry
 
 
 def _ema(values: List[float], period: int) -> float:
@@ -126,7 +121,7 @@ class MomentumPolicy(Policy):
         if entry <= 0:
             decision.reason = "momentum: entry non valida"
             return decision
-        amount = self.round_amount(available * (1.0 - self.params.fee_buffer) / entry)
+        amount = self.size_amount(available, entry, self.round_amount)
         if amount <= 0 or (self.min_amount and amount < self.min_amount):
             decision.reason = f"momentum: amount {amount} sotto minimo"
             return decision

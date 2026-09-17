@@ -123,22 +123,25 @@ def test_grid_completes_a_cycle_and_books_it():
     assert delta == pytest.approx(res.realized_pnl + res.unrealized_pnl, abs=1e-9)
 
 
-def test_fee_not_budgeted_makes_the_last_level_unaffordable():
-    """DIFETTO REALE DI PRODUZIONE (riprodotto dal simulatore).
+def test_fee_e_budgetata_ogni_livello_e_pagabile():
+    """FIX (2026-09-17): la griglia riserva la fee in OGNI livello.
 
-    La griglia dimensiona i livelli con `per_level = capital / levels` SENZA
-    includere la fee: con capital=100, levels=2, fee=0.1% il secondo livello
-    costa 50.05 EUR ma ne restano liberi 50.00 → l'exchange lo rifiuta.
-    In live questo si manifesta come "insufficient funds" sporadico e come
-    griglia permanentemente incompleta.
+    Difetto reale precedente: `per_level = capital / levels`
+    SENZA fee. Con capital=100, levels=2, fee=0.1% il secondo livello
+    costava 50.05 EUR ma ne restavano liberi 50.00 -> l'exchange lo
+    rifiutava ("fondi insufficienti" sporadico, griglia incompleta).
+
+    Ora il sizing passa da `denaro.domain.sizing.size_amount`, che
+    riserva FEE_BUFFER (1%) per fee e slippage: entrambi i livelli sono
+    pagabili. Vedi denaro/tests/test_sizing.py per la guardia completa.
     """
     cfg = BacktestConfig(symbol="SOL/EUR", capital=100.0, bot=_grid_bot(),
                          fee=0.001, min_amount=0.0, min_notional=0.0)
     bars = [bar(1_000_000 + i * 300_000, 100.0, 100.4, 99.9, 100.0)
             for i in range(4)]
     res = run_backtest(cfg, bars)
-    assert res.orders_placed == 1                    # non 2: il secondo e' rifiutato
-    assert any("fondi insufficienti" in x for x in res.rejections)
+    assert res.orders_placed == 2                    # entrambi pagabili
+    assert not any("fondi insufficienti" in x for x in res.rejections)
 
 
 def test_no_same_bar_round_trip():

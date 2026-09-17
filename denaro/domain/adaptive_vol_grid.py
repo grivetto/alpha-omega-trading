@@ -28,6 +28,7 @@ from dataclasses import dataclass
 from typing import Any, Dict, Iterator, List, Optional, TextIO
 
 from .grid import GridDecision, GridLevel
+from .sizing import size_amount
 
 logger = logging.getLogger("denaro.strategies.adaptive_vol_grid")
 
@@ -65,6 +66,7 @@ class GridConfig:
     min_vol_ratio: float = 0.0005        # floor ATR/price operativo
     max_vol_ratio: float = 0.10          # cap ATR/price operativo
     max_tick_age: float = 60.0           # secondi: tick piu' vecchio = stale
+    fee_buffer: float = 0.01             # riserva fee/slippage sul sizing
     csv_chunk_size: int = 10_000         # righe per chunk in from_csv_chunked
     gc_interval: int = 5                 # gc.collect() ogni N chunk
 
@@ -227,7 +229,7 @@ class AdaptiveVolGrid(StrategyBase):
     def _buy_qty(self, price: float) -> float:
         """Qty per livello: quota capitale per livello / prezzo, cap esposizione."""
         per_level = self.config.capital / float(self.config.levels)
-        qty = per_level / price if price > 0.0 else 0.0
+        qty = size_amount(per_level, price, lambda a: a, self.config.fee_buffer)
         max_qty = self.config.max_position_pct * self.state.equity / price if price > 0.0 else 0.0
         return min(qty, max_qty)
 
@@ -294,7 +296,8 @@ class AdaptiveVolGrid(StrategyBase):
             buy_price = price - (level + 1) * spacing
             if buy_price <= 0.0:
                 continue
-            amount = per_level / buy_price
+            amount = size_amount(per_level, buy_price,
+                                 lambda a: round(a, 8), self.config.fee_buffer)
             if amount <= 0.0 or amount < self.min_amount:
                 continue
             decision.to_place.append(

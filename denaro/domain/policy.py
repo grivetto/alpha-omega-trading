@@ -19,6 +19,7 @@ from __future__ import annotations
 from typing import Dict, List, Optional
 
 from .grid import GridDecision, GridLevel
+from .sizing import FEE_BUFFER, size_amount as _size_amount
 
 
 class Policy:
@@ -40,6 +41,22 @@ class Policy:
     def on_price(self, price: float) -> None:
         """Aggiorna lo storico interno (default: no-op)."""
         return None
+
+
+
+    # ── sizing condiviso ────────────────────────────────────────────────────
+    # Riserva applicata a OGNI ordine dimensionato da un budget disponibile.
+    # Senza di essa l'ordine usa il 100% del saldo e l'exchange lo RIFIUTA per
+    # la fee (InsufficientFunds): visto in produzione il 2026-09-17 su XRP/EUR
+    # (meanrev) e SOL/EUR (momentum). Una sola implementazione per tutte le
+    # policy, cosi' una strategia nuova nasce gia' corretta.
+    # Alias della costante unica (sizing.py): non duplicare il valore.
+    FEE_BUFFER: float = FEE_BUFFER
+
+    @classmethod
+    def size_amount(cls, budget, price, round_amount, fee_buffer=None) -> float:
+        """Delega all'unica implementazione (denaro/domain/sizing.py)."""
+        return _size_amount(budget, price, round_amount, fee_buffer)
 
     # --- helper condivisi -----------------------------------------------------
 
