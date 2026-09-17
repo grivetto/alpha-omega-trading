@@ -107,3 +107,16 @@ strategies/*.json
 # lo avrebbe committato. Non e' mai finito nella storia, ma la falla va chiusa.
 .env_*
 *.env_*
+
+# ── Artefatti generati (2026-09-17) ──
+# Il brain genera centinaia di strategie e dataset: sono materiale di ricerca
+# rigenerabile, non codice. Restano su disco, non nel repo.
+strategies/auto_gen_*.py
+strategies/*_prices.txt
+strategies/_last_gen.txt
+strategies/test_*.py
+brain/data/
+legacy/
+.codewhale/
+fase1_reply_*.txt
+_last_gen.txt
