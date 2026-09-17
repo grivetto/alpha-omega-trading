@@ -864,6 +864,16 @@ def collect():
     for name, (host, port) in NODES.items():
         nodes[name] = {"reachable": ping_host(host, port), "host": host}
     data["nodes"] = nodes
+    # 4b) Repo: il codice che gira e quello committato?
+    try:
+        import sys as _sys
+        _radice = Path(__file__).resolve().parents[1]
+        if str(_radice) not in _sys.path:
+            _sys.path.insert(0, str(_radice))
+        from denaro.infra_repo import stato_repo
+        data["repo"] = stato_repo()
+    except Exception as e:  # noqa: BLE001
+        data["repo"] = {"errore": str(e)[:120]}
 
     # 5) Zabbix + tunnel
     data["zabbix"] = zabbix_state()

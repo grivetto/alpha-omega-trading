@@ -373,6 +373,22 @@ const ebKeys = Object.keys(eb).filter(k => eb[k] && eb[k].ok && eb[k].eur !== nu
     return `<div class="row"><span class="k">${esc(n).toUpperCase()}</span><span class="pill ${ok ? 'ok' : 'bad'}">${ok ? 'UPLINK' : 'DOWN'}</span></div>`;
   }).join('') || '<div class="skeleton">—</div>';
 
+  // Stato del REPO: HEAD e modifiche non committate. Il nodo esegue i file del
+  // repo, quindi una modifica non committata cambia il comportamento vero senza
+  // passare dalla storia (visto il 2026-09-17 su mc2 e nuvola).
+  const rp = d.repo || {};
+  for (const [n, r] of Object.entries(rp)) {
+    if (!r || !r.head && (r.dirty === null || r.dirty === undefined)) continue;
+    const ignoto = (r.dirty === null || r.dirty === undefined);
+    const pulito = (r.dirty === 0);
+    const col = ignoto ? 'var(--dim)' : (pulito ? 'var(--neon-green)' : 'var(--neon-red)');
+    const txt = ignoto ? 'REPO N/D' : (pulito ? 'REPO PULITO' : 'REPO: ' + r.dirty + ' MODIFICHE NON COMMITTATE');
+    $('nodes').insertAdjacentHTML('beforeend',
+      '<div class="skeleton" style="font-size:10px;padding-left:8px;letter-spacing:1px">' +
+      esc(n).toUpperCase() + ' · ' + (r.head ? 'HEAD ' + esc(r.head) + ' · ' : '') +
+      '<span style="color:' + col + '">' + txt + '</span></div>');
+  }
+
   // Zabbix
   const z = d.zabbix || {};
   $('zabbix').innerHTML = Object.entries(z).map(([k, v]) => {
