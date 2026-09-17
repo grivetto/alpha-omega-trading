@@ -25,8 +25,8 @@ Environment=DASH_HTML_FILE=dashboard_infra.html
 # bot trend della flotta). Quello su MARCODG1, raggiunto via tunnel, era
 # rimasto a 3 bot con codice vecchio: preferirlo lasciava la dashboard
 # incompleta. Ora si preferisce il locale, il tunnel resta come riserva.
-Environment="AGG_URLS=http://127.0.0.1:8912/infra.json,http://[::1]:8912/infra.json"
-Environment=AGG_TIMEOUT=15
+Environment="AGG_URLS=http://127.0.0.1:8912/infra.json"
+Environment=AGG_TIMEOUT=25
 Environment=DASH_CACHE_FILE=/home/sergio/denaro/health/infra_last_good.json
 ExecStart=/usr/bin/python3 /home/sergio/alpha-omega-trading/serve_dashboard.py
 Restart=always
