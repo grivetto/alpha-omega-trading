@@ -133,6 +133,12 @@ _REMOTE_TTL = 30.0  # secondi
 # Serve a non presentare come "running" un nodo spento giorni prima.
 BOT_STALE_S = 300.0
 
+# Uno snapshot piu' vecchio di questo limite non e' rappresentativo: i flag di
+# freschezza dei singoli bot si congelano al momento della generazione. Se il
+# cron che lo rigenera si ferma, meglio tornare alla collect live (lenta ma
+# onesta) invece di servire dati silenziosamente stantii.
+SNAP_MAX_AGE_S = 300.0
+
 
 def fetch_remote_json(host, remote_path, cmd=None):
     """Legge un JSON da una macchina remota via SSH, con cache TTL (30s)."""
@@ -936,10 +942,15 @@ class Handler(BaseHTTPRequestHandler):
                 if snap_path.exists():
                     try:
                         payload = json.loads(snap_path.read_text())
-                        payload["cached"] = True
-                        payload["cached_age"] = round(time.time() - payload.get("generated", 0), 1)
-                        self._send(200, payload)
-                        return
+                        # Uno snapshot troppo VECCHIO non e' rappresentativo
+                        # (i flag stale dei bot si congelano alla generazione):
+                        # meglio una collect live, lenta ma onesta.
+                        age = time.time() - payload.get("generated", 0)
+                        if age <= SNAP_MAX_AGE_S:
+                            payload["cached"] = True
+                            payload["cached_age"] = round(age, 1)
+                            self._send(200, payload)
+                            return
                     except Exception:
                         pass
                 self._send(200, collect())

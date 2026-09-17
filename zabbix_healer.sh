@@ -136,7 +136,12 @@ restart_service() {
   fi
   log "RIAVVIO [$host] $service"
   if [ "$DRY_RUN" = "true" ]; then log "[DRY-RUN] $action"; return 0; fi
-  eval "$action" >> "$LOG_FILE" 2>&1 && log "OK restart $service su $host" || log "FAIL restart $service su $host"
+  # </dev/null e' ESSENZIALE. Il chiamante esegue questa funzione dentro un
+  # "while read" alimentato da una pipe: senza la redirezione, ssh CONSUMA lo
+  # stdin del ciclo e il loop termina dopo il PRIMO problema. Il 2026-09-17 e'
+  # esattamente cosi' che la dashboard spenta non e' stata ripresa per due cicli:
+  # ogni ciclo curava un problema e usciva.
+  eval "$action" </dev/null >> "$LOG_FILE" 2>&1 && log "OK restart $service su $host" || log "FAIL restart $service su $host"
 }
 
 kill_zombies() {
@@ -150,7 +155,7 @@ kill_zombies() {
   fi
   log "KILL ZOMBIE [$host]"
   if [ "$DRY_RUN" = "true" ]; then log "[DRY-RUN] $action"; return 0; fi
-  eval "$action" >> "$LOG_FILE" 2>&1 && log "OK cleanup zombie su $host"
+  eval "$action" </dev/null >> "$LOG_FILE" 2>&1 && log "OK cleanup zombie su $host"
 }
 
 handle_problem() {
@@ -164,6 +169,23 @@ handle_problem() {
   IFS='|' read -r node service <<< "${HOST_SERVICE[$host]:-}"
   if [ -z "${node:-}" ]; then
     log "host $host non mappato — nessuna azione"
+    return
+  fi
+
+  # ── SERVIZI SYSTEMD ──────────────────────────────────────────────────────
+  # I trigger dei servizi hanno la forma "SERVIZIO <unit>: <problema>". Il unit
+  # da riavviare e' NOMINATO nel trigger. Senza questo ramo, un problema su
+  # denaro-dashboard-marcodg1 finiva nel case generico e riavviava il servizio
+  # di DEFAULT dell'host mappato — cioe' il nodo di trading: la cosa sbagliata,
+  # e per giunta un riavvio che non cura il guasto segnalato.
+  if [[ "$name" =~ ^SERVIZIO[[:space:]]+([A-Za-z0-9@._-]+): ]]; then
+    local unit="${BASH_REMATCH[1]}"
+    log "servizio nominato dal trigger: $unit"
+    if guardia_flap "$node" "$unit"; then
+      restart_service "$node" "$unit" "$host"
+      mark_healed "flap|$node|$unit"
+    fi
+    mark_healed "$key"
     return
   fi
 

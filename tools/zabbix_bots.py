@@ -65,8 +65,14 @@ def invia(metrics):
 def metriche_di(slug, h, clock):
     """Metriche di un bot. Con h=None (irraggiungibile) si pusha solo status=0."""
     if not h:
-        return [{"host": host_of(slug), "key": key_of(slug, "status"),
-                 "value": 0, "clock": clock}]
+        # LETTURA FALLITA: non si pusha NULLA, e in particolare non status=0.
+        # Una singola lettura SSH fallita (rete, timeout, host occupato) farebbe
+        # sembrare morto un bot vivo; il trigger "non in esecuzione" scatta e
+        # l'autohealing RIAVVIA UN NODO SANO. E' successo il 2026-09-17 con
+        # nuvola_dot: un hiccup di rete ha riavviato denaro-node-nuvola-trade.
+        # Lasciando l'item senza aggiornamento, decide il trigger "nessun dato"
+        # (5 minuti di silenzio): un segnale robusto, non un singolo campione.
+        return []
     eta = clock - float(h.get("timestamp") or 0)
     h = dict(h)
     h["_status"] = 1 if (eta <= STALE_DOPO_S and h.get("status") == "running") else 0
