@@ -29,7 +29,7 @@ bots:
   - symbol: XRP/EUR
     mode: okx
     strategy: meanrev
-    capital: 24.83
+    capital: 24.4
     profit_target: 0.018
     entry_slip: 0.001
     fee: 0.001

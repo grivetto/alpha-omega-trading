@@ -187,7 +187,7 @@ for t in res:
         print(f'SKIP|{desc}|{host}|{t.get(\"priority\",\"0\")}')
         continue
     print(f\"{desc}|{host}|{t.get('priority','0')}\")
- " | while IFS='|' read -r trigger host prio; do
+ " < "$RESP_FILE" | while IFS='|' read -r trigger host prio; do
     [ -z "$trigger" ] && continue
     if [ "$trigger" = "SKIP" ]; then
         log "ignoro trigger non-Denaro: $host: $prio"
