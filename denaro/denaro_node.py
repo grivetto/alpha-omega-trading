@@ -355,6 +355,16 @@ class NodeApp:
             if not bot.get("enabled", True):
                 log.info("bot %s disabilitato (config)", bot.get("symbol"))
                 continue
+            # MANDATO (round 31): in LIVE parte solo una strategia con alpha
+            # MISURATO. Il censimento ha eliminato grid, momentum e meanrev
+            # (alpha negativo a fee reali) e nove policy non hanno nemmeno un
+            # motore di backtest. Regola in denaro/research/misurate.py.
+            from denaro.research.misurate import puo_girare_live
+            _ammessa, _motivo = puo_girare_live(
+                str(bot.get("strategy", "grid")), str(bot.get("mode", "paper")))
+            if not _ammessa:
+                log.error("bot %s BLOCCATO: %s", bot["symbol"], _motivo)
+                continue
             bucket = None
             if bot.get("mode") in ("okx", "kraken"):
                 limiters = self.config.get("rate_limits", {}) or {}
