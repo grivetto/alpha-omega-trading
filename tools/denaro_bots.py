@@ -35,6 +35,7 @@ BOTS = [
     ("nuvola_avax",  "AVAX", "nuvola",   ("ssh", "nuvola",   HEALTH + "/avax_nuvola_live.json")),
     ("nuvola_dot",   "DOT",  "nuvola",   ("ssh", "nuvola",   HEALTH + "/dot_nuvola_live.json")),
     ("nuvola_uni",   "UNI",  "nuvola",   ("ssh", "nuvola",   HEALTH + "/uni_nuvola_live.json")),
+    ("nuvola_mina",  "MINA", "nuvola",   ("ssh", "nuvola",   HEALTH + "/mina_nuvola_live.json")),
     ("nuvola_sui",   "SUI",  "nuvola",   ("ssh", "nuvola",   HEALTH + "/sui_nuvola_live.json")),
 
     ("marcodg1_ada",  "ADA",  "MARCODG1", ("ssh", "MARCODG1", HEALTH_MARCO + "/ada_marcodg1_live.json")),

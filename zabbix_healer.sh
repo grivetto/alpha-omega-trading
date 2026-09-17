@@ -42,6 +42,7 @@ declare -A HOST_SERVICE=(
   ["alpha-omega-bot-mc2-doge"]="local|denaro-node-mc2"
   ["alpha-omega-bot-mc2-trx"]="local|denaro-node-mc2"
   ["alpha-omega-bot-mc2-crv"]="local|denaro-node-mc2"
+  ["alpha-omega-bot-nuvola-mina"]="nuvola|denaro-node-nuvola-trade"
   ["alpha-omega-bot-nuvola-sui"]="nuvola|denaro-node-nuvola-trade"
   ["alpha-omega-bot-marcodg1-algo"]="MARCODG1|denaro-node-marcodg1-xrp"
   ["alpha-omega-bot-nuvola-link"]="nuvola|denaro-node-nuvola-trade"
