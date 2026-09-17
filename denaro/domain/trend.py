@@ -38,7 +38,8 @@ class TrendParams:
 
     __slots__ = ("canale", "atr_period", "trail_mult", "stop_atr_mult",
                  "trend_ema", "risk_pct", "max_exposure", "entry_slip",
-                 "fee_buffer", "max_barre", "periodo_barre_s")
+                 "fee_buffer", "max_barre", "periodo_barre_s",
+                 "offset_barre_s")
 
     def __init__(self, canale: int = 40, atr_period: int = 14,
                  # trail 2.5 e non 3.0: misurato il 2026-09-18 sul capitale reale
@@ -51,7 +52,8 @@ class TrendParams:
                  max_exposure: float = 1.0, entry_slip: float = 0.0005,
                  fee_buffer: float = FEE_BUFFER,
                  max_barre: int = 400,
-                 periodo_barre_s: float = GIORNO_S) -> None:
+                 periodo_barre_s: float = GIORNO_S,
+                 offset_barre_s: float = 0.0) -> None:
         self.canale = canale
         self.atr_period = atr_period
         self.trail_mult = trail_mult
@@ -70,6 +72,15 @@ class TrendParams:
         # Rendere il periodo un parametro e' cio' che permette di passare al 4H
         # senza riscrivere la policy.
         self.periodo_barre_s = float(periodo_barre_s) or GIORNO_S
+        # SFASAMENTO del confine di barra rispetto all'epoca UNIX. Gli exchange
+        # NON allineano le candele giornaliere a mezzanotte UTC: OKX le allinea a
+        # mezzanotte UTC+8, cioe' alle 16:00 UTC (verificato il 2026-09-17 su
+        # eea.okx.com: ts % 86400 == 57600). Il default 0 e' il caso "mezzanotte
+        # UTC"; la policy lo RICAVA dalle barre in precarica_barre, perche' le
+        # barre costruite dai tick devono chiudersi sullo STESSO confine delle
+        # candele su cui la strategia e' stata misurata: altrimenti il live valuta
+        # un segnale diverso da quello del backtest (trovato il 2026-09-17).
+        self.offset_barre_s = float(offset_barre_s) % self.periodo_barre_s
 
 
 class TrendPolicy(Policy):
@@ -112,7 +123,11 @@ class TrendPolicy(Policy):
         if price <= 0 or now is None:
             return False
         periodo = self.params.periodo_barre_s or GIORNO_S
-        indice = int(now // periodo)
+        offset = self.params.offset_barre_s
+        # il confine di barra e' quello dell'EXCHANGE (per OKX le 16:00 UTC),
+        # non la mezzanotte UTC: cosi' le barre dei tick coincidono con le
+        # candele del backtest
+        indice = int((now - offset) // periodo)
         if self._giorno is None:
             self._giorno = indice
             self._ap = self._ma = self._mi = self._ch = price
@@ -124,7 +139,7 @@ class TrendPolicy(Policy):
                 self._mi = price
             self._ch = price
             return False
-        self.barre.append({"ts": self._giorno * periodo, "o": self._ap,
+        self.barre.append({"ts": self._giorno * periodo + offset, "o": self._ap,
                            "h": self._ma, "l": self._mi, "c": self._ch})
         self._giorno = indice
         self._ap = self._ma = self._mi = self._ch = price
@@ -220,13 +235,26 @@ class TrendPolicy(Policy):
             return 0
         lette.sort(key=lambda x: x[0])
         periodo = self.params.periodo_barre_s or GIORNO_S
+        # SFASAMENTO: si ricava dalla griglia ricevuta. Le candele di un exchange
+        # cadono tutte sullo stesso confine (OKX: 16:00 UTC), quindi la fase
+        # DOMINANTE e' il confine vero; con esso le barre costruite dai tick si
+        # chiudono esattamente dove si chiudono le candele del backtest.
+        fasi: Dict[int, int] = {}
+        for x in lette:
+            fase = int(int(x[0]) % int(periodo))
+            fasi[fase] = fasi.get(fase, 0) + 1
+        if fasi:
+            fase, quante = max(fasi.items(), key=lambda kv: (kv[1], kv[0]))
+            if quante * 4 >= len(lette) * 3:      # >= 75%: griglia uniforme
+                self.params.offset_barre_s = float(fase) % periodo
+        offset = self.params.offset_barre_s
         if now is not None:
-            inizio_oggi = int(float(now) // periodo) * periodo
+            inizio_oggi = int((float(now) - offset) // periodo) * periodo + offset
             lette = [x for x in lette if x[0] < inizio_oggi]
         # dedup per PERIODO: tiene l'ULTIMA occorrenza (la piu' completa)
         per_periodo = {}
         for x in lette:
-            per_periodo[int(x[0] // periodo)] = x
+            per_periodo[int((x[0] - offset) // periodo)] = x
         lette = [per_periodo[k] for k in sorted(per_periodo)]
         # scarta l'ultima se e' la barra di oggi (non ancora chiusa): il suo
         # massimo/minimo sarebbero parziali e falserebbero il canale
