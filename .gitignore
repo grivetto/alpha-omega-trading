@@ -120,3 +120,8 @@ legacy/
 .codewhale/
 fase1_reply_*.txt
 _last_gen.txt
+
+# La dir health DENTRO denaro/ e' scritta dal cron dell'aggregator
+# (snapshot ogni minuto). Il pattern health/*.json qui sopra e' ancorato
+# alla radice: non la copriva, e il file finiva tracciato.
+denaro/health/
