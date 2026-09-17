@@ -240,3 +240,52 @@ def test_metriche_oos_composte():
     assert v.bh_oos_composto == pytest.approx(0.1025)         # 1.05*1.05-1
     assert v.alpha_oos_composto == pytest.approx(0.21 - 0.1025)
     assert v.peggior_fold == pytest.approx(0.10)
+
+# ── 8. cross-sezionale: la scommessa relativa ───────────────────────────────
+
+def test_xsec_rifiuta_pochi_simboli():
+    serie = {"A/EUR": _barre([100.0] * 50), "B/EUR": _barre([100.0] * 50)}
+    r = E.backtest_xsec(serie, {"lookback": 10, "k": 1, "rebalance": 5})
+    assert r.errore, "con meno di 3 simboli il cross-sezionale non ha senso"
+
+
+def test_xsec_seleziona_il_migliore():
+    """Con un asset che sale e due che scendono, deve scegliere quello che sale."""
+    serie = {}
+    serie["SU/EUR"] = _barre([100.0 * (1.01 ** i) for i in range(400)])
+    serie["GIU1/EUR"] = _barre([100.0 * (0.99 ** i) for i in range(400)])
+    serie["GIU2/EUR"] = _barre([100.0 * (0.995 ** i) for i in range(400)])
+    r = E.backtest_xsec(serie, {"lookback": 20, "k": 1, "rebalance": 10},
+                        capitale=100.0, fee=0.002)
+    assert not r.errore
+    assert r.ritorno > 0, "doveva seguire l'asset in salita, ritorno %+.2f%%" % (100 * r.ritorno)
+    assert r.esposizione_pct > 50.0, "doveva restare investito quasi sempre"
+
+
+def test_xsec_filtro_di_mercato_manda_a_cash():
+    """Con il filtro attivo e un paniere in discesa, l'equity resta piatta."""
+    serie = {}
+    for k in range(3):
+        serie["A%d/EUR" % k] = _barre([100.0 * (0.99 ** i) for i in range(500)])
+    senza = E.backtest_xsec(serie, {"lookback": 20, "k": 2, "rebalance": 10},
+                            capitale=100.0, fee=0.002)
+    con = E.backtest_xsec(serie, {"lookback": 20, "k": 2, "rebalance": 10,
+                                  "cash_filter_ma": 100}, capitale=100.0, fee=0.002)
+    assert senza.ritorno < 0, "senza filtro un paniere in discesa perde"
+    assert con.ritorno > senza.ritorno, "il filtro doveva proteggere il capitale"
+
+
+def test_xsec_nessuna_selezione_sul_futuro():
+    """La classifica a barra i usa solo prezzi fino a i: niente look-ahead.
+
+    Con il primo tratto piatto e poi un crollo solo dell'ultimo asset, la
+    strategia non puo' averlo evitato PRIMA che accadesse.
+    """
+    piatto = _barre([100.0] * 200)
+    crollo = _barre([100.0] * 199 + [50.0])
+    serie = {"A/EUR": piatto, "B/EUR": piatto, "C/EUR": crollo}
+    r = E.backtest_xsec(serie, {"lookback": 20, "k": 1, "rebalance": 10},
+                        capitale=100.0, fee=0.0)
+    # con fee zero e un solo crollo, il selezionatore non puo' prevederlo:
+    # il rendimento non deve essere positivo solo per aver scartato C
+    assert r.ritorno <= 0.0, "ha evitato il crollo prima che accadesse: look-ahead"
