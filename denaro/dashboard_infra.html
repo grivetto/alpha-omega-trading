@@ -131,8 +131,11 @@ header { display: flex; align-items: flex-end; justify-content: space-between; m
 .badge { padding: 4px 12px; border-radius: 4px; font-size: 10px; letter-spacing: 1px; font-weight: 800; border: 1px solid; }
 .badge.running { color: var(--neon-green); border-color: var(--neon-green); background: rgba(10,255,157,0.1); box-shadow: 0 0 10px rgba(10,255,157,0.3); }
 .badge.stopped { color: var(--neon-red); border-color: var(--neon-red); background: rgba(255,46,99,0.1); }
+.badge.inpos { color: #ffe600; border-color: #ffe600; background: rgba(255,230,0,0.12); box-shadow: 0 0 10px rgba(255,230,0,0.25); }
 .bot-eq { font-size: 32px; font-weight: 900; letter-spacing: -1px; font-family: 'Orbitron', sans-serif; color: var(--bot-color, var(--neon-cyan)); text-shadow: 0 0 10px currentColor; }
-.bot-eq-label { color: var(--dim); font-size: 10px; letter-spacing: 2px; margin-bottom: 16px; }
+.bot-eq-label { color: var(--dim); font-size: 10px; letter-spacing: 2px; margin-bottom: 10px; }
+.bot-pos { font-size: 10px; letter-spacing: 1px; margin-bottom: 12px; color: var(--dim); }
+.bot-pos.on { color: #ffe600; font-weight: 700; }
 .bot-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
 .stat { text-align: center; border-right: 1px solid rgba(0,243,255,0.1); }
 .stat:last-child { border-right: none; }
@@ -308,16 +311,27 @@ const ebKeys = Object.keys(eb).filter(k => eb[k] && eb[k].ok && eb[k].eur !== nu
     const stTxt = st === 'running' ? 'OPERATIVE' : (st === 'no_file' ? 'NO DATA' : st.toUpperCase());
     const pnl = b.pnl || 0;
     const pnlTxt = (pnl >= 0 ? '+' : '') + fmt(pnl, 4) + '€';
+    // Posizione realmente detenuta (telemetria 2026-09-18): il bot resta
+    // "running" anche mentre e' dentro il mercato, quindi serve un badge
+    // dedicato per non confondere FLAT e IN POSIZIONE.
+    const inPos = Number(b.in_posizione) > 0;
+    const posTxt = inPos
+      ? 'IN POSIZIONE · ENTRY ' + fmt(b.pos_entry, 4) + '€ · STOP ' + (Number(b.pos_stop) > 0 ? fmt(b.pos_stop, 4) + '€' : 'n/d')
+      : 'FLAT';
     const div = document.createElement('div');
     div.className = 'bot';
     div.style.setProperty('--bot-color', meta.color);
     div.innerHTML = `
       <div class="bot-head">
         <div><div class="bot-name">${esc(meta.sym)}</div><div class="bot-sym">${esc(meta.ex)}</div></div>
-        <span class="badge ${stCls}">${esc(stTxt)}</span>
+        <div style="display:flex;gap:6px;align-items:center">
+          ${inPos ? '<span class="badge inpos">IN POS</span>' : ''}
+          <span class="badge ${stCls}">${esc(stTxt)}</span>
+        </div>
       </div>
       <div class="bot-eq">${fmt(b.total_equity)}€</div>
       <div class="bot-eq-label">EQUITY</div>
+      <div class="bot-pos ${inPos ? 'on' : ''}">${posTxt}</div>
       <div class="bot-stats">
         <div class="stat"><div class="v buys">${b.buys ?? 0}</div><div class="l">BUY</div></div>
         <div class="stat"><div class="v sells">${b.sells ?? 0}</div><div class="l">SELL</div></div>
