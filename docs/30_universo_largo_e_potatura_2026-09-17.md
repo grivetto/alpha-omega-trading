@@ -83,3 +83,20 @@ Due ipotesi chiuse con dati, non con opinioni: e' esattamente il mandato
   su storia e 4 finestre, capitale condiviso per conto.
 - `tools/trend_potatura_oos.py`: protocollo di selezione in campione /
   validazione fuori campione, per non ripetere l'errore della potatura.
+
+## 30.6 Quanto pesano i costi (e quanto vale cambiarli)
+
+Stessa flotta, stessa capacita', fee diverse (`tools/trend_sensibilita_fee.py`,
+109 EUR di capitale):
+
+| fee | storia | 365b | Sharpe storia | in EUR (storia) |
+|---|---|---|---|---|
+| taker spot 0.35% (oggi) | +79.60% | +8.37% | 1.24 | 86.76 EUR |
+| maker spot 0.20% | +82.65% | +9.21% | 1.28 | 90.08 EUR (+3.32) |
+| taker derivati 0.05% | +85.72% | +10.05% | 1.31 | 93.43 EUR (+6.67) |
+| costi zero | +86.75% | +10.33% | 1.32 | 94.55 EUR (+7.79) |
+
+Lettura: **tutto il costo sostenuto in 2.4 anni vale 7.79 EUR**, il 8% del
+rendimento lordo. Sull'anno recente: passare a ordini **maker** vale ~+0.9 EUR,
+ai **derivati** ~+1.8 EUR. Non e' la leva che cambia il conto a 109 EUR — ma
+scala linearmente col capitale e costa poco provarci.
