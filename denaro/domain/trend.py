@@ -33,6 +33,13 @@ from .sizing import FEE_BUFFER
 
 GIORNO_S = 86_400.0
 
+# Un ingresso del trend e' un limite SOPRA il mercato al confine: si riempie
+# in secondi. Se resta aperto oltre questa soglia il segnale e' SCADUTO
+# (il prezzo e' scattato oltre il limite) e va cancellato: altrimenti blocca
+# ogni ingresso futuro e puo' riempirsi giorni dopo a un prezzo che non e'
+# piu' quello misurato.
+SCADENZA_BUY_S = 900.0
+
 
 class TrendParams:
     """Parametri del trend giornaliero. Default = set fisso misurato buono."""
@@ -440,6 +447,31 @@ class TrendPolicy(Policy):
             return d
 
         # --- flat: valuta il breakout SOLO alla chiusura di una barra ---
+# SEGNALE SCADUTO: al confine il limite e' sopra il mercato e si riempie in
+# secondi; se e' rimasto aperto va cancellato SUBITO, non al prossimo
+# breakout (altrimenti blocca il bot per mesi e puo' riempirsi a un prezzo
+# che non e' piu' quello misurato).
+        if open_buys:
+            scaduti = []
+            for oid, info in open_buys.items():
+                ts_ordine = info.get("timestamp")
+                if not ts_ordine:
+                    # eta' ignota: NON si cancella (meglio un blocco visibile
+                    # che buttare via un ordine buono appena piazzato)
+                    continue
+                try:
+                    eta = float(now) - float(ts_ordine)
+                except (TypeError, ValueError):
+                    continue
+                if eta > SCADENZA_BUY_S:
+                    scaduti.append(oid)
+            if scaduti:
+                d.to_cancel = list(scaduti)
+                d.reason = ("trend: %d buy non riempiti da oltre %d s, "
+                            "cancellati (segnale scaduto)"
+                            % (len(scaduti), int(SCADENZA_BUY_S)))
+                return d
+
         if not nuovo_giorno:
             d.reason = "trend: attesa chiusura giornaliera (atr %.4f)" % self.atr
             return d
