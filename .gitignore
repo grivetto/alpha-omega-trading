@@ -126,6 +126,10 @@ _last_gen.txt
 # alla radice: non la copriva, e il file finiva tracciato.
 denaro/health/
 
+# Dato della scommessa: generato dal cron su MARCODG1 (tools/scommessa.py),
+# non e' codice — mai nel repo.
+denaro/scommessa.json*
+
 # cartella morta rimossa: se ricreata non deve finire in git
 _dead/
 
