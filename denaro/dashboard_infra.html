@@ -204,6 +204,11 @@ footer { margin-top: 30px; text-align: center; color: var(--dim); font-size: 11p
 
   <div class="bots" id="bots"></div>
 
+  <div class="card" style="margin-bottom:18px; border-color:rgba(255,230,0,0.35)">
+    <h2><span class="ico">◈</span> SCOMMESSA ASIMMETRICA — AIRDROP FARMING · BASE</h2>
+    <div id="scommessa"><div class="skeleton">—</div></div>
+  </div>
+
   <div class="grid">
     <div class="card"><h2><span class="ico">▒</span> PREZZI LIVE</h2><div id="prices"></div></div>
     <div class="card"><h2><span class="ico">▒</span> SALDI EXCHANGE</h2><div id="balances"></div></div>
@@ -340,7 +345,7 @@ const ebKeys = Object.keys(eb).filter(k => eb[k] && eb[k].ok && eb[k].eur !== nu
       </div>`;
     bwrap.appendChild(div);
   }
-  if (shown === 0) bwrap.innerHTML = '<div class="card" style="grid-column:1/-1">NO BOT DETECTED</div>';
+  if (shown === 0) bwrap.innerHTML = '<div class="card" style="grid-column:1/-1">FLOTTA FERMA — NESSUN BOT ATTIVO ORA</div>';
 
   // Prezzi
   const pr = d.prices || {};
@@ -408,10 +413,16 @@ const ebKeys = Object.keys(eb).filter(k => eb[k] && eb[k].ok && eb[k].eur !== nu
     return `<div class="row"><span class="k">${esc(k)}</span><span class="pill ${up ? 'ok' : 'warn'}">${esc(v)}</span></div>`;
   }).join('') || '<div class="skeleton">—</div>';
 
-  // Status
+  // Status: con la flotta a zero bot freschi il badge lo dice esplicitamente
+  // (prima restava "CAUTION — COMPONENT OFFLINE", che sembrava un guasto).
   const allOk = shown > 0 && ORDER.every(n => !bots[n] || bots[n].status === 'running');
-  $('sysstatus').textContent = allOk ? 'SYSTEM ONLINE' : 'CAUTION — COMPONENT OFFLINE';
-  $('dot').className = 'pulse' + (allOk ? '' : ' warn');
+  if (shown === 0) {
+    $('sysstatus').textContent = 'FLOTTA FERMA — NESSUN BOT ATTIVO';
+    $('dot').className = 'pulse warn';
+  } else {
+    $('sysstatus').textContent = allOk ? 'SYSTEM ONLINE' : 'CAUTION — COMPONENT OFFLINE';
+    $('dot').className = 'pulse' + (allOk ? '' : ' warn');
+  }
 
   // ── NODE ENGINE: tutti i bot (paper + live) ──
   renderNodeBots(d);
@@ -571,9 +582,56 @@ function renderErrors(d) {
     `<div class="row"><span class="k">${esc(sym)}</span><span class="v bad">${esc(String(e).slice(0, 90))}</span></div>`).join('');
 }
 
+async function loadScommessa() {
+  try {
+    const r = await fetch('/scommessa.json', {cache: 'no-store'});
+    if (!r.ok) { renderScommessa(null); return; }
+    renderScommessa(await r.json());
+  } catch (e) { renderScommessa(null); }
+}
+
+// Regola di onesta' (spec DSH 2026-09-19): oltre 30 minuti senza dato fresco
+// la scheda dichiara "DATO NON AGGIORNATO" e non mostra i numeri vecchi.
+function renderScommessa(s) {
+  const wrap = $('scommessa');
+  if (!s || s.ok === false || typeof s.ts !== 'number') {
+    wrap.innerHTML = '<div class="skeleton">DATO NON AGGIORNATO' +
+      (s && s.errore ? ' — ' + esc(String(s.errore).slice(0, 90)) : ' — nessun dato dal generatore') + '</div>';
+    return;
+  }
+  const ageS = Date.now() / 1000 - s.ts;
+  const upd = s.ts_iso ? s.ts_iso.replace('T', ' ').replace('Z', '') + ' UTC' : '—';
+  if (ageS > 1800 || ageS < -300) {
+    wrap.innerHTML = '<div class="skeleton">DATO NON AGGIORNATO — ultimo dato: ' + esc(upd) + '</div>';
+    return;
+  }
+  const w = String(s.wallet || '');
+  const wallet = w.length > 14 ? w.slice(0, 6) + '…' + w.slice(-4) : (w || '—');
+  const gas = s.gas_sufficiente
+    ? '<span class="pill ok">GAS OK</span>'
+    : '<span class="pill bad">GAS BASSO</span>';
+  wrap.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:24px;flex-wrap:wrap">
+      <div>
+        <div class="eq-label">// VALORE SCOMMESSA (live)</div>
+        <div class="bot-eq" style="font-size:42px;color:var(--neon-yellow)">€${fmt(s.valore_eur)}</div>
+        <div class="eq-break">${fmt(s.usdc, 4)} USDC · ${fmt(s.eth, 6)} ETH · wallet <b>${esc(wallet)}</b> · ${esc(s.rete || '—')}</div>
+        <div class="eq-break">tetto perdita <b>€${fmt(s.tetto_perdita_eur, 0)}</b> · sopravvivenza <b>${fmt(s.sopravvivenza_pct, 1)}%</b></div>
+      </div>
+      <div style="min-width:280px;text-align:right">
+        ${gas}
+        <div class="bot-sym" style="margin-top:12px;color:var(--dim)">FASE: <span style="color:var(--txt)">${esc(s.fase || '—')}</span></div>
+        <div class="bot-sym" style="color:var(--dim)">PROSSIMO: <span style="color:var(--txt)">${esc(s.prossimo_passo || '—')}</span></div>
+        <div class="bot-sym" style="margin-top:8px">aggiornato ${esc(upd)}</div>
+      </div>
+    </div>`;
+}
+
 function tick() { $('clock').textContent = new Date().toLocaleTimeString('it-IT'); }
 load();
+loadScommessa();
 setInterval(load, 30000);
+setInterval(loadScommessa, 60000);
 setInterval(tick, 1000);
 tick();
 </script>

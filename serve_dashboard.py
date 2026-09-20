@@ -22,6 +22,8 @@ Cosa fa adesso:
   GET /dashboard/       -> idem (prima era 404)
   GET /api/infra.json   -> JSON dell'aggregator (proxy) + fallback last-good
   GET /infra.json       -> alias di /api/infra.json
+  GET /scommessa.json   -> dato della scommessa asimmetrica (spec DSH 19/09)
+  GET /api/dsh.json     -> stato del bridge DSH/Stella
   GET /healthz          -> stato del servizio in JSON
 
 Configurazione (env var, override da riga di comando):
@@ -54,7 +56,10 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 HTML_ROUTES = {"/", "/dashboard", "/dashboard/", "/index.html"}
-JSON_ROUTES = {"/api/infra.json", "/infra.json", "/api/infra", "/infra"}
+JSON_ROUTES = {"/api/infra.json", "/infra.json", "/api/infra", "/infra", "/api/dsh.json", "/dsh.json"}
+# La scheda scommessa legge il file scritto dal cron (tools/scommessa.py su
+# MARCODG1); il server lo serve senza cache: se manca -> 404 "nessun dato".
+SCOMMESSA_ROUTES = {"/scommessa.json", "/api/scommessa.json"}
 # favicon a tema gioco (dado neon), servita come file statico
 FAVICON_ROUTES = {"/favicon.svg", "/favicon.ico", "/favicon.png"}
 
@@ -229,6 +234,40 @@ class DashboardHandler(BaseHTTPRequestHandler):
         body = json.dumps(st).encode()
         self._send(200 if st["ok"] else 503, body, "application/json; charset=utf-8", head_only=head_only)
 
+    def _serve_dsh(self, head_only: bool = False) -> None:
+        """Serve /api/dsh.json — stato DSH/Stella bridge."""
+        try:
+            from denaro.dsh_status import build_dsh_status
+            payload = build_dsh_status()
+            body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+        except Exception as exc:
+            log("dsh_status error: %s" % exc)
+            body = json.dumps({"error": "dsh_status failed", "detail": str(exc)}).encode()
+        self._send(200, body, "application/json; charset=utf-8", head_only=head_only)
+
+    def _serve_scommessa(self, head_only: bool = False) -> None:
+        """Serve /scommessa.json — il dato della scommessa (spec DSH 2026-09-19).
+
+        Legge <DASH_HTML_DIR>/scommessa.json, rigenerato ogni 10 minuti dal
+        cron su MARCODG1. Se il file manca: 404 {"error":"nessun dato"}.
+        Nessuna cache: la freschezza si giudica dal ts nel payload, e la
+        scheda in pagina dichiara "DATO NON AGGIORNATO" oltre i 30 minuti.
+        """
+        path = Path(self.html_dir) / "scommessa.json"
+        try:
+            body = path.read_bytes()
+            json.loads(body.decode("utf-8", "replace"))  # JSON valido o niente
+        except FileNotFoundError:
+            self._send(404, b'{"error":"nessun dato"}',
+                       "application/json; charset=utf-8", head_only=head_only)
+            return
+        except Exception as exc:
+            log("scommessa.json illeggibile (%s): %s" % (path, exc))
+            self._send(500, json.dumps({"error": "scommessa illeggibile"}).encode(),
+                       "application/json; charset=utf-8", head_only=head_only)
+            return
+        self._send(200, body, "application/json; charset=utf-8", head_only=head_only)
+
     # ---------- HTTP ----------
     def do_GET(self) -> None:  # noqa: N802
         path = self.path.split("?", 1)[0].rstrip("/") or "/"
@@ -243,6 +282,10 @@ class DashboardHandler(BaseHTTPRequestHandler):
             return
         if path in HTML_ROUTES or path == "":
             self._serve_html()
+        elif path in SCOMMESSA_ROUTES:
+            self._serve_scommessa()
+        elif path in {"/api/dsh.json", "/dsh.json"}:
+            self._serve_dsh()
         elif path in {r.rstrip("/") or "/" for r in JSON_ROUTES}:
             self._serve_json()
         elif path == "/healthz":
@@ -263,6 +306,8 @@ class DashboardHandler(BaseHTTPRequestHandler):
             return
         if path in HTML_ROUTES:
             self._serve_html(head_only=True)
+        elif path in SCOMMESSA_ROUTES:
+            self._serve_scommessa(head_only=True)
         elif path in {r.rstrip("/") or "/" for r in JSON_ROUTES}:
             self._serve_json(head_only=True)
         elif path == "/healthz":
