@@ -54,49 +54,47 @@ REMOTE_NODES = {
 def sorgenti_conti():
     """Sorgenti dei conti OKX, scelte in base alla MACCHINA su cui giriamo.
 
-    Difetto trovato il 2026-09-17: i path erano fissi per MARCODG1, ma lo stesso
-    file gira anche su mc2. L'aggregator di mc2 rispondeva "no key" per due conti
-    su tre e la dashboard web mostrava 24.83 EUR invece di 74.58 — un terzo del
-    capitale, con due subaccount vivi e invisibili.
+    Aggiornato il 2026-09-20: i path precedenti puntavano ai .env del sistema
+    PRE-freeze, con chiavi ormai morte (50119 / ssh fallito): la dashboard
+    mostrava 0-0.02 EUR invece del capitale reale. Ora si leggono i SEGRETI
+    DEL RIDEPLOY (~/denaro/secrets, verificati il 19/09 da ccxt).
+    Regola: ogni conto va letto SULLA macchina da cui la sua chiave funziona.
+      - main    : whitelist 87.106.222.123 + 87.106.3.15 -> si legge da MARCODG1;
+      - i 3 sub : verificati leggibili da mc2 -> si leggono da mc2
+                  (l'aggregator di MARCODG1 li legge via tunnel inverso :2222);
+      - nuvola  : non esegue l'aggregator; ramo tenuto minimo.
 
     Ritorna (locali, remoti):
       locali[label] = (path_env, prefisso)
       remoti[label] = (ssh_target, porta, path_env, python_remoto, prefisso)
     """
-    # NB: l'UTENTE va specificato. Da mc2 l'utente corrente e' gia' sergio e
-    # funzionava; da MARCODG1 l'utente e' marco e ssh usava quello, quindi
-    # nuvolasub1 rispondeva "ssh/ccxt fallito" e 24.83 EUR sparivano dal totale.
-    nuvola = ("sergio@87.106.3.15", 22, "/home/sergio/denaro/.env",
-              "/home/sergio/denaro/venv/bin/python", "")
-    marco_main = ("MARCODG1", 22, "/home/marco/denaro/.env",
-                  "/home/marco/denaro/venv/bin/python", "")
-    marco_sub = ("MARCODG1", 22, "/home/marco/alpha-omega-trading/.env",
-                 "/home/marco/denaro/venv/bin/python", "MARCOSUB1_")
+    _mc2_sub_py = "/home/sergio/denaro/venv/bin/python"
+    subs_mc2 = {
+        "OKX mc2sub1": ("sergio@127.0.0.1", 2222,
+                        "/home/sergio/denaro/secrets/mc2sub1_okx.env", _mc2_sub_py, ""),
+        "OKX marcosub1": ("sergio@127.0.0.1", 2222,
+                          "/home/sergio/denaro/secrets/marcosub1_okx.env", _mc2_sub_py, ""),
+        "OKX nuvolasub1": ("sergio@127.0.0.1", 2222,
+                           "/home/sergio/denaro/secrets/nuvolasub1_okx.env", _mc2_sub_py, ""),
+    }
 
-    if Path("/home/marco/alpha-omega-trading/.env").exists():
-        # ── MARCODG1: main e marcosub1 hanno il .env locale ──
+    if Path("/home/marco/denaro/secrets/main_okx.env").exists():
+        # ── MARCODG1 (dove gira l'aggregator della dashboard pubblica) ──
+        locali = {"OKX main": ("/home/marco/denaro/secrets/main_okx.env", "")}
+        remoti = dict(subs_mc2)
+    elif Path("/home/sergio/denaro/secrets/mc2sub1_okx.env").exists():
+        # ── mc2 (dashboard locale): i tre sub sono locali, main sta su MARCODG1 ──
         locali = {
-            "OKX main": ("/home/marco/denaro/.env", ""),
-            "OKX marcosub1": ("/home/marco/alpha-omega-trading/.env", "MARCOSUB1_"),
+            "OKX mc2sub1": ("/home/sergio/denaro/secrets/mc2sub1_okx.env", ""),
+            "OKX marcosub1": ("/home/sergio/denaro/secrets/marcosub1_okx.env", ""),
+            "OKX nuvolasub1": ("/home/sergio/denaro/secrets/nuvolasub1_okx.env", ""),
         }
-        remoti = {
-            "OKX mc2sub1": ("sergio@127.0.0.1", 2222,
-                            "/home/sergio/alpha-omega-trading/.env",
-                            "/usr/bin/python3", ""),
-            "OKX nuvolasub1": nuvola,
-        }
-    elif Path("/home/sergio/alpha-omega-trading/.env").exists():
-        # ── mc2: qui gira la dashboard web; mc2sub1 e' locale ──
-        locali = {"OKX mc2sub1": ("/home/sergio/alpha-omega-trading/.env", "")}
-        remoti = {
-            "OKX main": marco_main,
-            "OKX marcosub1": marco_sub,
-            "OKX nuvolasub1": nuvola,
-        }
+        remoti = {"OKX main": ("MARCODG1", 22, "/home/marco/denaro/secrets/main_okx.env",
+                               "/home/marco/denaro/venv/bin/python", "")}
     else:
-        # ── nuvola ──
-        locali = {"OKX nuvolasub1": ("/home/sergio/denaro/.env", "")}
-        remoti = {"OKX main": marco_main, "OKX marcosub1": marco_sub}
+        # ── nuvola: l'aggregator non gira qui; ramo minimo (main locale) ──
+        locali = {"OKX main": ("/home/sergio/denaro/secrets/main_okx.env", "")}
+        remoti = {}
     return locali, remoti
 
 # Kraken: piu' chiavi API possono puntare allo STESSO conto -> si deduplica per
@@ -836,18 +834,10 @@ def collect():
                                        remote_py, prefix)
         balances[label] = res if res else {"ok": False, "error": "ssh/ccxt fallito"}
 
-    # 2c) Kraken: una sola voce per conto reale (dedup per fingerprint chiave)
-    for path, key_attr, sec_attr in KRAKEN_ENV_FILES:
-        e = load_env(path)
-        k, s = e.get(key_attr), e.get(sec_attr)
-        if not k or not s:
-            continue
-        r = fetch_kraken_balance({key_attr: k, sec_attr: s}, key_attr, sec_attr)
-        if r.get("ok"):
-            if not any(v.get("acct") and v.get("acct") == r.get("acct")
-                       for kk, v in balances.items() if kk.lower().startswith("kraken")):
-                balances["kraken"] = r
-            break
+    # 2c) Kraken RIMOSSO dal capitale (decommissionato 19/09/2026 per decisione
+    # del proprietario). Non si colleziona piu': la polvere residua (~0.02 EUR)
+    # non deve entrare nel totale della dashboard. KRAKEN_ENV_FILES e
+    # fetch_kraken_balance restano per memoria storica, senza consumer.
 
     data["balances"] = balances
 
@@ -912,6 +902,23 @@ def collect():
             if _expl not in bots or bots[_expl].get("status") in (None, "no_file", "error"):
                 bots[_expl] = _v
 
+    # 6c) FRESCHEZZA delle card (2026-09-20). Le card della flotta devono
+    # mostrare solo bot che stanno lavorando ADESSO: un health di giorni fa
+    # con status "running" e' un fossile, e veniva mostrato come stato attuale.
+    # Il JS salta le card con stale=true; qui si applica lo stesso metro di
+    # collect_node_bots (timestamp piu' vecchio di BOT_STALE_S).
+    _now = time.time()
+    for _k, _h in bots.items():
+        if not isinstance(_h, dict) or _h.get("stale"):
+            continue
+        try:
+            _ts = float(_h.get("timestamp") or 0.0)
+        except (TypeError, ValueError):
+            _ts = 0.0
+        if not _ts or (_now - _ts) > BOT_STALE_S:
+            _h["stale"] = True
+            _h["age_s"] = round(_now - _ts, 1) if _ts else None
+
     # 7) CAPITALE TOTALE REALE = somma dei SALDI reali (account deduplicati).
     #    Prima esistevano due costanti hardcoded (24.0 e 25.47): con 75 EUR
     #    investiti la dashboard mostrava sempre 24 EUR.
@@ -967,7 +974,8 @@ def collect():
         else:
             prefix = f"{node_name}:"
             nb = {k: v for k, v in node_bots.items() if k.startswith(prefix)}
-        running = [b for b in nb.values() if b.get("status") == "running"]
+        running = [b for b in nb.values()
+                   if b.get("status") == "running" and not b.get("stale")]
         node_totals[node_name] = {
             "bots": len(nb),
             "running": len(running),
