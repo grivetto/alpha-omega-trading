@@ -142,7 +142,16 @@ class PaperExchange:
                 "total": {self.quote: total}}
 
     def create_limit_order(self, symbol: str, side: str, amount: float,
-                           price: float) -> dict:
+                           price: float,
+                           client_order_id: Optional[str] = None) -> dict:
+        """Ordine limite simulato, con chiave di idempotenza opzionale (R3b).
+
+        La chiave viene REGISTRATA nell'ordine restituito (campo
+        `client_order_id`), cosi' l'idempotenza e' verificabile senza rete: e' la
+        stessa informazione che l'exchange reale restituisce in
+        `clientOrderId` e che `_rebuild_from_exchange` usa per riconoscere un
+        ordine sopravvissuto a un crash.
+        """
         amount = self._round_amount(float(amount))
         price = self._round_price(float(price))
         notional = amount * price
@@ -152,11 +161,19 @@ class PaperExchange:
         oid = f"paper-{uuid.uuid4().hex[:10]}"
         order = {"id": oid, "symbol": symbol, "side": side,
                  "amount": amount, "price": price, "status": "open"}
+        if client_order_id:
+            order["client_order_id"] = str(client_order_id)
         self.orders[oid] = order
         return order
 
-    def sell_market(self, symbol: str, amount: float) -> dict:
-        """Vendita immediata (stop-loss): slippage realistico come il live."""
+    def sell_market(self, symbol: str, amount: float,
+                    client_order_id: Optional[str] = None) -> dict:
+        """Vendita immediata (stop-loss): slippage realistico come il live.
+
+        La chiave opzionale viene propagata nell'id (e nel fill) dell'ordine a
+        mercato: senza, ogni stop-market era indistinguibile dall'altro e un
+        ordine sopravvissuto a un crash non era attribuibile a nessun bot.
+        """
         amount = self._round_amount(float(amount))
         if amount <= 0 or self.price <= 0:
             return {"id": "", "status": "rejected"}
@@ -165,10 +182,12 @@ class PaperExchange:
         proceeds = amount * exec_price * (1 - self.fee)
         self.cash += proceeds
         self.asset -= amount
+        oid = (f"market-{client_order_id}" if client_order_id
+               else "stop-loss-market")
         self.fill_events.append(
             {"side": "sell", "amount": amount, "price": exec_price,
-             "proceeds": proceeds, "id": "stop-loss-market"})
-        return {"id": "stop-loss-market", "status": "closed"}
+             "proceeds": proceeds, "id": oid})
+        return {"id": oid, "status": "closed"}
 
     def cancel_order(self, order_id: str, symbol: str) -> dict:
         if order_id in self.orders:

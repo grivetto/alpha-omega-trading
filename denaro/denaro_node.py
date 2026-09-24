@@ -28,6 +28,7 @@ from denaro.application.config import load_node_config
 from denaro.application.orchestrator import BotConfig, BotTask, TradeOrchestrator
 from denaro.application.safemode import SafeModeGuardian
 from denaro.application.supervisor import ResourceSupervisor
+from denaro.domain.exposure import AccountExposure
 from denaro.domain.grid import GridParams, GridPolicy
 from denaro.domain.risk import RiskManager
 from denaro.infrastructure.exchanges.paper import PaperExchange
@@ -35,6 +36,23 @@ from denaro.infrastructure.market_data import MarketDataHub
 from denaro.infrastructure.sqlite_store import SqliteStateStore
 
 log = logging.getLogger("denaro.node")
+
+# Cap di ESPOSIZIONE DI CONTO (difetto B, docs/55 Q6) — chiave di config
+# `exposure_cap_notional`, in NOZIONALE (size x prezzo, valuta di quotazione).
+#
+# Si puo' dichiarare a DUE livelli:
+#   exposure_cap_notional: 120.0        # livello NODO: vale per tutti i bot
+#   bots:
+#     - symbol: LINK/EUR
+#       exposure_cap_notional: 40.0     # livello BOT: vince sul livello nodo
+#
+# Il cap e' del CONTO, non del bot: tutti i bot dello stesso conto
+# (`mode` + `env_prefix`) condividono UN registro `AccountExposure`, quindi il
+# vincolo e' sul TOTALE nozionale esposto, sommato fra i bot. Per questo non
+# esiste un "opt-out" per singolo bot: un cap di nodo vale per tutti.
+# Assente o 0 = nessun cap: comportamento INVARIATO (nessun registro, nessun
+# rifiuto, nessun rilascio). Le regole del registro stanno in
+# `denaro/domain/exposure.py` (puro e gia' testato).
 
 # Chiavi di config dei bot modificabili a runtime via strategy_overrides.json.
 # La brain (watchdog/strategy lab) promuove/retrocede strategie scrivendo questo
@@ -47,6 +65,10 @@ _OVERRIDE_KEYS = frozenset({
     "stop_loss_pct", "daily_loss_limit", "max_drawdown_limit",
     "weekly_loss_limit", "max_slippage",
     "tick_interval", "fee", "entry_slip", "quote",
+    # difetto B: il cap di conto e' una chiave OPERATIVA (si alza/abbassa senza
+    # toccare la strategia), quindi la brain puo' regolarla a runtime come le
+    # altre. Un cap piu' stretto riduce l'esposizione, mai il contrario.
+    "exposure_cap_notional",
     # VAGR specific
     "atr_window", "vol_target_pct", "min_spacing_pct", "max_spacing_pct",
     "max_grid_levels", "quiet_threshold", "active_threshold",
@@ -328,6 +350,11 @@ class NodeApp:
         # sul nodo condividono il budget API (D3 del blueprint).
         from denaro.infrastructure.rate_limiter import RateLimiterRegistry
         self.rate_limiters = RateLimiterRegistry()
+        # UN registro di esposizione per CONTO (difetto B, docs/55 Q6): la chiave
+        # e' `mode:env_prefix`, cioe' l'identita' del sub-account. I bot che
+        # condividono il conto condividono il registro e vedono la SOMMA degli
+        # impegni; bot paper e bot live con prefissi diversi restano separati.
+        self._exposures: Dict[str, AccountExposure] = {}
         self._build_bots()
 
     def _apply_overrides(self, bot: dict) -> dict:
@@ -395,6 +422,11 @@ class NodeApp:
                 bot_key=bot_key,
                 stop_loss_pct=float(bot.get("stop_loss_pct", 0.0)),
                 max_slippage=float(bot.get("max_slippage", 0.005)),
+                # difetto A: minimo d'ordine dichiarato, ripiego per la soglia
+                # operativa quando l'adapter non sa rispondere. NB: senza il
+                # campo nello schema Pydantic il valore verrebbe SCARTATO in
+                # silenzio (vedi `application/config.py`).
+                min_notional=float(bot.get("min_notional", 0.0) or 0.0),
                 **paths,
             )
             policy = build_policy(bot, exchange)
@@ -427,6 +459,12 @@ class NodeApp:
             task = BotTask(cfg, exchange, policy, risk,
                            price_source=self._make_price_source(bot["symbol"]),
                            get_equity=self._equity_for(exchange))
+            # difetto B (docs/55 Q6): il cap di esposizione di conto va INIETTATO.
+            # Il registro era pronto (`domain/exposure.py`) e `BotTask.exposure`
+            # gia' previsto, ma nessuno lo costruiva: il cap esisteva solo nei
+            # test. Con `cap <= 0` la chiave e' assente e `task.exposure` resta
+            # None: comportamento INVARIATO.
+            task.exposure = self._exposure_for(bot)
             # per i bot paper: il prezzo dell'hub alimenta i fill simulati, e lo
             # stato cash/asset viene ricostruito dal journal al boot (M5)
             if isinstance(exchange, PaperExchange):
@@ -462,6 +500,42 @@ class NodeApp:
         if isinstance(exchange, PaperExchange):
             return exchange.equity
         return exchange.fetch_total_equity
+
+    def _exposure_for(self, bot: dict) -> Optional[AccountExposure]:
+        """Registro di esposizione del CONTO a cui appartiene questo bot.
+
+        Un solo registro per conto (`mode` + `env_prefix`): e' cio' che rende
+        visibile la SOMMA degli impegni, che nessun bot vede da solo. Il cap
+        viene dal bot se dichiarato, altrimenti dal nodo; se nessuno dei due lo
+        dichiara (o vale 0) si restituisce None = nessun cap, comportamento
+        storico invariato.
+
+        Se due bot dello stesso conto dichiarano cap DIVERSI si tiene il piu'
+        BASSO e lo si dice: il cap e' un vincolo di conto, e fra due
+        dichiarazioni in conflitto si sceglie quella prudente (mai la piu'
+        permissiva, che sarebbe un modo silenzioso di alzare il rischio).
+        """
+        cap = (float(bot.get("exposure_cap_notional") or 0.0)
+               or float(self.config.get("exposure_cap_notional") or 0.0))
+        if cap <= 0:
+            return None
+        chiave = f"{bot.get('mode', 'paper')}:{bot.get('env_prefix', '') or '-'}"
+        reg = self._exposures.get(chiave)
+        if reg is None:
+            reg = AccountExposure(cap)
+            self._exposures[chiave] = reg
+            log.info("cap esposizione di conto %s: %.2f nozionale", chiave, cap)
+            return reg
+        if cap < reg.cap:
+            log.warning("cap esposizione di conto %s: dichiarati %.2f e %.2f — "
+                        "si applica il piu' basso (%.2f)",
+                        chiave, reg.cap, cap, cap)
+            reg.cap = cap
+        elif cap > reg.cap:
+            log.warning("cap esposizione di conto %s: dichiarati %.2f e %.2f — "
+                        "resta il piu' basso (%.2f)",
+                        chiave, reg.cap, cap, reg.cap)
+        return reg
 
     def _make_price_source(self, symbol: str):
         async def source() -> float:

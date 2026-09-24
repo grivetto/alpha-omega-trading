@@ -16,6 +16,10 @@ import ccxt
 
 from ..rate_limiter import TokenBucket
 from .errors import PermanentExchangeError, TransientExchangeError
+# R3b (docs/58 §58.3): una sola sanificazione per tutti gli adapter. Il vincolo
+# piu' stretto e' quello di OKX ([a-z0-9], max 32): un id valido per OKX e'
+# valido anche per Kraken, quindi la chiave generata dal bot e' portabile.
+from .okx import client_order_id_sicuro
 
 log = logging.getLogger("denaro.kraken")
 
@@ -194,17 +198,42 @@ class KrakenAdapter:
 
     # orders
     def create_limit_order(self, symbol: str, side: str, amount: float,
-                           price: float) -> dict:
+                           price: float,
+                           client_order_id: Optional[str] = None) -> dict:
+        """Ordine limite, con chiave di idempotenza opzionale (R3b, docs/58).
+
+        Kraken accetta `userref`/`cl_ord_id` e ccxt inoltra i parametri non
+        riconosciuti senza errore: si manda la stessa `params={"clOrdId": ...}`
+        dell'adapter OKX, cosi' la chiave generata dal bot e' valida su ENTRAMBI
+        gli exchange (una sola igiene, non due) e un riavvio puo' riconoscere
+        l'ordine su qualunque sede. La sanificazione e' quella di OKX — la piu'
+        stretta delle due — perche' un id accettato da OKX e' accettato anche da
+        Kraken, mentre il contrario non e' garantito.
+
+        Senza `client_order_id` il comportamento e' identico a prima.
+        """
         self._ensure_markets()
-        if side == "buy":
-            out = self._call(self.ex.create_limit_buy_order, symbol, amount, price)
+        coid = client_order_id_sicuro(client_order_id)
+        params: Dict[str, Any] = {"clOrdId": coid} if coid else {}
+        create = (self.ex.create_limit_buy_order if side == "buy"
+                  else self.ex.create_limit_sell_order)
+        if params:
+            out = self._call(create, symbol, amount, price, params)
         else:
-            out = self._call(self.ex.create_limit_sell_order, symbol, amount, price)
+            out = self._call(create, symbol, amount, price)
         self.invalidate_balance()
         return out
 
-    def sell_market(self, symbol: str, amount: float) -> dict:
-        """Vendita immediata (stop-loss): market sell di `amount` asset."""
+    def sell_market(self, symbol: str, amount: float,
+                    client_order_id: Optional[str] = None) -> dict:
+        """Vendita immediata (stop-loss): market sell di `amount` asset.
+
+        Chiave opzionale come per OKX: senza, comportamento storico invariato.
+        """
+        coid = client_order_id_sicuro(client_order_id)
+        if coid:
+            return self._call(self.ex.create_market_sell_order, symbol, amount,
+                              {"clOrdId": coid})
         return self._call(self.ex.create_market_sell_order, symbol, amount)
 
     @property

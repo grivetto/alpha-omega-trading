@@ -28,6 +28,54 @@ La regola operativa è: *un engine per conto, un conto per engine.*
 4. **Le chiavi stanno solo nel `.env`** della WorkingDirectory della unit —
    mai nel repo, mai in questa cartella.
 
+## Chiavi operative
+
+### `min_notional` (per bot)
+
+Minimo d'ordine **dichiarato** per il symbol, in valuta di quotazione. È il
+ripiego della *soglia operativa* del controllo di finanziamento quando
+`min_notional(symbol)` dell'adapter non risponde (markets non caricate, venue
+senza filtro `cost.min`). Sotto quella soglia il bot classifica il conto come
+**NON FINANZIATO** (`capitale_stato: non_finanziato` in health), non piazza
+ordini e **non** aggiorna peak/daily/weekly baseline: niente più tick saltati in
+silenzio con "equity inattendibile".
+
+```yaml
+bots:
+  - symbol: LINK/EUR
+    mode: okx
+    capital: 24.83
+    min_notional: 1.0
+```
+
+Se manca sia dall'adapter sia da qui, si usa il default prudente **1 EUR** e
+l'origine del numero viene dichiarata in health (`capitale_soglia_origine`:
+`exchange` | `config` | `default`).
+
+### `exposure_cap_notional` (di nodo o di bot)
+
+Cap di **esposizione di conto** in nozionale (size × prezzo), cioè il tetto
+sulla SOMMA degli impegni di tutti i bot che condividono il conto
+(`mode` + `env_prefix`). Il cap del motore è per bot: senza questo, sette bot
+sullo stesso conto sommano la propria esposizione e nessuno vede il totale.
+
+```yaml
+exposure_cap_notional: 120.0        # livello NODO: vale per tutti i bot
+bots:
+  - symbol: LINK/EUR
+    exposure_cap_notional: 40.0     # livello BOT: vince su quello di nodo
+```
+
+- **assente o 0 = nessun cap** (comportamento storico invariato: nessun registro
+  iniettato, nessun rifiuto);
+- il cap è del **conto**: non esiste un opt-out per il singolo bot. Se due bot
+  dello stesso conto dichiarano cap diversi si applica il **più basso** (e il
+  nodo lo scrive nel log);
+- quando il cap rifiuta un'apertura, il motivo finisce in `_last_error`
+  (`cap esposizione di conto: headroom esaurito ...`) e nel journal
+  (`exposure_cap_blocked`); cap, impegnato e headroom sono pubblicati in health
+  (`exposure_cap_notional`, `exposure_impegnato`, `exposure_headroom`).
+
 ## Verifica dell'allineamento
 
 ```bash

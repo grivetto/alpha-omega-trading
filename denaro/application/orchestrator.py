@@ -21,6 +21,11 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+from ..domain.capitale import (ORIGINE_DEFAULT, STATO_ILLEGGIBILE,
+                               STATO_NON_FINANZIATO,
+                               STATO_SOTTOCAPITALIZZATO,
+                               ClassificazioneCapitale, classifica_capitale,
+                               risolvi_soglia)
 from ..domain.equity import EquityTracker
 from ..domain.grid import GridDecision, GridLevel, GridPolicy
 from ..domain.risk import RiskManager
@@ -44,6 +49,22 @@ def _sell_parts(item) -> tuple:
     return amount, price, level
 
 
+def _equity_per_health(raw) -> float:
+    """Valore GREZZO da scrivere in health: NaN/None → 0.0, mai un sostituto.
+
+    C7: su una lettura non utilizzabile la telemetria deve restare fedele al
+    conto — si pubblica cio' che si e' letto (0.0 quando non e' un numero),
+    non il capitale di configurazione, che farebbe sembrare finanziato un conto
+    vuoto. `round(None, 4)` solleverebbe TypeError dentro `_write_health`: la
+    sanificazione sta qui, in un punto solo.
+    """
+    try:
+        v = float(raw)
+    except (TypeError, ValueError):
+        return 0.0
+    return v if v == v else 0.0      # NaN → 0.0
+
+
 # --- porta exchange ----------------------------------------------------------
 
 class ExchangePort:
@@ -53,10 +74,16 @@ class ExchangePort:
     def fetch_balance(self) -> dict: ...                        # pragma: no cover
     def fetch_open_orders(self, symbol: str) -> List[dict]: ...  # pragma: no cover
     def fetch_order(self, order_id: str, symbol: str) -> dict: ...  # pragma: no cover
+    # R3b (docs/58 §58.3): `client_order_id` e' OPZIONALE e sta in coda, cosi'
+    # un adapter/fake storico (che non lo accetta) resta valido: chi invia non
+    # passa la chiave se la porta non la dichiara (vedi
+    # `BotTask._client_order_id_accettato`).
     def create_limit_order(self, symbol: str, side: str, amount: float,
-                           price: float) -> dict: ...           # pragma: no cover
+                           price: float,
+                           client_order_id: Optional[str] = None) -> dict: ...  # pragma: no cover
     def cancel_order(self, order_id: str, symbol: str) -> dict: ...  # pragma: no cover
-    def sell_market(self, symbol: str, amount: float) -> dict: ...  # pragma: no cover
+    def sell_market(self, symbol: str, amount: float,
+                    client_order_id: Optional[str] = None) -> dict: ...  # pragma: no cover
 
 
 # --- stato bot ---------------------------------------------------------------
@@ -115,6 +142,12 @@ class BotConfig:
     health_path: Optional[Path] = None
     stop_loss_pct: float = 0.0      # drawdown dal peak → chiudi posizioni e ferma
     max_slippage: float = 0.005     # P2: spread max tollerato per market order
+    # Difetto A (P0): minimo d'ordine DICHIARATO per questo symbol, usato come
+    # ripiego quando l'adapter non sa rispondere (`min_notional(symbol)` → 0).
+    # Serve alla classificazione di finanziamento: sotto il minimo reale nessun
+    # ordine e' piazzabile, quindi il conto e' NON FINANZIATO (visto in
+    # produzione: 0,0003 EUR di dust con `capital: 24.83` per bot).
+    min_notional: float = 0.0
 
 
 # --- bot task ----------------------------------------------------------------
@@ -148,8 +181,23 @@ class BotTask:
         # come per `_supervisor`: None = nessun cap, comportamento invariato.
         self.exposure = None
         self._last_error: str = ""
+        # Difetto A (P0) — stato di FINANZIAMENTO del conto. `capitale_stato` e'
+        # l'ultima classificazione (finisce in health come campo esplicito);
+        # `_capitale_stato_prec` serve al log UNA VOLTA per transizione: il
+        # journal di produzione ripeteva la stessa riga ogni 30 s per 6 bot.
+        self.capitale_stato: Optional[ClassificazioneCapitale] = None
+        self._capitale_stato_prec: Optional[str] = None
+        # soglia operativa risolta una volta (minimo d'ordine reale): cache, cosi'
+        # il controllo di finanziamento non paga una lettura di mercati a tick.
+        self._soglia_operativa_cache: Optional[tuple] = None
         # rate-limit dei log di errore (chiave -> ultimo ts loggato)
         self._err_log_ts: Dict[str, float] = {}
+        # R3b (docs/58 §58.3): contatore monotono delle chiavi d'ordine. Deve
+        # essere UNICO per invio: se lo stesso tick piazza 3 livelli, i 3 id
+        # devono essere diversi, altrimenti la chiave di idempotenza non
+        # distingue nulla (due ordini diversi con la stessa chiave = il secondo
+        # rifiutato, o peggio scambiato per il primo al riavvio).
+        self._id_seq = 0
         # stop-loss gia' scattato (persistente: non rivende dopo un restart)
         self._stop_loss_triggered = False
         # portfolio manager anti-deadlock (capitale virtuale + preflight dedup)
@@ -286,6 +334,116 @@ class BotTask:
         record = {"event": event, "symbol": self.cfg.symbol, "ts": self._now(), **fields}
         await asyncio.to_thread(self.journal.append, record)
 
+    # --- R3b (docs/58 §58.3): chiave di idempotenza degli ordini ---------------
+
+    @staticmethod
+    def _chiave_bot(bot_key: str, symbol: str = "") -> str:
+        """Chiave d'ordine leggibile e accettata dall'exchange: [a-z0-9], ≤16.
+
+        Si usa `bot_key` (mode:env:symbol) perche' distingue due bot che girano
+        sullo STESSO symbol e sullo stesso conto. Se il campo e' vuoto si ripiega
+        sul symbol. Qui non si sanifica: lo fa l'adapter (`client_order_id_sicuro`
+        in `exchanges/okx.py`), che e' l'unico che conosce il vincolo della sede.
+        """
+        grezzo = (bot_key or symbol or "bot").lower()
+        return "".join(car for car in grezzo if car.isalnum())[:16]
+
+    def _nuovo_client_order_id(self, kind: str, extra: str = "") -> str:
+        """Chiave d'ordine UNICA per invio, ≤32 caratteri [a-z0-9].
+
+        R3b (docs/58 §58.3): senza chiave, un crash fra l'invio e il salvataggio
+        dello stato lascia un ordine vivo che il bot non sa piu' riconoscere come
+        proprio (capitale impegnato che non vede). La chiave rende l'ordine NOSTRO
+        per costruzione.
+
+        Formato `<kind><contatore>-<chiave bot>[-<extra>]`:
+        - `kind` distingue l'origine (`gb` grid buy, `gs` ladder sell, `tp`
+          take-profit, `sm` stop a mercato);
+        - il CONTATORE monotono d'istanza garantisce l'unicita' DENTRO l'istanza:
+          lo stesso tick che piazza 3 livelli produce 3 id diversi;
+        - `extra` (es. il livello della scala) rende l'id leggibile nel journal.
+
+        Nota dichiarata: il contatore NON e' persistito, quindi dopo un riavvio la
+        numerazione riparte da 0 e una chiave puo' ripetersi. Cio' che conta e'
+        che l'ordine sia ATTRIBUIBILE (l'exchange restituisce `clientOrderId` e
+        `_rebuild_from_exchange` lo registra); se la sede rifiuta un id duplicato
+        l'ordine non parte, l'errore finisce in `_last_error` e nulla viene scritto
+        nello stato: fallire e' preferibile a duplicare.
+        """
+        self._id_seq = (self._id_seq + 1) % 10000
+        base = self._chiave_bot(getattr(self.cfg, "bot_key", ""), self.cfg.symbol)
+        parti = [f"{kind}{self._id_seq}", base]
+        if extra:
+            parti.append(str(extra))
+        return self._chiave_sicura("-".join(p for p in parti if p))
+
+    @staticmethod
+    def _chiave_sicura(valore: str, max_len: int = 32) -> str:
+        """Normalizza una chiave d'ordine: minuscolo, [a-z0-9], ≤`max_len`.
+
+        Stessa semantica di `exchanges.okx.client_order_id_sicuro`, in forma
+        minima per non far dipendere `application/` da un adapter specifico (il
+        vincolo [a-z0-9]/32 e' di OKX, la sede piu' stretta fra quelle
+        supportate).
+        """
+        return "".join(car for car in str(valore).lower() if car.isalnum())[:max_len]
+
+    @staticmethod
+    def _client_order_id_accettato(fn) -> bool:
+        """True se la porta exchange dichiara `client_order_id` nella firma.
+
+        Serve la tolleranza verso gli adapter/fake storici (4 parametri): passare
+        la chiave a una porta che non la conosce solleverebbe TypeError e
+        BLOCHEREBBE il piazzamento, cioe' sostituirebbe un difetto di
+        tracciabilita' con un difetto di operativita'. In dubbio si invia SENZA
+        chiave (comportamento identico a prima della correzione).
+        """
+        try:
+            return "client_order_id" in inspect.signature(fn).parameters
+        except (TypeError, ValueError):  # builtin o wrapper non ispezionabile
+            return True
+
+    async def _invia_ordine(self, side: str, amount: float, price: float,
+                            client_order_id: Optional[str] = None) -> dict:
+        """Invia un ordine limite, con la chiave d'idempotenza se la porta la usa."""
+        fn = self.ex.create_limit_order
+        if client_order_id and self._client_order_id_accettato(fn):
+            return await asyncio.to_thread(fn, self.cfg.symbol, side, amount,
+                                           price, client_order_id=client_order_id)
+        return await asyncio.to_thread(fn, self.cfg.symbol, side, amount, price)
+
+    async def _vendi_a_mercato(self, amount: float,
+                               client_order_id: Optional[str] = None) -> dict:
+        """Vendita a mercato (stop), con la chiave d'idempotenza se supportata."""
+        fn = self.ex.sell_market
+        if client_order_id and self._client_order_id_accettato(fn):
+            return await asyncio.to_thread(fn, self.cfg.symbol, amount,
+                                           client_order_id=client_order_id)
+        return await asyncio.to_thread(fn, self.cfg.symbol, amount)
+
+    @staticmethod
+    def _chiave_ordine(order: dict) -> Optional[str]:
+        """Estrae la chiave d'ordine dalla risposta dell'exchange, se c'e'.
+
+        La risposta e' di ccxt per gli adapter live (`clientOrderId` sul dict
+        unificato; `clOrdId` dentro `info`) e un dict semplice per il paper
+        (`client_order_id`). Se il campo non c'e' si restituisce None e il
+        comportamento resta quello di prima: nessuna chiave inventata.
+        """
+        if not isinstance(order, dict):
+            return None
+        for chiave in ("clientOrderId", "client_order_id", "clOrdId"):
+            valore = order.get(chiave)
+            if valore:
+                return str(valore)
+        info = order.get("info")
+        if isinstance(info, dict):
+            for chiave in ("clOrdId", "clientOrderId"):
+                valore = info.get(chiave)
+                if valore:
+                    return str(valore)
+        return None
+
     def _rebuild_from_exchange(self) -> None:
         """Ricostruisce lo stato dagli ordini aperti + journal (replay PnL)."""
         # 1) PnL/trades dalla storia (journal immutabile → totale ricostruito)
@@ -308,10 +466,20 @@ class BotTask:
             for o in self.ex.fetch_open_orders(self.cfg.symbol):
                 oid, side = o["id"], o["side"]
                 amount, price = float(o["amount"]), float(o["price"])
+                # R3b (docs/58 §58.3): l'exchange restituisce la chiave
+                # d'idempotenza con cui l'ordine e' stato inviato
+                # (`clientOrderId` in ccxt). Registrarla e' cio' che rende un
+                # ordine sopravvissuto a un crash RICONOSCIBILE come nostro,
+                # invece di un ordine anonimo da classificare "unknown". Se il
+                # campo non c'e' (sede/fake che non lo riporta) il comportamento
+                # resta quello di prima: nessuna chiave inventata.
+                coid = self._chiave_ordine(o)
                 if side == "buy":
-                    self.state.open_buys[oid] = {
-                        "amount": amount, "price": price,
-                        "timestamp": self._now(), "level": 0}
+                    voce = {"amount": amount, "price": price,
+                            "timestamp": self._now(), "level": 0}
+                    if coid:
+                        voce["client_order_id"] = coid
+                    self.state.open_buys[oid] = voce
                 else:
                     # `kind` ignoto: l'ordine arriva dall'exchange, non dal
                     # nostro journal. Viene contato come "non classificato" dalla
@@ -323,11 +491,13 @@ class BotTask:
                     # fabbricato discende un PnL fabbricato, e la telemetria
                     # pubblica una performance che non e' quella del conto.
                     # Si dichiara l'ignoto e lo si propaga a chi deve misurarlo.
-                    self.state.open_sells[oid] = {
-                        "amount": amount, "entry_price": None,
-                        "price": price, "target_price": price,
-                        "kind": "unknown", "timestamp": self._now(),
-                        "entry_unknown": True}
+                    voce = {"amount": amount, "entry_price": None,
+                            "price": price, "target_price": price,
+                            "kind": "unknown", "timestamp": self._now(),
+                            "entry_unknown": True}
+                    if coid:
+                        voce["client_order_id"] = coid
+                    self.state.open_sells[oid] = voce
         except Exception as e:  # noqa: BLE001
             log.warning("rebuild open orders fallito: %s", e)
         # 3) la posizione detenuta va riconciliata con l'ASSET REALE
@@ -391,14 +561,54 @@ class BotTask:
         # cancellati prima della scrittura (bug: errori di piazzamento invisibili)
         self._last_error = ""
         # equity reale: get_equity puo' fare I/O (fetch live) → to_thread
-        raw_equity = await asyncio.to_thread(self._get_equity)
+        try:
+            raw_equity = await asyncio.to_thread(self._get_equity)
+        except Exception as e:  # noqa: BLE001
+            # Lettura del conto FALLITA: e' il caso `illeggibile`, non
+            # `non_finanziato`. Prima l'eccezione usciva dal tick e il bot
+            # restava senza health aggiornata: nessuna traccia del perche'.
+            raw_equity = None
+            self._note_error(f"equity: {e}")
+
+        # DIFETTO A (P0) — PRIMA si stabilisce SE il conto e' finanziato, POI se
+        # la lettura e' plausibile. Sono due domande diverse e collassarle nello
+        # stesso ramo e' esattamente cio' che ha tenuto fermo per ore il nodo
+        # nuvola: 0,0003 EUR di dust, `capital: 24.83` per bot e sei bot che
+        # ripetevano "equity inattendibile" ogni 30 s senza che nulla dicesse
+        # "il conto non e' finanziato".
+        self.capitale_stato = self._classifica_capitale(raw_equity)
+        await self._nota_transizione_capitale(self.capitale_stato)
+        if self.capitale_stato.stato == STATO_NON_FINANZIATO:
+            # (c) NESSUN ordine e (d) NESSUNA baseline toccata: si esce PRIMA di
+            # equity_tracker, peak/daily/weekly e circuit breaker, e prima di
+            # qualunque chiamata di prezzo o di piazzamento — cosi' un conto a
+            # secco non "martella" l'exchange ogni 30 s. Il tick successivo
+            # rilegge il saldo, quindi l'uscita dallo stato e' automatica appena
+            # arrivano fondi, senza restart.
+            self._last_error = self._last_error or self.capitale_stato.messaggio()
+            await self._persist(_equity_per_health(raw_equity), blocked=True)
+            return
+
+        if self.capitale_stato.stato == STATO_ILLEGGIBILE:
+            # Comportamento di OGGI per il guasto transitorio: tick saltato,
+            # nessun valore sostitutivo. Il percorso passa da qui e non da
+            # `_guard_equity`, che su un None formatterebbe "%.4f" di un
+            # non-numero (TypeError nel tick).
+            # Lo stato va in `_last_error` ANCHE quando c'e' gia' la causa
+            # tecnica (`equity: ...`): health deve dire "illeggibile" E perche'.
+            dettaglio = self._last_error
+            self._last_error = self.capitale_stato.messaggio()
+            if dettaglio:
+                self._last_error = f"{self._last_error} — {dettaglio}"
+            await self._persist(_equity_per_health(raw_equity), blocked=True)
+            return
+
         equity = await self._guard_equity(raw_equity)
         if equity is None:
             # C7: equity inattendibile ⇒ NESSUN ordine in questo tick e nessuna
             # baseline aggiornata. In health si scrive il valore GREZZO letto
             # (non un sostituto), cosi' la telemetria resta fedele al conto.
-            await self._persist(raw_equity if raw_equity == raw_equity else 0.0,
-                                blocked=True)
+            await self._persist(_equity_per_health(raw_equity), blocked=True)
             return
         # campione della curva equity: si registra solo qui, dopo il guard, cosi'
         # le letture sporche non avvelenano le metriche
@@ -563,6 +773,12 @@ class BotTask:
         #     sul numero di bot e non sul singolo: un bot che porterebbe il
         #     totale oltre il cap non apre. Senza registro iniettato
         #     (`self.exposure is None`) il comportamento resta quello storico.
+        #     Il nozionale e' quello che il bot impegna DAVVERO (size x prezzo),
+        #     non il capitale di config: il cap misura l'esposizione, non
+        #     l'intenzione. Si passa al registro il TOTALE che il bot avrebbe
+        #     DOPO l'apertura, perche' `can_open` sostituisce l'impegno dello
+        #     stesso bot invece di sommarlo (altrimenti un bot gia' esposto
+        #     aprirebbe sopra il cap).
         if self.exposure is not None and decision.to_place:
             nuovo = 0.0
             for _lv in decision.to_place:
@@ -570,18 +786,28 @@ class BotTask:
                     nuovo += float(_lv.amount) * float(_lv.buy_price)
                 except (TypeError, ValueError):
                     continue
-            if not self.exposure.can_open(self.cfg.bot_key, nuovo):
+            impegnato = self._impegno_corrente(price)
+            if not self.exposure.can_open(self.cfg.bot_key, impegnato + nuovo):
                 decision.to_place = []
                 decision.reason = (
-                    "cap di esposizione di conto: "
-                    f"{self.exposure.total():.2f} + {nuovo:.2f} > "
-                    f"{self.exposure.cap:.2f}")
+                    "cap di esposizione di conto: headroom esaurito "
+                    f"({impegnato:.2f} + {nuovo:.2f} > "
+                    f"{self.exposure.cap:.2f})")
+                # il motivo deve essere leggibile anche in health, non solo nel
+                # journal: senza, un blocco per cap e' indistinguibile da un bot
+                # che semplicemente non vuole tradare.
+                self._last_error = decision.reason
                 await self._journal("exposure_cap_blocked",
                                     richiesto=round(nuovo, 6),
-                                    impegnato=round(self.exposure.total(), 6),
+                                    impegnato=round(impegnato, 6),
+                                    totale=round(self.exposure.total(), 6),
                                     cap=round(self.exposure.cap, 6))
             else:
-                self.exposure.commit(self.cfg.bot_key, nuovo)
+                # PRENOTAZIONE: l'impegno si registra ORA, non al fill, cosi' un
+                # altro bot dello stesso conto che ticka nello stesso giro vede
+                # il capitale gia' impegnato e non apre anche lui. Il valore
+                # viene poi RICONCILIATO con lo stato reale a fine tick.
+                self.exposure.commit(self.cfg.bot_key, impegnato + nuovo)
 
         # 3aa) GRID BILATERALE: i SELL ladder NON richiedono EUR (usano l'asset
         #      in mano) → si eseguono SEMPRE, anche se il preflight blocca i
@@ -606,22 +832,35 @@ class BotTask:
             amount, sell_price, level = _sell_parts(item)
             if level < 0 and idx < len(ladder_levels):
                 level = int(ladder_levels[idx])
+            # R3b (docs/58 §58.3): INTENZIONE scritta sul journal PRIMA dell'invio.
+            # Fra l'invio dell'ordine e il salvataggio dello stato c'e' una
+            # finestra in cui l'ordine esiste sull'exchange e non nel nostro
+            # stato: un crash li' dentro lascia un ordine vivo e non tracciato.
+            # La chiave chiude il buco (l'ordine e' riconoscibile al riavvio),
+            # l'evento lo rende ricostruibile anche a journal letto a mano.
+            coid = self._nuovo_client_order_id("gs", level)
+            await self._journal("order_intent", client_order_id=coid,
+                                side="sell", amount=amount, price=sell_price,
+                                kind="ladder", level=level)
             try:
-                o = await asyncio.to_thread(
-                    self.ex.create_limit_order, self.cfg.symbol, "sell",
-                    amount, sell_price)
+                o = await self._invia_ordine("sell", amount, sell_price, coid)
                 if o:
                     # `price` (prezzo dell'ordine) + `kind`/`level` rendono la
                     # scala ricostruibile e deduplicabile: prima qui si salvava
                     # solo `target_price`, che grid.py non leggeva.
-                    self.state.open_sells[o["id"]] = {
+                    voce = {
                         "amount": amount, "entry_price": price,
                         "price": sell_price, "target_price": sell_price,
                         "kind": "ladder", "level": level,
-                        "timestamp": self._now()}
+                        "timestamp": self._now(),
+                        # chiave d'idempotenza: senza, l'ordine sopravvissuto a un
+                        # crash non e' attribuibile a questo bot
+                        "client_order_id": self._chiave_ordine(o) or coid}
+                    self.state.open_sells[o["id"]] = voce
                     await self._journal("sell_placed", order_id=o["id"],
                                         amount=amount, price=sell_price,
-                                        level=level, kind="ladder")
+                                        level=level, kind="ladder",
+                                        client_order_id=voce["client_order_id"])
                     ladder_ok += 1
             except Exception as e:  # noqa: BLE001
                 ladder_err = ladder_err or str(e)[:160]
@@ -662,6 +901,11 @@ class BotTask:
                         await self._journal("buy_canceled", order_id=oid)
                     except Exception:  # noqa: BLE001
                         pass
+                # la PRENOTAZIONE fatta in 3a-bis non corrisponde a ordini
+                # piazzati: lasciarla in piedi esaurirebbe il cap del conto per
+                # un ordine che non esiste. Si riconcilia con lo stato REALE
+                # prima di uscire.
+                self._reconcile_exposure(price)
                 await self._persist(equity, blocked=False, free_quote=free)
                 return
         if decision.to_place:
@@ -686,22 +930,44 @@ class BotTask:
             except Exception as e:  # noqa: BLE001
                 self._last_error = f"cancel {oid}: {e}"
         for level in decision.to_place:
+            # R3b (docs/58 §58.3): l'INTENZIONE si journalizza PRIMA dell'invio.
+            # Fra l'invio dell'ordine e il salvataggio dello stato c'e' una
+            # finestra in cui l'ordine esiste sull'exchange e non nel nostro
+            # stato. La chiave d'idempotenza rende l'ordine riconoscibile al
+            # riavvio; l'evento `order_intent` rende ricostruibile CIO' CHE
+            # VOLEVAMO inviare, anche se il crash e' avvenuto subito dopo.
+            coid = self._nuovo_client_order_id("gb", level.level)
+            await self._journal("order_intent", client_order_id=coid,
+                                side="buy", amount=level.amount,
+                                price=level.buy_price, kind="grid",
+                                level=level.level)
             try:
-                o = await asyncio.to_thread(
-                    self.ex.create_limit_order, self.cfg.symbol, "buy",
-                    level.amount, level.buy_price)
+                o = await self._invia_ordine("buy", level.amount,
+                                             level.buy_price, coid)
                 if o:
                     self.state.open_buys[o["id"]] = {
                         "amount": level.amount, "price": level.buy_price,
-                        "timestamp": self._now(), "level": level.level}
+                        "timestamp": self._now(), "level": level.level,
+                        # chiave d'idempotenza realmente inviata: se la sede la
+                        # rimanda indietro si registra QUELLA (e' la verita'
+                        # dell'exchange), altrimenti quella che abbiamo inviato
+                        "client_order_id": self._chiave_ordine(o) or coid}
                     await self._journal("buy_placed", order_id=o["id"],
                                         amount=level.amount, price=level.buy_price,
-                                        level=level.level)
+                                        level=level.level, client_order_id=coid)
             except Exception as e:  # noqa: BLE001
                 self._last_error = f"place buy: {e}"
 
         # 5) fill processing post-place (se applicabile)
         await self._process_fills(price)
+
+        # 5-bis) RICONCILIAZIONE DELL'IMPEGNO DI CONTO (docs/55 Q6). Dopo i fill
+        # l'esposizione VERA e' quella che sta nello stato (posizione + ordini),
+        # non quella decisa a inizio tick: `commit` segue il fill, `release`
+        # segue la chiusura. Un bot FLAT libera il suo impegno, altrimenti il cap
+        # del conto resterebbe esaurito per sempre al primo ordine piazzato e
+        # nessun bot aprirebbe mai piu'.
+        self._reconcile_exposure(price)
 
         await self._persist(equity, blocked=False, free_quote=free)
 
@@ -920,6 +1186,171 @@ class BotTask:
         except Exception:
             return 0.0
 
+    # --- finanziamento del conto (difetto A, P0) ------------------------------
+
+    def _soglia_operativa(self) -> tuple:
+        """(soglia minima operativa, origine) — la soglia NON si inventa.
+
+        E' il minimo d'ordine REALE: `min_notional(symbol)` dell'adapter. Se
+        l'adapter non sa rispondere (markets non caricate, venue senza filtro
+        `cost.min`) si usa il `min_notional` dichiarato in config e solo in
+        ultima istanza il default prudente di `domain/capitale.py` — con
+        l'origine scritta in health, cosi' si sa da dove viene il numero.
+
+        Una soglia CERTA viene cacheata: il minimo di un mercato non cambia a
+        ogni tick, e il controllo di finanziamento non deve pagare una lettura
+        di mercati (ne' una chiamata di rete) a ogni giro — cioe' non deve
+        "martellare" l'exchange, che e' il difetto da chiudere.
+        """
+        if self._soglia_operativa_cache is not None:
+            return self._soglia_operativa_cache
+        soglia, origine = risolvi_soglia(
+            self._min_notional(),
+            getattr(self.cfg, "min_notional", 0.0) or 0.0)
+        if origine != ORIGINE_DEFAULT:
+            self._soglia_operativa_cache = (soglia, origine)
+        return soglia, origine
+
+    def _classifica_capitale(self, raw_equity) -> ClassificazioneCapitale:
+        """Classifica il finanziamento del conto dalla lettura grezza.
+
+        La logica sta in `domain/capitale.py` (pura, testabile senza rete): qui
+        si portano solo i due numeri che le servono — il capitale configurato
+        del bot e la lettura del conto — piu' la soglia operativa.
+        """
+        soglia, origine = self._soglia_operativa()
+        return classifica_capitale(self.cfg.capital, raw_equity,
+                                   soglia_operativa=soglia,
+                                   origine_soglia=origine)
+
+    async def _nota_transizione_capitale(self, classif: ClassificazioneCapitale) -> None:
+        """Log e journal UNA VOLTA PER TRANSIZIONE (difetto A).
+
+        Il journal di produzione ripeteva la STESSA riga ogni 30 secondi per
+        ognuno dei 6 bot del nodo nuvola: un allarme che non cambia non e' un
+        allarme, e' rumore che nasconde il fatto. Qui si scrive al CAMBIO di
+        stato — warning entrando in `non_finanziato`, info uscendone — cosi' il
+        journal contiene la TRANSIZIONE, che e' la notizia.
+        """
+        nuovo = classif.stato
+        prec = self._capitale_stato_prec
+        self._capitale_stato_prec = nuovo
+        if nuovo == prec:
+            return
+        if nuovo == STATO_NON_FINANZIATO:
+            log.warning("CAPITALE NON FINANZIATO %s: %s", self.cfg.symbol,
+                        classif.messaggio())
+            await self._journal("capitale_non_finanziato",
+                                capitale_reale=classif.capitale_reale,
+                                capitale_configurato=classif.capitale_configurato,
+                                soglia_operativa=classif.soglia_operativa,
+                                origine_soglia=classif.origine_soglia)
+            return
+        if prec == STATO_NON_FINANZIATO:
+            log.info("CAPITALE %s: %s — operativita' riprende", self.cfg.symbol,
+                     classif.messaggio())
+            await self._journal("capitale_ripristinato",
+                                capitale_reale=classif.capitale_reale,
+                                capitale_configurato=classif.capitale_configurato,
+                                soglia_operativa=classif.soglia_operativa,
+                                origine_soglia=classif.origine_soglia)
+            return
+        if nuovo == STATO_SOTTOCAPITALIZZATO:
+            log.warning("CAPITALE %s: %s", self.cfg.symbol, classif.messaggio())
+            await self._journal("capitale_sottocapitalizzato",
+                                capitale_reale=classif.capitale_reale,
+                                capitale_configurato=classif.capitale_configurato,
+                                soglia_operativa=classif.soglia_operativa)
+            return
+        if prec == STATO_SOTTOCAPITALIZZATO:
+            log.info("CAPITALE %s: %s", self.cfg.symbol, classif.messaggio())
+
+    # --- esposizione di conto (difetto B, docs/55 Q6) -------------------------
+
+    def _impegno_corrente(self, price: float = 0.0) -> float:
+        """Nozionale DAVVERO esposto da questo bot ORA (size x prezzo).
+
+        Non il capitale configurato: il cap misura l'esposizione. Dove vive
+        l'esposizione dipende dalla policy:
+        - le policy a STOP MONITORATO (trend) tengono la posizione in
+          `state.posizione_aperta` e NON hanno ordini di vendita;
+        - le grid non usano `posizione_aperta`: l'asset comprato vive negli
+          ordini di VENDITA aperti, quindi contare solo la posizione
+          dichiarerebbe "flat" un bot che ha appena comprato;
+        - gli ordini di ACQUISTO aperti sono capitale che sta per diventare
+          asset: contano anche loro.
+        """
+        tot = 0.0
+        pos = self.state.posizione_aperta or {}
+        try:
+            q = float(pos.get("amount") or 0.0)
+            rif = (float(price) if price and price > 0
+                   else float(pos.get("entry") or 0.0))
+            if q > 0 and rif > 0:
+                tot += q * rif
+        except (TypeError, ValueError):
+            pass
+        for book in (self.state.open_buys, self.state.open_sells):
+            for info in book.values():
+                try:
+                    q = float(info.get("amount") or 0.0)
+                    p = float(info.get("price") or info.get("target_price") or 0.0)
+                except (TypeError, ValueError):
+                    continue
+                if q > 0 and p > 0:
+                    tot += q * p
+        return tot
+
+    def _reconcile_exposure(self, price: float = 0.0) -> None:
+        """Allinea il registro condiviso allo stato REALE del bot.
+
+        `commit` segue il fill (l'impegno e' la posizione e gli ordini che
+        esistono davvero), `release` segue la chiusura: un bot flat — nessuna
+        posizione e nessun ordine — esce dal totale, altrimenti il cap del conto
+        resterebbe esaurito per sempre. No-op senza registro iniettato
+        (`self.exposure is None`): il comportamento storico resta invariato.
+        """
+        if self.exposure is None:
+            return
+        flat = (not self.state.posizione_aperta and not self.state.open_buys
+                and not self.state.open_sells)
+        if flat:
+            self.exposure.release(self.cfg.bot_key)
+        else:
+            self.exposure.commit(self.cfg.bot_key, self._impegno_corrente(price))
+
+    def _quota_vendibile(self) -> float:
+        """Quanto asset di questo bot si puo' vendere a mercato (mai oltre il suo).
+
+        Il problema che risolve (docs/58 §58.5.2): la correzione R1 — giusta — aveva
+        reso lo stop **cieco per le griglie**. Una policy a stop monitorato (trend)
+        traccia la posizione in `state.posizione_aperta`; una griglia NO: compra, e
+        l'asset comprato vive negli **ordini di vendita** che ha piazzato. Leggendo
+        solo `posizione_aperta`, lo stop di una griglia trovava 0 e non vendeva nulla.
+
+        La quota e' quindi:
+        - la size tracciata (trend), **piu'**
+        - il totale degli ordini di vendita aperti (l'asset che la griglia ha comprato
+          e non ha ancora rivenduto).
+
+        Resta un limite SUPERIORE al diritto del bot, e il chiamante lo interseca
+        comunque con il saldo libero reale: non si vende mai piu' di cio' che il bot
+        ha comprato, ne' piu' di cio' che c'e' sul conto. Cosi' lo stop torna preciso
+        senza tornare a liquidare l'asset di un altro bot o di una mano umana.
+        """
+        pos = self.state.posizione_aperta or {}
+        try:
+            tracciata = float(pos.get("amount") or 0.0)
+        except (TypeError, ValueError):
+            tracciata = 0.0
+        comprato_non_rivenduto = 0.0
+        for o in self.state.open_sells.values():
+            try:
+                comprato_non_rivenduto += float(o.get("amount") or 0.0)
+            except (TypeError, ValueError, AttributeError):
+                continue
+        return max(0.0, tracciata + comprato_non_rivenduto)
+
     async def _esegui_stop_monitorato(self, price: float,
                                       stop_price: float) -> bool:
         """Chiude a MERCATO la posizione perche' il prezzo ha toccato lo stop.
@@ -972,10 +1403,13 @@ class BotTask:
 
         pos = self.state.posizione_aperta or {}
         entrata = float(pos.get("entry") or 0.0)
-        size_posizione = float(pos.get("amount") or 0.0)
+        # La quota del bot: size tracciata (policy a stop monitorato) OPPURE cio' che
+        # ha comprato e non ha rivenduto (griglia). Vedi `_quota_vendibile`.
+        size_posizione = self._quota_vendibile()
         if size_posizione <= 0:
-            # Nessuna posizione tracciata: NON si liquida un saldo sconosciuto.
-            # Meglio una posizione da riconciliare che un conto svuotato.
+            # Nessuna posizione tracciata E nessun ordine di vendita aperto: NON si
+            # liquida un saldo sconosciuto. Meglio una posizione da riconciliare che
+            # un conto svuotato.
             await self._journal("stop_no_position", libero=libero)
             self._last_error = ("stop senza posizione tracciata: nessuna vendita "
                                 "(saldo libero non toccato)")
@@ -990,8 +1424,15 @@ class BotTask:
                         "(libero insufficiente)", self.cfg.symbol, amount,
                         size_posizione)
         if amount > 0:
+            # R3b (docs/58 §58.3): intenzione journalizzata PRIMA della vendita a
+            # mercato. Uno stop partito e non tracciato e' il caso peggiore: la
+            # posizione risulta ancora aperta mentre l'asset e' gia' sul mercato.
+            coid = self._nuovo_client_order_id("sm", "stop")
+            await self._journal("order_intent", client_order_id=coid,
+                                side="sell", amount=amount, price=price,
+                                kind="stop_monitorato", stop=stop_price)
             try:
-                await asyncio.to_thread(self.ex.sell_market, self.cfg.symbol, amount)
+                await self._vendi_a_mercato(amount, coid)
             except Exception as e:  # noqa: BLE001
                 self._last_error = f"trend stop sell: {e}"
                 log.error("TREND STOP %s: vendita fallita: %s", self.cfg.symbol, e)
@@ -1044,8 +1485,13 @@ class BotTask:
         self.state.stop_loss_triggered = True
         self.trading_paused = True
         self._last_error = f"STOP LOSS: drawdown {drawdown * 100:.1f}%"
-        log.warning("STOP LOSS %s: drawdown %.1f%% equity %.2f",
-                    self.cfg.symbol, drawdown * 100, equity)
+        # FOTOGRAFIA DELLA QUOTA, PRIMA DI CANCELLARE: per una griglia la posizione
+        # vive negli ordini di vendita aperti (`_quota_vendibile`), e la cancellazione
+        # degli ordini qui sotto la azzera. Calcolarla dopo significava leggere zero e
+        # non vendere nulla: lo stop di una griglia diventava un no-op silenzioso.
+        _quota = self._quota_vendibile()
+        log.warning("STOP LOSS %s: drawdown %.1f%% equity %.2f quota %.8f",
+                    self.cfg.symbol, drawdown * 100, equity, _quota)
 
         # prezzo per la vendita: dal parametro oppure fetch one-shot
         if price is None:
@@ -1111,9 +1557,19 @@ class BotTask:
             # R1 (docs/53 §0.6): si vende la SIZE DELLA POSIZIONE, non il saldo.
             # Il libero puo' includere l'asset di un altro bot sullo stesso
             # sub-account, o di una mano umana: questo bot risponde solo della
-            # propria size. Se non c'e' posizione tracciata NON si vende nulla.
-            _pos = self.state.posizione_aperta or {}
-            _size = float(_pos.get("amount") or 0.0)
+            # propria size.
+            #
+            # MA la semantica era indecisa (docs/58 §58.5.2): per una GRIGLIA la
+            # posizione NON vive in `posizione_aperta`, vive negli ordini di vendita
+            # che il bot ha piazzato dopo aver comprato. Con la sola size tracciata,
+            # lo stop di una griglia non vendeva nulla: la correzione R1 disabilitava
+            # lo stop invece di renderlo preciso. `_quota_vendibile` chiude la
+            # questione: e' la size tracciata **piu'** cio' che il bot ha comprato e
+            # non ha ancora rivenduto, e resta limitata dal saldo libero.
+            #
+            # La quota e' quella fotografata in testa alla funzione, PRIMA che gli
+            # ordini di vendita fossero cancellati: ricalcolarla qui darebbe zero.
+            _size = _quota
             amount = min(libero, _size) if _size > 0 else 0.0
             if _size <= 0:
                 await self._journal("stop_loss_no_position", libero=libero,
@@ -1142,9 +1598,19 @@ class BotTask:
                         "STOP LOSS %s: amount %.8f < min %.8f — tentativo market "
                         "sell del totale (chiusura completa posizione)",
                         self.cfg.symbol, amount, min_amt)
-                await asyncio.to_thread(self.ex.sell_market, self.cfg.symbol, amount)
+                # R3b (docs/58 §58.3): intenzione PRIMA dell'invio. Se il crash
+                # cade fra la vendita e `_persist`, la chiave d'idempotenza
+                # permette di riconoscere a chi appartiene quello che resta sul
+                # conto invece di trovarlo come ordine anonimo.
+                coid = self._nuovo_client_order_id("sm", "sl")
+                await self._journal("order_intent", client_order_id=coid,
+                                    side="sell", amount=amount, price=price,
+                                    kind="stop_loss",
+                                    drawdown=round(drawdown, 4))
+                await self._vendi_a_mercato(amount, coid)
                 await self._journal("stop_loss_sell", amount=amount,
-                                    drawdown=round(drawdown, 4), price=price)
+                                    drawdown=round(drawdown, 4), price=price,
+                                    client_order_id=coid)
             else:
                 log.warning("STOP LOSS %s: nessun %s libero da vendere (amount=0); "
                             "controlla ordini aperti/posizioni residue",
@@ -1276,10 +1742,16 @@ class BotTask:
                         fee=amount * entry * self.cfg.fee)
                 else:
                     target = self.policy.sell_target(entry)
+                    # R3b (docs/58 §58.3): anche la sell di take-profit nasce da
+                    # un ordine inviato: senza chiave, una sell sopravvissuta a un
+                    # crash e' indistinguibile da un ordine di mano umana.
+                    coid_tp = self._nuovo_client_order_id("tp")
+                    await self._journal("order_intent", client_order_id=coid_tp,
+                                        side="sell", amount=amount, price=target,
+                                        kind="tp", buy_order_id=oid)
                     try:
-                        sell = await asyncio.to_thread(
-                            self.ex.create_limit_order, self.cfg.symbol, "sell",
-                            amount, target)
+                        sell = await self._invia_ordine("sell", amount, target,
+                                                        coid_tp)
                         if sell:
                             # `kind="tp"` distingue le vendite da take-profit
                             # dalla scala ladder (grid.py conta solo le ladder) e
@@ -1287,10 +1759,13 @@ class BotTask:
                             self.state.open_sells[sell["id"]] = {
                                 "amount": amount, "entry_price": entry,
                                 "price": target, "target_price": target,
-                                "kind": "tp", "timestamp": self._now()}
+                                "kind": "tp", "timestamp": self._now(),
+                                "client_order_id": (self._chiave_ordine(sell)
+                                                    or coid_tp)}
                             await self._journal("buy_filled", order_id=oid,
                                                 entry=entry, amount=amount,
-                                                sell_target=target)
+                                                sell_target=target,
+                                                client_order_id=coid_tp)
                             await self._notify_fill(
                                 oid, "buy", entry, amount,
                                 fee=amount * entry * self.cfg.fee)
@@ -1415,6 +1890,24 @@ class BotTask:
             except Exception:  # noqa: BLE001
                 pass
         payload["stop_loss_triggered"] = bool(self.state.stop_loss_triggered)
+        # DIFETTO A: il finanziamento del conto e' un CAMPO ESPLICITO, non un
+        # errore generico. Dashboard e Zabbix possono allarmare su
+        # `capitale_stato` senza leggere i log, e `capitale_reale` dice quanti
+        # soldi ci sono davvero invece di lasciare un segnaposto.
+        if self.capitale_stato is not None:
+            payload.update(self.capitale_stato.to_dict())
+        # DIFETTO B: il cap di conto e' VISIBILE (cap/impegnato/headroom): senza
+        # questi tre numeri un blocco per cap e' indistinguibile da un bot che
+        # non vuole tradare.
+        if self.exposure is not None:
+            try:
+                payload["exposure_cap_notional"] = round(float(self.exposure.cap), 4)
+                payload["exposure_impegnato"] = round(float(self.exposure.total()), 4)
+                headroom = self.exposure.headroom()
+                payload["exposure_headroom"] = (
+                    None if headroom == float("inf") else round(headroom, 4))
+            except Exception:  # noqa: BLE001
+                pass
         try:
             payload["cap_locked"] = round(float(self.portfolio.locked), 4)
             payload["cap_available"] = round(float(self.portfolio.total_available()), 4)

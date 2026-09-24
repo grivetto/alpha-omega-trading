@@ -11,6 +11,7 @@ exist". Questo adapter rende EEA il default e applica:
 from __future__ import annotations
 
 import logging
+import re
 import time
 from typing import Any, Dict, List, Optional
 
@@ -33,6 +34,38 @@ RETRY_BASE_S = 1.0
 # arrivano dagli eventi WS (orders/fills), il balance REST e' solo un
 # fallback → refresh minimo ogni 15s.
 BALANCE_CACHE_TTL = 15.0
+
+
+# --- R3b (docs/58 §58.3): chiave di idempotenza degli ordini -------------------
+# Un ordine inviato SENZA chiave e' irriconoscibile: se il processo muore fra
+# l'invio e il salvataggio dello stato, l'ordine resta vivo sull'exchange e il
+# bot non sa piu' che e' suo (capitale impegnato che non vede). Con `clOrdId`
+# l'ordine e' NOSTRO per costruzione e un riavvio lo riconosce.
+# VINCOLO OKX: `clOrdId` e' alfanumerico MINUSCOLO, max 32 caratteri. Non e' un
+# dettaglio di stile: un id con un carattere non ammesso fa RIFIUTARE l'ordine,
+# cioe' trasforma una protezione in un blocco degli ordini.
+CLIENT_ORDER_ID_MAX = 32
+# carattere NON ammesso (la classe ammessa e' [a-z0-9]): si sostituisce, non si
+# elimina, cosi' due id che differiscono solo per un separatore restano distinti
+CLIENT_ORDER_ID_RE = re.compile(r"[^a-z0-9]")
+
+
+def client_order_id_sicuro(client_order_id: Optional[str],
+                           max_len: int = CLIENT_ORDER_ID_MAX) -> str:
+    """Rende una chiave d'ordine accettabile da OKX: [a-z0-9], max 32 caratteri.
+
+    Sostituisce ogni carattere non ammesso con `x` (NON lo elimina: eliminandolo
+    `a.b` e `ab` colliderebbero, e due ordini diversi finirebbero con la STESSA
+    chiave di idempotenza) e tronca a `max_len`. Tutto minuscolo, perche' OKX
+    rifiuta le maiuscole.
+    """
+    if not client_order_id:
+        return ""
+    out = CLIENT_ORDER_ID_RE.sub("x", str(client_order_id).lower())[:max_len]
+    if len(str(client_order_id)) > max_len:
+        log.debug("clOrdId troncato a %d caratteri: %r -> %r",
+                  max_len, client_order_id, out)
+    return out
 
 
 class OKXPermanentError(PermanentExchangeError):
@@ -260,19 +293,43 @@ class OKXAdapter:
     # --- orders ---------------------------------------------------------------
 
     def create_limit_order(self, symbol: str, side: str, amount: float,
-                           price: float) -> dict:
+                           price: float,
+                           client_order_id: Optional[str] = None) -> dict:
+        """Ordine limite, con chiave di idempotenza opzionale (`clOrdId`).
+
+        R3b (docs/58 §58.3): la chiave viaggia come `params={"clOrdId": ...}` —
+        ccxt la mappa sul campo OKX `clOrdId`. Serve a riconoscere al riavvio un
+        ordine inviato prima di un crash, invece di contarlo come "unknown".
+
+        Se `client_order_id` e' None il comportamento e' IDENTICO a prima
+        (nessun `params` alla chiamata): nessun effetto sui chiamanti storici.
+        """
         # i mercati servono a ccxt per applicare tick size / precision
         self._ensure_markets()
-        if side == "buy":
-            out = self._call(self.ex.create_limit_buy_order, symbol, amount, price)
+        coid = client_order_id_sicuro(client_order_id)
+        params: Dict[str, Any] = {"clOrdId": coid} if coid else {}
+        create = (self.ex.create_limit_buy_order if side == "buy"
+                  else self.ex.create_limit_sell_order)
+        if params:
+            out = self._call(create, symbol, amount, price, params)
         else:
-            out = self._call(self.ex.create_limit_sell_order, symbol, amount, price)
+            out = self._call(create, symbol, amount, price)
         # il free balance cambia subito (fondi bloccati): non riusare la cache
         self.invalidate_balance()
         return out
 
-    def sell_market(self, symbol: str, amount: float) -> dict:
-        """Vendita immediata (stop-loss): market sell di `amount` asset."""
+    def sell_market(self, symbol: str, amount: float,
+                    client_order_id: Optional[str] = None) -> dict:
+        """Vendita immediata (stop-loss): market sell di `amount` asset.
+
+        Anche qui la chiave e' opzionale (R3b): uno stop inviato e poi perso da
+        un crash e' esattamente il caso in cui serve riconoscere l'ordine.
+        Senza chiave il comportamento resta quello storico.
+        """
+        coid = client_order_id_sicuro(client_order_id)
+        if coid:
+            return self._call(self.ex.create_market_sell_order, symbol, amount,
+                              {"clOrdId": coid})
         return self._call(self.ex.create_market_sell_order, symbol, amount)
 
     def cancel_order(self, order_id: str, symbol: str) -> dict:

@@ -114,6 +114,16 @@ class BotConfigSchema(BaseModel):
     # health_path esplicito: per i bot LIVE mantiene i path v3.3
     # (health/ada.json ecc.) cosi' dashboard e Zabbix restano invariati
     health_path: str = ""
+    # difetto A (P0): minimo d'ordine DICHIARATO per il symbol. E' il ripiego
+    # della soglia operativa quando `min_notional(symbol)` dell'adapter non
+    # risponde; sotto quella soglia il conto e' classificato NON FINANZIATO e il
+    # bot non piazza ordini. 0 = non dichiarato (si usa l'adapter, o 1 EUR).
+    min_notional: float = 0.0
+    # difetto B (docs/55 Q6): cap di esposizione del CONTO in nozionale.
+    # 0 = nessun cap (comportamento storico). Se dichiarato anche a livello di
+    # nodo, il valore del bot vince; fra bot dello stesso conto si applica il
+    # piu' basso.
+    exposure_cap_notional: float = 0.0
     # secret: interpolati da ${VAR} al load — mai hardcoded nel file
     api_key: str = ""
     api_secret: str = ""
@@ -136,6 +146,10 @@ class NodeConfig(BaseModel):
     # il file sbagliato (bug F1): l'istanza trend era stata convertita in grid
     # dagli override del main. Ogni istanza DEVE poter puntare al proprio file.
     overrides_file: str = "config/strategy_overrides.json"
+    # difetto B (docs/55 Q6): cap di esposizione di conto valido per TUTTI i bot
+    # del nodo, in nozionale. 0 = nessun cap. Un bot puo' dichiararne uno
+    # proprio (chiave omonima in `bots[]`), che vince su questo.
+    exposure_cap_notional: float = 0.0
     exchange_rest: Dict[str, Any] = Field(default_factory=lambda: {"name": "okx", "eea": True})
     hub: HubConfig = Field(default_factory=HubConfig)
     supervisor: SupervisorConfig = Field(default_factory=SupervisorConfig)

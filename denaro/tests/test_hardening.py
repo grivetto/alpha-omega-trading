@@ -308,7 +308,14 @@ class TestEventLoopIsNotBlocked(_Base):
         altri task del nodo devono continuare a girare."""
         ex = _SlowBalanceExchange(price=100.0, delay=0.30)
         bot = self.make(ex)
-        bot._get_equity = lambda: 0.0      # fuori range → entra nel ramo lento
+        # Lettura SPORCA per eccesso (capitale 30 → 5000 e' oltre 30x): e' il
+        # caso che entra nel ramo lento di `_guard_equity`, quello che chiama
+        # `fetch_balance` (qui rallentato di proposito). NB: non si usa piu' 0.0
+        # — dal difetto A (2026-09-25) uno zero LETTO e' un conto vuoto, cioe'
+        # lo stato `non_finanziato`, che salta il tick PRIMA di qualunque I/O:
+        # il test non misurerebbe piu' nulla (visto: il tick diventava istantaneo
+        # e l'heartbeat avanzava di 2 soli passi).
+        bot._get_equity = lambda: 5000.0   # fuori range → entra nel ramo lento
 
         ticks = {"n": 0}
         stop = asyncio.Event()
