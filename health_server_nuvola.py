@@ -17,7 +17,7 @@ HEALTH_DIR = Path(os.getenv("HEALTH_DIR", "/home/sergio/denaro/health"))
 PORT = int(os.getenv("HEALTH_PORT", "8911"))
 HOST = os.getenv("HEALTH_HOST", "127.0.0.1")
 # Nomi file reali su nuvola (verificati 2026-08-26)
-BOTS = {"doge": "doge_nuvola", "sol": "sol_kraken"}
+BOTS = {"avax": "avax_nuvola_live", "dot": "dot_nuvola_live", "link": "link_nuvola_live", "mina": "mina_nuvola_live", "sui": "sui_nuvola_live", "uni": "uni_nuvola_live"}
 
 
 def read_health(name: str):
