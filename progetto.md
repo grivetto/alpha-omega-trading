@@ -20,7 +20,14 @@ Questo file riporta SOLO fatti riconciliati con l'exchange e con systemd.
   (fix fail-closed del 2026-09-24: con `env_prefix` valorizzato nessun fallback
   su variabili generiche → isolamento subaccount garantito).
 
-## Capitale riconciliato (fetch_balance via ccxt, 2026-09-24)
+## Capitale riconciliato (API main + subaccount, 2026-09-24)
+
+Riconciliazione integrale eseguita con chiave main (da MARCODG1, IP-bound):
+- main account: 0.003 EUR + dust — funding account vuoto.
+- Subaccount (mc2sub1, nuvolasub1, marcosub1, marcosol1, marcodoge1):
+  funding = 0 per tutti; trading = dust (mc2sub1 SOL ~0.10 EUR, resto dust).
+- TOTALE OKX: ~0.15 EUR. Il capitale (~67 EUR) presente al 19/09 non è più
+  sui subaccount OKX: va depositato dal proprietario.
 
 | Subaccount | Equity reale | Capital dichiarato nei config |
 |------------|--------------|-------------------------------|
@@ -30,10 +37,9 @@ Questo file riporta SOLO fatti riconciliati con l'exchange e con systemd.
 | main | ~0.003 EUR (dust) | — |
 
 Conseguenza: la guardia "equity inattendibile → tick saltato" blocca ogni
-ordine su tutti e tre i nodi. ZERO ordini live piazzati. Non è un incidente:
-è il fail-safe che funziona. Per tradare servono capitali reali sui subaccount
-(la riconciliazione integrale main→sub con API del main account va eseguita da
-MARCODG1, chiave IP-bound).
+ordine su tutti e tre i nodi. ZERO ordini live piazzati (verificato:
+open_orders=0 su tutti i subaccount). Non è un incidente: è il fail-safe che
+funziona. Per tradare servono depositi reali sui subaccount.
 
 ## Risorse
 
