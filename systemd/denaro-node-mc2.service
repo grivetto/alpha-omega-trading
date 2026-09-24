@@ -1,18 +1,17 @@
 [Unit]
-Description=Denaro Node — trading engine unificato su MC2 (paper)
+Description=Denaro Node — trading engine unificato su MC2 (live OKX mc2sub1)
 After=network-online.target
 Wants=network-online.target
 
 [Service]
 Type=simple
-User=sergio
-ExecStart=/home/sergio/denaro/venv/bin/python -m denaro.denaro_node --config config/node_mc2.yaml
-WorkingDirectory=/home/sergio/denaro_node_app
-EnvironmentFile=/home/sergio/denaro_node_app/.env
+ExecStart=/home/sergio/alpha-omega-trading/venv/bin/python -m denaro.denaro_node --config config/node_mc2.yaml
+WorkingDirectory=/home/sergio/alpha-omega-trading
+EnvironmentFile=/home/sergio/alpha-omega-trading/config/.env_mc2
 Restart=always
 RestartSec=10
 StandardOutput=journal
 StandardError=journal
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=default.target

@@ -7,8 +7,8 @@ Wants=network-online.target
 Type=simple
 User=marco
 WorkingDirectory=/home/marco/alpha-omega-trading
-EnvironmentFile=/home/marco/alpha-omega-trading/.env
-ExecStart=/home/marco/denaro/venv/bin/python -m denaro.denaro_node --config config/node_marcodg1_xrp.yaml
+EnvironmentFile=/home/marco/alpha-omega-trading/config/.env_marcodg1
+ExecStart=/home/marco/alpha-omega-trading/venv/bin/python -m denaro.denaro_node --config config/node_marcodg1_xrp.yaml
 Restart=on-failure
 RestartSec=10
 StandardOutput=journal
@@ -16,4 +16,3 @@ StandardError=journal
 
 [Install]
 WantedBy=multi-user.target
-

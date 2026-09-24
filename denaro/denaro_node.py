@@ -214,7 +214,11 @@ def build_exchange(bot: dict, data_dir: Path, bucket=None):
     prefix = bot.get("env_prefix", "")
 
     def env(name, default=""):
-        return os.getenv(prefix + name, os.getenv(name, default))
+        # FAIL-CLOSED: se c'è un prefisso, usa SOLO la variabile prefissata.
+        # Nessun fallback su variabili generiche → isolamento subaccount garantito.
+        if prefix:
+            return os.getenv(prefix + name, default)
+        return os.getenv(name, default)
 
     mode = bot.get("mode", "paper")
     symbol = bot["symbol"]
