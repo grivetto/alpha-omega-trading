@@ -30,7 +30,7 @@ LOG = Path("/home/sergio/hermes_bridge/stella/bridge.jsonl")
 
 
 def ssh(host: str, cmd: str, timeout: int = 30) -> tuple[int, str]:
-    r = subprocess.run(["ssh", "-o", "BatchMode=yes", "-o", f"ConnectTimeout=8", host, cmd],
+    r = subprocess.run(["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=8", host, cmd],
                        capture_output=True, text=True, timeout=timeout)
     return r.returncode, (r.stdout + r.stderr).strip()
 

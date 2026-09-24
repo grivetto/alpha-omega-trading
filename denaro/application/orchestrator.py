@@ -21,6 +21,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+from ..domain.equity import EquityTracker
 from ..domain.grid import GridDecision, GridLevel, GridPolicy
 from ..domain.risk import RiskManager
 from ..domain.types import CBState, CoreState
@@ -106,6 +107,10 @@ class BotConfig:
     # circuit breaker, storico trade, Kelly, metriche di performance). Senza
     # questo file il CB daily/weekly si azzera a ogni restart.
     risk_state_path: Optional[Path] = None
+    # curva equity persistita (Q5b, docs/53 §0.4): senza, le metriche `eq_*` si
+    # azzerano a ogni riavvio e `eq_warm` non diventa mai True su un bot che
+    # riparte spesso — cioe' proprio quando servirebbe.
+    equity_path: Optional[Path] = None
     journal_path: Optional[Path] = None
     health_path: Optional[Path] = None
     stop_loss_pct: float = 0.0      # drawdown dal peak → chiudi posizioni e ferma
@@ -137,6 +142,11 @@ class BotTask:
         # ResourceSupervisor (iniettato da TradeOrchestrator.start_all): adatta
         # l'intervallo di tick alla pressione di RAM/CPU del nodo.
         self._supervisor = None
+        # Cap di esposizione A LIVELLO DI CONTO (docs/55 Q6): il tetto per bot
+        # esiste (`trend.py:493`, default spento) ma con piu' bot sullo stesso
+        # conto NESSUNO vede la somma. Il registro condiviso lo inietta il nodo,
+        # come per `_supervisor`: None = nessun cap, comportamento invariato.
+        self.exposure = None
         self._last_error: str = ""
         # rate-limit dei log di errore (chiave -> ultimo ts loggato)
         self._err_log_ts: Dict[str, float] = {}
@@ -149,6 +159,8 @@ class BotTask:
         self.store = StateStore(Path(config.state_path)) if config.state_path else None
         self.risk_store = (StateStore(Path(config.risk_state_path))
                            if config.risk_state_path else None)
+        self.equity_store = (StateStore(Path(config.equity_path))
+                             if config.equity_path else None)
         self.journal = Journal(Path(config.journal_path)) if config.journal_path else None
         self.health = AtomicFile(Path(config.health_path)) if config.health_path else None
 
@@ -162,12 +174,20 @@ class BotTask:
                                     day_start_capital=config.capital,
                                     week_start_capital=config.capital)
 
+        # Misura ONESTA (docs/53 §0.4): la performance si deriva dalla curva
+        # equity mark-to-market, non dai PnL per-trade che `domain/equity.py`
+        # dichiara inaffidabili (non registrano gli stop-loss, si azzerano a ogni
+        # riavvio, mescolano euro e percentuali). La primitiva esisteva ed era
+        # usata SOLO dai test: da qui entra nel percorso live.
+        self.equity_tracker = EquityTracker()
+
         self._load_state()
         # Se lo stato contiene una posizione aperta, va restituita alla policy
         # CON il suo stop PRIMA di ogni altra cosa: senza, la policy la
         # adotterebbe ancorando lo stop a 2 ATR invece del trailing che aveva.
         self._ripristina_posizione()
         self._load_risk_state()
+        self._load_equity_curve()
         self._rebuild_from_exchange()
 
     # --- persistence ---------------------------------------------------------
@@ -225,11 +245,34 @@ class BotTask:
             log.warning("risk_state %s illeggibile (%s): baseline ripristinata",
                         self.cfg.symbol, e)
 
+    def _load_equity_curve(self) -> None:
+        """Ripristina la curva equity (Q5b, docs/53 §0.4).
+
+        Senza questo, a ogni riavvio la serie riparte da zero e `eq_warm`
+        (30 campioni o 5 giorni osservati) non diventa mai True: le metriche
+        oneste resterebbero non pubblicabili proprio sui bot che si riavviano.
+        Una serie illeggibile NON viene inventata: si riparte vuoti e lo si dice.
+        """
+        if self.equity_store is None:
+            return
+        data = self.equity_store.load()
+        righe = data.get("rows") if isinstance(data, dict) else data
+        if not isinstance(righe, list) or not righe:
+            return
+        try:
+            self.equity_tracker.extend(
+                [(float(r[0]), float(r[1])) for r in righe])
+        except Exception as e:  # noqa: BLE001 - serie corrotta: si riparte
+            log.warning("equity_curve %s illeggibile (%s): si riparte vuota",
+                        self.cfg.symbol, e)
+
     def _save_state(self) -> None:
         if self.store is not None:
             self.store.save(self.state.to_dict())
         if self.risk_store is not None:
             self.risk_store.save(self.risk_state.to_dict())
+        if self.equity_store is not None:
+            self.equity_store.save({"rows": self.equity_tracker.rows})
 
     async def _journal(self, event: str, **fields) -> None:
         """Append al journal FUORI dall'event loop.
@@ -274,10 +317,17 @@ class BotTask:
                     # nostro journal. Viene contato come "non classificato" dalla
                     # scala di vendita, che quindi resta sospesa finche' non si
                     # risolve → impedisce di duplicare la scala a ogni restart.
+                    # R3 (docs/53 §0.6): l'ordine arriva dall'exchange, non dal
+                    # nostro journal, quindi il prezzo d'ingresso NON e' noto.
+                    # Prima si inventava `price * 0.99`: da un entry price
+                    # fabbricato discende un PnL fabbricato, e la telemetria
+                    # pubblica una performance che non e' quella del conto.
+                    # Si dichiara l'ignoto e lo si propaga a chi deve misurarlo.
                     self.state.open_sells[oid] = {
-                        "amount": amount, "entry_price": price * 0.99,
+                        "amount": amount, "entry_price": None,
                         "price": price, "target_price": price,
-                        "kind": "unknown", "timestamp": self._now()}
+                        "kind": "unknown", "timestamp": self._now(),
+                        "entry_unknown": True}
         except Exception as e:  # noqa: BLE001
             log.warning("rebuild open orders fallito: %s", e)
         # 3) la posizione detenuta va riconciliata con l'ASSET REALE
@@ -350,6 +400,9 @@ class BotTask:
             await self._persist(raw_equity if raw_equity == raw_equity else 0.0,
                                 blocked=True)
             return
+        # campione della curva equity: si registra solo qui, dopo il guard, cosi'
+        # le letture sporche non avvelenano le metriche
+        self.equity_tracker.append(now, equity)
         if equity > self.state.peak_equity:
             self.state.peak_equity = equity
         dd = (self.state.peak_equity - equity) / max(1e-10, self.state.peak_equity)
@@ -493,12 +546,42 @@ class BotTask:
             except (TypeError, ValueError):
                 pass
 
-        # 3a) SafeMode (TODO punto 3): nessun NUOVO trade se la RAM e' critica;
-        #     le posizioni esistenti continuano a essere gestite (fill/exit)
-        if self.trading_paused:
+        # 3a) Nessun NUOVO trade se la RAM e' critica o se lo stop-loss del bot e'
+        #     in corso. `trading_paused` e' un flag IN MEMORIA, che
+        #     `_propagate_safemode` (denaro_node.py:478) riscrive a ogni cambio di
+        #     livello RAM: da solo non basta, perche' al ritorno a "nominal"
+        #     riabiliterebbe gli ordini con lo stop ancora da completare.
+        #     R2 (docs/53 §0.6): il blocco deve dipendere anche dallo stato
+        #     PERSISTITO. Le posizioni esistenti continuano a essere gestite.
+        if self.trading_paused or self.state.stop_loss_triggered:
             decision.to_place = []
             decision.to_sell = []
             decision.reason = "safemode: trading paused"
+
+        # 3a-bis) CAP DI ESPOSIZIONE DI CONTO (docs/55 Q6). Il tetto e' sul
+        #     TOTALE NOZIONALE impegnato dai bot che condividono il conto, non
+        #     sul numero di bot e non sul singolo: un bot che porterebbe il
+        #     totale oltre il cap non apre. Senza registro iniettato
+        #     (`self.exposure is None`) il comportamento resta quello storico.
+        if self.exposure is not None and decision.to_place:
+            nuovo = 0.0
+            for _lv in decision.to_place:
+                try:
+                    nuovo += float(_lv.amount) * float(_lv.buy_price)
+                except (TypeError, ValueError):
+                    continue
+            if not self.exposure.can_open(self.cfg.bot_key, nuovo):
+                decision.to_place = []
+                decision.reason = (
+                    "cap di esposizione di conto: "
+                    f"{self.exposure.total():.2f} + {nuovo:.2f} > "
+                    f"{self.exposure.cap:.2f}")
+                await self._journal("exposure_cap_blocked",
+                                    richiesto=round(nuovo, 6),
+                                    impegnato=round(self.exposure.total(), 6),
+                                    cap=round(self.exposure.cap, 6))
+            else:
+                self.exposure.commit(self.cfg.bot_key, nuovo)
 
         # 3aa) GRID BILATERALE: i SELL ladder NON richiedono EUR (usano l'asset
         #      in mano) → si eseguono SEMPRE, anche se il preflight blocca i
@@ -875,17 +958,37 @@ class BotTask:
             except Exception:  # noqa: BLE001
                 pass  # fail-open: meglio uscire che restare esposti
 
-        # 3) quantita' da vendere = saldo LIBERO del base asset
+        # 3) quantita' da vendere = la SIZE DELLA POSIZIONE, non il saldo del conto.
+        #    R1 (docs/53 §0.6): vendere il saldo LIBERO liquida a mercato anche il
+        #    capitale di un altro bot sullo stesso sub-account, o asset detenuti a
+        #    mano. Questo bot risponde solo della propria size.
         base = self.cfg.symbol.split("/")[0]
         try:
             bal = await asyncio.to_thread(self.ex.fetch_balance)
-            amount = float((bal.get("free", {}) or {}).get(base, 0.0) or 0.0)
+            libero = float((bal.get("free", {}) or {}).get(base, 0.0) or 0.0)
         except Exception as e:  # noqa: BLE001
             self._last_error = f"trend stop balance: {e}"
             return False
 
         pos = self.state.posizione_aperta or {}
         entrata = float(pos.get("entry") or 0.0)
+        size_posizione = float(pos.get("amount") or 0.0)
+        if size_posizione <= 0:
+            # Nessuna posizione tracciata: NON si liquida un saldo sconosciuto.
+            # Meglio una posizione da riconciliare che un conto svuotato.
+            await self._journal("stop_no_position", libero=libero)
+            self._last_error = ("stop senza posizione tracciata: nessuna vendita "
+                                "(saldo libero non toccato)")
+            log.error("TREND STOP %s: posizione non tracciata, nessuna vendita "
+                      "(libero %.8f lasciato intatto)", self.cfg.symbol, libero)
+            return False
+        amount = min(libero, size_posizione)
+        if amount < size_posizione:
+            await self._journal("stop_partial_close", richiesto=size_posizione,
+                                disponibile=libero, venduto=amount)
+            log.warning("TREND STOP %s: venduto %.8f dei %.8f della posizione "
+                        "(libero insufficiente)", self.cfg.symbol, amount,
+                        size_posizione)
         if amount > 0:
             try:
                 await asyncio.to_thread(self.ex.sell_market, self.cfg.symbol, amount)
@@ -1004,12 +1107,28 @@ class BotTask:
         base = self.cfg.symbol.split("/")[0]
         try:
             bal = await asyncio.to_thread(self.ex.fetch_balance)
-            amount = float((bal.get("free", {}) or {}).get(base, 0.0) or 0.0)
-            # usiamo il saldo libero; se residuo sotto il minimo dell'exchange,
-            # un market sell separato fallirebbe (volume minimum not met).
-            # → proviamo comunque un unico market sell del totale: su molti
-            #   exchange la chiusura completa dell'asset è accettata anche se
-            #   sotto il minimo nominale (il minimo vale per ordini nuovi).
+            libero = float((bal.get("free", {}) or {}).get(base, 0.0) or 0.0)
+            # R1 (docs/53 §0.6): si vende la SIZE DELLA POSIZIONE, non il saldo.
+            # Il libero puo' includere l'asset di un altro bot sullo stesso
+            # sub-account, o di una mano umana: questo bot risponde solo della
+            # propria size. Se non c'e' posizione tracciata NON si vende nulla.
+            _pos = self.state.posizione_aperta or {}
+            _size = float(_pos.get("amount") or 0.0)
+            amount = min(libero, _size) if _size > 0 else 0.0
+            if _size <= 0:
+                await self._journal("stop_loss_no_position", libero=libero,
+                                    drawdown=round(drawdown, 4))
+                log.error("STOP LOSS %s: posizione non tracciata, nessuna vendita "
+                          "(libero %.8f lasciato intatto)", self.cfg.symbol, libero)
+            elif amount < _size:
+                await self._journal("stop_loss_partial_close", richiesto=_size,
+                                    disponibile=libero, venduto=amount,
+                                    drawdown=round(drawdown, 4))
+                log.warning("STOP LOSS %s: venduto %.8f dei %.8f della posizione "
+                            "(libero insufficiente)", self.cfg.symbol, amount, _size)
+            # se il residuo e' sotto il minimo dell'exchange, un market sell
+            # separato fallirebbe (volume minimum not met): su molti exchange la
+            # chiusura completa e' accettata anche sotto il minimo nominale.
             min_amt = 0.0
             mfn = getattr(self.ex, "min_amount_for", None)
             if mfn is not None:
@@ -1033,9 +1152,18 @@ class BotTask:
         except Exception as e:  # noqa: BLE001
             self._last_error = f"stop loss sell: {e}"
             log.error("STOP LOSS %s: vendita fallita: %s", self.cfg.symbol, e)
-            # non resettare stop_loss_triggered: se la vendita fallisce per un
-            # errore transitorio, il retry al prossimo tick lo risolverà; il flag
-            # resta True per tracciare che lo stop è in corso.
+            # R2 (docs/53 §0.6): si RIPROVA. Il ramo di tick esegue lo stop solo
+            # se `stop_loss_triggered` e' False, quindi lasciarlo True qui
+            # significava NON ritentare mai: il commento precedente prometteva un
+            # retry che non avveniva. Stesso schema del guard di spread, che
+            # poche righe sopra ripristina il flag con "# riprova".
+            # `trading_paused` resta True: nessun NUOVO ordine finche' la
+            # posizione non e' chiusa.
+            self.state.stop_loss_triggered = False
+            await self._journal("stop_loss_sell_failed", error=str(e)[:200],
+                                drawdown=round(drawdown, 4))
+            await self._persist(equity, blocked=True)
+            return
 
         await self._journal("stop_loss", drawdown=round(drawdown, 4), equity=equity)
         await self._persist(equity, blocked=True)
@@ -1062,21 +1190,62 @@ class BotTask:
         open_ids: Optional[set] = (None if open_orders is None
                                    else {str(o.get("id")) for o in open_orders})
 
-        async def _resolved_status(oid: str) -> str:
-            """'open' se ancora aperto; altrimenti interroga l'ordine singolo."""
+        _ordini = {}
+
+        async def _resolved_order(oid: str):
+            """Dict dell'ordine risolto, o None se ancora aperto/irrisolvibile.
+
+            Q4 (docs/53 §0.6): serve il DICT, non solo lo `status`, perche' e' li'
+            che la sede riporta la quantita' DAVVERO riempita (`filled`).
+            """
             if open_ids is not None and oid in open_ids:
-                return "open"
+                return None
             try:
                 o = await asyncio.to_thread(self.ex.fetch_order, oid, self.cfg.symbol)
             except Exception:  # noqa: BLE001
+                return None
+            _ordini[oid] = o
+            return o
+
+        async def _resolved_status(oid: str) -> str:
+            """'open' se ancora aperto; altrimenti interroga l'ordine singolo."""
+            o = await _resolved_order(oid)
+            if o is None:
                 return "open"  # non risolvibile: non toccare lo stato
             return str(o.get("status", "open"))
 
+        def _filled(oid: str, default: float) -> float:
+            """Quantita' RIEMPITA secondo la sede; `default` se non la riporta.
+
+            Solo un valore > 0 e' informazione: un ordine CHIUSO con `filled: 0`
+            e' una contraddizione (o un fake che non traccia l'ordine), e li' si
+            tiene la quantita' richiesta come prima. Cosi' il caso reale — la
+            sede che riempie meno del richiesto — viene contato, e i percorsi che
+            non riportano `filled` restano invariati.
+            """
+            o = _ordini.get(oid) or {}
+            for chiave in ("filled", "filled_amount", "executed_amount_base"):
+                v = o.get(chiave)
+                if v is None:
+                    continue
+                try:
+                    q = float(v)
+                except (TypeError, ValueError):
+                    continue
+                return q if q > 0 else default
+            return default
+
         for oid, info in list(self.state.open_buys.items()):
             st = await _resolved_status(oid)
-            if st in ("closed", "filled"):
+            # Q4 (docs/53 §0.6): si usa la quantita' RIEMPITA, non quella
+            # richiesta. Una sede puo' chiudere un ordine con meno del richiesto,
+            # e un ordine cancellato puo' aver riempito in parte: in entrambi i
+            # casi il riempito e' denaro vero e non deve sparire dallo stato.
+            _filled_qty = _filled(
+                oid, float(info["amount"]) if st in ("closed", "filled") else 0.0)
+            if st in ("closed", "filled") or _filled_qty > 0:
                 entry = float(info["price"])
-                amount = float(info["amount"])
+                amount = _filled_qty
                 if getattr(self.policy, "STOP_MONITORATO", False):
                     # La protezione e' uno stop monitorato: NESSUN ordine limite
                     # da piazzare (essendo sotto il mercato si riempirebbe
@@ -1133,11 +1302,29 @@ class BotTask:
 
         for oid, info in list(self.state.open_sells.items()):
             st = await _resolved_status(oid)
-            if st in ("closed", "filled"):
+            # Q4 (docs/53 §0.6): come per i buy, si contabilizza il RIEMPITO.
+            _filled_qty = _filled(
+                oid, float(info["amount"]) if st in ("closed", "filled") else 0.0)
+            if st in ("closed", "filled") or _filled_qty > 0:
                 # PnL fee-aware: proceeds×(1-fee) - cost×(1+fee). Con fee=0
                 # il comportamento e' identico all'accounting del motore v3.3.
-                amount = float(info["amount"])
-                entry = float(info["entry_price"])
+                amount = _filled_qty
+                _entry_raw = info.get("entry_price")
+                if _entry_raw is None:
+                    # R3 (docs/53 §0.6): prezzo d'ingresso NON noto (posizione
+                    # recuperata dall'exchange). Un PnL che non si puo' misurare
+                    # si dichiara non misurabile: non si inventa e non entra nei
+                    # totali, altrimenti la performance pubblicata e' finta.
+                    target = float(info["target_price"])
+                    await self._journal("sell_unmeasured", order_id=oid,
+                                        amount=amount, exit=target,
+                                        motivo="entry_price non noto "
+                                               "(posizione recuperata)")
+                    await self._notify_fill(oid, "sell", target, amount,
+                                            fee=amount * target * self.cfg.fee)
+                    self.state.open_sells.pop(oid, None)
+                    continue
+                entry = float(_entry_raw)
                 target = float(info["target_price"])
                 cost = amount * entry * (1 + self.cfg.fee)
                 proceeds = amount * target * (1 - self.cfg.fee)
@@ -1193,6 +1380,11 @@ class BotTask:
             "error": self._last_error,
             "timestamp": self._now(),
         }
+        # MISURA ONESTA dalla curva equity (docs/53 §0.4): questi campi derivano
+        # dalla serie mark-to-market, non dai PnL per-trade. `eq_warm` dice se la
+        # storia basta a dare un numero non truffa: finche' e' False i valori
+        # `eq_*` non sono ancora significativi e non vanno letti come performance.
+        payload.update(self.equity_tracker.evaluate())
         # POSIZIONE DETENUTA. Per le policy a STOP MONITORATO (trend) quando si e'
         # in posizione NON ci sono ordini aperti: buys e sells restano 0 e la
         # dashboard non poteva distinguere "in posizione" da "flat". Qui si
