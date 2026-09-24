@@ -102,11 +102,30 @@ Elementi vecchi (denaro-v3, zabbix_status.py, denaro_metrics.py) rimossi.
 La pulizia lato SERVER (host/item nel frontend Zabbix) richiede accesso
 API/UI di Zabbix su MARCODG1 — da fare con le credenziali di Zabbix.
 
+## Layer di ricerca advisory — TradingAgents (dal 2026-09-25)
+
+- Submodule `tradingagents/` (TauricResearch, MIT) + venv isolato `.venv` +
+  config `config/.env_tradingagents` (DeepSeek v4-flash + TypeSafe/JEV).
+- Runner `tools/tradingagents_advisory.py` in modalità **log-only**: produce
+  un rating di ricerca (Buy/Overweight/Hold/Underweight/Sell) per asset;
+  NESSUN ordine, nessuna chiave exchange, nessuna influenza sulle strategie
+  live. Output in `logs/tradingagents/` (gitignored).
+- Cron giornaliero su mc2 (06:10): BTC+ETH → `logs/tradingagents/cron.log`.
+  Costo misurato ~$0.04/run (~$2.5/mese per 2 asset).
+- Caveat tecnico: usare model ID `deepseek-v4-flash` (non `deepseek-flash`),
+  altrimenti lo structured output del framework si rompe — dettagli in
+  `docs/62_tradingagents_2026-09-25.md`.
+- Utilizzo previsto: confronto statistico rating advisory vs segnali trend
+  live vs rendimenti forward, per valutare se alza l'expectancy.
+
 ## Prossimi passi (in ordine)
 
 1. Riconciliazione capitale main→subaccount (API main da MARCODG1) e funding
    dei subaccount fino a min_notional (1 EUR/ordine) + capitale di lavoro.
 2. Verifica dry-run end-to-end con capitale reale minimo su un solo subaccount.
 3. Pulizia Zabbix lato server (rimuovere item/host obsoleti).
-4. Migrazione dei servizi infra legacy su MARCODG1 da ~/denaro a
-   ~/alpha-omega-trading (oggi girano ancora dal percorso vecchio; funzionano).
+4. Migrazione servizi infra MARCODG1 da ~/denaro a ~/alpha-omega-trading:
+   COMPLETATA il 2026-09-25 (unit su path canonici, tutte attive).
+5. TradingAgents: dopo ~2 settimane di log advisory, valutare il valore
+   aggiunto (rating vs segnali trend vs rendimenti forward). Se nullo,
+   disattivare il cron (costo ~$2.5/mese).
