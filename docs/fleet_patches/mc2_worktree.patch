@@ -1,0 +1,554 @@
+diff --git a/denaro/application/orchestrator.py b/denaro/application/orchestrator.py
+index 310555c..8b149f4 100644
+--- a/denaro/application/orchestrator.py
++++ b/denaro/application/orchestrator.py
+@@ -13,6 +13,7 @@ Il ciclo `tick()` e' deterministico e testabile con un FakeExchange.
+ from __future__ import annotations
+ 
+ import asyncio
++import inspect
+ import json
+ import logging
+ import time
+@@ -113,6 +114,8 @@ class BotTask:
+         self._running = False
+         self._task: Optional[asyncio.Task] = None
+         self._last_error: str = ""
++        # rate-limit dei log di errore (chiave -> ultimo ts loggato)
++        self._err_log_ts: Dict[str, float] = {}
+         # stop-loss gia' scattato (persistente: non rivende dopo un restart)
+         self._stop_loss_triggered = False
+         # portfolio manager anti-deadlock (capitale virtuale + preflight dedup)
+@@ -199,6 +202,10 @@ class BotTask:
+     async def tick(self) -> None:
+         """Un ciclo completo: risk → prezzo → decisione → esecuzione → health."""
+         now = self._now()
++        # l'errore e' PER-TICK: si azzera qui (non a fine tick), cosi' health e
++        # log riflettono l'esito del tick appena concluso invece di essere
++        # cancellati prima della scrittura (bug: errori di piazzamento invisibili)
++        self._last_error = ""
+         # equity reale: get_equity puo' fare I/O (fetch live) → to_thread
+         equity = await asyncio.to_thread(self._get_equity)
+         equity = self._guard_equity(equity)
+@@ -229,7 +236,7 @@ class BotTask:
+             free = float(bal.get("free", {}).get("EUR") or 0)
+             total = float(bal.get("total", {}).get("EUR") or 0)
+         except Exception as e:  # noqa: BLE001
+-            self._last_error = f"balance: {e}"
++            self._note_error(f"balance: {e}")
+             self._write_health(equity, blocked=False)
+             return
+ 
+@@ -251,10 +258,21 @@ class BotTask:
+                 t = await asyncio.to_thread(self.ex.fetch_ticker, self.cfg.symbol)
+                 price = float(t["last"])
+         except Exception as e:  # noqa: BLE001
+-            self._last_error = f"ticker: {e}"
++            self._note_error(f"ticker: {e}")
+             self._write_health(equity, blocked=False)
+             return
+ 
++        # 2b) PREZZO NON DISPONIBILE: non si decide su un prezzo finto.
++        #     Prima il tick proseguiva con price=0.0: la policy rispondeva
++        #     "prezzo non valido", health restava "running" con error="" e il
++        #     bot era di fatto inerte senza che nulla lo segnalasse (visto in
++        #     produzione il 2026-09-13 su XRP/ETH: price=0.000000 per giorni).
++        if price <= 0:
++            self._note_error("prezzo non disponibile (hub/REST)")
++            self._write_health(equity, blocked=False, free_quote=free)
++            self._save_state()
++            return
++
+         # DEBUG: log price fetch
+         log.info("TICK %s: price=%.6f free=%.4f equity=%.4f", self.cfg.symbol, price, free, equity)
+ 
+@@ -314,6 +332,8 @@ class BotTask:
+         # 3aa) GRID BILATERALE: i SELL ladder NON richiedono EUR (usano l'asset
+         #      in mano) → si eseguono SEMPRE, anche se il preflight blocca i
+         #      buy per mancanza di free (es. ADA con 0 EUR e 9.8 ADA free).
++        ladder_ok = 0
++        ladder_err = ""
+         for amount, sell_price in decision.to_sell:
+             try:
+                 o = await asyncio.to_thread(
+@@ -326,11 +346,22 @@ class BotTask:
+                     self._journal("sell_placed", order_id=o["id"],
+                                   amount=amount, price=sell_price,
+                                   kind="ladder")
++                    ladder_ok += 1
+             except Exception as e:  # noqa: BLE001
+-                self._last_error = f"place sell ladder: {e}"
++                ladder_err = ladder_err or str(e)[:160]
++        # Il log riportava SEMPRE "N piazzati" (len della decisione) anche con
++        # 0 ordini accettati: un fallimento totale appariva come successo.
+         if decision.to_sell:
+-            log.info("grid bilaterale %s: %d sell ladder piazzati",
+-                     self.cfg.symbol, len(decision.to_sell))
++            n = len(decision.to_sell)
++            if ladder_ok == n:
++                log.info("grid bilaterale %s: %d sell ladder piazzati",
++                         self.cfg.symbol, n)
++            elif ladder_ok:
++                log.warning("grid bilaterale %s: %d/%d sell ladder piazzati (%s)",
++                            self.cfg.symbol, ladder_ok, n, ladder_err)
++                self._note_error(f"ladder sell parziale: {ladder_err}")
++            else:
++                self._note_error(f"ladder sell rifiutati ({n}): {ladder_err}")
+ 
+         # 3b) PRE-FLIGHT anti-deadlock (ATLAS v6): fattibilita' BUY prima
+         #     delle API. Capitale usabile = free + locked×0.85 (ordini buy
+@@ -395,10 +426,25 @@ class BotTask:
+         # 5) fill processing post-place (se applicabile)
+         await self._process_fills(price)
+ 
+-        self._last_error = ""
+         self._write_health(equity, blocked=False, free_quote=free)
+         self._save_state()
+ 
++    def _note_error(self, msg: str) -> None:
++        """Registra l'errore del tick e lo logga (max 1 volta ogni 5 min).
++
++        Prima: gli errori di piazzamento finivano solo in health e venivano
++        azzerati a fine tick; i fallimenti ripetuti (es. ladder sell dust
++        rifiutati ogni 30s) erano completamente invisibili nei log.
++        """
++        if not self._last_error:
++            self._last_error = msg
++        key = msg.split(":")[0][:48]
++        now = self._now()
++        last = self._err_log_ts.get(key, 0.0)
++        if now - last > 300.0:
++            self._err_log_ts[key] = now
++            log.warning("%s %s: %s", self.cfg.symbol, key, msg[:300])
++
+     def _guard_equity(self, equity: float) -> float:
+         """P2 — sanity dell'equity: letture impossibili (spike/dip da fetch
+         sporco) sostituite con l'ultimo valore valido. Range plausibile per
+@@ -430,7 +476,7 @@ class BotTask:
+                     base = self.cfg.symbol.split("/")[0]
+                     free_b = float((bal.get("free", {}) or {}).get(base, 0))
+                     price = self._price_source() if self._price_source else 0
+-                    if asyncio.iscoroutinefunction(price):
++                    if inspect.iscoroutinefunction(price):
+                         # non siamo in async qui → skip coerenza
+                         raise RuntimeError("async price source")
+                     price = float(price)
+@@ -772,7 +818,7 @@ class TradeOrchestrator:
+                 ohlcv = await asyncio.to_thread(
+                     fetch, symbol, self.OHLCV_TIMEFRAME, self.OHLCV_LIMIT)
+                 if ohlcv:
+-                    if asyncio.iscoroutinefunction(callback):
++                    if inspect.iscoroutinefunction(callback):
+                         await callback(symbol, ohlcv)
+                     else:
+                         callback(symbol, ohlcv)
+diff --git a/denaro/dashboard_infra.html b/denaro/dashboard_infra.html
+index 7df3454..8d40a55 100644
+--- a/denaro/dashboard_infra.html
++++ b/denaro/dashboard_infra.html
+@@ -251,7 +251,7 @@ function render(d) {
+   const te = d.total_equity || 0;
+   $('totaleq').textContent = fmt(te);
+   const be = d.bot_equity ?? 0, ke = d.kraken_equity ?? 0;
+-  $('eqbreak').innerHTML = `OKX LIVE (MC2) <b>€${fmt(be)}</b> + KRAKEN LIVE (MARCODG1) <b>€${fmt(ke)}</b>`;
++  $('eqbreak').innerHTML = `OKX (tutti i conti) <b>€${fmt(be)}</b> + KRAKEN <b>€${fmt(ke)}</b>`;
+   const bal = d.balances || {};
+   const labels = Object.keys(bal).filter(k => bal[k] && bal[k].ok);
+   $('eqdetail').innerHTML = 'CHANNELS: ' + labels.map(esc).join(' ⏺ ');
+diff --git a/denaro/infra_aggregator.py b/denaro/infra_aggregator.py
+index 053a1ee..23f13ec 100644
+--- a/denaro/infra_aggregator.py
++++ b/denaro/infra_aggregator.py
+@@ -47,8 +47,8 @@ REMOTE_NODES = {
+ 
+ # Conti OKX (per saldi reali)
+ ENV_FILES = {
+-    "denaro (main)": "/home/marco/denaro/.env",
+-    "alpha (marcosub1)": "/home/marco/alpha-omega-trading/.env",
++    # [fix-equity-stella] path reali su mc2 (prima puntavano a /home/marco, inesistenti qui)
++    "denaro (main)": "/home/sergio/alpha-omega-trading/.env",
+ }
+ 
+ # Sub-account con chiavi IP-bound sul nodo di origine: il file si legge via SSH
+@@ -528,19 +528,28 @@ def collect():
+     node_bots = collect_node_bots()
+     data["node_bots"] = node_bots
+ 
+-    # 7) CAPITALE TOTALE REALE = somma del capitale reale dei 4 bot live
+-    #    Kraken (SOL 12.70 + XRP 12.70 = 25.40€) + OKX mc2 (DOGE 12.00 + SOL 12.00 = 24.00€)
+-    okx_eq = sum(b.get("total_equity", 0) for k, b in node_bots.items()
+-                 if "mc2:okx" in k and b.get("status") == "running")
+-    if okx_eq == 0:
+-        okx_eq = 24.0
+-    kraken_eq = sum(b.get("total_equity", 0) for k, b in node_bots.items()
+-                    if "trend-live" in k and b.get("status") == "running")
+-    if kraken_eq > 30.0:
+-        kraken_eq = 25.47
+-    data["bot_equity"] = round(okx_eq, 2)
+-    data["kraken_equity"] = round(kraken_eq, 2)
+-    data["total_equity"] = round(okx_eq + kraken_eq, 2)
++    # 7) CAPITALE REALE = somma dei SALDI REALI degli account (mai valori hardcoded).
++    #    [fix-equity-stella] Prima: fallback fissi 24.0 / 25.47 e stima dal capitale nominale dei bot,
++    #    che sovrastimava l'equity. Ora: si valorizzano i saldi reali; se non disponibili si dichiara
++    #    "unavailable" invece di inventare un numero.
++    real_total, equity_detail_local, unpriced_local = balance_eur(balances)
++    data["equity_breakdown_local"] = equity_detail_local
++    data["equity_unpriced_local"] = unpriced_local
++    okx_eq = sum(v.get("eur") or 0 for kk, v in equity_detail_local.items()
++                 if kk.lower().startswith("okx") or "okx" in kk.lower())
++    kraken_eq = sum(v.get("eur") or 0 for kk, v in equity_detail_local.items()
++                    if "kraken" in kk.lower())
++    if real_total > 0:
++        data["bot_equity"] = round(okx_eq, 2)
++        data["kraken_equity"] = round(kraken_eq, 2)
++        data["total_equity"] = round(real_total, 2)
++        data["equity_source"] = "saldi_reali"
++    else:
++        data["bot_equity"] = None
++        data["kraken_equity"] = None
++        data["total_equity"] = None
++        data["equity_source"] = "unavailable"
++        data["equity_note"] = "nessun saldo reale leggibile: usare l'aggregatore primario (MARCODG1)"
+ 
+     node_running = [b for b in node_bots.values() if b.get("status") == "running"]
+     data["node_total_pnl"] = round(sum(b.get("pnl", 0) for b in node_running), 4)
+@@ -578,6 +587,84 @@ def collect():
+     return data
+ 
+ 
++# [fix-equity-stella] valorizzazione dei saldi reali in EUR (stessa logica dell'aggregatore MARCODG1)
++_eur_rate_cache = {}
++
++
++def fetch_eur_rate(currency):
++    """Cambio in EUR per una valuta; stablecoin = 1.0; None se non disponibile."""
++    cur = str(currency or "").upper()
++    if not cur:
++        return None
++    if cur in ("EUR", "USDT", "USDC", "DAI", "USD", "TUSD", "PYUSD"):
++        return 1.0
++    now = time.time()
++    hit = _eur_rate_cache.get(cur)
++    if hit and now - hit[0] < 300:
++        return hit[1]
++    rate = None
++    try:
++        import ccxt
++        ex = ccxt.okx({"enableRateLimit": True, "hostname": "eea.okx.com"})
++        for pair in ("%s/EUR" % cur, "%s/USDT" % cur):
++            try:
++                t = ex.fetch_ticker(pair)
++                last = float(t.get("last") or 0)
++                if not last:
++                    continue
++                if pair.endswith("USDT"):
++                    try:
++                        fx = float(ex.fetch_ticker("EUR/USDT").get("last") or 1) or 1
++                        last = last / fx
++                    except Exception:
++                        pass
++                rate = last
++                break
++            except Exception:
++                continue
++    except Exception:
++        rate = None
++    _eur_rate_cache[cur] = (now, rate)
++    return rate
++
++
++def balance_eur(balances):
++    """Valorizza in EUR i saldi reali deduplicando gli account identici.
++
++    Ritorna (totale_eur, dettaglio_per_etichetta, quote_non_valutate).
++    """
++    seen = []
++    detail = {}
++    total = 0.0
++    unpriced = []
++    for label, bal in (balances or {}).items():
++        if not isinstance(bal, dict) or not bal.get("ok"):
++            err = bal.get("error", "") if isinstance(bal, dict) else "n/d"
++            detail[label] = {"ok": False, "eur": None, "error": str(err)[:80]}
++            continue
++        fp = bal.get("acct") or label
++        if fp in seen:
++            detail[label] = {"ok": True, "eur": None, "dedup": True}
++            continue
++        seen.append(fp)
++        tot = 0.0
++        for cur, amt in (bal.get("total") or {}).items():
++            try:
++                amt = float(amt)
++            except Exception:
++                continue
++            if amt <= 0:
++                continue
++            rate = fetch_eur_rate(cur)
++            if rate is None:
++                unpriced.append("%s:%s" % (label, cur))
++                continue
++            tot += amt * rate
++        detail[label] = {"ok": True, "eur": round(tot, 2)}
++        total += tot
++    return round(total, 2), detail, unpriced
++
++
+ class Handler(BaseHTTPRequestHandler):
+     def _send(self, code, payload):
+         body = json.dumps(payload, indent=1).encode()
+diff --git a/denaro/infrastructure/exchanges/kraken.py b/denaro/infrastructure/exchanges/kraken.py
+index 42c07b2..61d538a 100644
+--- a/denaro/infrastructure/exchanges/kraken.py
++++ b/denaro/infrastructure/exchanges/kraken.py
+@@ -49,6 +49,25 @@ class KrakenAdapter:
+         })
+         self.bucket = bucket or TokenBucket(DEFAULT_CAPACITY, DEFAULT_REFILL_RATE)
+         self._balance_cache: Optional[tuple] = None  # (value, ts)
++        # metadati mercati caricati pigramente: senza di essi i limiti
++        # min_amount/min_notional valgono 0.0 e ogni filtro di minimo ordine
++        # resta disattivato (ordini dust ritentati a ogni tick)
++        self._markets_loaded = False
++
++    def _ensure_markets(self) -> bool:
++        """Carica i metadati dei mercati UNA volta (limiti e precision)."""
++        if self._markets_loaded:
++            return True
++        try:
++            self._call(self.ex.load_markets)
++            self._markets_loaded = True
++            log.info("kraken: %d mercati caricati (limiti/precision)",
++                     len(getattr(self.ex, "markets", {}) or {}))
++        except Exception as e:  # noqa: BLE001
++            log.warning("kraken load_markets fallito (%s) - minimi non "
++                        "disponibili", e)
++            return False
++        return True
+ 
+     @staticmethod
+     def _classify(exc: Exception) -> bool:
+@@ -164,6 +183,8 @@ class KrakenAdapter:
+ 
+     def min_notional(self, symbol: str) -> float:
+         """Size minima (notional) richiesta da Kraken per un ordine."""
++        if not self._ensure_markets():
++            return 0.0
+         try:
+             m = self.ex.market(symbol)
+             return float((m.get("limits", {}).get("cost", {}).get("min") or 0.0))
+@@ -173,9 +194,13 @@ class KrakenAdapter:
+     # orders
+     def create_limit_order(self, symbol: str, side: str, amount: float,
+                            price: float) -> dict:
++        self._ensure_markets()
+         if side == "buy":
+-            return self._call(self.ex.create_limit_buy_order, symbol, amount, price)
+-        return self._call(self.ex.create_limit_sell_order, symbol, amount, price)
++            out = self._call(self.ex.create_limit_buy_order, symbol, amount, price)
++        else:
++            out = self._call(self.ex.create_limit_sell_order, symbol, amount, price)
++        self.invalidate_balance()
++        return out
+ 
+     def sell_market(self, symbol: str, amount: float) -> dict:
+         """Vendita immediata (stop-loss): market sell di `amount` asset."""
+@@ -188,6 +213,8 @@ class KrakenAdapter:
+ 
+     def min_amount_for(self, symbol: str) -> float:
+         """Amount minimo dell'exchange per un symbol (limits.amount.min)."""
++        if not self._ensure_markets():
++            return 0.0
+         try:
+             m = self.ex.market(symbol)
+             return float((m.get("limits", {}).get("amount", {}).get("min") or 0.0))
+diff --git a/denaro/infrastructure/exchanges/okx.py b/denaro/infrastructure/exchanges/okx.py
+index 3136e14..d7a74dc 100644
+--- a/denaro/infrastructure/exchanges/okx.py
++++ b/denaro/infrastructure/exchanges/okx.py
+@@ -63,6 +63,31 @@ class OKXAdapter:
+         self.bucket = bucket or TokenBucket(DEFAULT_CAPACITY, DEFAULT_REFILL_RATE)
+         # cache bilanci con TTL (evita chiamate REST ridondanti)
+         self._balance_cache: Optional[tuple] = None  # (value, ts)
++        # metadati mercati caricati pigramente (SENZA questo i limiti
++        # min_amount/min_notional/precision sono invisibili -> 0.0)
++        self._markets_loaded = False
++
++    def _ensure_markets(self) -> bool:
++        """Carica i metadati dei mercati UNA volta.
++
++        Bug di produzione (2026-09-11): senza load_markets() la chiamata
++        ex.market() solleva "markets not loaded" e TUTTI i filtri di minimo
++        ordine (min_amount_for, min_notional) restituiscono 0.0. Risultato:
++        la policy pianificava ordini dust (9e-08 DOGE) mai accettabili
++        dall'exchange, ritentati a ogni tick e loggati come "piazzati".
++        """
++        if self._markets_loaded:
++            return True
++        try:
++            self._call(self.ex.load_markets)
++            self._markets_loaded = True
++            log.info("okx: %d mercati caricati (limiti/precision disponibili)",
++                     len(getattr(self.ex, "markets", {}) or {}))
++        except Exception as e:  # noqa: BLE001
++            log.warning("okx load_markets fallito (%s) - minimi ordine NON "
++                        "disponibili: i filtri restano disattivati", e)
++            return False
++        return True
+ 
+     @property
+     def min_amount(self) -> float:
+@@ -71,6 +96,8 @@ class OKXAdapter:
+ 
+     def min_amount_for(self, symbol: str) -> float:
+         """Amount minimo dell'exchange per un symbol (limits.amount.min)."""
++        if not self._ensure_markets():
++            return 0.0
+         try:
+             m = self.ex.market(symbol)
+             return float((m.get("limits", {}).get("amount", {}).get("min") or 0.0))
+@@ -221,6 +248,8 @@ class OKXAdapter:
+ 
+     def min_notional(self, symbol: str) -> float:
+         """Size minima (notional) richiesta dall'exchange per un ordine."""
++        if not self._ensure_markets():
++            return 0.0
+         try:
+             m = self.ex.market(symbol)
+             return float((m.get("limits", {}).get("cost", {}).get("min") or 0.0))
+@@ -231,9 +260,15 @@ class OKXAdapter:
+ 
+     def create_limit_order(self, symbol: str, side: str, amount: float,
+                            price: float) -> dict:
++        # i mercati servono a ccxt per applicare tick size / precision
++        self._ensure_markets()
+         if side == "buy":
+-            return self._call(self.ex.create_limit_buy_order, symbol, amount, price)
+-        return self._call(self.ex.create_limit_sell_order, symbol, amount, price)
++            out = self._call(self.ex.create_limit_buy_order, symbol, amount, price)
++        else:
++            out = self._call(self.ex.create_limit_sell_order, symbol, amount, price)
++        # il free balance cambia subito (fondi bloccati): non riusare la cache
++        self.invalidate_balance()
++        return out
+ 
+     def sell_market(self, symbol: str, amount: float) -> dict:
+         """Vendita immediata (stop-loss): market sell di `amount` asset."""
+diff --git a/denaro/infrastructure/market_data.py b/denaro/infrastructure/market_data.py
+index d2df030..ee58e24 100644
+--- a/denaro/infrastructure/market_data.py
++++ b/denaro/infrastructure/market_data.py
+@@ -15,6 +15,7 @@ logica di broadcast/cache/fallback e' testabile con fake (nessuna rete).
+ from __future__ import annotations
+ 
+ import asyncio
++import inspect
+ import logging
+ import time
+ from collections import defaultdict
+@@ -51,6 +52,37 @@ class MarketDataHub:
+         self._cache: Dict[str, tuple] = {}        # symbol -> (price, ts)
+         self._tasks: Dict[str, asyncio.Task] = {}  # symbol -> canale attivo
+         self._running = False
++        # ccxt richiede i markets caricati per QUALSIASI chiamata per simbolo
++        # (fetch_ticker incluso): senza, get_price fallisce e il Node ticka a
++        # prezzo 0.0 restando "running" ma incapace di operare (bug runtime
++        # 2026-09-13: i bot XRP/ETH su mc2 loggavano price=0.000000).
++        self._rest_markets_loaded = False
++
++    async def _ensure_rest_markets(self) -> bool:
++        """Carica i markets del client REST una volta (lazy, con retry).
++
++        Non viene fatto in __init__ perche' una rete momentaneamente giu' non
++        deve impedire l'avvio del Node: il primo fetch utile riprova.
++        """
++        if self._rest_markets_loaded:
++            return True
++        load = getattr(self._rest, "load_markets", None)
++        if load is None:
++            self._rest_markets_loaded = True
++            return True
++        try:
++            if inspect.iscoroutinefunction(load):
++                await load()
++            else:
++                await asyncio.to_thread(load)
++            self._rest_markets_loaded = True
++            n = len(getattr(self._rest, "markets", {}) or {})
++            log.info("hub: markets REST caricati (%d simboli)", n)
++        except Exception as e:  # noqa: BLE001
++            log.warning("hub: load_markets REST fallito (%s) — prezzi non "
++                        "disponibili finche' non riesce", e)
++            return False
++        return True
+ 
+     # --- lifecycle -----------------------------------------------------------
+ 
+@@ -61,7 +93,7 @@ class MarketDataHub:
+             load = getattr(self._pro, "load_markets", None)
+             if load:
+                 try:
+-                    if asyncio.iscoroutinefunction(load):
++                    if inspect.iscoroutinefunction(load):
+                         await load()
+                     else:
+                         load()
+@@ -95,7 +127,7 @@ class MarketDataHub:
+             if closer is None:
+                 continue
+             try:
+-                if asyncio.iscoroutinefunction(closer):
++                if inspect.iscoroutinefunction(closer):
+                     await closer()
+                 else:
+                     closer()
+@@ -144,9 +176,14 @@ class MarketDataHub:
+         p = self.price(symbol)
+         if p is not None:
+             return p
++        if not await self._ensure_rest_markets():
++            return None
+         try:
+             t = await asyncio.to_thread(self._rest.fetch_ticker, symbol)
+             last = float(t["last"])
++            if last <= 0:
++                log.warning("get_price(%s): prezzo non valido (%r)", symbol, last)
++                return None
+             self._cache[symbol] = (last, self._now())
+             return last
+         except Exception as e:  # noqa: BLE001 - fallback silenzioso
+diff --git a/denaro/infrastructure/mc2_feeder.py b/denaro/infrastructure/mc2_feeder.py
+index aba466a..c3f7a87 100644
+--- a/denaro/infrastructure/mc2_feeder.py
++++ b/denaro/infrastructure/mc2_feeder.py
+@@ -21,6 +21,7 @@ from __future__ import annotations
+ 
+ import argparse
+ import asyncio
++import inspect
+ import json
+ import logging
+ import signal
+@@ -74,7 +75,7 @@ class ExchangeFeeder:
+             load = getattr(self.pro, "load_markets", None)
+             if load:
+                 try:
+-                    if asyncio.iscoroutinefunction(load):
++                    if inspect.iscoroutinefunction(load):
+                         await load()
+                     else:
+                         load()
+=== UNTRACKED ===
+?? config/node_mc2.yaml.bak.pre-doge-live-20260907
+?? config/node_mc2.yaml.bak.yaml
+?? denaro/application/orchestrator.py.bak-20260913-211138
+?? denaro/application/orchestrator.py.bak.prezzo-live-20260907
+?? denaro/dashboard_infra.html.bak.eqsplit-20260916_000447
+?? denaro/infra_aggregator.py.bak.equity20260916_002022
+?? denaro/infra_aggregator.py.bak.helpers20260916_002149
+?? denaro/infrastructure/exchanges/kraken.py.bak-20260913-211138
+?? denaro/infrastructure/exchanges/okx.py.bak-20260913-211138
+?? denaro/infrastructure/market_data.py.bak-20260913-211138
+?? denaro/infrastructure/mc2_feeder.py.bak-20260913-211138
+?? denaro/scripts/
+?? serve_dashboard.py
+?? serve_dashboard.py.bak.20260915_233505
