@@ -41,7 +41,7 @@ class Handler(BaseHTTPRequestHandler):
         try:
             if path in ("/health", ""):
                 bots = {}
-                for name in ("sol", "ada"):
+                for name in ("ada_marcodg1_live", "algo_marcodg1_live", "arb_marcodg1_live", "xlm_marcodg1_live"):
                     h = read_health(name)
                     if h:
                         bots[name] = h

@@ -55,7 +55,7 @@ REMOTE_NODES = {
         "data_dir": "/home/sergio/alpha-omega-trading/node_data",
         "live_dir": "/home/sergio/denaro/health",
         "host": "alpha-omega-node-nuvola",
-        "unit": "denaro-node-nuvola",
+        "unit": "denaro-node-nuvola-trade",
     },
     "mc2": {
         "ssh": ["sergio@127.0.0.1", "-p", "2222"],  # tunnel inverso
@@ -78,19 +78,19 @@ SERVICES = {
         "ssh": [],  # locale
         "units": [
             "denaro-node-paper", "denaro-health-marcodg1", "denaro-aggregator-marcodg1",
-            "denaro-brain", "zabbix-agent",
+            "denaro-dashboard-marcodg1", "denaro-node-marcodg1-xrp", "cloudflared-denaro", "zabbix-agent",
         ],
     },
     "nuvola": {
         "host": "nuvola",
         "ssh": ["sergio@87.106.3.15", "-p", "22"],
-        "units": ["denaro-node-nuvola", "denaro-health-nuvola",
+        "units": ["denaro-node-nuvola-trade", "denaro-health-nuvola",
                   "zabbix-agent", "zabbix-tunnel"],
     },
     "mc2": {
         "host": "mc2",
         "ssh": ["sergio@127.0.0.1", "-p", "2222"],  # tunnel inverso
-        "units": ["denaro-node-mc2", "denaro-feeder-mc2", "denaro-health-mc2",
+        "units": ["denaro-node-mc2", "denaro-feeder-mc2", "denaro-health-mc2", "denaro-dashboard-mc2",
                   "zabbix-agent", "zabbix-tunnel-reverse"],
     },
 }
@@ -184,7 +184,7 @@ def push_services(data):
         if cfg["ssh"]:
             ssh_args = " ".join(cfg["ssh"])
             cmd = (f"ssh -o BatchMode=yes -o ConnectTimeout=5 {ssh_args} "
-                   f"'for u in {' '.join(units)}; do s=$(systemctl is-active $u 2>/dev/null); echo $u=$s; done'")
+                   f"'for u in {' '.join(units)}; do s=$(systemctl is-active $u 2>/dev/null); if [ $s != active ]; then s=$(XDG_RUNTIME_DIR=/run/user/1000 systemctl --user is-active $u 2>/dev/null); fi; echo $u=$s; done'")
             try:
                 r = subprocess.run(["bash", "-c", cmd], capture_output=True,
                                    text=True, timeout=20)
@@ -234,7 +234,9 @@ def push_remote_nodes(data, auth):
             ]
             _push_atlas_metrics(data, host, keybase, h)
         # Auto-heal remoto: nodo intero morto -> systemctl restart via SSH
-        if all_stale:
+        # Auto-heal remoto: DISATTIVATO per mc2/nuvola (19/09: causava heal-loop;
+        # dal 25/09 ogni nodo si auto-riavvia con systemd Restart=always).
+        if all_stale and node_name not in ("nuvola", "mc2"):
             _heal_remote(node_name, cfg)
         # Stato aggregato del nodo (comodita' dashboard/Zabbix)
         data.append({"host": host, "key": f"{prefix}.status",
