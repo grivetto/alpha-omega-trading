@@ -21,7 +21,7 @@ import shlex
 import socket
 import subprocess
 import time
-from http.server import BaseHTTPRequestHandler, HTTPServer
+from http.server import BaseHTTPRequestHandler, HTTPServer, ThreadingHTTPServer
 from pathlib import Path
 
 HEALTH_DIR = Path(os.getenv("HEALTH_DIR", "/home/marco/denaro/health"))
@@ -1046,4 +1046,4 @@ class Handler(BaseHTTPRequestHandler):
 
 if __name__ == "__main__":
     print(f"Infra aggregator on {HOST}:{PORT}")
-    HTTPServer((HOST, PORT), Handler).serve_forever()
+    ThreadingHTTPServer((HOST, PORT), Handler).serve_forever()

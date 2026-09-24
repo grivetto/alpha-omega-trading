@@ -41,6 +41,34 @@ ordine su tutti e tre i nodi. ZERO ordini live piazzati (verificato:
 open_orders=0 su tutti i subaccount). Non è un incidente: è il fail-safe che
 funziona. Per tradare servono depositi reali sui subaccount.
 
+## Piano allocazione capitale (tre nodi, tre strategie)
+
+Il capitale va distribuito **su tutti e tre i subaccount** in proporzione
+al numero di bot e alla diversificazione degli asset. Esempio con 500 EUR
+totali (adattabile all'importo reale versato):
+
+| Nodo | Subaccount | Strategia | Bot | Asset | Capitale nodo | Capitale/bot |
+|------|------------|-----------|-----|-------|---------------|--------------|
+| mc2 | mc2sub1 | Trend ATR+EMA | 7 | BTC ETH SOL XRP DOGE TRX CRV | **200 EUR** | ~28.6 EUR |
+| nuvola | nuvolasub1 | Trend ATR+EMA | 6 | LINK AVAX DOT UNI SUI MINA | **150 EUR** | ~25.0 EUR |
+| MARCODG1 | marcosub1 | Trend ATR+EMA | 4 | ADA ARB XLM ALGO | **150 EUR** | ~37.5 EUR |
+
+**Totale: 500 EUR** — zero overlap di asset (17 coppie uniche).
+
+Regole operative:
+- Ogni bot usa SOLO il budget del proprio subaccount e del proprio simbolo
+  (isolamento garantito da `env_prefix` + fail-closed env()).
+- Attivazione condizionata: equity reale ≥ capitale dichiarato nel config
+  (altrimenti guardia "equity inattendibile" blocca i tick).
+- Risk per trade: 2% del capitale del bot (config `risk_pct: 0.02`).
+- Stop giornaliero: -3% equity nodo; max drawdown: -10% equity nodo.
+- min_notional OKX: 1 EUR/ordine → capitale/bot deve essere ≥ ~20 EUR
+  per avere margine su fee + slippage + distanza griglia.
+
+Prossimo passo operativo: depositare i fondi sui tre subaccount secondo
+l'allocazione scelta, poi verificare che i tick smettano di essere saltati
+su tutti e tre i nodi (journalctl + health endpoint).
+
 ## Risorse
 
 - Vault chiavi: `~/.denaro_vault/keys_master.env` — le chiavi OKX lì contenute

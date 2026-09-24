@@ -16,7 +16,7 @@ HEALTH_DIR = Path(os.getenv("HEALTH_DIR", "/home/sergio/denaro/health"))
 PORT = int(os.getenv("HEALTH_PORT", "8911"))
 HOST = os.getenv("HEALTH_HOST", "127.0.0.1")
 # Nomi file reali su mc2 (verificati 2026-08-26)
-BOTS = {"doge": "doge_mc2"}
+BOTS = {"btc": "btc_mc2", "crv": "crv_mc2", "doge": "doge_mc2", "eth": "eth_mc2", "sol": "sol_mc2", "trx": "trx_mc2", "xrp": "xrp_mc2"}
 
 
 def read_health(name: str):
