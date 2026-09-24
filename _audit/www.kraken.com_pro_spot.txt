@@ -1,0 +1,2308 @@
+URL: https://www.kraken.com/pro/spot
+STATUS: 200
+FINAL: https://www.kraken.com/pro/spot
+BYTES: 3219959
+
+Crypto Spot Trading on Kraken Pro | Trade 1,400+ Pairs
+Individuals
+Businesses
+VIP
+Affiliates
+Markets
+About
+Search
+/
+Search
+/
+Individuals
+Businesses
+VIP
+Affiliates
+Markets
+About
+Kraken Pro
+Kraken Pro
+Unleash your trading potential
+Unleash your trading potential
+Trade crypto
+Trade crypto
+Trade crypto perps
+Trade crypto perps
+Trade on margin
+Trade on margin
+Trade stocks
+Trade stocks
+Trade xStocks
+Trade xStocks
+Trade with our money
+Trade with our money
+Borrow against crypto
+Borrow against crypto
+Check your VIP eligibility
+Check your VIP eligibility
+Access low trading fees
+Access low trading fees
+Kraken
+Kraken
+Smart investing made easy
+Smart investing made easy
+Buy crypto
+Buy crypto
+Buy stocks
+Buy stocks
+Buy xStocks
+Buy xStocks
+Buy perpetual futures
+Buy perpetual futures
+Buy bundles
+Buy bundles
+Pay with crypto
+Pay with crypto
+Convert crypto
+Convert crypto
+Grow your crypto
+Grow your crypto
+Auto-invest in crypto
+Auto-invest in crypto
+Get Kraken+ subscription
+Get Kraken+ subscription
+Krak
+Krak
+Send, spend, grow
+Send, spend, grow
+Spend cash and crypto
+Spend cash and crypto
+Grow cash and crypto
+Grow cash and crypto
+Send cash and crypto
+Send cash and crypto
+Get card and cashback
+Get card and cashback
+Advanced tools
+Kraken Desktop
+Kraken Desktop
+Supercharged trading
+Supercharged trading
+Kraken Wallet
+Kraken Wallet
+Secure your crypto
+Secure your crypto
+Kraken CLI
+Kraken CLI
+Your agent can trade now
+Your agent can trade now
+Kraken API
+Kraken API
+Trade spot and futures via API
+Trade spot and futures via API
+Kraken Institutional
+Kraken Institutional
+Secure access since 2011
+Secure access since 2011
+Exchange trading
+Exchange trading
+Spot & futures, via API
+Spot & futures, via API
+OTC
+OTC
+Multi-venue liquidity
+Multi-venue liquidity
+Staking
+Staking
+Institutional staking rewards
+Institutional staking rewards
+Prime
+Prime
+Integrated offerings
+Integrated offerings
+Custody
+Custody
+Qualified crypto custody
+Qualified crypto custody
+Kraken API
+Kraken API
+Trade spot and futures via API
+Trade spot and futures via API
+Who we serve
+Asset managers
+Asset managers
+Corporations
+Corporations
+ETP issuers
+ETP issuers
+Governments
+Governments
+Hedge funds
+Hedge funds
+Market makers & HFTs
+Market makers & HFTs
+Protocols
+Protocols
+VC firms
+VC firms
+Wealth managers
+Wealth managers
+Kraken 360 for protocols
+Kraken 360 for protocols
+Default partner for token projects
+Default partner for token projects
+Investments
+Investments
+We invest early
+We invest early
+Payward Services
+Payward Services
+Infrastructure for your platform
+Infrastructure for your platform
+xStocks
+xStocks
+Tokenized equities
+Tokenized equities
+Browse prices
+Browse prices
+New listings
+New listings
+Crypto categories
+Crypto categories
+Why Kraken
+Why Kraken
+Learn about crypto
+Learn about crypto
+Learn about security
+Learn about security
+How to buy Bitcoin
+How to buy Bitcoin
+Customer service
+Customer service
+Industry leading security
+Industry leading security
+Proof of reserves
+Proof of reserves
+Deep liquidity and volume
+Deep liquidity and volume
+Payward
+Payward
+English
+Spot
+Trade spot with precision and depth
+Discover low-cost crypto spot trading with advanced order tools. Built for active traders in Italy.
+Create free account Create free account
+Available on
+Pro Desktop
+MiFID
+Regulated platform
+Best crypto platform 2025
+AA Tier ranking
+Proof of Reserves
+Independently verified
+Reliable execution when it matters most
+With advanced order types, deep liquidity and API support for programmatic strategies, Kraken Pro delivers the gold standard in spot execution across 1,200+ crypto pairs. Trade in EUR with confidence on a MiCA-compliant platform.
+Move size without moving the market
+Effortlessly enter and exit positions of any size without walking the book. Tap into deep liquidity across 1,200+ pairs, confident in the knowledge that depth remains consistent across volatility spikes.
+Market depth
+Trade on your terms
+Limit, stop, post-only, OCO. Whatever order type you need, Kraken Pro has you covered with granular control over price, size and triggers.
+Order types
+“Kraken Spot makes investing feel effortless. Clean execution, intuitive design, and a platform I trust with my portfolio.”
+- RookieXBT
+Charts built for analysis
+Full-featured charting inside Kraken Pro, with multiple timeframes, indicators, and drawing tools to read price action and plan your trades.
+Charting
+Protect your capital
+Decide how much to risk and how big to size before you enter. Build discipline into every order and cultivate the habits that keep an active book alive.
+Risk management
+Create free account Create free account
+$2T+
+Total transaction volume
+190+
+Supported countries
+13M+
+Registered users
+15+ years
+Operating since 2011
+How to trade spot on Kraken Pro
+Fund your account - Deposit local currency or crypto to your Kraken account.
+Choose a pair - Select the market you want to trade, then review price, order-book depth, and recent activity.
+Set your order - Pick an order type, then enter size and review the fee before confirming.
+Trade and settle - Your order executes at the market price and the asset settles to your balance, owned outright and ready to hold, withdraw, or trade again.
+Your trades, our protection
+Granular order controls
+Limit, stop-limit, OCO, and post-only orders protect your fills. Self-trade prevention stops your orders matching.
+Asset safeguards
+Proof of Reserves, cold-storage custody, and 2FA protect what you hold.
+Platform reliability
+A high-performance matching engine and transparent order handling keep execution reliable through volatility.
+Fees
+The table below outlines crypto spot trading maker-taker fees that decrease with 30-day volume.
+Popular spot markets
+Browse the top crypto spot trading pairs.
+Popular Trending Newly listed Top gainers
+BTC
+Bitcoin BTC
+$84,331.00 -0.09%
+ETH
+Ethereum ETH
+$2,686.26 +0.30%
+USDT
+Tether USDT
+$1.00 -0.01%
+BNB
+BNB BNB
+$778.59 +1.61%
+XRP
+XRP XRP
+$1.53 +2.39%
+USDC
+USDC USDC
+$1.00 0.00%
+SOL
+Solana SOL
+$116.77 +1.80%
+TRX
+TRON TRX
+$0.34 -0.04%
+ZEC
+Zcash ZEC
+$1,540.31 +1.78%
+HYPE
+Hyperliquid HYPE
+$92.36 -1.46%
+DOGE
+Dogecoin DOGE
+$0.096 +3.53%
+XMR
+Monero XMR
+$569.07 +2.51%
+WBT
+WhiteBIT WBT
+$84.36 -0.25%
+LINK
+Chainlink LINK
+$13.28 +8.03%
+BTC
+Bitcoin BTC
+$84,331.00 -0.09%
+ETH
+Ethereum ETH
+$2,686.26 +0.30%
+USDT
+Tether USDT
+$1.00 -0.01%
+BNB
+BNB BNB
+$778.59 +1.61%
+XRP
+XRP XRP
+$1.53 +2.39%
+USDC
+USDC USDC
+$1.00 0.00%
+SOL
+Solana SOL
+$116.77 +1.80%
+TRX
+TRON TRX
+$0.34 -0.04%
+ZEC
+Zcash ZEC
+$1,540.31 +1.78%
+HYPE
+Hyperliquid HYPE
+$92.36 -1.46%
+DOGE
+Dogecoin DOGE
+$0.096 +3.53%
+XMR
+Monero XMR
+$569.07 +2.51%
+WBT
+WhiteBIT WBT
+$84.36 -0.25%
+LINK
+Chainlink LINK
+$13.28 +8.03%
+BTC
+Bitcoin BTC
+$84,331.00 -0.09%
+ETH
+Ethereum ETH
+$2,686.26 +0.30%
+USDT
+Tether USDT
+$1.00 -0.01%
+BNB
+BNB BNB
+$778.59 +1.61%
+XRP
+XRP XRP
+$1.53 +2.39%
+USDC
+USDC USDC
+$1.00 0.00%
+SOL
+Solana SOL
+$116.77 +1.80%
+TRX
+TRON TRX
+$0.34 -0.04%
+ZEC
+Zcash ZEC
+$1,540.31 +1.78%
+HYPE
+Hyperliquid HYPE
+$92.36 -1.46%
+DOGE
+Dogecoin DOGE
+$0.096 +3.53%
+XMR
+Monero XMR
+$569.07 +2.51%
+WBT
+WhiteBIT WBT
+$84.36 -0.25%
+LINK
+Chainlink LINK
+$13.28 +8.03%
+BTC
+Bitcoin BTC
+$84,331.00 -0.09%
+ETH
+Ethereum ETH
+$2,686.26 +0.30%
+USDT
+Tether USDT
+$1.00 -0.01%
+BNB
+BNB BNB
+$778.59 +1.61%
+XRP
+XRP XRP
+$1.53 +2.39%
+USDC
+USDC USDC
+$1.00 0.00%
+SOL
+Solana SOL
+$116.77 +1.80%
+TRX
+TRON TRX
+$0.34 -0.04%
+ZEC
+Zcash ZEC
+$1,540.31 +1.78%
+HYPE
+Hyperliquid HYPE
+$92.36 -1.46%
+DOGE
+Dogecoin DOGE
+$0.096 +3.53%
+XMR
+Monero XMR
+$569.07 +2.51%
+WBT
+WhiteBIT WBT
+$84.36 -0.25%
+LINK
+Chainlink LINK
+$13.28 +8.03%
+WBTC
+Wrapped Bitcoin WBTC
+$84,302.00 -0.13%
+USDS
+USDS USDS
+$1.00 +0.01%
+ADA
+Cardano ADA
+$0.25 +4.43%
+XLM
+Stellar XLM
+$0.21 +5.97%
+BCH
+Bitcoin Cash BCH
+$340.58 +1.49%
+NEAR
+NEAR Protocol NEAR
+$4.58 +5.28%
+UNI
+Uniswap UNI
+$9.14 +0.61%
+LTC
+Litecoin LTC
+$71.47 +16.11%
+USDE
+Ethena USDe USDE
+$1.00 +0.01%
+AVAX
+Avalanche AVAX
+$10.54 +2.17%
+DAI
+Dai DAI
+$1.00 +0.01%
+CC
+Canton CC
+$0.11 +3.68%
+USD1
+USD1 USD1
+$1.00 -0.02%
+SUI
+Sui SUI
+$1.01 +4.64%
+WBTC
+Wrapped Bitcoin WBTC
+$84,302.00 -0.13%
+USDS
+USDS USDS
+$1.00 +0.01%
+ADA
+Cardano ADA
+$0.25 +4.43%
+XLM
+Stellar XLM
+$0.21 +5.97%
+BCH
+Bitcoin Cash BCH
+$340.58 +1.49%
+NEAR
+NEAR Protocol NEAR
+$4.58 +5.28%
+UNI
+Uniswap UNI
+$9.14 +0.61%
+LTC
+Litecoin LTC
+$71.47 +16.11%
+USDE
+Ethena USDe USDE
+$1.00 +0.01%
+AVAX
+Avalanche AVAX
+$10.54 +2.17%
+DAI
+Dai DAI
+$1.00 +0.01%
+CC
+Canton CC
+$0.11 +3.68%
+USD1
+USD1 USD1
+$1.00 -0.02%
+SUI
+Sui SUI
+$1.01 +4.64%
+WBTC
+Wrapped Bitcoin WBTC
+$84,302.00 -0.13%
+USDS
+USDS USDS
+$1.00 +0.01%
+ADA
+Cardano ADA
+$0.25 +4.43%
+XLM
+Stellar XLM
+$0.21 +5.97%
+BCH
+Bitcoin Cash BCH
+$340.58 +1.49%
+NEAR
+NEAR Protocol NEAR
+$4.58 +5.28%
+UNI
+Uniswap UNI
+$9.14 +0.61%
+LTC
+Litecoin LTC
+$71.47 +16.11%
+USDE
+Ethena USDe USDE
+$1.00 +0.01%
+AVAX
+Avalanche AVAX
+$10.54 +2.17%
+DAI
+Dai DAI
+$1.00 +0.01%
+CC
+Canton CC
+$0.11 +3.68%
+USD1
+USD1 USD1
+$1.00 -0.02%
+SUI
+Sui SUI
+$1.01 +4.64%
+WBTC
+Wrapped Bitcoin WBTC
+$84,302.00 -0.13%
+USDS
+USDS USDS
+$1.00 +0.01%
+ADA
+Cardano ADA
+$0.25 +4.43%
+XLM
+Stellar XLM
+$0.21 +5.97%
+BCH
+Bitcoin Cash BCH
+$340.58 +1.49%
+NEAR
+NEAR Protocol NEAR
+$4.58 +5.28%
+UNI
+Uniswap UNI
+$9.14 +0.61%
+LTC
+Litecoin LTC
+$71.47 +16.11%
+USDE
+Ethena USDe USDE
+$1.00 +0.01%
+AVAX
+Avalanche AVAX
+$10.54 +2.17%
+DAI
+Dai DAI
+$1.00 +0.01%
+CC
+Canton CC
+$0.11 +3.68%
+USD1
+USD1 USD1
+$1.00 -0.02%
+SUI
+Sui SUI
+$1.01 +4.64%
+HBAR
+Hedera HBAR
+$0.094 +3.44%
+TON
+Toncoin TON
+$1.42 +0.18%
+SHIB
+Shiba Inu SHIB
+$0.0000058 +3.37%
+TAO
+Bittensor TAO
+$296.47 +2.90%
+USDG
+Global Dollar USDG
+$1.00 0.00%
+CRO
+Cronos CRO
+$0.063 +2.86%
+PYUSD
+PayPal USD PYUSD
+$1.00 0.00%
+XAUT
+Tether Gold XAUT
+$4,265.70 -0.61%
+ONDO
+Ondo ONDO
+$0.52 +26.35%
+OKB
+Okb OKB
+$119.69 +1.26%
+RLUSD
+Ripple USD RLUSD
+$1.00 0.00%
+MNT
+Mantle MNT
+$0.68 +4.62%
+HBAR
+Hedera HBAR
+$0.094 +3.44%
+TON
+Toncoin TON
+$1.42 +0.18%
+SHIB
+Shiba Inu SHIB
+$0.0000058 +3.37%
+TAO
+Bittensor TAO
+$296.47 +2.90%
+USDG
+Global Dollar USDG
+$1.00 0.00%
+CRO
+Cronos CRO
+$0.063 +2.86%
+PYUSD
+PayPal USD PYUSD
+$1.00 0.00%
+XAUT
+Tether Gold XAUT
+$4,265.70 -0.61%
+ONDO
+Ondo ONDO
+$0.52 +26.35%
+OKB
+Okb OKB
+$119.69 +1.26%
+RLUSD
+Ripple USD RLUSD
+$1.00 0.00%
+MNT
+Mantle MNT
+$0.68 +4.62%
+HBAR
+Hedera HBAR
+$0.094 +3.44%
+TON
+Toncoin TON
+$1.42 +0.18%
+SHIB
+Shiba Inu SHIB
+$0.0000058 +3.37%
+TAO
+Bittensor TAO
+$296.47 +2.90%
+USDG
+Global Dollar USDG
+$1.00 0.00%
+CRO
+Cronos CRO
+$0.063 +2.86%
+PYUSD
+PayPal USD PYUSD
+$1.00 0.00%
+XAUT
+Tether Gold XAUT
+$4,265.70 -0.61%
+ONDO
+Ondo ONDO
+$0.52 +26.35%
+OKB
+Okb OKB
+$119.69 +1.26%
+RLUSD
+Ripple USD RLUSD
+$1.00 0.00%
+MNT
+Mantle MNT
+$0.68 +4.62%
+HBAR
+Hedera HBAR
+$0.094 +3.44%
+TON
+Toncoin TON
+$1.42 +0.18%
+SHIB
+Shiba Inu SHIB
+$0.0000058 +3.37%
+TAO
+Bittensor TAO
+$296.47 +2.90%
+USDG
+Global Dollar USDG
+$1.00 0.00%
+CRO
+Cronos CRO
+$0.063 +2.86%
+PYUSD
+PayPal USD PYUSD
+$1.00 0.00%
+XAUT
+Tether Gold XAUT
+$4,265.70 -0.61%
+ONDO
+Ondo ONDO
+$0.52 +26.35%
+OKB
+Okb OKB
+$119.69 +1.26%
+RLUSD
+Ripple USD RLUSD
+$1.00 0.00%
+MNT
+Mantle MNT
+$0.68 +4.62%
+USDGO
+USDGO USDGO
+$1.00 +0.04%
+ST
+Sentio ST
+$0.0099 +1.05%
+FOREST
+Forest Protocol FOREST
+$0.028 -5.24%
+XION
+xion XION
+$0.11 -1.01%
+USDD
+USDD USDD
+$1.00 +0.13%
+KEEP
+Keep Network KEEP
+$0.027 +0.96%
+USDS
+USDS USDS
+$1.00 +0.01%
+FIDD
+Fidelity Digital Dollar FIDD
+$1.00 +0.03%
+ALTHEA
+Althea ALTHEA
+$0.040 -2.69%
+ZBT
+Zerobase ZBT
+$0.089 +3.36%
+HSK
+HashKey Platform Token HSK
+$0.096 -0.33%
+CHECK
+Check CHECK
+$0.012 +0.98%
+SUNDOG
+Sundog SUNDOG
+$0.0028 -1.48%
+BADGER
+Badger DAO BADGER
+$0.35 +1.18%
+USDGO
+USDGO USDGO
+$1.00 +0.04%
+ST
+Sentio ST
+$0.0099 +1.05%
+FOREST
+Forest Protocol FOREST
+$0.028 -5.24%
+XION
+xion XION
+$0.11 -1.01%
+USDD
+USDD USDD
+$1.00 +0.13%
+KEEP
+Keep Network KEEP
+$0.027 +0.96%
+USDS
+USDS USDS
+$1.00 +0.01%
+FIDD
+Fidelity Digital Dollar FIDD
+$1.00 +0.03%
+ALTHEA
+Althea ALTHEA
+$0.040 -2.69%
+ZBT
+Zerobase ZBT
+$0.089 +3.36%
+HSK
+HashKey Platform Token HSK
+$0.096 -0.33%
+CHECK
+Check CHECK
+$0.012 +0.98%
+SUNDOG
+Sundog SUNDOG
+$0.0028 -1.48%
+BADGER
+Badger DAO BADGER
+$0.35 +1.18%
+USDGO
+USDGO USDGO
+$1.00 +0.04%
+ST
+Sentio ST
+$0.0099 +1.05%
+FOREST
+Forest Protocol FOREST
+$0.028 -5.24%
+XION
+xion XION
+$0.11 -1.01%
+USDD
+USDD USDD
+$1.00 +0.13%
+KEEP
+Keep Network KEEP
+$0.027 +0.96%
+USDS
+USDS USDS
+$1.00 +0.01%
+FIDD
+Fidelity Digital Dollar FIDD
+$1.00 +0.03%
+ALTHEA
+Althea ALTHEA
+$0.040 -2.69%
+ZBT
+Zerobase ZBT
+$0.089 +3.36%
+HSK
+HashKey Platform Token HSK
+$0.096 -0.33%
+CHECK
+Check CHECK
+$0.012 +0.98%
+SUNDOG
+Sundog SUNDOG
+$0.0028 -1.48%
+BADGER
+Badger DAO BADGER
+$0.35 +1.18%
+USDGO
+USDGO USDGO
+$1.00 +0.04%
+ST
+Sentio ST
+$0.0099 +1.05%
+FOREST
+Forest Protocol FOREST
+$0.028 -5.24%
+XION
+xion XION
+$0.11 -1.01%
+USDD
+USDD USDD
+$1.00 +0.13%
+KEEP
+Keep Network KEEP
+$0.027 +0.96%
+USDS
+USDS USDS
+$1.00 +0.01%
+FIDD
+Fidelity Digital Dollar FIDD
+$1.00 +0.03%
+ALTHEA
+Althea ALTHEA
+$0.040 -2.69%
+ZBT
+Zerobase ZBT
+$0.089 +3.36%
+HSK
+HashKey Platform Token HSK
+$0.096 -0.33%
+CHECK
+Check CHECK
+$0.012 +0.98%
+SUNDOG
+Sundog SUNDOG
+$0.0028 -1.48%
+BADGER
+Badger DAO BADGER
+$0.35 +1.18%
+TNSR
+Tensor TNSR
+$0.038 +4.66%
+API3
+API3 API3
+$0.27 +3.83%
+CARV
+CARV CARV
+$0.043 +0.34%
+BLEND
+Fluent Network BLEND
+$0.069 +0.35%
+L3
+Layer3 L3
+$0.0031 -1.96%
+ONE
+ONEchain ONE
+$0.15 +4.96%
+REZ
+Renzo REZ
+$0.0039 +6.58%
+FOLD
+The Interfold FOLD
+$0.060 +1.83%
+GOAT
+Goatseus Maximus GOAT
+$0.019 +1.26%
+HOLO
+Holoworld HOLO
+$0.068 +5.54%
+BRL1
+BRL1 BRL1
+$0.19 -0.48%
+PTB
+Portal to Bitcoin PTB
+$0.00099 +7.49%
+ETHFI
+Etherfi ETHFI
+$0.68 +3.86%
+QUID
+Squid QUID
+$0.069 +1.60%
+TNSR
+Tensor TNSR
+$0.038 +4.66%
+API3
+API3 API3
+$0.27 +3.83%
+CARV
+CARV CARV
+$0.043 +0.34%
+BLEND
+Fluent Network BLEND
+$0.069 +0.35%
+L3
+Layer3 L3
+$0.0031 -1.96%
+ONE
+ONEchain ONE
+$0.15 +4.96%
+REZ
+Renzo REZ
+$0.0039 +6.58%
+FOLD
+The Interfold FOLD
+$0.060 +1.83%
+GOAT
+Goatseus Maximus GOAT
+$0.019 +1.26%
+HOLO
+Holoworld HOLO
+$0.068 +5.54%
+BRL1
+BRL1 BRL1
+$0.19 -0.48%
+PTB
+Portal to Bitcoin PTB
+$0.00099 +7.49%
+ETHFI
+Etherfi ETHFI
+$0.68 +3.86%
+QUID
+Squid QUID
+$0.069 +1.60%
+TNSR
+Tensor TNSR
+$0.038 +4.66%
+API3
+API3 API3
+$0.27 +3.83%
+CARV
+CARV CARV
+$0.043 +0.34%
+BLEND
+Fluent Network BLEND
+$0.069 +0.35%
+L3
+Layer3 L3
+$0.0031 -1.96%
+ONE
+ONEchain ONE
+$0.15 +4.96%
+REZ
+Renzo REZ
+$0.0039 +6.58%
+FOLD
+The Interfold FOLD
+$0.060 +1.83%
+GOAT
+Goatseus Maximus GOAT
+$0.019 +1.26%
+HOLO
+Holoworld HOLO
+$0.068 +5.54%
+BRL1
+BRL1 BRL1
+$0.19 -0.48%
+PTB
+Portal to Bitcoin PTB
+$0.00099 +7.49%
+ETHFI
+Etherfi ETHFI
+$0.68 +3.86%
+QUID
+Squid QUID
+$0.069 +1.60%
+TNSR
+Tensor TNSR
+$0.038 +4.66%
+API3
+API3 API3
+$0.27 +3.83%
+CARV
+CARV CARV
+$0.043 +0.34%
+BLEND
+Fluent Network BLEND
+$0.069 +0.35%
+L3
+Layer3 L3
+$0.0031 -1.96%
+ONE
+ONEchain ONE
+$0.15 +4.96%
+REZ
+Renzo REZ
+$0.0039 +6.58%
+FOLD
+The Interfold FOLD
+$0.060 +1.83%
+GOAT
+Goatseus Maximus GOAT
+$0.019 +1.26%
+HOLO
+Holoworld HOLO
+$0.068 +5.54%
+BRL1
+BRL1 BRL1
+$0.19 -0.48%
+PTB
+Portal to Bitcoin PTB
+$0.00099 +7.49%
+ETHFI
+Etherfi ETHFI
+$0.68 +3.86%
+QUID
+Squid QUID
+$0.069 +1.60%
+SN44
+Score SN44
+$10.40 +3.21%
+TBTC
+tBTC TBTC
+$84,264.00 -0.11%
+SUPER
+SuperVerse SUPER
+$0.18 -2.75%
+USDE
+Ethena USDe USDE
+$1.00 +0.01%
+SOMI
+Somnia SOMI
+$0.20 +5.95%
+BAND
+Band Protocol BAND
+$0.22 +3.27%
+AUGUR
+Augur (REPv2_Yes_1) AUGUR
+$0.75 -28.86%
+DRIFT
+Drift Protocol DRIFT
+$0.019 -2.08%
+RAILS
+Rails RAILS
+$0.039 -4.17%
+AIXBT
+aixbt by Virtuals AIXBT
+$0.023 +4.97%
+CTR
+Citrea CTR
+$0.012 -1.42%
+CTC
+Creditcoin CTC
+$0.11 +3.74%
+SN44
+Score SN44
+$10.40 +3.21%
+TBTC
+tBTC TBTC
+$84,264.00 -0.11%
+SUPER
+SuperVerse SUPER
+$0.18 -2.75%
+USDE
+Ethena USDe USDE
+$1.00 +0.01%
+SOMI
+Somnia SOMI
+$0.20 +5.95%
+BAND
+Band Protocol BAND
+$0.22 +3.27%
+AUGUR
+Augur (REPv2_Yes_1) AUGUR
+$0.75 -28.86%
+DRIFT
+Drift Protocol DRIFT
+$0.019 -2.08%
+RAILS
+Rails RAILS
+$0.039 -4.17%
+AIXBT
+aixbt by Virtuals AIXBT
+$0.023 +4.97%
+CTR
+Citrea CTR
+$0.012 -1.42%
+CTC
+Creditcoin CTC
+$0.11 +3.74%
+SN44
+Score SN44
+$10.40 +3.21%
+TBTC
+tBTC TBTC
+$84,264.00 -0.11%
+SUPER
+SuperVerse SUPER
+$0.18 -2.75%
+USDE
+Ethena USDe USDE
+$1.00 +0.01%
+SOMI
+Somnia SOMI
+$0.20 +5.95%
+BAND
+Band Protocol BAND
+$0.22 +3.27%
+AUGUR
+Augur (REPv2_Yes_1) AUGUR
+$0.75 -28.86%
+DRIFT
+Drift Protocol DRIFT
+$0.019 -2.08%
+RAILS
+Rails RAILS
+$0.039 -4.17%
+AIXBT
+aixbt by Virtuals AIXBT
+$0.023 +4.97%
+CTR
+Citrea CTR
+$0.012 -1.42%
+CTC
+Creditcoin CTC
+$0.11 +3.74%
+SN44
+Score SN44
+$10.40 +3.21%
+TBTC
+tBTC TBTC
+$84,264.00 -0.11%
+SUPER
+SuperVerse SUPER
+$0.18 -2.75%
+USDE
+Ethena USDe USDE
+$1.00 +0.01%
+SOMI
+Somnia SOMI
+$0.20 +5.95%
+BAND
+Band Protocol BAND
+$0.22 +3.27%
+AUGUR
+Augur (REPv2_Yes_1) AUGUR
+$0.75 -28.86%
+DRIFT
+Drift Protocol DRIFT
+$0.019 -2.08%
+RAILS
+Rails RAILS
+$0.039 -4.17%
+AIXBT
+aixbt by Virtuals AIXBT
+$0.023 +4.97%
+CTR
+Citrea CTR
+$0.012 -1.42%
+CTC
+Creditcoin CTC
+$0.11 +3.74%
+TREAD
+Tread.Fi TREAD
+$0.64 +24.00%
+GNOT
+Gno.land GNOT
+$0.093 -0.05%
+ONE
+ONEchain ONE
+$0.15 +4.96%
+LAPTOP
+Hunter Biden's Laptop LAPTOP
+$0.072 +4.15%
+TCS
+TCS Token TCS
+$0.10 +0.01%
+SOFID
+SoFiUSD SOFID
+$1.00 -0.04%
+USTABLES
+United Stables USTABLES
+$1.00 +0.01%
+AVL
+Avalon AVL
+$0.024 +2.74%
+TMX
+TermMax TMX
+$0.016 -15.56%
+FOLD
+The Interfold FOLD
+$0.060 +1.83%
+PWT
+Permacast PWT
+$0.58 +0.26%
+DGAI
+DGrid AI DGAI
+$1.03 -0.05%
+ALIGN
+align ALIGN
+$0.0065 +4.81%
+USDGO
+USDGO USDGO
+$1.00 +0.04%
+TREAD
+Tread.Fi TREAD
+$0.64 +24.00%
+GNOT
+Gno.land GNOT
+$0.093 -0.05%
+ONE
+ONEchain ONE
+$0.15 +4.96%
+LAPTOP
+Hunter Biden's Laptop LAPTOP
+$0.072 +4.15%
+TCS
+TCS Token TCS
+$0.10 +0.01%
+SOFID
+SoFiUSD SOFID
+$1.00 -0.04%
+USTABLES
+United Stables USTABLES
+$1.00 +0.01%
+AVL
+Avalon AVL
+$0.024 +2.74%
+TMX
+TermMax TMX
+$0.016 -15.56%
+FOLD
+The Interfold FOLD
+$0.060 +1.83%
+PWT
+Permacast PWT
+$0.58 +0.26%
+DGAI
+DGrid AI DGAI
+$1.03 -0.05%
+ALIGN
+align ALIGN
+$0.0065 +4.81%
+USDGO
+USDGO USDGO
+$1.00 +0.04%
+TREAD
+Tread.Fi TREAD
+$0.64 +24.00%
+GNOT
+Gno.land GNOT
+$0.093 -0.05%
+ONE
+ONEchain ONE
+$0.15 +4.96%
+LAPTOP
+Hunter Biden's Laptop LAPTOP
+$0.072 +4.15%
+TCS
+TCS Token TCS
+$0.10 +0.01%
+SOFID
+SoFiUSD SOFID
+$1.00 -0.04%
+USTABLES
+United Stables USTABLES
+$1.00 +0.01%
+AVL
+Avalon AVL
+$0.024 +2.74%
+TMX
+TermMax TMX
+$0.016 -15.56%
+FOLD
+The Interfold FOLD
+$0.060 +1.83%
+PWT
+Permacast PWT
+$0.58 +0.26%
+DGAI
+DGrid AI DGAI
+$1.03 -0.05%
+ALIGN
+align ALIGN
+$0.0065 +4.81%
+USDGO
+USDGO USDGO
+$1.00 +0.04%
+TREAD
+Tread.Fi TREAD
+$0.64 +24.00%
+GNOT
+Gno.land GNOT
+$0.093 -0.05%
+ONE
+ONEchain ONE
+$0.15 +4.96%
+LAPTOP
+Hunter Biden's Laptop LAPTOP
+$0.072 +4.15%
+TCS
+TCS Token TCS
+$0.10 +0.01%
+SOFID
+SoFiUSD SOFID
+$1.00 -0.04%
+USTABLES
+United Stables USTABLES
+$1.00 +0.01%
+AVL
+Avalon AVL
+$0.024 +2.74%
+TMX
+TermMax TMX
+$0.016 -15.56%
+FOLD
+The Interfold FOLD
+$0.060 +1.83%
+PWT
+Permacast PWT
+$0.58 +0.26%
+DGAI
+DGrid AI DGAI
+$1.03 -0.05%
+ALIGN
+align ALIGN
+$0.0065 +4.81%
+USDGO
+USDGO USDGO
+$1.00 +0.04%
+KII
+KiiChain KII
+$0.080 -0.46%
+LIGHTER
+Lighter LIGHTER
+$5.10 -4.90%
+SODA
+SodaX SODA
+$0.013 -8.56%
+DOS
+DAPPOS DOS
+$0.22 +1.85%
+AUGUR
+Augur (REPv2_Yes_1) AUGUR
+$0.75 -28.86%
+XU3O8
+XU3O8 XU3O8
+$5.57 -0.42%
+BNKR
+BankrCoin BNKR
+$0.00042 +12.06%
+SN44
+Score SN44
+$10.40 +3.21%
+CSPR
+Casper CSPR
+$0.0027 -2.40%
+SN62
+Ridges AI SN62
+$3.21 +2.35%
+SN8
+Vanta SN8
+$8.56 +5.08%
+SN75
+Hippius SN75
+$5.19 +3.07%
+USDPT
+USDPT USDPT
+$1.01 +0.89%
+SN51
+SN51 SN51
+$26.46 +1.95%
+KII
+KiiChain KII
+$0.080 -0.46%
+LIGHTER
+Lighter LIGHTER
+$5.10 -4.90%
+SODA
+SodaX SODA
+$0.013 -8.56%
+DOS
+DAPPOS DOS
+$0.22 +1.85%
+AUGUR
+Augur (REPv2_Yes_1) AUGUR
+$0.75 -28.86%
+XU3O8
+XU3O8 XU3O8
+$5.57 -0.42%
+BNKR
+BankrCoin BNKR
+$0.00042 +12.06%
+SN44
+Score SN44
+$10.40 +3.21%
+CSPR
+Casper CSPR
+$0.0027 -2.40%
+SN62
+Ridges AI SN62
+$3.21 +2.35%
+SN8
+Vanta SN8
+$8.56 +5.08%
+SN75
+Hippius SN75
+$5.19 +3.07%
+USDPT
+USDPT USDPT
+$1.01 +0.89%
+SN51
+SN51 SN51
+$26.46 +1.95%
+KII
+KiiChain KII
+$0.080 -0.46%
+LIGHTER
+Lighter LIGHTER
+$5.10 -4.90%
+SODA
+SodaX SODA
+$0.013 -8.56%
+DOS
+DAPPOS DOS
+$0.22 +1.85%
+AUGUR
+Augur (REPv2_Yes_1) AUGUR
+$0.75 -28.86%
+XU3O8
+XU3O8 XU3O8
+$5.57 -0.42%
+BNKR
+BankrCoin BNKR
+$0.00042 +12.06%
+SN44
+Score SN44
+$10.40 +3.21%
+CSPR
+Casper CSPR
+$0.0027 -2.40%
+SN62
+Ridges AI SN62
+$3.21 +2.35%
+SN8
+Vanta SN8
+$8.56 +5.08%
+SN75
+Hippius SN75
+$5.19 +3.07%
+USDPT
+USDPT USDPT
+$1.01 +0.89%
+SN51
+SN51 SN51
+$26.46 +1.95%
+KII
+KiiChain KII
+$0.080 -0.46%
+LIGHTER
+Lighter LIGHTER
+$5.10 -4.90%
+SODA
+SodaX SODA
+$0.013 -8.56%
+DOS
+DAPPOS DOS
+$0.22 +1.85%
+AUGUR
+Augur (REPv2_Yes_1) AUGUR
+$0.75 -28.86%
+XU3O8
+XU3O8 XU3O8
+$5.57 -0.42%
+BNKR
+BankrCoin BNKR
+$0.00042 +12.06%
+SN44
+Score SN44
+$10.40 +3.21%
+CSPR
+Casper CSPR
+$0.0027 -2.40%
+SN62
+Ridges AI SN62
+$3.21 +2.35%
+SN8
+Vanta SN8
+$8.56 +5.08%
+SN75
+Hippius SN75
+$5.19 +3.07%
+USDPT
+USDPT USDPT
+$1.01 +0.89%
+SN51
+SN51 SN51
+$26.46 +1.95%
+SN64
+Chutes SN64
+$20.19 +2.23%
+WEMIX
+Wemix WEMIX
+$0.20 +0.28%
+QUID
+Squid QUID
+$0.069 +1.60%
+CAP
+Cap CAP
+$0.051 -3.54%
+NES
+Nesa NES
+$0.17 -0.51%
+NOCK
+Nockchain NOCK
+$0.031 +6.83%
+ARX
+Arcium ARX
+$0.26 +14.01%
+RE
+Re RE
+$0.47 +5.97%
+YOM
+Yom YOM
+$0.017 -2.62%
+CTR
+Citrea CTR
+$0.012 -1.42%
+KNTQ
+Kinetiq KNTQ
+$0.32 -5.15%
+SLX
+Solstice SLX
+$0.071 -1.53%
+SN64
+Chutes SN64
+$20.19 +2.23%
+WEMIX
+Wemix WEMIX
+$0.20 +0.28%
+QUID
+Squid QUID
+$0.069 +1.60%
+CAP
+Cap CAP
+$0.051 -3.54%
+NES
+Nesa NES
+$0.17 -0.51%
+NOCK
+Nockchain NOCK
+$0.031 +6.83%
+ARX
+Arcium ARX
+$0.26 +14.01%
+RE
+Re RE
+$0.47 +5.97%
+YOM
+Yom YOM
+$0.017 -2.62%
+CTR
+Citrea CTR
+$0.012 -1.42%
+KNTQ
+Kinetiq KNTQ
+$0.32 -5.15%
+SLX
+Solstice SLX
+$0.071 -1.53%
+SN64
+Chutes SN64
+$20.19 +2.23%
+WEMIX
+Wemix WEMIX
+$0.20 +0.28%
+QUID
+Squid QUID
+$0.069 +1.60%
+CAP
+Cap CAP
+$0.051 -3.54%
+NES
+Nesa NES
+$0.17 -0.51%
+NOCK
+Nockchain NOCK
+$0.031 +6.83%
+ARX
+Arcium ARX
+$0.26 +14.01%
+RE
+Re RE
+$0.47 +5.97%
+YOM
+Yom YOM
+$0.017 -2.62%
+CTR
+Citrea CTR
+$0.012 -1.42%
+KNTQ
+Kinetiq KNTQ
+$0.32 -5.15%
+SLX
+Solstice SLX
+$0.071 -1.53%
+SN64
+Chutes SN64
+$20.19 +2.23%
+WEMIX
+Wemix WEMIX
+$0.20 +0.28%
+QUID
+Squid QUID
+$0.069 +1.60%
+CAP
+Cap CAP
+$0.051 -3.54%
+NES
+Nesa NES
+$0.17 -0.51%
+NOCK
+Nockchain NOCK
+$0.031 +6.83%
+ARX
+Arcium ARX
+$0.26 +14.01%
+RE
+Re RE
+$0.47 +5.97%
+YOM
+Yom YOM
+$0.017 -2.62%
+CTR
+Citrea CTR
+$0.012 -1.42%
+KNTQ
+Kinetiq KNTQ
+$0.32 -5.15%
+SLX
+Solstice SLX
+$0.071 -1.53%
+ALEO
+ALEO ALEO
+$0.042 +96.77%
+PEAQ
+Peaq Network PEAQ
+$0.046 +31.23%
+SAGA
+Saga SAGA
+$0.064 +30.02%
+LSK
+Lisk LSK
+$0.43 +27.13%
+ONDO
+Ondo ONDO
+$0.52 +26.35%
+QNT
+Quant QNT
+$89.49 +25.97%
+XPL
+Plasma XPL
+$0.11 +25.00%
+TREAD
+Tread.Fi TREAD
+$0.64 +24.00%
+PLAY
+PlaysOut PLAY
+$0.038 +20.55%
+LCX
+LCX LCX
+$0.035 +17.82%
+LTC
+Litecoin LTC
+$71.47 +16.11%
+FET
+Fetch.ai FET
+$0.23 +15.51%
+CHIP
+USD.AI CHIP
+$0.049 +15.03%
+DYM
+Dymension DYM
+$0.020 +14.89%
+ALEO
+ALEO ALEO
+$0.042 +96.77%
+PEAQ
+Peaq Network PEAQ
+$0.046 +31.23%
+SAGA
+Saga SAGA
+$0.064 +30.02%
+LSK
+Lisk LSK
+$0.43 +27.13%
+ONDO
+Ondo ONDO
+$0.52 +26.35%
+QNT
+Quant QNT
+$89.49 +25.97%
+XPL
+Plasma XPL
+$0.11 +25.00%
+TREAD
+Tread.Fi TREAD
+$0.64 +24.00%
+PLAY
+PlaysOut PLAY
+$0.038 +20.55%
+LCX
+LCX LCX
+$0.035 +17.82%
+LTC
+Litecoin LTC
+$71.47 +16.11%
+FET
+Fetch.ai FET
+$0.23 +15.51%
+CHIP
+USD.AI CHIP
+$0.049 +15.03%
+DYM
+Dymension DYM
+$0.020 +14.89%
+ALEO
+ALEO ALEO
+$0.042 +96.77%
+PEAQ
+Peaq Network PEAQ
+$0.046 +31.23%
+SAGA
+Saga SAGA
+$0.064 +30.02%
+LSK
+Lisk LSK
+$0.43 +27.13%
+ONDO
+Ondo ONDO
+$0.52 +26.35%
+QNT
+Quant QNT
+$89.49 +25.97%
+XPL
+Plasma XPL
+$0.11 +25.00%
+TREAD
+Tread.Fi TREAD
+$0.64 +24.00%
+PLAY
+PlaysOut PLAY
+$0.038 +20.55%
+LCX
+LCX LCX
+$0.035 +17.82%
+LTC
+Litecoin LTC
+$71.47 +16.11%
+FET
+Fetch.ai FET
+$0.23 +15.51%
+CHIP
+USD.AI CHIP
+$0.049 +15.03%
+DYM
+Dymension DYM
+$0.020 +14.89%
+ALEO
+ALEO ALEO
+$0.042 +96.77%
+PEAQ
+Peaq Network PEAQ
+$0.046 +31.23%
+SAGA
+Saga SAGA
+$0.064 +30.02%
+LSK
+Lisk LSK
+$0.43 +27.13%
+ONDO
+Ondo ONDO
+$0.52 +26.35%
+QNT
+Quant QNT
+$89.49 +25.97%
+XPL
+Plasma XPL
+$0.11 +25.00%
+TREAD
+Tread.Fi TREAD
+$0.64 +24.00%
+PLAY
+PlaysOut PLAY
+$0.038 +20.55%
+LCX
+LCX LCX
+$0.035 +17.82%
+LTC
+Litecoin LTC
+$71.47 +16.11%
+FET
+Fetch.ai FET
+$0.23 +15.51%
+CHIP
+USD.AI CHIP
+$0.049 +15.03%
+DYM
+Dymension DYM
+$0.020 +14.89%
+PLUME
+Plume PLUME
+$0.018 +14.05%
+ARX
+Arcium ARX
+$0.26 +14.01%
+LDO
+Lido DAO Token LDO
+$0.44 +13.74%
+WFB
+Fractal Bitcoin WFB
+$0.38 +13.56%
+BILL
+billions network BILL
+$0.014 +12.49%
+B2
+BSquared Network B2
+$0.50 +12.27%
+RIVER
+River RIVER
+$1.27 +12.26%
+BNKR
+BankrCoin BNKR
+$0.00042 +12.06%
+SNEK
+Snek SNEK
+$0.00060 +11.87%
+INIT
+Initia INIT
+$0.099 +11.84%
+U
+Union U
+$0.00028 +11.58%
+SONIC
+Sonic SVM SONIC
+$0.028 +11.53%
+BTR
+Bitlayer BTR
+$0.058 +11.42%
+VELVET
+Velvet VELVET
+$0.062 +11.11%
+PLUME
+Plume PLUME
+$0.018 +14.05%
+ARX
+Arcium ARX
+$0.26 +14.01%
+LDO
+Lido DAO Token LDO
+$0.44 +13.74%
+WFB
+Fractal Bitcoin WFB
+$0.38 +13.56%
+BILL
+billions network BILL
+$0.014 +12.49%
+B2
+BSquared Network B2
+$0.50 +12.27%
+RIVER
+River RIVER
+$1.27 +12.26%
+BNKR
+BankrCoin BNKR
+$0.00042 +12.06%
+SNEK
+Snek SNEK
+$0.00060 +11.87%
+INIT
+Initia INIT
+$0.099 +11.84%
+U
+Union U
+$0.00028 +11.58%
+SONIC
+Sonic SVM SONIC
+$0.028 +11.53%
+BTR
+Bitlayer BTR
+$0.058 +11.42%
+VELVET
+Velvet VELVET
+$0.062 +11.11%
+PLUME
+Plume PLUME
+$0.018 +14.05%
+ARX
+Arcium ARX
+$0.26 +14.01%
+LDO
+Lido DAO Token LDO
+$0.44 +13.74%
+WFB
+Fractal Bitcoin WFB
+$0.38 +13.56%
+BILL
+billions network BILL
+$0.014 +12.49%
+B2
+BSquared Network B2
+$0.50 +12.27%
+RIVER
+River RIVER
+$1.27 +12.26%
+BNKR
+BankrCoin BNKR
+$0.00042 +12.06%
+SNEK
+Snek SNEK
+$0.00060 +11.87%
+INIT
+Initia INIT
+$0.099 +11.84%
+U
+Union U
+$0.00028 +11.58%
+SONIC
+Sonic SVM SONIC
+$0.028 +11.53%
+BTR
+Bitlayer BTR
+$0.058 +11.42%
+VELVET
+Velvet VELVET
+$0.062 +11.11%
+PLUME
+Plume PLUME
+$0.018 +14.05%
+ARX
+Arcium ARX
+$0.26 +14.01%
+LDO
+Lido DAO Token LDO
+$0.44 +13.74%
+WFB
+Fractal Bitcoin WFB
+$0.38 +13.56%
+BILL
+billions network BILL
+$0.014 +12.49%
+B2
+BSquared Network B2
+$0.50 +12.27%
+RIVER
+River RIVER
+$1.27 +12.26%
+BNKR
+BankrCoin BNKR
+$0.00042 +12.06%
+SNEK
+Snek SNEK
+$0.00060 +11.87%
+INIT
+Initia INIT
+$0.099 +11.84%
+U
+Union U
+$0.00028 +11.58%
+SONIC
+Sonic SVM SONIC
+$0.028 +11.53%
+BTR
+Bitlayer BTR
+$0.058 +11.42%
+VELVET
+Velvet VELVET
+$0.062 +11.11%
+2Z
+Doublezero 2Z
+$0.057 +11.10%
+MORPHO
+Morpho MORPHO
+$2.81 +10.84%
+NIL
+Nillion NIL
+$0.11 +10.80%
+COMP
+Compound COMP
+$24.07 +10.61%
+CAT
+Simon's Cat CAT
+$0.0000023 +10.28%
+SNX
+Synthetix Network Token SNX
+$0.26 +10.13%
+BERT
+Bertram The Pomeranian BERT
+$0.017 +10.05%
+BIO
+Bio Protocol BIO
+$0.031 +9.89%
+AMI
+Amnis Finance AMI
+$0.00092 +9.66%
+DASH
+Dash DASH
+$63.26 +9.66%
+CLOUD
+Sanctum CLOUD
+$0.051 +9.57%
+ACH
+Alchemy Pay ACH
+$0.0061 +9.55%
+2Z
+Doublezero 2Z
+$0.057 +11.10%
+MORPHO
+Morpho MORPHO
+$2.81 +10.84%
+NIL
+Nillion NIL
+$0.11 +10.80%
+COMP
+Compound COMP
+$24.07 +10.61%
+CAT
+Simon's Cat CAT
+$0.0000023 +10.28%
+SNX
+Synthetix Network Token SNX
+$0.26 +10.13%
+BERT
+Bertram The Pomeranian BERT
+$0.017 +10.05%
+BIO
+Bio Protocol BIO
+$0.031 +9.89%
+AMI
+Amnis Finance AMI
+$0.00092 +9.66%
+DASH
+Dash DASH
+$63.26 +9.66%
+CLOUD
+Sanctum CLOUD
+$0.051 +9.57%
+ACH
+Alchemy Pay ACH
+$0.0061 +9.55%
+2Z
+Doublezero 2Z
+$0.057 +11.10%
+MORPHO
+Morpho MORPHO
+$2.81 +10.84%
+NIL
+Nillion NIL
+$0.11 +10.80%
+COMP
+Compound COMP
+$24.07 +10.61%
+CAT
+Simon's Cat CAT
+$0.0000023 +10.28%
+SNX
+Synthetix Network Token SNX
+$0.26 +10.13%
+BERT
+Bertram The Pomeranian BERT
+$0.017 +10.05%
+BIO
+Bio Protocol BIO
+$0.031 +9.89%
+AMI
+Amnis Finance AMI
+$0.00092 +9.66%
+DASH
+Dash DASH
+$63.26 +9.66%
+CLOUD
+Sanctum CLOUD
+$0.051 +9.57%
+ACH
+Alchemy Pay ACH
+$0.0061 +9.55%
+2Z
+Doublezero 2Z
+$0.057 +11.10%
+MORPHO
+Morpho MORPHO
+$2.81 +10.84%
+NIL
+Nillion NIL
+$0.11 +10.80%
+COMP
+Compound COMP
+$24.07 +10.61%
+CAT
+Simon's Cat CAT
+$0.0000023 +10.28%
+SNX
+Synthetix Network Token SNX
+$0.26 +10.13%
+BERT
+Bertram The Pomeranian BERT
+$0.017 +10.05%
+BIO
+Bio Protocol BIO
+$0.031 +9.89%
+AMI
+Amnis Finance AMI
+$0.00092 +9.66%
+DASH
+Dash DASH
+$63.26 +9.66%
+CLOUD
+Sanctum CLOUD
+$0.051 +9.57%
+ACH
+Alchemy Pay ACH
+$0.0061 +9.55%
+Create free account Create free account
+FAQs
+What is the best platform for spot trading crypto in Italy?
+Kraken Pro gives active traders deep-liquidity spot execution across 1,200+ crypto pairs, with advanced order types and an API to run strategies programmatically. You own every asset outright; withdraw, self-custody, or move on-chain. Trade in EUR on a MiCA-compliant platform.
+How is spot trading different from margin or futures?
+Spot means you buy the asset outright and own it — no borrowing, leverage, or liquidation risk. Margin and futures use leverage. Spot is the most direct way to hold exposure.
+What does it cost to trade spot on Kraken Pro?
+Spot uses a maker-taker fee schedule that falls as your 30-day volume grows. You see the fee before confirming each order.
+What order types can I use for spot trading?
+Limit, stop, stop-limit, OCO, and post-only, so you control entry and exit price, size, and triggers.
+Is spot trading on Kraken Pro available in Italy?
+Yes. Italian clients can spot trade crypto on Kraken Pro, a MiCA-compliant and regulated platform.
+Related content
+Spot order types
+Spot market depth
+Spot charting
+Spot risk management
+How to set conditional orders
+Best crypto exchanges 2026
+How Kraken is the most regulated exchange
+Explore more products and features
+Margin
+Trade spot margin with up to 10x leverage on 48+ assets.
+Futures
+Trade perpetual futures with deep liquidity, leverage, and 24/7 markets.
+Prop
+Pass an evaluation. Get funded with up to $200,000. And keep up to 90% of the gains.
+Ready to dive in?
+Create a free account to unleash the power of Pro. It takes as little as 4 minutes to get started.
+Get the app
+Warning: If you invest in this product, you may lose some, or all, of the money you invest. The value of your investment may go down as well as up. Not investment advice. Crypto trading involves risk of loss. Spot trading is provided by Payward Europe Solutions Limited, trading as Kraken, is regulated by the Central Bank of Ireland.
+Investment services, ancillary services and investment activities (the "Services") in relation to financial instruments are provided and carried out by Payward Europe Digital Solutions (CY) Limited (ex I.F. Greenfields Wealth Ltd) ("PEDSL-CY"). PEDSL-CY is authorised and approved by the Cyprus Securities and Exchange Commission (CySEC) for the provision of the Services with licence number 342/17. PEDSL-CY is registered in Cyprus with registered number HE 356603 and registered office at Athalassas, 62, MEZZANINE, Strovolos 2012, Nicosia, Cyprus. See Risk Disclosures here.
+These materials are for general information purposes only and are not investment or financial product advice or a recommendation or solicitation to buy or sell financial instruments or to engage in any specific trading strategy. The unpredictable nature of the derivatives markets can lead to loss of funds. Trading in derivatives involves significant risk and is not appropriate for all investors. You could lose more than your investment. See Risk Disclosure Statement to learn about the risks. Tax may be payable on any return and/or on any increase in the value of your investment and you should seek independent advice on your taxation position. Geographic restrictions may apply.
+Kraken Prop provides a platform interface through which you can connect to an evaluation service. The evaluation is managed by Breakout Trading Group, LLC ("Breakout"). If you pass, you can choose to become an independent contractor and provide trade signals to Payward Oceanic Ltd. (BVI). Kraken acts solely as the platform interface — Kraken does not itself operate the evaluation, make execution decisions, hold funds, or guarantee any payout. This is an unregulated platform interface providing access to services offered by other entities, and is not regulated by the Central Bank of Ireland or any other EU authority. If you pass the evaluation, you are providing trade signals to Payward Oceanic Ltd — you are not trading on your own behalf. Payward Oceanic exercises sole discretion over whether to act on your signals. Any payout is a discretionary performance fee, not a return on investment. Evaluation fees are non-refundable. Availability varies by jurisdiction. The protections afforded by MiCA do not apply to this service.
+Most applicants do not pass on their first attempt and there is no guarantee that your performance will improve or that you will pass any future evaluations. Prospective applicants should purchase an evaluation only if they are confident in their ability and knowingly accept the risk of not qualifying for a funded account. Evaluation fees are non-refundable for each attempt once trading begins, regardless of outcome. This is not a regulated service.
+Warning: If you invest in this product, you may lose some, or all, of the money you invest. The value of your investment may go down as well as up.
+Not investment advice. Crypto trading involves risk of loss. Spot trading is provided by Payward Europe Solutions Limited, trading as Kraken, is regulated by the Central Bank of Ireland.
+Investment services, ancillary services and investment activities (the "Services") in relation to financial instruments are provided and carried out by Payward Europe Digital Solutions (CY) Limited (ex I.F. Greenfields Wealth Ltd) ("PEDSL-CY"). PEDSL-CY is authorised and approved by the Cyprus Securities and Exchange Commission (CySEC) for the provision of the Services with licence number 342/17. PEDSL-CY is registered in Cyprus with registered number HE 356603 and registered office at Athalassas, 62, MEZZANINE, Strovolos 2012, Nicosia, Cyprus. See Risk Disclosures here .
+These materials are for general information purposes only and are not investment or financial product advice or a recommendation or solicitation to buy or sell financial instruments or to engage in any specific trading strategy. The unpredictable nature of the derivatives markets can lead to loss of funds. Trading in derivatives involves significant risk and is not appropriate for all investors. You could lose more than your investment. See Risk Disclosure Statement to learn about the risks. Tax may be payable on any return and/or on any increase in the value of your investment and you should seek independent advice on your taxation position. Geographic restrictions may apply.
+Kraken Prop provides a platform interface through which you can connect to an evaluation service. The evaluation is managed by Breakout Trading Group, LLC ("Breakout"). If you pass, you can choose to become an independent contractor and provide trade signals to Payward Oceanic Ltd. (BVI). Kraken acts solely as the platform interface — Kraken does not itself operate the evaluation, make execution decisions, hold funds, or guarantee any payout. This is an unregulated platform interface providing access to services offered by other entities, and is not regulated by the Central Bank of Ireland or any other EU authority. If you pass the evaluation, you are providing trade signals to Payward Oceanic Ltd — you are not trading on your own behalf. Payward Oceanic exercises sole discretion over whether to act on your signals. Any payout is a discretionary performance fee, not a return on investment. Evaluation fees are non-refundable. Availability varies by jurisdiction. The protections afforded by MiCA do not apply to this service.
+Most applicants do not pass on their first attempt and there is no guarantee that your performance will improve or that you will pass any future evaluations. Prospective applicants should purchase an evaluation only if they are confident in their ability and knowingly accept the risk of not qualifying for a funded account. Evaluation fees are non-refundable for each attempt once trading begins, regardless of outcome. This is not a regulated service.
+Create account Create account Sign in
+Create account Create account Sign in
+Features →
+Buy Crypto
+Sell Crypto
+Margin Trading
+Crypto perpetuals
+OTC Trading
+Institutions
+API Trading
+Staking Rewards
+Recurring buys
+Kraken Borrow
+Kraken Funded
+About Kraken →
+Kraken Security
+Kraken Careers
+Kraken Blog
+Kraken Developer
+Press Room
+Affiliate Program
+Asset Listings
+Kraken Status
+Support Center
+Complaints
+Crypto Prices →
+Bitcoin Price
+Ethereum Price
+Dogecoin Price
+XRP Price
+Cardano Price
+Solana Price
+Litecoin Price
+Crypto categories
+Price predictions
+Convert Crypto →
+BTC to USD
+ETH to USD
+XRP to USD
+BNB to USD
+SOL to USD
+DOGE to USD
+ADA to USD
+TRX to USD
+LTC to USD
+Buy Crypto →
+Buy Bitcoin
+Buy Ethereum
+Buy Dogecoin
+Buy XRP
+Buy Cardano
+Buy Solana
+Buy Litecoin
+Buy Stocks →
+Buy Nvidia
+Buy Tesla
+Buy Apple
+Buy Amazon
+Buy Palantir
+Buy Microsoft
+Buy Tokenized Equities →
+Buy NVDAx
+Buy TSLAx
+Buy AAPLx
+Buy SPYx
+Buy AMZNx
+Financial Education →
+What is cryptocurrency?
+What are Smart Contracts?
+What is Bitcoin?
+What is tokenization
+Best Crypto apps
+Best crypto exchanges
+Kraken vs Coinbase
+Privacy Hub
+Privacy Notice
+Cookie Settings
+Do Not Sell/Share
+Compliance Hub
+Terms of Service
+Exchange Trading Rules
+Disclosures
+Candidate Privacy Notice
+by PAYWARD
+© 2011–2026 Payward, Inc.
+Trading
+Kraken
+Kraken Pro
+NinjaTrader
+Breakout
+VIP
+API Trading
+|
+Services
+Payward Services
+xStocks
+CF Benchmarks
+Reap
+|
+Banking
+Krak
+Prime
+OTC
+Custody
+|
+Asset Management
+Payward Europe Solutions Limited, trading as Kraken, is regulated by the Central Bank of Ireland. Payward Global Solutions Limited, trading as Kraken, is regulated by the Central Bank of Ireland. Registered office: 70 Sir John Rogerson’s Quay, Dublin, D02 R296, Ireland. Click here for related policies and disclosures.
+These materials are for general information purposes only and are not investment or financial product advice or a recommendation or solicitation to buy, sell, stake or hold any cryptoasset or to engage in any specific trading strategy. Kraken does not and will not work to increase or decrease the price of any particular cryptoasset it makes available. The unpredictable nature of the crypto-asset markets can lead to loss of funds. Tax may be payable on any return and/or on any increase in the value of your cryptoassets and you should seek independent advice on your taxation position. Geographic restrictions may apply. Some crypto products and markets are unregulated. Kraken’s regulatory status for its various products and services differs per jurisdiction and you may not be protected by government compensation and/or regulatory protection schemes. See Legal Disclosures for each jurisdiction.

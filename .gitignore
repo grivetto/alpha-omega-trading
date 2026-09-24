@@ -146,3 +146,6 @@ new-api-bybit.*
 *-api-keys.*
 *.keys.env
 secrets/
+
+# Dump rigenerabile (2,6 MB) dello strumento OKX: si ricrea con _audit/instruments.js
+_audit/okx_instruments.json

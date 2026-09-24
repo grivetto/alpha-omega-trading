@@ -1,0 +1,150 @@
+URL: https://www.okx.com/en-eu/help/okx-x-perps-eea-regional-availability-eligibility
+STATUS: 200
+FINAL: https://www.okx.com/en-eu/help/okx-x-perps-eea-regional-availability-eligibility
+BYTES: 94136
+
+Who can access X-Perps? | OKX Europe Skip to main content
+Buy crypto Buy and Sell
+SEPA, Visa, Mastercard, and more
+Crypto calculator
+Check real-time conversion rates and crypto values
+Deposit Deposit cash
+Add cash to your account balance using a bank transfer to start trading
+Deposit crypto
+Transfer crypto from an on-chain wallet or exchange
+Markets Trade Trading instruments
+Convert
+Quick conversion, zero trading fees, no slippage
+Spot and margin
+Buy and sell crypto with ease
+Futures
+Trade futures with leverage
+Powerful tools
+Agent Trade Kit
+Automate your trades with AI agents and community-built skills
+Agent Trade Kit
+Build AI agents to automate any trading strategy
+AI Builder Program
+Everything a Builder needs, all in one place
+Skills
+Discover and install trading skills
+Trading bots
+Multiple strategies to help you trade with ease
+RFQ
+Custom multi-leg strategies and block trades
+Grow Earn
+Don’t just HODL. Earn
+Onchain Earn
+Institutional Institutional home
+The world’s most powerful suite of crypto trading solutions
+OKX Rubix
+Digital assets-as-a-service for regulated institutions
+APIs
+Seamless and ultra-low latency API connectivity
+Managed Trading Sub-accounts
+Manage sub-accounts, trade easily and safely with more profits
+Historical market data
+Candlesticks, aggregate trades, order book data and more
+Institutional Insights
+Our latest institutional trading research, news, and more
+Learn Learn crypto
+Build strong crypto fundamentals with simple guides and tutorials
+How to buy crypto
+Follow step-by-step instructions to buy crypto
+Getting started
+Find answers to common questions on your crypto journey
+Crypto prices
+Track real-time crypto prices and market moves
+Crypto news
+Stay on top of the latest crypto news and trends
+Blog
+Read insights and stories from our team
+More Products
+Security of funds Status Proof of Reserves OKX Protect Web3
+Others
+Rewards Deposit Bonus Referral VIP program Affiliates X Drops Club OKX Ventures Trade on TradingView Listing application Fees
+Log in Sign up
+Support Support center My tickets Connect with OKX
+Support center
+FAQ
+Trading
+Futures
+Article
+Who can access X-Perps?
+Published on Apr 15, 2026 Updated on Sep 4, 2026 5 min read 3
+What do I need to complete before I can trade X-Perps?
+Access to X-Perps depends on three things:
+Identity verification (KYC) completed
+The appropriateness assessment completed
+No account-level restrictions or open compliance checks on your account
+If you're missing one of the three, the app or the web platform prompts you for the step it's waiting on.
+What is the appropriateness assessment,and why do I have to complete it?
+Before you can trade X-Perps, you must complete an appropriateness assessment. This is a regulatory requirement under MiFID rules, designed to help you understand the risks involved in trading leveraged derivative products before you begin. If you don't pass the assessment, you'll need to wait a period of time before you can retake it.
+Based on the assessment, you'll be classified as either retail or professional. The product offering is identical for both classifications.
+What does the assessment cover?
+The appropriateness assessment evaluates your understanding of leveraged derivatives, including how they work and the risks involved. It's a one-time process that you complete within OKX before gaining access to X-Perps.
+What happens if I don't pass the appropriateness assessment?
+If you don't pass the appropriateness assessment, a waiting period is applied to your account automatically before you can retake it. The date and time you can next retry are shown on your account, so check there rather than counting the days yourself. Customer support can't shorten that waiting period, reset it, or give you access to X-Perps while it's running.When the waiting period ends, open the assessment again from the same Futures entry point you used the first time and complete it. Answer each question based on your own knowledge and experience of leveraged derivatives.
+Why availability may vary?
+X-Perps are complex, leveraged products and may be subject to different rollout timelines, compliance requirements, or operational conditions depending on your region. This means access may not be enabled at the same time in every EEA country, even though all 30 are supported.
+How do I check whether X-Perps are enabled for my account?
+The most reliable way to confirm your eligibility is through the OKX app or web platform, where you can typically see:
+Whether X-Perps are available for your account
+Prompts for any required setup steps, including the appropriateness assessment
+Applicable notices or restrictions
+What happens if I don't pass the appropriateness assessment?
+If you don't pass the appropriateness assessment, a waiting period is applied to your account automatically before you can retake it. The date and time you can next retry are shown on your account, so check there rather than counting the days yourself. Customer support can't shorten that waiting period, reset it, or give you access to X-Perps while it's running.When the waiting period ends, open the assessment again from the same Futures entry point you used the first time and complete it. Answer each question based on your own knowledge and experience of leveraged derivatives.
+Why is X-Perps activation or an account-mode switch blocked?
+Activating X-Perps or switching your account mode can be blocked while your account still holds activity tied to its current setup. The most common examples are open positions, open orders that haven't been filled, and trading bots that are still running: Close the positions, cancel the orders, and stop the bots, then try again.Those examples aren't a complete list. The steps your own account needs are listed in the message shown on screen when the action is blocked, so work through the ones you can see there and retry activation or the mode switch afterwards. Customer support can't complete these steps for you or skip them.
+Is the appropriateness assessment the same for retail and professional users?
+Yes. Both retail and professional users complete the same assessment. The classification may affect certain regulatory protections, but the X-Perps product offering is identical for both.
+Do I need to complete KYC before the appropriateness assessment?
+Yes. You must complete identity verification (KYC) before you can access the appropriateness assessment or trade X-Perps.
+Why is my account mode change blocked?
+Applies to: changing your account mode while you hold positions, open orders or running bots.
+A mode change needs a clean starting state, because your open positions and open orders are margined under the mode you're leaving. Close your open positions, cancel your open orders, and stop your running bots, then work through any remaining items the product lists for you.
+If the prompt is blank, or the items it lists have already been cleared, send Support the exact message you see and a screenshot of it. That message is what identifies which item the change is still waiting on.
+How do I move funds after changing my trading mode?
+Applies to: moving funds between your Funding account and your Trading account.
+Go to Assets > Transfer, choose the accounts to move between, enter the amount, and confirm.
+If the transfer is blocked, keep the exact error message and send it to Support. The message identifies which restriction is holding the transfer, which is what's needed to diagnose it — retrying without it tends to produce the same result.
+Important note: X-Perps are leveraged derivatives. Leverage can amplify both gains and losses, and losses may occur rapidly. These products may not be suitable for all investors.
+OKX Europe Markets Limited is authorised and regulated by the Malta Financial Services Authority under the Investment Services Act.
+Need help with an OKX product? Find guides and answers in our Help Centre. Visit here .
+Disclaimer
+This content is provided for informational purposes only and may cover products that are not available in your region. It is not intended to provide (i) investment advice or an investment recommendation; (ii) an offer or solicitation to buy, sell, or hold crypto/digital assets, or (iii) financial, accounting, legal, or tax advice. Crypto/digital asset holdings, including stablecoins and NFTs, involve a high degree of risk and can fluctuate greatly. You should carefully consider whether trading or holding crypto/digital assets is suitable for you in light of your financial condition. Please consult your legal/tax/investment professional for questions about your specific circumstances. Information (including market data and statistical information, if any) appearing in this post is for general information purposes only. While all reasonable care has been taken in preparing this data and graphs, no responsibility or liability is accepted for any errors of fact or omission expressed herein.
+© 2026 OKX. This article may be reproduced or distributed in its entirety, or excerpts of 100 words or less of this article may be used, provided such use is non-commercial. Any reproduction or distribution of the entire article must also prominently state: “This article is © 2026 OKX and is used with permission.” Permitted excerpts must cite to the name of the article and include attribution, for example “Article Name, [author name if applicable], © 2026 OKX.” No derivative works or other uses of this article are permitted.
+Expand
+What do I need to complete before I can trade X-Perps?
+What is the appropriateness assessment,and why do I have to complete it?
+What does the assessment cover?
+What happens if I don't pass the appropriateness assessment?
+Why availability may vary?
+How do I check whether X-Perps are enabled for my account?
+What happens if I don't pass the appropriateness assessment?
+Why is X-Perps activation or an account-mode switch blocked?
+Is the appropriateness assessment the same for retail and professional users?
+Do I need to complete KYC before the appropriateness assessment?
+Why is my account mode change blocked?
+How do I move funds after changing my trading mode?
+©2017 - 2026 OKX.COM
+Language
+Europe English Deutsch Español (España) Français Italiano Nederlands Polski Português (Portugal) Română Norsk (bokmål) Suomi Svenska Čeština Русский Українська
+More about OKX
+About us Candidate Privacy Notice Careers Contact us Terms of Service Terms of Service (Derivatives) Privacy Notice OKX EU Disclosures OEM Disclosures Conflicts of interest disclosure Whistleblower notice Law enforcement OKX app
+Products
+Buy crypto P2P trading Convert Trade Earn Trading bots All cryptocurrencies Learn TradingView X-RWA Outcome markets Stock price
+Services
+Affiliate API Historical market data CEX fee schedule Listing application P2P Merchant application
+Support
+Support center Channel verification Announcements Connect with OKX Formal complaints
+Buy crypto
+Buy USDC Buy Bitcoin Buy Ethereum Buy ADA Buy Solana Buy Litecoin Buy XRP
+Crypto calculator
+BTC to USD ETH to USD USDC to USD SOL to USD XRP to USD PI to USD
+Trade
+BTC USDC ETH USDC LTC USDC SOL USDC XRP USDC Bitcoin price Ethereum price Pi Network price Solana price XRP price Bitcoin price prediction Ethereum price prediction XRP price prediction Pi Network price prediction How to buy crypto How to buy Bitcoin How to buy Ethereum How to buy Solana How to buy Pi Network
+Trade on the go with OKX
+Register
+OKX Europe Limited, a Maltese limited liability company, is licensed by the Malta Financial Services Authority (“MFSA”) as a Crypto-Asset Service Provider under Regulation (EU) 2023/1114 on Markets in Crypto-Assets (“MiCA”), as implemented in Malta by the Markets in Crypto-Assets Act, Chapter 647. It is authorised to provide: custody and administration of crypto-assets; operation of a crypto-asset trading platform; exchange of crypto-assets for funds or other crypto-assets; execution, reception and transmission of orders; placing of crypto-assets; portfolio management; and transfer services for crypto-assets.
+OKX Europe Limited is also licensed and regulated by the MFSA as a financial institution under the Financial Institutions Act, Chapter 376, to provide services enabling cash to be placed on and withdrawn from payment accounts and to execute payment transactions by direct debit, payment card or similar device, and credit transfer, including standing orders

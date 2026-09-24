@@ -1,0 +1,274 @@
+URL: https://www.bybit.eu/en-EU/help-center/article/Trading-Fee-Structure
+STATUS: 200
+FINAL: https://www.bybit.eu/en-EU/help-center/article/Trading-Fee-Structure
+BYTES: 281217
+
+Bybit EU Trading Fee Structure - Help Center
+Help Center
+Platform Walkthrough
+Getting Started
+Bybit EU Trading Fee Structure
+Last updated on 2026-08-04 13:33:53
+Share
+Bybit EU trading fees are different for Non-VIP and VIP users. Users can enjoy higher trading fee discounts according to different VIP levels.
+The VIP level will be determined based on your asset balance or last 30-day trading volume. Traders are only required to meet one of the criteria to unlock the fee discount of the respective VIP Level. For example, Trader A has a 250,000 EUR asset balance (VIP 2 criteria), and his last 30-day Spot trading volume has reached 10,000,000 EUR (VIP 3 criteria). Trader A will be promoted to VIP Level 3 and will be entitled to all discounted fee rates stated under VIP 3.
+The VIP level will be up dated daily at 7AM UTC and the Subaccounts will have the fee rate of the Main Account. Please note that the trading fee rates applied on your orders will be the ones applicable on your account at the time of order placement.
+Trading Fee Rate
+Applicable before October 5, 2026
+The table below displays the base trading fee rates for Spot and Spot Margin trading for each VIP level. Please note that the trading fee rates applied will vary depending on the type of order execution. For more information, please refer to this guide and for the accurate fee rates applicable to your account, please always refer to the My Fee Rate page after completing Identity Verification .
+VIP Level
+| Asset Balance
+(EUR)
+| 30-Day Spot Trading Volume
+(EUR)
+| Taker Fee Rate
+| Maker Fee Rate
+|
+VIP 0
+| ≥ 0
+| < 10,000
+| 0.2500%
+| 0.1000%
+|
+≥ 10,000
+| 0.2500%
+|
+≥ 50,000
+| 0.2500%
+|
+≥ 100,000
+| 0.2200%
+|
+≥ 250,000
+| 0.2000%
+|
+≥ 500,000
+| 0.1500%
+|
+VIP 1
+| ≥ 100,000
+| ≥ 1,000,000
+| 0.1000%
+| 0.0675%
+|
+VIP 2
+| ≥ 250,000
+| ≥ 5,000,000
+| 0.0775%
+| 0.0650%
+|
+VIP 3
+| ≥ 500,000
+| ≥ 10,000,000
+| 0.0750%
+| 0.0625%
+|
+VIP 4
+| ≥ 1,000,000
+| ≥ 25,000,000
+| 0.0600%
+| 0.0500%
+|
+VIP 5
+| ≥ 2,000,000
+| ≥ 50,000,000
+| 0.0500%
+| 0.0400%
+|
+Supreme VIP
+| N/A
+| ≥ 100,000,000
+| 0.0450%
+| 0.0300%
+|
+**The Spot Trading fee rate above is only applicable to Crypto Trading pairs. Please refer to the table below for the trading fees applied on Fiat-Crypto Trading Pairs (Eg: USDC/EUR).
+The Fiat trading fee rates applied to your account will depend on your trading volume or VIP level, whichever is higher. For example, a trader with a 30–Day Spot Trading Volume of 5,000,000 EUR will benefit from the VIP 2 trading fee rates of 0.0775% for taker orders and 0.0650% for maker orders.
+VIP Level
+| Asset Balance
+(EUR)
+| 30–Day Spot Trading Volume
+(EUR)
+| Taker Fee Rate
+| Maker Fee Rate
+|
+VIP 0
+| ≥ 0
+| < 10,000
+| 0.2500%
+| 0.1500%
+|
+≥ 10,000
+| 0.2500%
+| 0.1500%
+|
+≥ 50,000
+| 0.2500%
+| 0.1500%
+|
+≥100,000
+| 0.2200%
+| 0.1000%
+|
+≥250,000
+| 0.2000%
+| 0.1000%
+|
+≥500,000
+| 0.1500%
+| 0.1000%
+|
+VIP 1
+| ≥ 100,000
+| ≥ 1,000,000
+| 0.1200%
+| 0.0675%
+|
+VIP 2
+| ≥ 250,000
+| ≥ 5,000,000
+| 0.0775%
+| 0.0650%
+|
+VIP 3
+| ≥ 500,000
+| ≥ 10,000,000
+| 0.0750%
+| 0.0625%
+|
+VIP 4
+| ≥ 1,000,000
+| ≥ 25,000,000
+| 0.0600%
+| 0.0500%
+|
+VIP 5
+| ≥ 2,000,000
+| ≥ 50,000,000
+| 0.0500%
+| 0.0400%
+|
+Supreme VIP
+| N/A
+| ≥ 100,000,000
+| 0.0450%
+| 0.0300%
+|
+Applicable from October 5, 2026
+From 05/10/2026 at 11:00 UTC , we're moving to a single unified fee structure, one clear rate across your account. All trades executed on or after 05/10/2026 11:00 UTC will be charged under the new fee structure.
+The table below displays the trading fee rates for Spot and Spot Margin trading for each VIP level. For the accurate fee rates, please always refer to the My Fee Rate page after completing your Identity Verification .
+VIP Level
+| Asset Balance
+(EUR)
+| 30-Day Spot Trading Volume
+(EUR)
+| Trading Fee Rate
+|
+VIP 0
+| ≥ 0
+| < 10,000
+| 0.2500%
+|
+≥ 10,000
+| 0.2500%
+|
+≥ 50,000
+| 0.2500%
+|
+≥ 100,000
+| 0.2200%
+|
+≥ 250,000
+| 0.2000%
+|
+≥ 500,000
+| 0.1500%
+|
+VIP 1
+| ≥ 100,000
+| ≥ 1,000,000
+| 0.1200%
+|
+VIP 2
+| ≥ 250,000
+| ≥ 5,000,000
+| 0.0775%
+|
+VIP 3
+| ≥ 500,000
+| ≥ 10,000,000
+| 0.0750%
+|
+VIP 4
+| ≥ 1,000,000
+| ≥ 25,000,000
+| 0.0600%
+|
+VIP 5
+| ≥ 2,000,000
+| ≥ 50,000,000
+| 0.0500%
+|
+Supreme VIP
+| N/A
+| ≥ 100,000,000
+| 0.0450%
+|
+Requirements for each VIP Levels
+Your VIP level will be determined based on your asset balance or last 30-day trading volume.
+VIP Level
+| Asset Balance
+(EUR)
+| 30-Day Average Net Borrowing
+(EUR)
+| 30–Day Spot Trading Volume
+(EUR)
+|
+VIP 0
+| ≥ 0
+| ≤ 50,000
+| ≤ 1,000,000
+|
+VIP 1
+| ≥ 100,000
+| 50,000
+| ≥ 1,000,000
+|
+VIP 2
+| ≥ 250,000
+| 500,000
+| ≥ 5,000,000
+|
+VIP 3
+| ≥ 500,000
+| 1,000,000
+| ≥ 10,000,000
+|
+VIP 4
+| ≥ 1,000,000
+| 1,500,000
+| ≥ 25,000,000
+(API Trading Volume ≤ 20%)
+|
+VIP 5
+| ≥ 2,000,000
+| 2,000,000
+| ≥ 50,000,000
+(API Trading Volume ≤ 20%)
+|
+Supreme VIP
+| N/A
+| N/A
+| ≥ 100,000,000
+(API Trading Volume ≤ 20%)
+|
+Notes:
+— Asset Balance = Total Wallet Balance of All Accounts.
+— 30-day average effective net borrowing (EUR) includes borrowing from Spot Margin Trading.
+— Trading volume from both Main Account and Subaccount will be considered.
+— To understand the criteria of each VIP level, please refer to Introduction to the VIP Program .
+For more details on how to calculate trading fees, please refer to the following articles:
+Spot Trading: Fees explained
+Bybit EU Spot Margin Trading: Fees Explained
+Was it helpful?
+Related Articles
+How to Submit a Support Ticket or Complaint Difference Between Spot and Spot Margin Everything You Need to Know to Get Started on Bybit EU Bybit EU's Fees That You Need to Know Complaints Handling Policy - Bybit EU How to Register for a Testnet Account and Request for Test Coins

@@ -1,0 +1,204 @@
+URL: https://www.okx.com/en-eu/help/notice-updates-to-okx-eea-trading-fees
+STATUS: 200
+FINAL: https://www.okx.com/en-eu/help/notice-updates-to-okx-eea-trading-fees
+BYTES: 82238
+
+Notice: Updates to OKX EEA Trading Fees | OKX Europe Skip to main content
+Buy crypto Buy and Sell
+SEPA, Visa, Mastercard, and more
+Crypto calculator
+Check real-time conversion rates and crypto values
+Deposit Deposit cash
+Add cash to your account balance using a bank transfer to start trading
+Deposit crypto
+Transfer crypto from an on-chain wallet or exchange
+Markets Trade Trading instruments
+Convert
+Quick conversion, zero trading fees, no slippage
+Spot and margin
+Buy and sell crypto with ease
+Futures
+Trade futures with leverage
+Powerful tools
+Agent Trade Kit
+Automate your trades with AI agents and community-built skills
+Agent Trade Kit
+Build AI agents to automate any trading strategy
+AI Builder Program
+Everything a Builder needs, all in one place
+Skills
+Discover and install trading skills
+Trading bots
+Multiple strategies to help you trade with ease
+RFQ
+Custom multi-leg strategies and block trades
+Grow Earn
+Don’t just HODL. Earn
+Onchain Earn
+Institutional Institutional home
+The world’s most powerful suite of crypto trading solutions
+OKX Rubix
+Digital assets-as-a-service for regulated institutions
+APIs
+Seamless and ultra-low latency API connectivity
+Managed Trading Sub-accounts
+Manage sub-accounts, trade easily and safely with more profits
+Historical market data
+Candlesticks, aggregate trades, order book data and more
+Institutional Insights
+Our latest institutional trading research, news, and more
+Learn Learn crypto
+Build strong crypto fundamentals with simple guides and tutorials
+How to buy crypto
+Follow step-by-step instructions to buy crypto
+Getting started
+Find answers to common questions on your crypto journey
+Crypto prices
+Track real-time crypto prices and market moves
+Crypto news
+Stay on top of the latest crypto news and trends
+Blog
+Read insights and stories from our team
+More Products
+Security of funds Status Proof of Reserves OKX Protect Web3
+Others
+Rewards Deposit Bonus Referral VIP program Affiliates X Drops Club OKX Ventures Trade on TradingView Listing application Fees
+Log in Sign up
+Support Support center My tickets Connect with OKX
+Support center
+Announcements
+Trading updates
+Article
+Latest announcements
+Notice: Updates to OKX EEA Trading Fees
+Published on Apr 8, 2026 2 min read
+We're making changes to the EEA fee framework. We're notifying you to give you early visibility of what's changing, how to prepare, and how it may benefit your trading activity on OKX.
+Key date: April 22, 2026*
+Introduction of fee groups
+Implementation of new EEA fee framework
+*OKX reserves the right to amend the effective dates of these changes as necessary. For the latest and most accurate information, always refer to your local OKX fee page.
+**The changes may go live without any further notifications or reminders to you.
+What's Changing?
+Implementation of the new EEA fee framework
+As of April 22, 2026, the new fee framework will go into effect. Clients who qualify for new VIP tiers after the changes go live will automatically receive the updated VIP status.
+Tier
+| Assets (EUR)
+| or
+| 30-day trading volume (EUR)
+| Maker fee
+| Taker fee
+| 24h crypto withdrawal limit (USD)
+|
+Regular
+| 0
+| /
+| 0
+| 0.200%
+| 0.350%
+| 10,000,000
+|
+VIP1
+| 100,000
+| /
+| 100,001
+| 0.100%
+| 0.200%
+| 24,000,000
+|
+VIP2
+| 200,000
+| /
+| 250,001
+| 0.090%
+| 0.180%
+| 32,000,000
+|
+VIP3
+| 2,000,000
+| /
+| 500,001
+| 0.080%
+| 0.150%
+| 40,000,000
+|
+VIP4
+| 5,000,000
+| /
+| 1,000,001
+| 0.075%
+| 0.100%
+| 44,000,000
+|
+VIP5
+| 20,000,000
+| /
+| 2,500,001
+| 0.070%
+| 0.085%
+| 48,000,000
+|
+VIP6
+| 50,000,000
+| /
+| 5,000,001
+| 0.060%
+| 0.070%
+| 60,000,000
+|
+VIP7
+| 100,000,000
+| /
+| 10,000,001
+| 0.055%
+| 0.065%
+| 72,000,000
+|
+VIP8
+| 250,000,000
+| /
+| 20,000,001
+| 0.045%
+| 0.060%
+| 80,000,000
+|
+VIP9
+| 500,000,000
+| /
+| 50,000,001
+| 0.030%
+| 0.055%
+| 80,000,000
+|
+Ongoing reviews & API access
+Fee groups and rates across trading pairs may be subject to review every 3 months to align with market conditions.
+OKX will strive to provide customers with advance notification of any changes.
+Please refer to Upcoming Changes for OpenAPI related queries on token grouping.
+Questions?
+We encourage customers to review these changes. For assistance, please contact your Relationship Manager or email us at institutional@okx.com with any questions.
+Thank you for your continued support.
+The OKX Team
+Disclaimer
+This content is provided for informational purposes only and may cover products that are not available in your region. It is not intended to provide (i) investment advice or an investment recommendation; (ii) an offer or solicitation to buy, sell, or hold crypto/digital assets, or (iii) financial, accounting, legal, or tax advice. Crypto/digital asset holdings, including stablecoins and NFTs, involve a high degree of risk and can fluctuate greatly. You should carefully consider whether trading or holding crypto/digital assets is suitable for you in light of your financial condition. Please consult your legal/tax/investment professional for questions about your specific circumstances. Information (including market data and statistical information, if any) appearing in this post is for general information purposes only. While all reasonable care has been taken in preparing this data and graphs, no responsibility or liability is accepted for any errors of fact or omission expressed herein.
+© 2026 OKX. This article may be reproduced or distributed in its entirety, or excerpts of 100 words or less of this article may be used, provided such use is non-commercial. Any reproduction or distribution of the entire article must also prominently state: “This article is © 2026 OKX and is used with permission.” Permitted excerpts must cite to the name of the article and include attribution, for example “Article Name, [author name if applicable], © 2026 OKX.” No derivative works or other uses of this article are permitted.
+Expand
+©2017 - 2026 OKX.COM
+Language
+Europe English Deutsch Español (España) Français Italiano Nederlands Polski Português (Portugal) Română Norsk (bokmål) Suomi Svenska Čeština
+More about OKX
+About us Candidate Privacy Notice Careers Contact us Terms of Service Terms of Service (Derivatives) Privacy Notice OKX EU Disclosures OEM Disclosures Conflicts of interest disclosure Whistleblower notice Law enforcement OKX app
+Products
+Buy crypto P2P trading Convert Trade Earn Trading bots All cryptocurrencies Learn TradingView X-RWA Outcome markets Stock price
+Services
+Affiliate API Historical market data CEX fee schedule Listing application P2P Merchant application
+Support
+Support center Channel verification Announcements Connect with OKX Formal complaints
+Buy crypto
+Buy USDC Buy Bitcoin Buy Ethereum Buy ADA Buy Solana Buy Litecoin Buy XRP
+Crypto calculator
+BTC to USD ETH to USD USDC to USD SOL to USD XRP to USD PI to USD
+Trade
+BTC USDC ETH USDC LTC USDC SOL USDC XRP USDC Bitcoin price Ethereum price Pi Network price Solana price XRP price Bitcoin price prediction Ethereum price prediction XRP price prediction Pi Network price prediction How to buy crypto How to buy Bitcoin How to buy Ethereum How to buy Solana How to buy Pi Network
+Trade on the go with OKX
+Register
+OKX Europe Limited, a Maltese limited liability company, is licensed by the Malta Financial Services Authority (“MFSA”) as a Crypto-Asset Service Provider under Regulation (EU) 2023/1114 on Markets in Crypto-Assets (“MiCA”), as implemented in Malta by the Markets in Crypto-Assets Act, Chapter 647. It is authorised to provide: custody and administration of crypto-assets; operation of a crypto-asset trading platform; exchange of crypto-assets for funds or other crypto-assets; execution, reception and transmission of orders; placing of crypto-assets; portfolio management; and transfer services for crypto-assets.
+OKX Europe Limited is also licensed and regulated by the MFSA as a financial institution under the Financial Institutions Act, Chapter 376, to provide services enabling cash to be placed on and withdrawn from payment accounts and to execute payment transactions by direct debit, payment card or similar device, and credit transfer, including standing orders

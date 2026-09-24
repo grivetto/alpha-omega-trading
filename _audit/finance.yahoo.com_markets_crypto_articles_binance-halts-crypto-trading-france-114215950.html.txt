@@ -1,0 +1,2 @@
+URL: https://finance.yahoo.com/markets/crypto/articles/binance-halts-crypto-trading-france-114215950.html
+ERROR: fetch failed

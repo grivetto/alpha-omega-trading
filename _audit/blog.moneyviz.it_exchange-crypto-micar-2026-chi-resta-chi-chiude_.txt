@@ -1,0 +1,245 @@
+URL: https://blog.moneyviz.it/exchange-crypto-micar-2026-chi-resta-chi-chiude/
+STATUS: 200
+FINAL: https://blog.moneyviz.it/exchange-crypto-micar-2026-chi-resta-chi-chiude/
+BYTES: 237216
+
+Crypto exchange MiCA: come verificare l'autorizzazione ) --> Vai al contenuto MONEYVIZ · Blog Caratteristiche Regime dichiarativo La guida completa Dichiarazione trading Dichiarazione crypto Per commercialisti Broker, exchange e wallet supportati 250+ integrazioni Custom format broker Import broker non presenti in lista AI e MCP API e integrazioni per agenti AI
+Tutte le guide tasse
+Crypto Guida alla dichiarazione crypto Regimi, quadri, aliquote 2026 Guide crypto Tutti gli articoli del blog DAC8 e CARF 2026 Eventi Webinar e appuntamenti MoneyViz Another Block in the Wallet Approfondimenti fiscali crypto
+Calcolatori Checkup rischio fiscale Gratis · 2 minuti Sanzioni & interessi Rivalutazione oro Rivalutazione crypto
+Risorse Chi siamo Team e storia Garanzia calcoli Minus Detector
+Prezzi
+Cerca ⌘K Cerca nel blog MoneyViz
+Esc
+Accedi Prova gratis 0€ · nessuna carta
+Online dal 2020 · il software fiscale italiano più longevo per crypto, azioni ed ETF ·
+Eccellenza tecnica e fiscale →
+Caratteristiche Regime dichiarativo La guida completa Dichiarazione trading Dichiarazione crypto Per commercialisti Broker, exchange e wallet supportati 250+ integrazioni Custom format broker Import broker non presenti in lista AI e MCP API e integrazioni per agenti AI Tutte le guide tasse
+Crypto Guida alla dichiarazione crypto Regimi, quadri, aliquote 2026 Guide crypto Tutti gli articoli del blog DAC8 e CARF 2026 Eventi Webinar e appuntamenti MoneyViz Another Block in the Wallet Approfondimenti fiscali crypto
+Calcolatori Checkup rischio fiscale Gratis · 2 minuti Sanzioni & interessi Rivalutazione oro Rivalutazione crypto
+Risorse Chi siamo Team e storia Garanzia calcoli Minus Detector
+Prezzi Accedi Prova gratis → 0€ · nessuna carta
+Condividi
+Home › Tasse criptovalute Tasse criptovalute · 15 min
+·
+Pubblicato 1 luglio 2026 ·
+Aggiornato 12 agosto 2026
+Come verificare se un crypto exchange è autorizzato MiCA
+Verifica l'entità legale del tuo crypto exchange nel registro ESMA: autorizzazione MiCA, passaporto Italia, servizi coperti e revoche.
+Articolo verificato — Scritto e controllato dai nostri esperti fiscali Stefano Capaccioli Dottore Commercialista e Revisore Legale
+Gabriele Del Mese Founder & Amministratore
+Vincenzo Pone Dottore Commercialista e Revisore Legale
+Paolo Luigi Burlone Dottore Commercialista e Revisore Legale
+Condividi
+Markdown per AI
+Punti chiave
+Controlla l’entità legale, non soltanto il marchio. Le tutele MiCA valgono per la specifica società europea autorizzata indicata nel contratto.
+Usa il registro ufficiale ESMA. Il file dei CASP riporta autorità competente, sede, nome commerciale, LEI, data di autorizzazione, eventuale revoca, servizi coperti e Paesi nei quali l’operatore può prestare servizi.
+Per servire clienti italiani deve comparire “IT”. La sigla va cercata nel campo dei Paesi coperti dal passaporto europeo, insieme al servizio che utilizzi.
+Una licenza del gruppo non copre automaticamente tutte le società. Verifica che il nome nel registro coincida con quello nei termini contrattuali del tuo conto.
+Salva la prova con la data del controllo. Il registro ESMA viene aggiornato settimanalmente e può includere autorizzazioni ritirate con la relativa data di efficacia.
+Risposta rapida
+Per verificare se un crypto exchange o altro provider è autorizzato MiCA, individua prima l’entità legale che gestisce il tuo conto e cercala nel registro CASP di ESMA. Controlla che non sia indicata una data di revoca, che il campo dei Paesi comprenda l’Italia ( IT ) e che l’autorizzazione copra il servizio che utilizzi.
+Per consultare i dati ufficiali in forma navigabile, usa il registro MoneyViz dei crypto exchange autorizzati MiCA ; questa guida ti spiega invece come interpretare entità legale, passaporto, servizi e revoche senza confondere il marchio con la società autorizzata.
+Dal 1° luglio 2026 il periodo transitorio MiCA è terminato in tutta l’Unione europea. Un operatore privo di autorizzazione non può continuare a offrire normalmente servizi su cripto-attività ai clienti UE. Il punto decisivo, però, non è riconoscere un logo: è verificare la società con cui hai davvero concluso il contratto.
+Questa guida è stata aggiornata il 12 agosto 2026 sulla versione del registro ESMA pubblicata il 5 agosto 2026 . La procedura resta valida anche quando cambiano i nomi presenti nel registro, perché indica quali campi controllare e quale evidenza conservare.
+Cosa è cambiato dal 1° luglio 2026 con la fine del periodo transitorio?
+Dal 1° luglio 2026 un provider non può continuare a offrire normalmente servizi su cripto-attività ai clienti dell’Unione europea basandosi soltanto su una precedente registrazione nazionale: deve operare tramite una specifica entità autorizzata o notificata secondo MiCA e abilitata per i servizi e i Paesi interessati.
+MiCA ha sostituito il mosaico delle registrazioni nazionali VASP con un quadro europeo per i CASP ( Crypto-Asset Service Provider , prestatore di servizi per le cripto-attività). Il passaggio non consiste in un cambio di sigla: introduce requisiti armonizzati su organizzazione, capitale, custodia, gestione dei conflitti e tutela dei clienti.
+Il vecchio articolo pubblicato su questo stesso URL seguiva i singoli operatori alla scadenza del periodo transitorio. Il suo valore informativo viene conservato e adattato in scenari verificabili, perché nomi, licenze, migrazioni societarie e passaporti possono cambiare ogni settimana. Per conoscere lo stato attuale devi quindi applicare il controllo descritto in questa guida alla società che gestisce oggi il tuo conto.
+CASP e VASP non sono sinonimi
+Un VASP italiano era iscritto nel registro OAM secondo la disciplina nazionale precedente. Un CASP è autorizzato o notificato nel quadro MiCA e può prestare soltanto i servizi indicati nel registro. La vecchia iscrizione OAM, da sola, non dimostra che un operatore possa continuare a offrire servizi crypto dopo il periodo transitorio.
+Quali scenari MiCA può avere un crypto exchange?
+I casi da distinguere sono cinque: entità autorizzata nel tuo Paese, entità autorizzata altrove con passaporto Italia, migrazione verso una nuova società europea, domanda ancora in istruttoria e operatore privo di autorizzazione che deve limitarsi alla chiusura ordinata. Il marchio commerciale può restare identico anche quando cambia la società contrattuale.
+Come interpretare lo stato MiCA di un provider Scenario | Che cosa verificare | Azione prudente |
+Entità autorizzata in Italia | Ragione sociale, servizi e validità dell’autorizzazione | Confronta il registro con il contratto del conto |
+Licenza UE con passaporto | Presenza di IT e servizio effettivamente utilizzato | Salva la riga ESMA con la data del controllo |
+Nuova entità europea | Comunicazione di migrazione, nuovi termini e nuova ragione sociale | Completa le verifiche richieste e conserva vecchio e nuovo contratto |
+Domanda presentata | L’autorizzazione deve risultare concessa, non soltanto richiesta | Non trattare “MiCA ready” come prova di abilitazione |
+Nessuna entità trovata | Nome legale, LEI, registro nazionale e aggiornamento del CSV | Evita nuovi depositi e chiedi istruzioni documentate per l’uscita |
+Questa lettura per scenari conserva il valore delle precedenti analisi su operatori italiani, piattaforme internazionali e gruppi con più entità, senza trasformare una fotografia di luglio 2026 in una raccomandazione permanente. Il dato vivo resta il registro ufficiale, non il nome citato in un articolo.
+Come verificare un provider crypto autorizzato MiCA?
+La verifica richiede sette passaggi: trova l’entità legale nel contratto, apri il registro CASP di ESMA, cerca nome o LEI, controlla l’assenza di una revoca, verifica il passaporto per l’Italia, confronta i servizi autorizzati e salva una copia datata del risultato. Non basta una dichiarazione commerciale del provider.
+Trova l’entità legale del conto. Apri termini di servizio, contratto, email di migrazione o sezione “Informazioni legali” dell’app. Annota ragione sociale, Paese e, se disponibile, codice LEI.
+Apri il registro MiCA di ESMA. Usa la pagina ufficiale e scarica il file Crypto-asset service providers , pubblicato in formato CSV.
+Cerca ragione sociale o LEI. Il nome commerciale può essere diverso dalla società autorizzata; il LEI è il controllo più preciso quando è disponibile.
+Controlla la validità. Verifica la data di autorizzazione e accertati che il campo della revoca sia vuoto per il periodo che ti interessa.
+Verifica il passaporto Italia. Nel campo dei Paesi coperti deve essere presente IT . Una licenza UE senza passaporto per l’Italia non prova che il servizio sia offerto qui.
+Controlla il servizio usato. Custodia, scambio cripto-euro, scambio cripto-cripto, esecuzione ordini e trasferimenti sono autorizzazioni distinte.
+Conserva l’evidenza. Salva CSV, riga trovata, termini contrattuali e data del controllo. Se resta un dubbio, confronta il registro dell’autorità nazionale indicata da ESMA.
+Controlla il registro MiCA con una ricerca guidata
+MoneyViz rende consultabili i dati ufficiali ESMA per nome commerciale, entità e Paese. Conferma sempre il risultato sulla fonte primaria prima di trasferire fondi.
+Apri il registro MiCAR →
+Quali campi del registro ESMA devi controllare?
+I campi essenziali sono entità legale, LEI, autorità competente, data di autorizzazione, eventuale data di revoca, servizi autorizzati e Paesi coperti, perché soltanto il loro controllo congiunto permette di stabilire chi presta il servizio, da quando è abilitato, che cosa può offrire e se può rivolgersi a clienti italiani. Il solo nome commerciale non fornisce questa prova.
+Campi decisivi del registro CASP ESMA Campo | Cosa dimostra | Controllo da fare |
+Entità legale | Società titolare dell’autorizzazione | Deve coincidere con il contratto del conto |
+LEI | Identificativo univoco della società | Usalo per distinguere società con nomi simili |
+Autorità competente | Autorità nazionale che ha autorizzato o ricevuto la notifica | Confronta il relativo registro nazionale se serve |
+Data autorizzazione | Inizio dell’abilitazione registrata | Deve precedere il periodo verificato |
+Data revoca | Fine dell’autorizzazione, se applicabile | Una data valorizzata richiede attenzione immediata |
+Servizi | Attività che la società può prestare | Verifica custodia, scambio, ordini o trasferimenti usati |
+Paesi coperti | Stati raggiunti dal passaporto europeo | Per un cliente italiano deve comparire IT |
+Il marchio non identifica sempre la società autorizzata
+Uno stesso gruppo può usare un marchio unico per società europee ed extra-UE diverse. ESMA avverte che le tutele MiCA si applicano alla specifica entità legale autorizzata , non alle altre società del gruppo. Confronta quindi la ragione sociale del registro con quella indicata nei termini accettati dal tuo conto.
+Una licenza MiCA vale automaticamente in Italia?
+No: l’autorizzazione ottenuta in uno Stato UE consente il passaporto europeo, ma non prova automaticamente l’operatività in Italia; devi trovare la sigla IT tra i Paesi coperti, accertarti che non risulti una revoca e verificare che il servizio concreto rientri tra quelli autorizzati per la stessa entità legale.
+In Italia CONSOB autorizza i CASP specializzati, sentita la Banca d’Italia. Gli intermediari finanziari già vigilati possono seguire procedimenti di notifica o autorizzazione diversi in base alla categoria e al servizio. Per questo “non è nella lista dei CASP specializzati CONSOB” non significa automaticamente “non può operare in Italia”: la verifica europea completa include anche passaporti e intermediari notificati.
+Al termine del periodo transitorio, il comunicato congiunto CONSOB–Banca d’Italia del 30 giugno 2026 indicava otto CASP autorizzati da CONSOB e Banca Sella come intermediario già vigilato , per nove soggetti abilitati con sede italiana. È una fotografia datata, non una lista da riutilizzare senza controllo: le autorizzazioni successive vanno cercate nel registro aggiornato.
+Cosa significa se il crypto exchange non compare nel registro ESMA?
+L’assenza non dimostra da sola che il marchio sia privo di autorizzazione: può dipendere da una ricerca sul nome commerciale, da una migrazione o dal ritardo settimanale del registro; prima di depositare altri fondi, confronta contratto, ragione sociale, LEI, registro nazionale e data dell’ultima pubblicazione ESMA, poi chiedi conferma scritta.
+Controlli da fare prima di agire
+Rileggi il contratto corrente: una recente migrazione può avere cambiato l’entità senza cambiare il marchio.
+Cerca il LEI: riduce il rischio di confondere società appartenenti allo stesso gruppo.
+Controlla la data dell’ultimo CSV: ESMA aggiorna il registro ogni settimana e segnala che i dati nazionali possono comparire con ritardo.
+Confronta l’autorità nazionale: se l’autorizzazione è recentissima, il registro locale può essere più aggiornato.
+Chiedi una risposta documentata: l’operatore deve indicare entità, autorità, numero o LEI, servizi e Paesi coperti.
+“MiCA ready” o “domanda presentata” non equivalgono a un'autorizzazione
+Una dichiarazione promozionale, una domanda in istruttoria o una licenza ottenuta da un’altra società del gruppo non sostituiscono la riga nel registro. Anche la reverse solicitation è un’eccezione stretta: non consente a un operatore extra-UE di sollecitare clienti europei e continuare l’attività ordinaria.
+Se la verifica conferma che la società non è autorizzata, ESMA invita ad agire rapidamente: trasferire le cripto-attività verso un CASP autorizzato o un portafoglio personale, oppure valutare la chiusura delle posizioni. Prima di spostare fondi, fai una piccola transazione di prova, verifica rete e indirizzo e conserva lo storico completo delle operazioni.
+Cosa prevede la chiusura ordinata MiCA per un crypto exchange non autorizzato?
+La chiusura ordinata deve permettere ai clienti di uscire senza proseguire l’attività normale: l’operatore deve avvisarli con anticipo, attivare un piano credibile, consentire l’offboarding e organizzare il trasferimento delle cripto-attività verso un CASP autorizzato o un portafoglio personale, rispettando gli obblighi di condotta, prudenziali e antiriciclaggio applicabili. Non è una garanzia contro ogni rischio operativo, quindi scadenze e istruzioni ricevute vanno gestite tempestivamente.
+Lo statement ESMA del 17 aprile 2026 richiede piani credibili e immediatamente eseguibili. Dal 1° luglio 2026 i provider non autorizzati devono avere attivato il piano di uscita; le autorità nazionali devono vigilare perché non proseguano attività ordinarie oltre la fine del periodo transitorio.
+Autorizzato non significa privo di rischio
+MiCA introduce requisiti di organizzazione, tutela dei clienti, custodia e vigilanza, ma non garantisce il valore delle cripto-attività, la redditività del servizio o l’assenza di perdite. Verifica anche sicurezza dell’account, condizioni di custodia, costi, limiti di prelievo e copertura dei servizi effettivamente usati.
+Cosa succede ai fondi e allo storico se il provider interrompe i servizi?
+Una chiusura ordinata non dovrebbe congelare automaticamente i fondi: l’operatore resta tenuto a consentire l’uscita, anche se può ridurre le funzioni disponibili e comunicare finestre per vendita, prelievo o trasferimento; salva quindi lo storico, leggi le istruzioni ufficiali, scegli la destinazione degli asset e documenta ogni movimento.
+Scarica lo storico completo. Conserva CSV, estratti, saldi, costi, documenti fiscali e termini contrattuali prima di avviare il trasferimento.
+Leggi le scadenze comunicate. Distingui l’ultimo giorno per operare, quello per trasferire e l’eventuale data di chiusura automatica.
+Scegli la destinazione. Può essere un’altra entità autorizzata oppure un portafoglio personale del quale controlli le chiavi.
+Verifica rete e indirizzo. Esegui una piccola transazione di prova prima di spostare il saldo principale.
+Conserva la continuità documentale. Abbina hash, importi, date e prove in uscita e in entrata, così puoi ricostruire la posizione e preparare la dichiarazione fiscale.
+Chiudi il conto soltanto alla fine. Mantieni l’accesso finché hai verificato di possedere tutti i documenti e di poter contattare il supporto.
+Documenta la continuità del trasferimento
+Quando sposti cripto-attività tra conti o portafogli che ti appartengono, conserva hash, importi, date e prove di ogni trasferimento. Questi elementi servono a ricostruire la posizione e a preparare la dichiarazione fiscale anche dopo una migrazione o la chiusura del vecchio conto.
+Un crypto exchange può ottenere l’autorizzazione MiCA dopo la scadenza?
+Sì: un provider può completare successivamente l’autorizzazione in uno Stato membro e, se previsto, estenderla all’Italia tramite passaporto europeo; fino a quando l’entità non compare come autorizzata con servizi e Paesi coerenti, però, una domanda pendente non consente di trattarla come già abilitata.
+L’eventuale rientro sul mercato può avvenire anche tramite una nuova società europea. In quel caso il rapporto precedente non si trasferisce automaticamente: controlla chi assume il contratto, quali dati vengono migrati, se è richiesto un nuovo onboarding e se le condizioni di custodia o negoziazione cambiano.
+La reverse solicitation permette a un crypto exchange non autorizzato di continuare?
+Non come modalità ordinaria: la reverse solicitation prevista da MiCA riguarda servizi richiesti dal cliente di propria esclusiva iniziativa ed è interpretata da ESMA in modo restrittivo; non può essere usata per aggirare l’autorizzazione dopo attività pubblicitarie, promozioni, programmi referral o altre sollecitazioni rivolte a clienti dell’Unione europea.
+Per questo una piattaforma non può limitarsi a dichiarare che il cliente l’ha cercata spontaneamente quando il rapporto deriva da campagne o comunicazioni commerciali rivolte al mercato europeo. La prova operativa resta l’entità registrata, insieme a servizi e Paesi autorizzati.
+L’autorizzazione MiCA cambia gli obblighi fiscali sulle crypto?
+No: lo stato autorizzativo del provider non elimina monitoraggio fiscale, calcolo dei risultati o conservazione dei documenti; anche durante una migrazione o una chiusura devi conservare estratti, CSV, identificativi delle transazioni e saldi prima e dopo ogni movimento, così da ricostruire continuità, quantità e provenienza delle cripto-attività trasferite.
+Per gli adempimenti consulta la guida alla dichiarazione crypto in Italia e l’approfondimento su DAC8 e scambio automatico dei dati . Se devi verificare la compatibilità tecnica del tuo conto, usa l’elenco MoneyViz di piattaforme, broker e blockchain supportati .
+Conserva lo storico prima di cambiare piattaforma
+MoneyViz importa dati da piattaforme e portafogli, riconcilia i movimenti e prepara i dati fiscali. Verifica la compatibilità del tuo conto prima di trasferire o chiudere una posizione.
+Verifica le piattaforme supportate Scopri i piani MoneyViz
+Storico documentabile Import multi-piattaforma Dati fiscali verificabili
+Domande frequenti su crypto exchange e autorizzazione MiCA
+Dove verifico se un provider crypto è autorizzato MiCA? Nel registro MiCA ufficiale di ESMA, aprendo il file “Crypto-asset service providers”. Cerca la ragione sociale o il LEI indicati nel contratto del conto, quindi controlla data di autorizzazione, eventuale revoca, servizi coperti e presenza dell’Italia tra i Paesi raggiunti dal passaporto europeo.
+Posso cercare soltanto il nome commerciale della piattaforma? Puoi usarlo come primo indizio, ma non è sufficiente. Lo stesso marchio può riferirsi a più società del gruppo. La verifica conclusiva deve confrontare la ragione sociale e, quando disponibile, il LEI del registro ESMA con l’entità indicata nei termini contrattuali del tuo conto.
+Se il provider ha una licenza in un altro Paese UE può servire clienti italiani? Può farlo tramite il passaporto europeo, purché la specifica entità autorizzata abbia notificato l’operatività in Italia. Nel registro ESMA verifica che IT compaia tra i Paesi coperti e che il servizio utilizzato sia incluso nell’autorizzazione della stessa società.
+Che cosa significa una data di revoca nel registro ESMA? Significa che l’autorizzazione è cessata dalla data indicata. ESMA mantiene nel file anche i record ritirati proprio per documentarne la fine. Verifica il periodo interessato, consulta l’autorità nazionale competente e chiedi al provider le istruzioni per trasferimento, migrazione o chiusura del conto.
+Una domanda MiCA presentata è sufficiente per continuare a operare? No. Dopo la fine del periodo transitorio, una domanda in corso o la dicitura “MiCA ready” non equivalgono a un’autorizzazione. Serve una specifica entità autorizzata o notificata secondo MiCA, con servizi e Paesi coerenti con il rapporto offerto al cliente italiano.
+Un portafoglio personale deve comparire nel registro MiCA? No. Un portafoglio personale sotto il tuo controllo non è un prestatore di servizi e non riceve un’autorizzazione CASP. Devi però verificare gli operatori che custodiscono fondi per tuo conto, eseguono scambi o trasferimenti e conservare la documentazione dei passaggi verso o dal portafoglio personale.
+Con quale frequenza viene aggiornato il registro MiCA di ESMA? ESMA dichiara una pubblicazione settimanale. I dati arrivano dalle autorità nazionali competenti e dall’EBA, quindi un’autorizzazione appena concessa può comparire prima nel registro nazionale. Registra sempre la data del file consultato e ripeti il controllo prima di trasferimenti importanti.
+Essere autorizzati MiCA garantisce che non perderò denaro? No. L’autorizzazione introduce requisiti e vigilanza, ma non garantisce il prezzo delle cripto-attività, i rendimenti o l’assenza di problemi operativi. Valuta anche custodia, sicurezza, costi, liquidità, limiti di prelievo e rischi specifici del prodotto che intendi utilizzare.
+Che differenza c'è tra un CASP e un VASP? Il VASP apparteneva al precedente sistema di registrazioni nazionali; in Italia era iscritto presso l’OAM. Il CASP opera nel quadro europeo MiCA, con requisiti armonizzati e servizi espressamente indicati nell’autorizzazione o notifica. Una vecchia registrazione VASP non sostituisce l’abilitazione MiCA dopo il periodo transitorio.
+Devo chiudere subito il conto se il provider interrompe i servizi? Prima salva tutti i documenti, verifica le scadenze e completa eventuali vendite o trasferimenti. Se il provider mantiene l’accesso in sola consultazione, può essere utile non chiudere il conto finché non hai controllato storico, saldi, hash e assistenza. Segui comunque le istruzioni e i termini comunicati dall’operatore.
+Metodo e fonti
+Come è stata verificata questa guida
+Metodo: il 12 agosto 2026 abbiamo scaricato il CSV ufficiale CASP collegato dalla pagina ESMA, verificato intestazioni e campi e confrontato la procedura con le indicazioni ESMA ai consumatori. Il file consultato era indicato da ESMA come aggiornato al 5 agosto 2026.
+ESMA — pagina MiCA e registro ufficiale : registro CASP, frequenza settimanale, origine dei dati e gestione delle revoche.
+ESMA — Statement on the End of Transitional Periods under MiCA , 17 aprile 2026: verifica del provider, entità legale, chiusura ordinata e azioni per i clienti.
+ESMA — Public Statement on the end of the MiCA transitional period , 23 giugno 2026: cessazione dei servizi non autorizzati e gestione dell’uscita dei clienti.
+ESMA — Guidelines on reverse solicitation under MiCA , 26 febbraio 2025: interpretazione restrittiva dell’iniziativa esclusiva del cliente.
+CONSOB e Banca d’Italia — comunicato congiunto del 30 giugno 2026 : fine del periodo transitorio e fotografia dei soggetti abilitati in Italia.
+Banca d’Italia — prestatori di servizi per le cripto-attività : riparto di competenze, autorizzazioni e notifiche.
+Regolamento (UE) 2023/1114 : quadro normativo MiCA.
+Revisione: contenuto attribuito a Gabriele Del Mese con contributo di Stefano Capaccioli, Vincenzo Pone e Paolo Luigi Burlone; data e metodo sono visibili per rendere verificabili i claim variabili.
+Indice
+Cosa è cambiato dal 1° luglio 2026 con la fine del periodo transitorio?
+Quali scenari MiCA può avere un crypto exchange?
+Come verificare un provider crypto autorizzato MiCA?
+Quali campi del registro ESMA devi controllare?
+Una licenza MiCA vale automaticamente in Italia?
+Cosa significa se il crypto exchange non compare nel registro ESMA?
+Cosa prevede la chiusura ordinata MiCA per un crypto exchange non autorizzato?
+Cosa succede ai fondi e allo storico se il provider interrompe i servizi?
+Un crypto exchange può ottenere l’autorizzazione MiCA dopo la scadenza?
+La reverse solicitation permette a un crypto exchange non autorizzato di continuare?
+L’autorizzazione MiCA cambia gli obblighi fiscali sulle crypto?
+Domande frequenti su crypto exchange e autorizzazione MiCA
+Metodo e fonti
+Disclaimer fiscale
+Il contenuto di questo articolo ha finalità informativa e divulgativa.
+Non costituisce consulenza fiscale, legale o finanziaria personalizzata.
+Per decisioni relative alla tua posizione individuale rivolgiti a un
+professionista abilitato.
+Come MoneyViz ti aiuta
+Quadri RT, RW e RM compilati Plusvalenze, capitali esteri e proventi pronti per il modello dichiarativo.
+Plusvalenze calcolate in automatico Import da 250+ tra broker, exchange e blockchain. Normativa 2025–2026 sempre aggiornata.
+Report fiscale e F24 pronti PDF con tutti i calcoli e F24 con codici tributo da consegnare al commercialista.
+Prova gratuita →
+Nessuna carta richiesta
+Questo è un articolo verificato
+Tutti i nostri articoli vengono scritti, controllati e verificati dai
+nostri consulenti ed esperti fiscali per assicurarti la massima
+affidabilità e chiarezza.
+Gli autori
+Stefano Capaccioli
+Dottore Commercialista e Revisore Legale
+E' co-fondatore di Coinlex (società di consulenza e network di professionisti sulle criptovalute), Presidente della Commissione “Tassazione delle nuove Realtà economiche virtuali” del CNDCEC, Giornalista pubblicista, già componente della commissione di Esperti del MISE (Ministero dello Sviluppo Economico) su Blockchain. · Socio e Membro dell'Advisory Board di Moneyviz Si occupa di Consulenza Strategica e supporto fiscale/normativo sulle criptoattività
+Tutti gli articoli →
+Gabriele Del Mese
+Founder & Amministratore
+Si è occupato di validazione e backtest di sistemi per società operanti nel settore del trading e degli investimenti e collabora con Multinazionali e Startup nell’ambito di progetti ad alto contenuto tecnologico. Dal 2019 Membro del Centro Studi & Ricerche di Affari Miei · Cofondatore di Moneyviz ed Amministratore E’ il responsabile dello sviluppo tecnologico e della Customer Success
+Tutti gli articoli →
+Vincenzo Pone
+Dottore Commercialista e Revisore Legale
+Specializzato in Contabilità e Fiscalità Nazionale ed Internazionale degli strumenti finanziari. Si occupa di consulenza Economico-Finanziaria per Holding Finanziarie. · CoFondatore di Moneyviz In Moneyviz è il supervisore delle elaborazioni dei conti in regime dichiarativo.
+Tutti gli articoli →
+Paolo Luigi Burlone
+Dottore Commercialista e Revisore Legale
+E' co-fondatore di Coinlex (società di consulenza e network di professionisti sulle criptovalute), Componente Commissione “Tassazione delle nuove Realtà economiche virtuali” del CNDCEC · Socio e Membro dell'Advisory Board di Moneyviz Si occupa di Consulenza Strategica e supporto fiscale/normativo sulle criptoattività
+Tutti gli articoli →
+Con MoneyViz
+Dichiarazione crypto senza errori ,
+senza fogli di calcolo.
+Importi le transazioni da 250+ tra broker, exchange e blockchain.
+MoneyViz calcola plusvalenze, minusvalenze e proventi e compila
+i Quadri RT, RW e RM con i valori già pronti per il modello dichiarativo.
+250+ integrazioni: Binance, eToro, Kraken, Metamask, Ledger, Coinbase…
+Quadri RT, RW e RM compilati con normativa 2025–2026 aggiornata
+Report fiscale PDF e F24 con codici tributo da consegnare al commercialista
+Prova gratuita →
+Nessuna carta richiesta
+← Precedente Binance chiude in Italia nel 2026? Licenza MiCA e cosa fare Successivo → Come pagare le tasse su Trading 212: guida alla dichiarazione 2026 †
+Leggi anche
+Tasse criptovalute
+Quadro RW semplificato: cos'è e come si legge nel 2026
+22 set 2026
+Tasse criptovalute
+Revolut, violazione dati: cosa è successo e come proteggerti?
+19 set 2026
+Tasse criptovalute
+Come compilare il Quadro RT crypto 2026: esempi reali
+30 ago 2026
+Pronto a chiudere la tua dichiarazione?
+Modello Redditi PF, Quadro RW e RT pronti in pochi minuti. Importi i wallet, generi il PDF, depositi.
+Prova gratis 0€ · nessuna carta Vedi prezzi →
+MONEYVIZ · Blog
+Guide fiscali per chi investe in crypto, azioni, ETF e derivati in regime dichiarativo.
+Contenuti informativi, non consulenza personalizzata. Leggi il disclaimer completo →
+Categorie
+Tasse criptovalute
+Tasse
+Antiriciclaggio
+Autori
+Prodotto
+MoneyViz
+Prezzi
+Per commercialisti
+Garanzia calcoli
+Guide
+Regime dichiarativo
+Dichiarazione trading
+Dichiarazione crypto
+Emersione crypto
+Legale
+Privacy Policy
+Cookie Policy
+Termini e Condizioni
+Chi siamo
+FAQ
+© 2020-2026 Moneyviz S.r.l. · P.I. 12366280019 · Via Bertolotti, 7 · 10121 Torino (TO)

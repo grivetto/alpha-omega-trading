@@ -1,0 +1,5 @@
+URL: https://www.binance.com/en/fee/schedule
+STATUS: 202
+FINAL: https://www.binance.com/en/fee/schedule
+BYTES: 2108
+

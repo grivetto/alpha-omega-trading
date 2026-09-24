@@ -1,0 +1,47 @@
+URL: https://www.bybit.eu/en-EU/help-center/article/Bybit-Spot-Fees-Explained
+STATUS: 200
+FINAL: https://www.bybit.eu/en-EU/help-center/article/Bybit-Spot-Fees-Explained
+BYTES: 124952
+
+Bybit EU Spot Fees Explained - Help Center
+Help Center
+Trading Products
+Spot Trading
+Bybit EU Spot Fees Explained
+Last updated on 2026-03-08 09:53:21
+Share
+Traders can be classified as market takers or market makers. For every executed order, trading fees are incurred.
+Market takers are traders who seek liquidity and take liquidity off the liquidity view immediately. They are charged a taker fee.
+Market makers , who provide liquidity and increase the market depth of the liquidity view, are charged a maker fee.
+Traders can view their incurred trading fees from their trading history .
+The table below shows the trading fee you’ll be charged when you trade Spot markets on Bybit EU, and is applicable to Non-VIP users. For more information on the VIP rate, please refer to the Trading Fee Structure .
+| Maker Fee Rate
+| Taker Fee Rate
+|
+All Spot Trading Pairs
+| 0.1%
+| 0.25%
+|
+Formula for Spot Trading
+Trading Fee = Filled Order Quantity x Trading Fee Rate
+Notes:
+— The trading fee unit charged is based on the purchased cryptocurrency.
+— There is no trading fee for unfilled parts of orders and cancelled orders.
+Example
+Let’s suppose:
+Spot Trading Fee for Market Taker: 0.15%
+Spot Trading Fee for Market Maker: 0.1%
+Last Traded Price for BTC/USDC: $40,000
+For Market Takers
+Trader A buys 0.5 BTC with USDC using a Market Order. He will be a Market Taker as the market order will be executed immediately and take liquidity from the liquidity view. The taker fee rate will be applied to this order:
+Taker's Fee for Trader A = 0.5 x 0.15% = 0.00075 BTC
+As he is buying BTC, the trading fee will be incurred in BTC and deducted from the BTC amount he will receive in his account. Once the order is executed, he will receive 0.49925 BTC (0.5 - 0.00075) in his account.
+For Market Makers
+Trader B buys 20,000 USDC with BTC using a Limit Order and sets the Order Price at $41,000. Once the order is submitted, it will be placed in the liquidity view, waiting for execution. As soon as the Last Traded Price increases to $41,000, the order will be executed. As the order was placed in the liquidity view first, Trader B will be a Market Taker and the maker fee rate will be applied to this order:
+Maker's Fee for Trader B = 20,000 × 0.1% = 20 USDC
+As he is buying USDC, the trading fee will be incurred in USDC and deducted from the USDC amount he will receive in his account. Once the order is executed, he will receive 19,980 USDC (20,000 - 20) in his account.
+Disclaimer:
+The trading fees used in the examples are given for illustrative purposes only. To view the trading fee rates applicable to your account, please visit your My Fee Rates page.
+Was it helpful?
+Related Articles
+FAQ — Spot Trading Spot Trading Rules How to Get Started With Spot Trading FAQ — Spot Order Filling on Bybit EU

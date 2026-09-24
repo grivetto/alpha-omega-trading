@@ -1,0 +1,316 @@
+URL: https://www.okx.com/en-eu/help/trading-fee-rules-faq-eea
+STATUS: 200
+FINAL: https://www.okx.com/en-eu/help/trading-fee-rules-faq-eea
+BYTES: 196733
+
+Trading Fee Rules FAQ | OKX Europe Skip to main content
+Buy crypto Buy and Sell
+SEPA, Visa, Mastercard, and more
+Crypto calculator
+Check real-time conversion rates and crypto values
+Deposit Deposit cash
+Add cash to your account balance using a bank transfer to start trading
+Deposit crypto
+Transfer crypto from an on-chain wallet or exchange
+Markets Trade Trading instruments
+Convert
+Quick conversion, zero trading fees, no slippage
+Spot and margin
+Buy and sell crypto with ease
+Futures
+Trade futures with leverage
+Powerful tools
+Agent Trade Kit
+Automate your trades with AI agents and community-built skills
+Agent Trade Kit
+Build AI agents to automate any trading strategy
+AI Builder Program
+Everything a Builder needs, all in one place
+Skills
+Discover and install trading skills
+Trading bots
+Multiple strategies to help you trade with ease
+RFQ
+Custom multi-leg strategies and block trades
+Grow Earn
+Don’t just HODL. Earn
+Onchain Earn
+Institutional Institutional home
+The world’s most powerful suite of crypto trading solutions
+OKX Rubix
+Digital assets-as-a-service for regulated institutions
+APIs
+Seamless and ultra-low latency API connectivity
+Managed Trading Sub-accounts
+Manage sub-accounts, trade easily and safely with more profits
+Historical market data
+Candlesticks, aggregate trades, order book data and more
+Institutional Insights
+Our latest institutional trading research, news, and more
+Learn Learn crypto
+Build strong crypto fundamentals with simple guides and tutorials
+How to buy crypto
+Follow step-by-step instructions to buy crypto
+Getting started
+Find answers to common questions on your crypto journey
+Crypto prices
+Track real-time crypto prices and market moves
+Crypto news
+Stay on top of the latest crypto news and trends
+Blog
+Read insights and stories from our team
+More Products
+Security of funds Status Proof of Reserves OKX Protect Web3
+Others
+Rewards Deposit Bonus Referral VIP program Affiliates X Drops Club OKX Ventures Trade on TradingView Listing application Fees
+Log in Sign up
+Support Support center My tickets Connect with OKX
+Support center
+FAQ
+Trading
+Trading general info
+Article
+Trading Fee Rules FAQ
+Published on Sep 3, 2026 Updated on Sep 4, 2026 28 min read
+This article covers everything you need to know about OKX trading fees (also referred to as transaction fees, service fees, trading commission, or trading costs), including maker and taker fee rates, spot fees, futures fees and options fees, how fees are calculated, where to find the fee schedule and the fee rate for a specific pair, how to check your current fee tier and your 30-day trading volume, what you're charged when a position is closed or liquidated, how a funding fee differs from a trading fee, and how to reduce your fees.
+1. When will the maker and taker fees occur? What is the difference between maker and taker fees?
+A taker order occurs when you place a trade that is immediately filled against an order already on the order book. Taker orders incur a fee based on the taker fee rate.
+A maker order happens when you place an order that goes on the order book with a set price and quantity, such as a limit order that sits on the book until matched.
+Maker orders are charged a fee based on the maker fee rate. Maker orders add to the order book’s liquidity, providing more depth to the market. In contrast, taker orders remove liquidity by filling orders on the order book, reducing market depth. To incentivize liquidity provision by makers, maker fees are typically lower than taker fees. For detailed rules, you can read more about our trading fee schedule .
+2. Why are the fees different for market orders and limit orders?
+Fees may differ because they’re based on how an order is executed , not on whether it’s a market order or a limit order. Specifically, fees depend on whether your order is executed as a taker or a maker .
+Market orders usually execute immediately against existing orders in the orderbook, so they’re typically charged taker fees . In periods of low liquidity or high volatility, a market order may be partially filled, and any unfilled portion may be cancelled.
+Limit orders may incur maker or taker fees , depending on execution. If a limit order matches immediately with an existing order, it’s treated as a taker order. If it’s placed on the orderbook and filled later, it’s treated as a maker order.
+In short, the fee applied depends on the order’s actual execution rather than the order type.
+3. How do I check my current trading fee rate? What are the fee rates and commissions for each VIP level?
+You can log in to your account on our website and go to Assets > My trading fees . You can refer to My fee tier for your current fee tier level and the trading fee schedule, which includes the fee rates for each instrument and trading pair.
+Open my trading fees page
+Find your current fee tier level and the fee rate for the different levels at My trading fees
+Alternatively, you can log in to your account on our app and go to Menu > Account settings > Profile > Trading fee tier . You can refer to My fee tier for your current fee tier and the trading fee schedule, which includes the fee rates for each instrument and trading pair.
+Open user menu from homepage
+Open trading fee tier page to view the trading fee details
+4. How do I check the current fee rate for a specific pair on the trading page?
+You can go to our trading page and search for the trading pairs that you want. You can find the fee rates of the current trading pair on Fees in the Order placement panel .
+You can find the current maker and taker fee on our trading page
+Alternatively, you can log in to your account on our app then go to Trade , and select More and Fee rules to find out the fee level and fee rate for the current pair.
+You can also view your 30-day Spot/Futures/Options trading volume, as well as the asset holdings and trading volume required to upgrade to VIP.
+Fee rates are shown per instrument, so the rate on a spot pair and the rate on a futures contract aren't the same. To see futures fee rates, open a futures trading pair and check Fees in the order placement panel, or select More > Fee rules from the futures trading page. The rates shown are the ones that currently apply to your own account.
+Select Fee rules to view more about your current fee tier and rules
+5. How can I check the trading fees in advance?
+Before you place an order, the order placement panel shows the maker and taker fee rate that currently applies to you on that trading pair, so you can estimate the cost yourself: fee = fee rate × the amount of crypto bought or sold when the order is filled.
+What can't be shown in advance is the final fee amount. Your order can be filled as a maker or as a taker, it can be filled in several parts, and it can be filled at a price that differs from the price you saw when you placed it. All of this affects the fee. The exact fee charged is available as soon as the order is filled: go to Order history , select Details , and hover over Fee to see how it was calculated.
+6. How are trading fees paid? Can I pay them separately?
+Trading fees are taken from the trade itself. There's no separate fee balance, and there's no option to pay a fee from a different currency or with a separate payment method.The currency your fee is charged in follows the trade, not a fixed fee currency. When you buy on the order book, the fee is charged in the crypto you bought, so you receive slightly less than the quantity you ordered. When you sell, the fee is charged on the proceeds of the sale. Which currency that is depends on the direction of the trade, the product you're trading and the details of the fill, so read the fee line on the individual fill in your order history rather than assuming one fixed currency.
+For spot and margin trading, the fee is: fee rate × the amount of crypto bought or sold when the order is filled. This is also why a confirmation email that shows the quantity you ordered can differ slightly from the amount that arrives in your account: the amount in your account is the amount after the fee.
+7. Why is the amount I received different from what I expected? Is the spread a hidden fee?
+The maker and taker fees in this article apply to order book trading on Spot, margin and Futures. If you buy or sell through the express Buy/Sell flow, or through Convert, you're quoted a single all-in price instead of a separate fee. The cost of those routes is built into the quoted price, which is why the price you're quoted to buy an asset and the price you're quoted to sell the same asset at the same moment aren't the same. That difference is the spread, not a hidden fee.
+The same applies on the order book. The best available buy price and the best available sell price differ, and if your order is filled against several orders at different prices, your average fill price differs from the price at the top of the book. Where a trade also involves a currency conversion, the conversion rate applies on top.
+A fee shown as 0% means no maker or taker fee is charged on that pair. It doesn't mean the amount you receive matches your estimate to the last decimal, because the fill price still varies. A change in the value of your holdings after the trade is a price movement, not a fee.
+8. Does OKX charge any other trading fees?
+For order book trading, the charges are the maker and taker fees described in this article. For futures, you may also pay funding fees, a forced liquidation fee charged at the taker rate of your current tier, and an expiry settlement fee of 0.01%. There's no risk fee, no markup added on top of your maker or taker rate, and no other charge applied to a fill.
+We don't charge you for opening an account or for keeping an account open. Deposits, withdrawals and card transactions are priced separately from trading fees, and any fee your own bank or payment provider charges is set by them, not by us.
+9. Is there a daily limit on how much I can trade?
+Order book trading isn't priced or capped by a daily fee allowance. If an order of yours is limited or rejected, that comes from the order and risk rules that apply to that instrument and to your account — for example, the maximum order size for the contract, or your position and margin limits. The order panel shows the limit that applies when you place the order, and the error message tells you which one you've hit.
+Limits you may have seen elsewhere aren't the same thing: Convert has its own limits, and deposits and withdrawals have their own separate limits. Neither of them applies to your order book trading.
+10. How can I upgrade my VIP level and reduce trading fees?
+You can upgrade your trading fee level by increasing your asset volume or trading volume.
+Based on trading volume, you're divided into two levels: Regular and VIP. As a VIP user, you'll be categorized into levels based on asset volume and trading volume over the past 30 days. Your level determines the trading fees for the next trading day.
+When calculating transaction fee levels, if the spot trading volume, total trading volume of perpetual and futures contracts (USDC perpetual contracts, USDC futures contracts, coin-margined perpetual contracts, and coin-margined futures contracts), options trading volume, spreads trading volume, and asset volume meet the conditions for different trading fee levels, then you will enjoy the highest trading fee discount among them.
+For example, if your spot trading volume in the past 30 days is 10,000,000 USD (meeting VIP 2), your total trading volume of perpetual and futures contracts (USDC perpetual contracts, USDC futures contracts, coin-margined perpetual contracts, and coin-margined futures contracts) in the past 30 days is 200,000,000 USD (meeting VIP 3), your options trading volume in the past 30 days is 5,000,000 USD (meeting VIP 1), your spreads trading volume in the past 30 days is 150,000,000 USD (meeting VIP 2), and your asset size is 5,000,000 USD (meeting VIP 4), then you will enjoy a VIP 4 fee tier, and all tradings across all business lines are eligible for VIP 4 benefits.
+For details on trading volume and asset size requirements, please refer to the Trading Fee Rules .
+11. How do I view the total trading fees for Futures?
+To view your total trading fees or total trading volume, download your trading history and calculate the totals manually. Add up all the Fee amounts to get your total trading fees, and add up all the Quantity amounts to get your total trading volume. Please note that different trading pairs may use different trading units — make sure to confirm the relevant unit when calculating.
+12. How do I view the total profit/loss for Futures?
+In the Futures Analysis tool, you can view your total PnL from November 1, 2022 onwards. You can filter by the last 7, 30, or 90 days, or view all time. The All range covers data from November 1, 2022 to present. To access the Futures Analysis tool, follow the path below:
+On the app:
+Method 1: on the Futures trading page, select More > Futures analysis > Futures PnL
+Method 2: on the App homepage, select Assets > Tap on the tiny arrow beside 1Y PnL > Select Futures PnL
+On the web:
+On the OKX website, go to Assets > Select Analysis > Futures
+Futures analysis is a summary view. To see every trade you've made, go to Trade > Order history, or download your full trading history from Order center.
+13. How do I check the fees for my historical orders?
+You can find the fees for your historical orders on the web in the following sections:
+From Trading page > Order history
+Go to our trading page and select Order history . You will see the amount of the fee applied.
+Find the fee amount in your order history
+If you would like to check out how the fee is calculated, you can select Details and hover over the Fee .
+Select details to find out how the fee is calculated
+From Order center > Order history
+Go to our Order center and select Order history . You will see the amount of the fee applied.
+Opening Order center page
+If you would like to check out how the fee is calculated, you can select Details and hover over the Fee .
+Select details to find out how the fee is calculated
+Alternatively, you can find the fees for your historical orders in our app by going to Trade , selecting My trades , and find Order history .
+Open your transaction history page
+Select the transaction history that you want to view, and you will find the amount of the fee applied at Fill details .
+Find the fee that has been applied on the past transaction
+If you would like to check out how the fee is calculated, you can select the fee amount and you will be able to view the fee details.
+View how your trading fee is calculated
+14. How is my trading fee level determined?
+You can enhance your fee levels by increasing asset amount or trading volume.
+Based on trading volume, users are categorized into regular and VIP levels. VIP users are classified based on the asset amount or trading volume over the past 30 days. Different levels determine the trading fees for the next trading day.
+When calculating the fee level, if your spot trading volume, total volume of perpetual and expiry futures (USDC perpetual futures, USDC expiry futures, crypto-margined perpetual futures, and crypto-margined expiry futures), option trading volume, spreads trading volume, and the asset amount, meet the conditions for different fee levels, you will enjoy the highest level of fee benefits, i.e., the most favorable fee rate.
+15. How is the trading fee calculated?
+Instruments
+| Calculation formulas of trading fees
+|
+Spot/Margin
+| Trading fee of Spot/Margin = Fee rate × Amount of bought or sold crypto when order filled.
+Charge rule of crypto: Fee = Fee rate × Amount of bought crypto when order was filled;
+Take BTC/USDC spot as an example, assuming the current price of BTC is 20,000 USDC;
+Trader A (Maker fee: 0.08%; Taker fee: 0.1%) bought 1 BTC at market price, and became a taker of this trade, so the Trading fee = 0.1% × 1 = 0.001 BTC, and A will receive 0.999 BTC after fee deducted;
+Trader A sold 1 BTC at limit price, and received 20,000 USDC. Trader A became a maker of this trade, so the Trading fee = 0.08% × 20,000 = 16 USDC, and A will receive 19,984 USDC after fee deducted.
+Trading fee rebate rule: Fee = Fee rate × Amount of sold crypto when order was filled;
+Take BTC/USDC spot as an example, assuming the current price of BTC is 20,000 USDC;
+Trader A (Maker fee: -0.002%; Taker fee: 0.025%) sold 1 BTC at limit price, and became a maker of this trade, so the Trading fee rebated to A = 0.002% × 1 = 0.00002 BTC;
+Trader A bought 1 BTC with a limit order, and received 20,000 USDC. Trader A became a maker of this trade, so the Trading fee rebated to A = 0.002% × 1 × 20,000 = 0.4 USDC;
+|
+Futures
+| Trading fee of USDC-margined perpetual and expiry futures = Fee rate × (Number of contracts × Contract Multiplier × Contract size × Fill price).
+Charge rule: Trading fee of USDC-margined perpetual futures is settled in USDC and is charged when the order is filled;
+Take BTCUSDC perpetual futures (Contract size is 0.01 BTC, Contract Multiplier is 1) as an example, assuming the current price of BTC is 20,000 USDC;
+Trader A (Maker fee: 0.02%; Taker fee: 0.05%) bought/sold 100 contracts (1 BTC) at market price with 10x leverage, and used 2,000 USDC (0.1 BTC) as margin. Trader A became a taker of this trade, so the Trading fee = 0.05% × (100 × 1 × 0.01 × 20,000) = 10 USDC;
+Trader A bought/sold 100 contracts (1 BTC) at limit price with 10x leverage, and used 2,000 USDC (0.1 BTC) as margin. Trader A became a maker of this trade, so the Trading fee = 0.02% × (100 × 1 × 0.01 × 20,000) = 4 USDC.
+Trading fee of Crypto-margined perpetual and expiry futures = Fee rate × (Number of contracts × Contract Multiplier × Face value per contract / Fill price).
+Charge rule: Trading fee for Crypto-margined perpetual and expiry futures is settled in the traded crypto and is charged when the order is filled;
+Take BTCUSD perpetual futures (Contract size is 100 USD, Contract Multiplier is 1) as an example, assuming the market price of BTC is 20,000 USD.
+Trader A (Maker fee: 0.02%; Taker fee: 0.05%) bought/sold 100 contracts (10,000 USD) at market price with 10x leverage, and uses 0.05 BTC (1,000 USD) as margin. If Trader A is the taker of this trade, the trading fee = 0.05% × (100 × 1 × 100 / 20,000) = 0.00025 BTC;
+Trader A bought/sold 100 contracts (10,000 USD) at limit price with 10x leverage, and uses 0.05 BTC (1,000 USD) as a margin. If Trader A is the maker of this trade, the trading fee = 0.02% × (100 × 1 × 100 / 20,000) = 0.0001 BTC.
+Forced liquidation fee: Calculated according to the taker fee of user’s current tier level.
+Expiry settlement fee: 0.01% for all users regardless of tier level.
+|
+Options
+| Trading fee of options = Min(Fee rate × Contract Multiplier × Contract size × Number of contracts, 7% × Option premium × Contract Multiplier × Contract size × Number of contracts)
+Take BTCUSD options (Contract Multiplier is 0.01, Contract size is 1 BTC, Option premium is 0.05 BTC) as an example.
+Trader A (Maker fee: 0.02%; Taker fee: 0.03%) bought 100 contracts of call options (notional is 1 BTC):
+If trader A is the taker when order filled, so the Trading fee = Min(0.03% × 0.01 × 1 × 100, 7% × 0.05 × 0.01 × 1 × 100) = 0.0003 BTC;
+If trader A is the maker when order filled, so the Trading fee = Min(0.02% × 0.01 × 1 × 100, 7% × 0.05 × 0.01 × 1 × 100) = 0.0002 BTC.
+Exercise fee = Min(0.02% × Contract Multiplier × Contract size × Number of contracts, User’s taker fee rate × Contract Multiplier × Contract size × Number of contracts, 7% × Settlement value × Contract Multiplier × Contract size × Number of contracts)
+Day options don’t have an exercise fee. Day options are options that don’t expire on Fridays. Only applicable to exercised options. Doesn’t apply to unexercised options.
+Forced liquidation fee = Min(User’s taker fee rate × Contract Multiplier × Contract size × Number of contracts, 7% × mark price × Contract Multiplier × Contract size × Number of contracts)
+Options combo trades on RFQ can enjoy up to 50% discount on fees!
+For each underlying asset, trading fees are charged on legs from the side (buy or sell) with the higher notional.
+Only legs that incur a trading fee are counted towards the 30-day trading volume of the corresponding instrument.
+|
+Spreads
+| Each instrument’s fee rate is 50% off from its classic order book rate as shown in the fee tier.
+|
+For more details about trading fee structure, please visit here .
+16. What’s the difference between futures opening and closing fees?
+Fees are charged when an order is executed. There is no difference between the fees for opening or closing positions. Fees are collected based on the executed size of the order, corresponding to either the taker or maker fee.
+17. Are fees charged for liquidation?
+Forced liquidation fees are charged according to the taker fee rate of your current level.
+18. Why is there a discrepancy between the profit when holding a position and after closing it?
+For futures and options trading, the realized profit after closing a position is the net profit after deducting trading and funding fees. The difference between the profit when holding and after closing a position is due to these trading and funding fees.
+For example, in a BTCUSDC perpetual contract, if your current position value is 20,000 USDC with a floating profit of 15 USDC, the opened trading fee is -4 USDT, the closed trading fee is -5 USDC, and the funding fee is -1 USDC. After closing the position, your realized profit will be 5 USDT (= 15 USDC – 4 USDC – 5 USDC – 1 USDC).
+For margin trading, only the closed profit is recorded, without realized profit, so the profit when holding and after closing the position remains consistent.
+Fees aren't the only reason your result can differ from what you expected:
+Futures trading fees are calculated on the size of your position, not on the margin you put up. If you open a 20,000 USDC position at 10x leverage with 2,000 USDC of margin, your fee rate is applied to the 20,000 USDC position value, not to the 2,000 USDC of margin. The higher your leverage, the larger the amount your fee rate is applied to.
+A stop-loss or take-profit order isn't on the order book until it's triggered. Once it's triggered, your order is submitted at the order price you preset when you created it, and if that's the market price it's filled at the best price then available. In a fast-moving or less liquid market, that price can be worse than your trigger price, and the difference shows up as a larger loss than the one you calculated from your trigger price.
+Account-level profit figures include the unrealized profit and loss on positions that are still open, so adding up only your closed trades gives you a different number.
+19. Do zero-fee pairs count towards my trading volume?
+Applies to your fee tier. Zero-fee spot pairs are excluded from your 30-day spot volume, so trading them doesn't move you towards a higher VIP tier. Which pairs are excluded changes over time, so check the current rule on the trading fees page rather than working from a list you saw earlier.That rule is about your fee tier. Whether a trade counts towards a promotion or a reward is set by the terms and conditions of that specific campaign, which can define qualifying volume differently. Check the campaign's own terms rather than assuming the fee tier rule applies to it.
+20 . Why are the profits from Order history and Position history inconsistent?
+For futures and options trading , the realized profits in Position history include closed profits, funding fees, and trading fees, whereas the profits from Order history only include closed profits. For example, after closing the following position:
+From the Order history list, the opened and closed trading fees are both -0.03 USDT, and the closed profit is +0.46 USDT.
+Find the trading fees of your order history
+From the Position history list, the realized profit for this position includes a closed profit of +0.46 USDT. The funding fee is 0, and the trading fee is -0.06 USDT (= Opened trading fee + Closed trading fee), so the total realized profit is +0.40 USDT (= Closed profit + Funding fee + Trading fee).
+Find the realized PnL details by hovering over to PNL%
+For margin trading , only the closed PnL is recorded, without realized profit, hence the earnings in Order history and Position history are consistent.
+Find the explanation of the PnL for margin trading by hovering over the PnL field in your position history
+21. Why don't my trading bot's profit figures match my trade history?
+A trading bot reports profit using its own accounting, while your trade history and API export record each individual fill and the realized profit or loss on it. Your trade history and API export are the records of what was actually executed on your account, and they're the data to use for your own reporting. Stopping or deleting a bot doesn't change trade history or API data that has already been recorded.
+22. Where can I see my fee tier and 30-day trading volume? When do they update?
+Your trading fee rate is determined by your fee tier, which is based on your 30-day trading volume and your account asset holdings.
+To check your fee tier:
+On the app : select the main menu > profile picture > User Center > Account Information > Trading fee tier
+On the web : select Assets > My trading fees
+How your tier updates:
+The platform takes a daily snapshot of your trading volume and your holdings of each currency at 0:00 (UTC+8)
+Fee tiers are updated daily between 4:00 AM and 6:00 AM (UTC+8)
+Tiers aren't updated in real time. If your trading volume already meets the threshold, your tier is upgraded automatically once the update runs — you don't need to do anything else.
+How trading volume is calculated:
+Daily trading volume (USD) = quantity of the asset traded that day × that day's closing price of the asset (USDT) × that day's USDT/USD closing price
+Counted: spot, margin, futures/perpetual, options, and Convert. For example, XAUT/USDT margin trading counts toward spot volume, and the USDC/USDT perpetual counts toward futures volume.
+Not counted: P2P trading, and the PYUSD/USDT, USDC/USDT, RLUSD/USDT, and USDG/USDT spot pairs
+The platform only provides 30-day trading volume statistics. Longer periods aren't available.
+23. Can I use OKB holdings to offset trading fees?
+The platform currently doesn't offer a feature that lets you offset trading fees by holding OKB. OKB is charged under the same standard fee rules as any other currency.
+24. Is there a fee for adjusting leverage or adding or removing margin in isolated mode?
+No. Adjusting your leverage, adding margin, or removing margin doesn't incur any fee on its own.Trading fees are only charged when an order actually fills.
+25. If I just hold crypto in my account without trading, am I charged a daily fee?
+No. For spot and margin trading, fees are charged only when a buy or sell order fills. Unfilled portions, cancelled orders, and simply holding assets don't incur any fee.
+Note: perpetual futures positions incur a funding fee at each settlement point, but funding fees aren't trading fees.
+26. Is the funding fee a trading fee?
+A funding fee isn't a trading fee — they're two different charges:
+Funding fees are settled between long and short traders, and the platform doesn't take any cut
+When the funding rate is positive, longs pay shorts. When it's negative, shorts pay longs.
+Settlement frequency varies by currency (every 8, 4, 2, or 1 hour). You can see the current rate and the countdown to the next settlement above the order book.
+Funding is only settled if you hold a position at the settlement point. If you close your position before the countdown ends, you aren't part of that settlement.
+Formula: funding fee = position value × funding rate
+USDT-margined position value = contract face value × number of contracts × mark price
+Crypto-margined position value = contract face value × number of contracts ÷ mark price
+Note: if your available balance isn't enough to cover the funding fee, the system deducts it from your position margin, which pushes your liquidation price up and increases liquidation risk. We recommend keeping a sufficient available balance while you hold positions.
+27. What's the "face value" in the fee formula? How does the number of contracts relate to the position size I see?
+Face value is the value of the underlying asset represented by one contract. It's fixed and differs for each currency. For example, the BTC-USDT perpetual has a face value of 0.01 BTC.
+Face value × number of contracts = position size. For example, if the page shows a position size of 1.0935 BTC, that corresponds to 109.35 contracts (0.01 × 109.35 = 1.0935).
+To check the face value of a specific contract, select the three dots at the top-right of the trading page > Market information
+So "face value × number of contracts × fill price" in the fee formula is the actual value of that fill. Fees are calculated on fill value and have no direct relationship to your leverage — Leverage only affects how large a position you can open.
+28. I only placed one order — why does it show multiple fills? Was I overcharged?
+You weren't overcharged. A single order may fill in parts against multiple counterparties in the market, and the order details page lists each of those fills individually.Fees are calculated separately for each fill and then totalled. The total is the same as it would be for a single fill — nothing is charged twice. No fee is charged on the unfilled portion.
+29. Can trading fees that have already been charged be refunded?
+Trading fees generated by filled orders aren't refundable. Fees are a cost to factor in when trading, and the platform charges them under publicly disclosed, transparent rules.
+Disclaimer
+This content is provided for informational purposes only and may cover products that are not available in your region. It is not intended to provide (i) investment advice or an investment recommendation; (ii) an offer or solicitation to buy, sell, or hold crypto/digital assets, or (iii) financial, accounting, legal, or tax advice. Crypto/digital asset holdings, including stablecoins and NFTs, involve a high degree of risk and can fluctuate greatly. You should carefully consider whether trading or holding crypto/digital assets is suitable for you in light of your financial condition. Please consult your legal/tax/investment professional for questions about your specific circumstances. Information (including market data and statistical information, if any) appearing in this post is for general information purposes only. While all reasonable care has been taken in preparing this data and graphs, no responsibility or liability is accepted for any errors of fact or omission expressed herein.
+© 2026 OKX. This article may be reproduced or distributed in its entirety, or excerpts of 100 words or less of this article may be used, provided such use is non-commercial. Any reproduction or distribution of the entire article must also prominently state: “This article is © 2026 OKX and is used with permission.” Permitted excerpts must cite to the name of the article and include attribution, for example “Article Name, [author name if applicable], © 2026 OKX.” No derivative works or other uses of this article are permitted.
+Expand
+1. When will the maker and taker fees occur? What is the difference between maker and taker fees?
+2. Why are the fees different for market orders and limit orders?
+3. How do I check my current trading fee rate? What are the fee rates and commissions for each VIP level?
+4. How do I check the current fee rate for a specific pair on the trading page?
+5. How can I check the trading fees in advance?
+6. How are trading fees paid? Can I pay them separately?
+7. Why is the amount I received different from what I expected? Is the spread a hidden fee?
+8. Does OKX charge any other trading fees?
+9. Is there a daily limit on how much I can trade?
+10. How can I upgrade my VIP level and reduce trading fees?
+11. How do I view the total trading fees for Futures?
+12. How do I view the total profit/loss for Futures?
+13. How do I check the fees for my historical orders?
+14. How is my trading fee level determined?
+15. How is the trading fee calculated?
+16. What’s the difference between futures opening and closing fees?
+17. Are fees charged for liquidation?
+18. Why is there a discrepancy between the profit when holding a position and after closing it?
+19. Do zero-fee pairs count towards my trading volume?
+20. Why are the profits from Order history and Position history inconsistent?
+21. Why don't my trading bot's profit figures match my trade history?
+22. Where can I see my fee tier and 30-day trading volume? When do they update?
+23. Can I use OKB holdings to offset trading fees?
+24. Is there a fee for adjusting leverage or adding or removing margin in isolated mode?
+25. If I just hold crypto in my account without trading, am I charged a daily fee?
+26. Is the funding fee a trading fee?
+27. What's the "face value" in the fee formula? How does the number of contracts relate to the position size I see?
+28. I only placed one order — why does it show multiple fills? Was I overcharged?
+29. Can trading fees that have already been charged be refunded?
+©2017 - 2026 OKX.COM
+Language
+Europe English Deutsch Español (España) Français Italiano Nederlands Polski Português (Portugal) Română Norsk (bokmål) Suomi Svenska Čeština Русский Українська
+More about OKX
+About us Candidate Privacy Notice Careers Contact us Terms of Service Terms of Service (Derivatives) Privacy Notice OKX EU Disclosures OEM Disclosures Conflicts of interest disclosure Whistleblower notice Law enforcement OKX app
+Products
+Buy crypto P2P trading Convert Trade Earn Trading bots All cryptocurrencies Learn TradingView X-RWA Outcome markets Stock price
+Services
+Affiliate API Historical market data CEX fee schedule Listing application P2P Merchant application
+Support
+Support center Channel verification Announcements Connect with OKX Formal complaints
+Buy crypto
+Buy USDC Buy Bitcoin Buy Ethereum Buy ADA Buy Solana Buy Litecoin Buy XRP
+Crypto calculator
+BTC to USD ETH to USD USDC to USD SOL to USD XRP to USD PI to USD
+Trade
+BTC USDC ETH USDC LTC USDC SOL USDC XRP USDC Bitcoin price Ethereum price Pi Network price Solana price XRP price Bitcoin price prediction Ethereum price prediction XRP price prediction Pi Network price prediction How to buy crypto How to buy Bitcoin How to buy Ethereum How to buy Solana How to buy Pi Network
+Trade on the go with OKX
+Register
+OKX Europe Limited, a Maltese limited liability company, is licensed by the Malta Financial Services Authority (“MFSA”) as a Crypto-Asset Service Provider under Regulation (EU) 2023/1114 on Markets in Crypto-Assets (“MiCA”), as implemented in Malta by the Markets in Crypto-Assets Act, Chapter 647. It is authorised to provide: custody and administration of crypto-assets; operation of a crypto-asset trading platform; exchange of crypto-assets for funds or other crypto-assets; execution, reception and transmission of orders; placing of crypto-assets; portfolio management; and transfer services for crypto-assets.
+OKX Europe Limited is also licensed and regulated by the MFSA as a financial institution under the Financial Institutions Act, Chapter 376, to provide services enabling cash to be placed on and withdrawn from payment accounts and to execute payment transactions by direct debit, payment card or similar device, and credit transfer, including standing orders

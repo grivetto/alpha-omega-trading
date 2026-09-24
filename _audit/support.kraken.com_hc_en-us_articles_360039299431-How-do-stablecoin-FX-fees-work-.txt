@@ -1,0 +1,166 @@
+URL: https://support.kraken.com/hc/en-us/articles/360039299431-How-do-stablecoin-FX-fees-work-
+STATUS: 200
+FINAL: https://support.kraken.com/articles/360039299431-how-do-stablecoin-fx-fees-work-
+BYTES: 1002286
+
+How do stablecoin/FX fees work? | Kraken
+Buy crypto in minutes
+Get the Kraken app
+English
+Ask AI
+All
+Filter by: Select Product
+How do I deposit cash into my account?
+I need help with account verification
+Why can't I access my account?
+Are there any crypto withdrawal fees?
+I need help signing into my account
+Support
+Trading
+Kraken Pro
+Fees
+How do stablecoin/FX fees work?
+Last updated: February 10, 2026
+Want to know what stablecoins are? Learn about stablecoins and more at Kraken Learn .
+All trades made on Kraken Pro have a basic trading fee applied to them. For most markets the basic trading fee follows the maker/taker model.
+However, orders submitted to cash or stablecoin markets, such as two cash currencies (FX) or in pegged cryptocurrency markets such as USDC/USDT, incur an identical fee regardless of whether the order is a maker or taker.
+To learn more about currency pairs, see our Trading Glossary.
+0% maker fees
+Trades in the USDG/USD market do not incur Maker Fees.
+Full stablecoin & FX fee schedule Click here to see maker/taker fees for stablecoin/FX markets.
+View examples
+If the stablecoin is the base currency (e.g. USDT /USD):
+•
+The stablecoin fee schedule applies.
+•
+The trade will not contribute to your 30 day trading volume .
+If the stablecoin is the quote currency (e.g. BTC/ USDT ):
+•
+The spot crypto fee schedule applies.
+•
+The trade will contribute to your 30 day trading volume.
+If the currency pair has two stablecoins (e.g. USDG / USDC ):
+•
+The stablecoin fee schedule applies.
+•
+The trade will not contribute to your 30 day trading volume.
+If the currency pair has two cash currencies (e.g. EUR/USD ):
+•
+The stablecoin fee schedule applies.
+•
+The trade will not contribute to your 30 day trading volume.
+If the currency pair is pegged (e.g. WBTC/BTC ):
+•
+The stablecoin fee schedule applies.
+•
+The trade will not contribute to your 30 day trading volume .
+Important:
+Fee schedule volume-based discounts are based on crypto trading volume only. Making purchases using the Buy Crypto widget , Kraken app as well as trading stablecoin and FX pairs on our order books does not contribute to the fee schedule 30-day volume.
+0% maker fees
+Create account Create account Sign in
+Create account Create account Sign in
+Features →
+Buy Crypto
+Sell Crypto
+Margin Trading
+Futures Trading
+OTC Trading
+Institutions
+API Trading
+Staking Rewards
+Recurring buys
+Kraken Borrow
+Kraken Funded
+About Kraken →
+Kraken Security
+Kraken Careers
+Kraken Blog
+Kraken Developer
+Press Room
+Affiliate Program
+Asset Listings
+Kraken Status
+Support Center
+Complaints
+Crypto Prices →
+Bitcoin Price
+Ethereum Price
+Dogecoin Price
+XRP Price
+Cardano Price
+Solana Price
+Litecoin Price
+Crypto categories
+Price predictions
+Convert Crypto →
+BTC to USD
+ETH to USD
+XRP to USD
+BNB to USD
+SOL to USD
+DOGE to USD
+ADA to USD
+TRX to USD
+LTC to USD
+Buy Crypto →
+Buy Bitcoin
+Buy Ethereum
+Buy Dogecoin
+Buy XRP
+Buy Cardano
+Buy Solana
+Buy Litecoin
+Buy Stocks →
+Buy Nvidia
+Buy Tesla
+Buy Apple
+Buy Amazon
+Buy Palantir
+Buy Microsoft
+Buy Tokenized Equities →
+Buy NVDAx
+Buy TSLAx
+Buy AAPLx
+Buy SPYx
+Buy AMZNx
+Financial Education →
+What is cryptocurrency?
+What are Smart Contracts?
+What is Bitcoin?
+What is tokenization
+Best Crypto apps
+Best crypto exchanges
+Kraken vs Coinbase
+Privacy Hub
+Privacy Notice
+Cookie Settings
+Do Not Sell/Share
+Compliance Hub
+Terms of Service
+Exchange Trading Rules
+Disclosures
+by PAYWARD
+© 2011–2026 Payward, Inc.
+Trading
+Kraken
+Kraken Pro
+NinjaTrader
+Breakout
+VIP
+API Trading
+|
+Services
+Payward Services
+xStocks
+CF Benchmarks
+Reap
+|
+Banking
+Krak
+Prime
+OTC
+Custody
+|
+Asset Management
+Payward Europe Solutions Limited, trading as Kraken, is regulated by the Central Bank of Ireland. Payward Global Solutions Limited, trading as Kraken, is regulated by the Central Bank of Ireland. Registered office: 70 Sir John Rogerson’s Quay, Dublin, D02 R296, Ireland. Click here for related policies and disclosures.
+These materials are for general information purposes only and are not investment or financial product advice or a recommendation or solicitation to buy, sell, stake or hold any cryptoasset or to engage in any specific trading strategy. Kraken does not and will not work to increase or decrease the price of any particular cryptoasset it makes available. The unpredictable nature of the crypto-asset markets can lead to loss of funds. Tax may be payable on any return and/or on any increase in the value of your cryptoassets and you should seek independent advice on your taxation position. Geographic restrictions may apply. Some crypto products and markets are unregulated. Kraken’s regulatory status for its various products and services differs per jurisdiction and you may not be protected by government compensation and/or regulatory protection schemes. See Legal Disclosures for each jurisdiction.

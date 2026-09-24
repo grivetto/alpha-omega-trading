@@ -1,0 +1,293 @@
+URL: https://www.okx.com/en-eu/help/what-are-the-new-trading-fees-for-eea-users
+STATUS: 200
+FINAL: https://www.okx.com/en-eu/help/what-are-the-new-trading-fees-for-eea-users
+BYTES: 90474
+
+What are the spot trading fees, and how is my fee tier set? | OKX Europe Skip to main content
+Buy crypto Buy and Sell
+SEPA, Visa, Mastercard, and more
+Crypto calculator
+Check real-time conversion rates and crypto values
+Deposit Deposit cash
+Add cash to your account balance using a bank transfer to start trading
+Deposit crypto
+Transfer crypto from an on-chain wallet or exchange
+Markets Trade Trading instruments
+Convert
+Quick conversion, zero trading fees, no slippage
+Spot and margin
+Buy and sell crypto with ease
+Futures
+Trade futures with leverage
+Powerful tools
+Agent Trade Kit
+Automate your trades with AI agents and community-built skills
+Agent Trade Kit
+Build AI agents to automate any trading strategy
+AI Builder Program
+Everything a Builder needs, all in one place
+Skills
+Discover and install trading skills
+Trading bots
+Multiple strategies to help you trade with ease
+RFQ
+Custom multi-leg strategies and block trades
+Grow Earn
+Don’t just HODL. Earn
+Onchain Earn
+Institutional Institutional home
+The world’s most powerful suite of crypto trading solutions
+OKX Rubix
+Digital assets-as-a-service for regulated institutions
+APIs
+Seamless and ultra-low latency API connectivity
+Managed Trading Sub-accounts
+Manage sub-accounts, trade easily and safely with more profits
+Historical market data
+Candlesticks, aggregate trades, order book data and more
+Institutional Insights
+Our latest institutional trading research, news, and more
+Learn Learn crypto
+Build strong crypto fundamentals with simple guides and tutorials
+How to buy crypto
+Follow step-by-step instructions to buy crypto
+Getting started
+Find answers to common questions on your crypto journey
+Crypto prices
+Track real-time crypto prices and market moves
+Crypto news
+Stay on top of the latest crypto news and trends
+Blog
+Read insights and stories from our team
+More Products
+Security of funds Status Proof of Reserves OKX Protect Web3
+Others
+Rewards Deposit Bonus Referral VIP program Affiliates X Drops Club OKX Ventures Trade on TradingView Listing application Fees
+Log in Sign up
+Support Support center My tickets Connect with OKX
+Support center
+FAQ
+Trading
+Trading general info
+Article
+What are the spot trading fees, and how is my fee tier set?
+Published on Sep 16, 2025 Updated on Sep 3, 2026 5 min read 259
+The maker fee and taker fee charged on a spot order are set by two things: the fee tier your account is on, and whether you've opened a derivatives (X-Perps) account. The tables on this page show the rates per tier under both account setups. For the rates that apply to your own account right now, see the trading fee schedule .
+How is my VIP fee tier determined?
+Your VIP fee tier is based on your total account assets or on your 30-day trading volume. These are two separate routes to the same tier: meeting either one is enough, and you don't have to meet both. Your 30-day trading volume counts the volume traded on your OKX account in the corresponding market. Volume you've traded on another exchange isn't carried over into this calculation and doesn't count toward your tier here. For the tier your account is on now, see the trading fee schedule .
+What maker and taker fees apply if you've opened a derivatives (X-Perps) account?
+Tier
+| Assets (EUR)
+| or
+| 30-day trading volume (EUR)
+| Maker fee
+| Taker fee
+| 24h crypto withdrawal limit (USD)
+|
+Regular
+| 0 - 100,000
+| /
+| 0 - 1,000,000
+| 0.0800%
+| 0.1000%
+| 10,000,000
+|
+VIP1
+| 100,001 - 200,000
+| /
+| 1,000,001 - 5,000,000
+| 0.0675%
+| 0.0800%
+| 24,000,000
+|
+VIP2
+| 200,001 - 2,000,000
+| /
+| 5,000,001 - 10,000,000
+| 0.0600%
+| 0.0700%
+| 32,000,000
+|
+VIP3
+| 2,000,001 - 5,000,000
+| /
+| 10,000,001 - 20,000,000
+| 0.0550%
+| 0.0650%
+| 40,000,000
+|
+VIP4
+| 5,000,001 - 20,000,000
+| /
+| 20,000,001 - 100,000,000
+| 0.0300%
+| 0.0450%
+| 44,000,000
+|
+VIP5
+| 20,000,001 - 50,000,000
+| /
+| 100,000,001 - 200,000,000
+| 0.0250%
+| 0.0350%
+| 48,000,000
+|
+VIP6
+| 50,000,001 - 100,000,000
+| /
+| 200,000,001 - 500,000,000
+| 0.0000%
+| 0.0300%
+| 60,000,000
+|
+VIP7
+| 100,000,001 - 250,000,000
+| /
+| 500,000,001 - 1,000,000,000
+| -0.0020%
+| 0.0250%
+| 72,000,000
+|
+VIP8
+| 250,000,001 - 500,000,000
+| /
+| 1,000,000,001 - 5,000,000,000
+| -0.0050%
+| 0.0200%
+| 80,000,000
+|
+VIP9
+| 500,000,001
+| /
+| 5,000,000,001
+| -0.0075%
+| 0.0175%
+| 80,000,000
+|
+What maker and taker fees apply if you haven't opened a derivatives (X-Perps) account?
+Tier
+| Assets (EUR)
+| or
+| 30-day trading volume (EUR)
+| Maker fee
+| Taker fee
+| 24h crypto withdrawal limit (USD)
+|
+Regular
+| 0
+| /
+| 0
+| 0.200%
+| 0.350%
+| 10,000,000
+|
+VIP1
+| 100,000
+| /
+| 100,001
+| 0.100%
+| 0.200%
+| 24,000,000
+|
+VIP2
+| 200,000
+| /
+| 250,001
+| 0.090%
+| 0.180%
+| 32,000,000
+|
+VIP3
+| 2,000,000
+| /
+| 500,001
+| 0.080%
+| 0.150%
+| 40,000,000
+|
+VIP4
+| 5,000,000
+| /
+| 1,000,001
+| 0.075%
+| 0.100%
+| 44,000,000
+|
+VIP5
+| 20,000,000
+| /
+| 2,500,001
+| 0.070%
+| 0.085%
+| 48,000,000
+|
+VIP6
+| 50,000,000
+| /
+| 5,000,001
+| 0.060%
+| 0.070%
+| 60,000,000
+|
+VIP7
+| 100,000,000
+| /
+| 10,000,001
+| 0.055%
+| 0.065%
+| 72,000,000
+|
+VIP8
+| 250,000,000
+| /
+| 20,000,001
+| 0.045%
+| 0.060%
+| 80,000,000
+|
+VIP9
+| 500,000,000
+| /
+| 50,000,001
+| 0.030%
+| 0.055%
+| 80,000,000
+|
+Do zero-fee trades count toward my fee tier?
+30-day trading volume is the total volume traded in the corresponding market. Zero-fee trading pairs are excluded from your 30-day spot volume calculation, so filling orders on a zero-fee pair doesn't move your account up a tier. If you're a market maker, zero-fee trades won't count toward your tier calculation either. A trading pair that isn't on the zero-fee list is charged the maker or taker fee for your tier. Volume earned in a promotional campaign can follow that campaign's own terms, so check the terms of the campaign you joined. For the pairs that are zero-fee right now, see the trading fee schedule .
+Why is the fee on my order different from the rate I expected?
+The rate charged on a single order depends on more than the headline number, so compare these four things against that specific order:
+The fee tier your account was on when the order filled. Your tier can move as your assets or your 30-day trading volume change.
+Whether the order was maker or taker. A limit order that rests on the order book is charged the maker fee; an order that fills immediately against the book is charged the taker fee.
+Which product placed the order. Buy and Sell and Convert quote a single price with a spread built into it instead of charging a separate maker or taker fee, so their cost isn't comparable with a spot order book fee.
+Whether a derivatives (X-Perps) account has been opened. The two tables on this page apply to different account setups.
+The fee actually charged is recorded against each fill in your order history. Compare that figure with the rate for your tier on the trading fee schedule before concluding that an order was charged incorrectly.
+Does a referral code change my maker and taker fees?
+A referral code doesn't replace the fee schedule or the tier rules. The maker and taker rates charged on your orders come from the fee tier your account is on, so signing up with a code doesn't by itself put the account on a different rate. If you joined a programme that pays a rebate, that rebate is handled under the terms of the programme rather than by changing the rate quoted on the fee schedule. For the published rebate route, see the OKX affiliate programme .
+How is my VIP fee tier determined?
+What maker and taker fees apply if you've opened a derivatives (X-Perps) account?
+What maker and taker fees apply if you haven't opened a derivatives (X-Perps) account?
+Do zero-fee trades count toward my fee tier?
+Why is the fee on my order different from the rate I expected?
+Does a referral code change my maker and taker fees?
+©2017 - 2026 OKX.COM
+Language
+Europe English Deutsch Español (España) Français Italiano Nederlands Polski Português (Portugal) Română Norsk (bokmål) Suomi Svenska Čeština Русский Українська
+More about OKX
+About us Candidate Privacy Notice Careers Contact us Terms of Service Terms of Service (Derivatives) Privacy Notice OKX EU Disclosures OEM Disclosures Conflicts of interest disclosure Whistleblower notice Law enforcement OKX app
+Products
+Buy crypto P2P trading Convert Trade Earn Trading bots All cryptocurrencies Learn TradingView X-RWA Outcome markets Stock price
+Services
+Affiliate API Historical market data CEX fee schedule Listing application P2P Merchant application
+Support
+Support center Channel verification Announcements Connect with OKX Formal complaints
+Buy crypto
+Buy USDC Buy Bitcoin Buy Ethereum Buy ADA Buy Solana Buy Litecoin Buy XRP
+Crypto calculator
+BTC to USD ETH to USD USDC to USD SOL to USD XRP to USD PI to USD
+Trade
+BTC USDC ETH USDC LTC USDC SOL USDC XRP USDC Bitcoin price Ethereum price Pi Network price Solana price XRP price Bitcoin price prediction Ethereum price prediction XRP price prediction Pi Network price prediction How to buy crypto How to buy Bitcoin How to buy Ethereum How to buy Solana How to buy Pi Network
+Trade on the go with OKX
+Register
+OKX Europe Limited, a Maltese limited liability company, is licensed by the Malta Financial Services Authority (“MFSA”) as a Crypto-Asset Service Provider under Regulation (EU) 2023/1114 on Markets in Crypto-Assets (“MiCA”), as implemented in Malta by the Markets in Crypto-Assets Act, Chapter 647. It is authorised to provide: custody and administration of crypto-assets; operation of a crypto-asset trading platform; exchange of crypto-assets for funds or other crypto-assets; execution, reception and transmission of orders; placing of crypto-assets; portfolio management; and transfer services for crypto-assets.
+OKX Europe Limited is also licensed and regulated by the MFSA as a financial institution under the Financial Institutions Act, Chapter 376, to provide services enabling cash to be placed on and withdrawn from payment accounts and to execute payment transactions by direct debit, payment card or similar device, and credit transfer, including standing orders

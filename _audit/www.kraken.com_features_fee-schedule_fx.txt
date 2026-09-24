@@ -1,0 +1,5 @@
+URL: https://www.kraken.com/features/fee-schedule/fx
+STATUS: 404
+FINAL: https://www.kraken.com/features/fee-schedule/fx
+BYTES: 8663
+

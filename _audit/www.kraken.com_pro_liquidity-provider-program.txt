@@ -1,0 +1,347 @@
+URL: https://www.kraken.com/pro/liquidity-provider-program
+STATUS: 200
+FINAL: https://www.kraken.com/pro/liquidity-provider-program
+BYTES: 1548039
+
+Kraken Liquidity Provider Program: Maker Rebates & Fee Tiers
+Individuals
+Businesses
+VIP
+Affiliates
+Markets
+About
+Search
+/
+Search
+/
+Individuals
+Businesses
+VIP
+Affiliates
+Markets
+About
+Kraken Pro
+Kraken Pro
+Unleash your trading potential
+Unleash your trading potential
+Trade crypto
+Trade crypto
+Trade crypto perps
+Trade crypto perps
+Trade on margin
+Trade on margin
+Trade stocks
+Trade stocks
+Trade xStocks
+Trade xStocks
+Trade with our money
+Trade with our money
+Borrow against crypto
+Borrow against crypto
+Check your VIP eligibility
+Check your VIP eligibility
+Access low trading fees
+Access low trading fees
+Kraken
+Kraken
+Smart investing made easy
+Smart investing made easy
+Buy crypto
+Buy crypto
+Buy stocks
+Buy stocks
+Buy xStocks
+Buy xStocks
+Buy perpetual futures
+Buy perpetual futures
+Buy bundles
+Buy bundles
+Pay with crypto
+Pay with crypto
+Convert crypto
+Convert crypto
+Grow your crypto
+Grow your crypto
+Auto-invest in crypto
+Auto-invest in crypto
+Get Kraken+ subscription
+Get Kraken+ subscription
+Krak
+Krak
+Send, spend, grow
+Send, spend, grow
+Spend cash and crypto
+Spend cash and crypto
+Grow cash and crypto
+Grow cash and crypto
+Send cash and crypto
+Send cash and crypto
+Get card and cashback
+Get card and cashback
+Advanced tools
+Kraken Desktop
+Kraken Desktop
+Supercharged trading
+Supercharged trading
+Kraken Wallet
+Kraken Wallet
+Secure your crypto
+Secure your crypto
+Kraken CLI
+Kraken CLI
+Your agent can trade now
+Your agent can trade now
+Kraken API
+Kraken API
+Trade spot and futures via API
+Trade spot and futures via API
+Kraken Institutional
+Kraken Institutional
+Secure access since 2011
+Secure access since 2011
+Exchange trading
+Exchange trading
+Spot & futures, via API
+Spot & futures, via API
+OTC
+OTC
+Multi-venue liquidity
+Multi-venue liquidity
+Staking
+Staking
+Institutional staking rewards
+Institutional staking rewards
+Prime
+Prime
+Integrated offerings
+Integrated offerings
+Custody
+Custody
+Qualified crypto custody
+Qualified crypto custody
+Kraken API
+Kraken API
+Trade spot and futures via API
+Trade spot and futures via API
+Who we serve
+Asset managers
+Asset managers
+Corporations
+Corporations
+ETP issuers
+ETP issuers
+Governments
+Governments
+Hedge funds
+Hedge funds
+Market makers & HFTs
+Market makers & HFTs
+Protocols
+Protocols
+VC firms
+VC firms
+Wealth managers
+Wealth managers
+Kraken 360 for protocols
+Kraken 360 for protocols
+Default partner for token projects
+Default partner for token projects
+Investments
+Investments
+We invest early
+We invest early
+Payward Services
+Payward Services
+Infrastructure for your platform
+Infrastructure for your platform
+xStocks
+xStocks
+Tokenized equities
+Tokenized equities
+Browse prices
+Browse prices
+New listings
+New listings
+Crypto categories
+Crypto categories
+Why Kraken
+Why Kraken
+Learn about crypto
+Learn about crypto
+Learn about security
+Learn about security
+How to buy Bitcoin
+How to buy Bitcoin
+Customer service
+Customer service
+Industry leading security
+Industry leading security
+Proof of reserves
+Proof of reserves
+Deep liquidity and volume
+Deep liquidity and volume
+Payward
+Payward
+English
+Liquidity Provider Program
+Make the market. Get rewarded.
+Maker rebates up to 0.020% across spot, futures and xStocks. Five tiers.
+Unlock program guide Live September 1. Subject to Program Terms.
+Tiers evaluated on a rolling 30-day basis.
+Your liquidity
+Your maker volume as a share of the exchange. The bigger your share, the better your rate.
+Your markets
+Spot, Futures, and xStocks. One tier sets your maker and taker rates across all three.
+Your rewards
+Zero maker fees at LP 1*. Rebates from LP 2. Credit line eligibility from LP 3. Better rates all the way to LP 5.
+Get the full fee schedule
+Plus the qualification thresholds, the exception policy, and credit line terms. Tell us how you trade and a relationship manager will come back with the tier you'd land in today.
+First name
+Last name
+Email
+Company
+Country of business
+Type of business
+Monthly volume
+How did you hear about us
+Your message
+Download the fee schedule
+How it works
+Qualify
+Four routes in: Spot maker share, Futures maker share, alts, or US derivatives. Any one of them.
+Maintain
+Measured on a rolling 30 days. Tier changes take effect at 00:00 UTC the next day.
+Room to move
+Two months' grace at launch, then two exceptions a year if you fall short.
+99.9%
+Uptime with low-latency execution
+24/7
+Dedicated coverage with relationship managers and operational support around the clock
+Global
+Coverage across key jurisdictions
+15+
+Years of operational resilience
+600+
+Supported assets across trading and custody
+2T+
+Total annual trading volume
+Features designed for institutions
+APIs
+Connect via API, WebSockets, REST and FIX 4.4 with the option for IP allowlisting.
+Real-time market data
+Access historical and real-time market data for research and backtesting. L3 and enriched data available.
+Subaccounts
+Trade and manage multiple strategies separately.
+*Taker fees, spreads, and other trading charges may apply.
+Payward Digital Solutions Ltd. is licensed to conduct digital asset business by the Bermuda Monetary Authority. Trading futures, derivatives and other instruments using leverage involves an element of risk and may not be suitable for everyone. Read Kraken Derivatives’ risk disclosure to learn more.
+xStocks are issued by Backed Assets (JE) Limited (a Jersey private limited company) and offered to eligible Kraken customers via Payward Digital Solutions Ltd. (“PDSL”), a company licensed to conduct digital asset business by the Bermuda Monetary Authority. xStocks are not, nor will they be registered with any local securities regulators. PDSL (Kraken) does not provide investment advice and/or recommendations, and, no communication, through any Kraken App or website or otherwise, should be construed as such. Individual investors should make their own decisions or seek professional independent advice if they are unsure as to the suitability / appropriateness of any investment for their circumstances or needs, including potential tax treatment. Investing in xStocks involves an element of risk. The value of an investment may go down as well as up, and past performance is not a reliable indicator of future results. Not available in the U.S. or to U.S. persons. Geo restrictions apply. Read Kraken’s xStocks Risk Disclosure at kraken.com/legal/xstocks as well as the Base Prospectus and related Final Terms for xStocks at https://assets.backed.fi/legal-documentation to learn more.
+Custody services provided by Kraken Financial , a Wyoming-chartered Special Purpose Depository Institution. Kraken Financial is not an FDIC-insured bank and deposits are neither insured by nor subject to the protections of the FDIC.
+These materials are for general information purposes only and are not investment advice or a recommendation or solicitation to buy, sell, stake or hold any cryptoasset or to engage in any specific trading strategy. Kraken does not and will not work to increase or decrease the price of any particular cryptoasset it makes available. Some crypto products and markets are regulated and others are unregulated; regardless, Kraken may or may not be required to be registered or otherwise authorized to provide specific products and services in each market, and you may not be protected by government compensation and/or regulatory protection schemes. The unpredictable nature of the cryptoasset markets can lead to loss of funds. Tax may be payable on any return and/or on any increase in the value of your cryptoassets and you should seek independent advice on your taxation position. Geographic restrictions may apply. See Legal Disclosures for each jurisdiction here .
+Create account Create account Sign in
+Create account Create account Sign in
+Features →
+Buy Crypto
+Sell Crypto
+Margin Trading
+Crypto perpetuals
+OTC Trading
+Institutions
+API Trading
+Staking Rewards
+Recurring buys
+Kraken Borrow
+Kraken Funded
+About Kraken →
+Kraken Security
+Kraken Careers
+Kraken Blog
+Kraken Developer
+Press Room
+Affiliate Program
+Asset Listings
+Kraken Status
+Support Center
+Complaints
+Crypto Prices →
+Bitcoin Price
+Ethereum Price
+Dogecoin Price
+XRP Price
+Cardano Price
+Solana Price
+Litecoin Price
+Crypto categories
+Price predictions
+Convert Crypto →
+BTC to USD
+ETH to USD
+XRP to USD
+BNB to USD
+SOL to USD
+DOGE to USD
+ADA to USD
+TRX to USD
+LTC to USD
+Buy Crypto →
+Buy Bitcoin
+Buy Ethereum
+Buy Dogecoin
+Buy XRP
+Buy Cardano
+Buy Solana
+Buy Litecoin
+Buy Stocks →
+Buy Nvidia
+Buy Tesla
+Buy Apple
+Buy Amazon
+Buy Palantir
+Buy Microsoft
+Buy Tokenized Equities →
+Buy NVDAx
+Buy TSLAx
+Buy AAPLx
+Buy SPYx
+Buy AMZNx
+Financial Education →
+What is cryptocurrency?
+What are Smart Contracts?
+What is Bitcoin?
+What is tokenization
+Best Crypto apps
+Best crypto exchanges
+Kraken vs Coinbase
+Privacy Hub
+Privacy Notice
+Cookie Settings
+Do Not Sell/Share
+Compliance Hub
+Terms of Service
+Exchange Trading Rules
+Disclosures
+Candidate Privacy Notice
+by PAYWARD
+© 2011–2026 Payward, Inc.
+Trading
+Kraken
+Kraken Pro
+NinjaTrader
+Breakout
+VIP
+API Trading
+|
+Services
+Payward Services
+xStocks
+CF Benchmarks
+Reap
+|
+Banking
+Krak
+Prime
+OTC
+Custody
+|
+Asset Management
+Payward Europe Solutions Limited, trading as Kraken, is regulated by the Central Bank of Ireland. Payward Global Solutions Limited, trading as Kraken, is regulated by the Central Bank of Ireland. Registered office: 70 Sir John Rogerson’s Quay, Dublin, D02 R296, Ireland. Click here for related policies and disclosures.
+These materials are for general information purposes only and are not investment or financial product advice or a recommendation or solicitation to buy, sell, stake or hold any cryptoasset or to engage in any specific trading strategy. Kraken does not and will not work to increase or decrease the price of any particular cryptoasset it makes available. The unpredictable nature of the crypto-asset markets can lead to loss of funds. Tax may be payable on any return and/or on any increase in the value of your cryptoassets and you should seek independent advice on your taxation position. Geographic restrictions may apply. Some crypto products and markets are unregulated. Kraken’s regulatory status for its various products and services differs per jurisdiction and you may not be protected by government compensation and/or regulatory protection schemes. See Legal Disclosures for each jurisdiction.

@@ -1,0 +1,179 @@
+URL: https://www.chaincatcher.com/en/article/2274397
+STATUS: 200
+FINAL: https://www.chaincatcher.com/en/article/2274397
+BYTES: 227268
+
+The MiCA reshuffle begins, Binance...
+Scan to download
+Home
+Flash
+Depth
+Calendar
+Data
+Find
+TOKEN2049 Week
+BTC $84,278.77 -0.15%
+ETH $2,685.30 +0.31%
+BNB $778.38 +1.58%
+XRP $1.54 +2.67%
+SOL $116.88 +1.87%
+TRX $0.3401 -0.03%
+DOGE $0.0956 +3.41%
+ADA $0.2484 +4.29%
+BCH $340.42 +1.61%
+LINK $13.28 +8.00%
+HYPE $92.39 -1.36%
+AAVE $144.77 +4.69%
+SUI $1.01 +4.97%
+XLM $0.2148 +6.25%
+ZEC $1,543.31 +1.97%
+AAPL $336.03 -0.32%
+AMZN $249.24 -0.19%
+GOOGL $341.82 +0.83%
+MSFT $496.90 -0.65%
+META $776.22 +3.89%
+NVDA $224.06 -0.52%
+TSLA $377.77 -0.53%
+SNDK $1,756.06 -3.71%
+INTC $127.32 +3.87%
+SPCX $147.91 -0.71%
+MU $1,077.65 +0.35%
+AMD $630.12 +2.44%
+BTC $84,278.77 -0.15%
+ETH $2,685.30 +0.31%
+BNB $778.38 +1.58%
+XRP $1.54 +2.67%
+SOL $116.88 +1.87%
+TRX $0.3401 -0.03%
+DOGE $0.0956 +3.41%
+ADA $0.2484 +4.29%
+BCH $340.42 +1.61%
+LINK $13.28 +8.00%
+HYPE $92.39 -1.36%
+AAVE $144.77 +4.69%
+SUI $1.01 +4.97%
+XLM $0.2148 +6.25%
+ZEC $1,543.31 +1.97%
+AAPL $336.03 -0.32%
+AMZN $249.24 -0.19%
+GOOGL $341.82 +0.83%
+MSFT $496.90 -0.65%
+META $776.22 +3.89%
+NVDA $224.06 -0.52%
+TSLA $377.77 -0.53%
+SNDK $1,756.06 -3.71%
+INTC $127.32 +3.87%
+SPCX $147.91 -0.71%
+MU $1,077.65 +0.35%
+AMD $630.12 +2.44%
+Home
+Article
+Flash
+Specials
+Columns
+Knowledge Base
+Calendar
+Markets
+Charts
+Activity
+Tools
+Home
+Article
+The MiCA reshuffle begins, Binance temporarily bids farewell to the EU
+The MiCA reshuffle begins, Binance temporarily bids farewell to the EU
+Core Viewpoint
+Summary:
+What Binance leaves behind is not scattered retail investors, but a whole batch of high-value users who are forced to liquidate and have almost nowhere to go.
+Chloe
+2026-07-01 10:30:03
+What Binance leaves behind is not scattered retail investors, but a whole batch of high-value users who are forced to liquidate and have almost nowhere to go.
+Author: Chloe, ChainCatcher
+On July 1, 2026, the transition period of the EU's Markets in Crypto-Assets Regulation (MiCA) officially ended. Institutions that obtained licenses received the "EU passport" to operate throughout the single market, while those that did not must exit. Binance, having failed to obtain a license, notified users on June 26 that it would cease services in the EU market.
+Binance stated officially that "it is not leaving Europe," and that assets are secure and can be accessed at any time, but it is reapplying in France. Binance's co-CEO Richard Teng also commented on the MiCA transition period, assuring that user assets are safe and affected users can continue to use the options previously communicated, including withdrawal functions. Teng emphasized that the team's focus during the transition period is to provide clear guidance, continuity of service, and confidence to users.
+However, in practice, this means a shutdown: starting July 1, new registrations, deposits, spot orders, and financial products such as Earn, staking, and Launchpool will be halted for EU residents, leaving only withdrawals.
+Binance suffered a significant defeat in front of MiCA; how will the remaining competitors divide Binance's existing EU users? Looking back at Binance's compliance journey over the past three years: as the benefits of regulatory arbitrage gradually diminish, what has this giant, which grew in a regulatory vacuum, managed to complete, and what remains unaddressed?
+The Battle for Binance Users
+In the past, exchanges competed for users mostly by quietly adjusting fees and discreetly listing new coins. This time is different; after Binance's defeat, competitors launched subsidy wars almost the same day: Coinbase CEO Armstrong offered a 5% transfer bonus, while OKX's Xu Mingxing raised it to 8%, both highlighting "we have MiCA licenses" as their selling point. Even second-tier players jumped in, with SwissBorg offering a 3% deposit bonus, limited to funds transferred from non-MiCA platforms.
+In response to this battle for users, CZ posted on X, stating that the EU has "cut off the best liquidity in the world," hoping for a turnaround in the future.
+The aggressive user acquisition by competitors is due to the high elimination rate of MiCA: over 3,000 crypto institutions operating in Europe, by July 1, only about 210 had obtained full authorization, with a pass rate of approximately 7%. Licenses are highly concentrated in a few jurisdictions, with Germany leading with 56 licenses, followed by the Netherlands with 26, France with 21, and Malta, Cyprus, and Ireland each having around ten.
+OKX's European CEO Erald Ghoos estimates that about 80% of exchanges will not survive MiCA, and as of a few days ago, about 60% of European users remain on non-MiCA platforms. In other words, Binance's exit leaves not just scattered retail investors but a whole batch of high-value users forced to move, yet with almost nowhere to go.
+From market share data, Binance's loss of users actually began even before MiCA. According to Coingecko's 2025 annual report, it still held a 39.2% share of the trading volume among the top ten centralized exchanges, driving a total trading volume of $7.3 trillion for the year, but with a year-on-year growth rate of -0.5%. By the end of 2025, this trend became more pronounced; in December, Binance's spot market share was still 38.3%, but trading volume plummeted 40.6% from November's $609 billion to $361.8 billion.
+By early 2026, this trend fluctuated even more: according to CoinDesk data, Binance's market share fell to 22.0% in February, the lowest since October 2020, while OKX's derivatives market share climbed to 18.3%. However, according to CoinMarketCap data, by April 2026, Binance's spot and derivatives market share showed some recovery, with derivatives rising to 36.25%.
+Faced with high market volatility, the EU's decision effectively pushed existing chips directly onto competitors' tables. The real problem is that once users complete identity verification and deposits elsewhere, even if Binance offers better features and lower fees in the future, they may not return.
+Review One: The Largest Fine in History
+To understand why Binance encountered obstacles in the EU, we must return to its first critical juncture.
+On November 21, 2023, Binance reached the largest corporate anti-money laundering settlement in history with the United States, totaling over $4.3 billion. The Financial Crimes Enforcement Network (FinCEN) imposed a civil fine of $3.4 billion, the highest in the agency's history, accompanied by a five-year monitoring period. The Office of Foreign Assets Control (OFAC) imposed an additional fine of approximately $968 million. Founder Changpeng Zhao pled guilty, paid a $50 million fine, and stepped down, while a $150 million fine owed to the Commodity Futures Trading Commission (CFTC) was reduced to $100 million. Former compliance officer Samuel Lim was also fined $1.5 million.
+The severity of the penalties stemmed from the core issue not being the absence of a compliance department, but rather that it existed yet had never submitted any suspicious activity reports (SARs) to FinCEN. Over 100,000 suspicious transactions went unreported, involving terrorist organizations, ransomware, child sexual exploitation content, and various scams, with KYC data only being collected starting in May 2022. Regarding sanctions, OFAC identified 1,667,153 transactions suspected of violating sanctions between August 2017 and October 2022. During this period, Binance collected approximately $1.35 billion in trading fees from U.S. users alone.
+Review Two: A Costly Shift
+However, starting at the end of 2023, Binance did initiate a costly compliance shift.
+The first step was to change the CEO; CZ stepped down, and Richard Teng, who has over twenty years of financial and regulatory experience and previously worked at the Abu Dhabi Global Market and the Monetary Authority of Singapore, took over as the new CEO. Subsequently, Binance expanded its full-time compliance team by 34%, aiming to reach 645 people by the end of 2024. Including contract personnel, compliance-related staff has exceeded 1,000. Compliance expenditures increased by 36% starting in 2023, with hires from traditional finance and government agencies, including Todd McElduff from PayPal and Morgan Stanley, and Tigran Gambaryan, a former IRS financial crime expert.
+By early 2026, Binance had over 580 dedicated compliance personnel, plus 970 compliance-related staff dispersed across customer service, technology, and product departments, totaling over 1,500 people; in 2025 alone, Binance responded to over 71,000 law enforcement requests, assisting in the seizure of over $130 million in illegal funds.
+The second step was to change the battleground. After being heavily fined by the U.S., Binance shifted its expansion focus to regions with clear regulations, adopting a "license first, operate later" strategy. It announced plans to expand its licensed jurisdictions to over 20 by 2025, having already obtained licenses in Australia, India, Indonesia, Japan, New Zealand, and Thailand, and added another license by acquiring a stake in South Korea's Gopax. Its subsidiary became the world's first exchange to obtain a full VASP license from Dubai's VARA as early as 2024. Binance established regional headquarters in Dubai, Paris, and Singapore, gradually dismantling its previously ambiguous "global without entity" structure into legally regulated entities.
+Review Three: Politically "Untangled" in the U.S., but Faced a Hard Wall in the EU
+If we only look at the U.S. line, Binance's compliance efforts have successfully untangled the situation. The SEC withdrew its civil lawsuit against Binance in May; on October 23, 2025, Trump directly pardoned CZ, who had actually completed a four-month sentence and was released in September 2024. However, this pardon came with controversy over interests: Binance managed the Trump family's crypto project World Liberty Financial, which was a key driver of its stablecoin USD1's growth, and earlier this year accepted a $2 billion investment from the UAE through USD1, although Binance and CZ denied any business relationship.
+Internal data reviewed by the Financial Times showed that after the settlement, Binance still had $144 million in suspicious transactions, including one account belonging to a Venezuelan resident that processed $93 million between 2021 and 2025, despite system alerts, the account continued to operate normally. For regulators, such data would be a primary basis for their decision-making. Regulatory agencies in Greece, Ireland, and Latvia have all expressed concerns about Binance's past legal issues and corporate structure. However, Binance emphasizes that it has been "constructively cooperating with regulators for 18 months," and it has obtained the passes offered by Asia and the Middle East one by one, yet the EU remains a barrier where 18 months of goodwill, a team of 1,500 people, and billions of dollars in investment still did not yield a license.
+The Real Change is Not Just a License
+So how should we view Binance's recent defeat? Its compliance investments over the past three years are real, but the historical burdens that cannot be washed away are also undeniable. What is worth tracking is not whether it can regain the license in France after the deadline, but whether this company can deliver product strength, governance capability, and a foundation of trust commensurate with its scale after the benefits of regulatory arbitrage have disappeared.
+According to CryptoQuant data, Binance still dominates the cryptocurrency spot trading volume with a 32% market share in 2026. Whether the updates to MiCA (Markets in Crypto-Assets Regulation) will shake its leading position remains to be seen.
+MiCA reshuffles the European crypto market landscape; it is not just an individual disaster for a particular exchange but an engine redistributing funds: users, fees, and attention are flowing to those players who can quickly align rules and products. For Binance, the door to the EU may eventually reopen, but by the time it returns, the funds and users in the market will no longer resemble what they were when it left.
+Join ChainCatcher Official
+Telegram Feed: @chaincatcher X (Twitter): @ChainCatcher_
+Risk warning
+ChainCatcher reminds readers to view blockchain rationally, enhance risk awareness, and be cautious of various virtual token issuances and speculations. All content on this site is solely market information or related party opinions, and does not constitute any form of investment advice. If you find sensitive information in the content, please click “Report” , and we will handle it promptly.
+Topic or theme
+Exchange Industry Trends and Research
+Tracking the development status and trends of centralized exchanges and the industry.
+Related tags
+MiCA
+Binance
+European Union
+license
+User
+Compliance
+exchange
+cryptocurrency
+Risk warning
+Related reading
+Daily Observation of Cryptocurrency Policies: The European Central Bank Challenges MiCA Reserve Rules, Calls for the Elimination of the 60% Bank Deposit Red Line and a Complete Ban on Earning Interest from Stablecoins
+2026-09-23
+Not investment, but collecting monthly rent: Binance's $100 million stake in another account of Circle
+2026-09-22
+Binance's Altcoin Elimination Tournament: The Survival Rules Behind 294 Delists
+2026-09-21
+Chloe
+X：@az0078778
+Subscribe
+No issuing coins, only charging tolls: Visa's stablecoin strategy is tougher than that of issuers
+07-30
+The largest foreign company IPO in history falls below the issue price, triggering a Hyperliquid on-chain liquidation storm
+07-28
+Related tags
+MiCA
+Binance
+European Union
+license
+User
+Compliance
+exchange
+cryptocurrency
+Popular articles
+more
+GSR: Why is it difficult for low circulation, high FDV tokens to escape decline?
+09-20
+Morgan Stanley: Traditional server revenue increased by 87%, storage is still in the early cycle
+09-22
+Binance's Altcoin Elimination Tournament: The Survival Rules Behind 294 Delists
+09-21
+TOC
+Copyright © 2023
+About Us
+Media Kit
+Apply column
+Partnerships
+Privacy Policy
+Risk Warning
+Hiring
+Qiong ICP No. 2021009392
+Qiong ICP No. 2021009392
+ChainCatcher Building the Web3 world with innovations.
+Launch App
