@@ -91,7 +91,7 @@ SERVICES = {
         "host": "mc2",
         "ssh": ["sergio@127.0.0.1", "-p", "2222"],  # tunnel inverso
         "units": ["denaro-node-mc2", "denaro-feeder-mc2", "denaro-health-mc2", "denaro-dashboard-mc2",
-                  "zabbix-agent", "zabbix-tunnel-reverse"],
+                  "cloudflared-home", "zabbix-agent", "zabbix-tunnel-reverse"],
     },
 }
 
