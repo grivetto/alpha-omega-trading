@@ -332,6 +332,9 @@ def check_trading(e: Esito, dir_health: Optional[str] = None,
                     h = json.load(fh)
             except Exception:
                 continue
+            # salta file di aggregazione (lista, non dict per bot)
+            if not isinstance(h, dict):
+                continue
             eta = ora - os.path.getmtime(p)
             err = str(h.get("error") or "")
             blocked = h.get("blocked")

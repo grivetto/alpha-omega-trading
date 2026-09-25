@@ -1,0 +1,32 @@
+# Money — Banco di prova a secco (configurazione nodo)
+# Copiare in config/node_banco.yaml e adattare
+
+data_dir: node_data_banco
+
+supervisor:
+  ram_critical_pct: 0.85
+  ram_throttle_pct: 0.70
+  cpu_critical_pct: 0.90
+  tick_max_factor: 5.0
+
+hub:
+  ws_enabled: false
+  poll_interval: 60
+  price_ttl: 120
+
+exchange_rest:
+  name: okx
+  eea: true
+
+# Un solo "bot" per il banco: legge, calcola, non invia
+bots:
+  - symbol: BTC/EUR
+    mode: okx
+    strategy: banco_secco
+    capital: 26.0030           # capitale reale sul conto main (bonifico 26 EUR)
+    frazione_per_posizione: 0.25
+    min_notional: 1.0
+    tick_interval: 300        # 5 min tra esecuzioni banco
+    env_prefix: ''
+    health_path: /home/sergio/denaro/health/banco_secco.json
+    enabled: true
