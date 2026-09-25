@@ -90,16 +90,27 @@
 3. **ไม่มีกลยุทธ์ใดเข้าสู่ระบบผลิตได้โดยไม่ผ่านประตู**: expectancy สุทธิเป็นบวก
    นอกตัวอย่าง (out-of-sample) ที่ต้นทุน*จริง*ของบัญชีที่มันรันอยู่
 
+<p align="center">
+  <img src="assets/architettura-flotta.svg" alt="สถาปัตยกรรมกองเรือ: สามโหนด หนึ่งบัญชีย่อย OKX ต่อโหนด และผู้ควบคุมความเสี่ยงพอร์ตหนึ่งตัว" width="100%"/>
+</p>
+
 ### เทคโนโลยีหลัก
 
 | องค์ประกอบ | เทคโนโลยี | หน้าที่ |
 | :--- | :--- | :--- |
+| **ภาษา / รันไทม์** | Python 3.12+, AsyncIO | event loop ของโหนด, นโยบาย, supervisor |
+| **การเข้าถึงตัวแลกเปลี่ยน** | CCXT 4.x — OKX EEA REST **และ** WebSocket (`ccxt.pro`), hostname **`eea.okx.com`** | ข้อมูลตลาดและการส่งคำสั่ง; คีย์ EU ใช้ได้*เฉพาะ*กับ endpoint EEA เท่านั้น |
 | **แกนรันคำสั่ง** | Python, AsyncIO, CCXT | นโยบาย (trend / adaptive grid / mean-reversion), วงจรชีวิตของคำสั่ง, การบันทึก fill |
 | **แกนความเสี่ยง** | โมดูล domain ล้วน ไม่มี I/O | ความเสี่ยงต่อการเทรด, เซอร์กิตเบรกเกอร์, เพดานความเสี่ยงต่อบัญชี, การจำแนกสถานะเงินทุน |
 | **Backtest** | เอ็นจินของตัวเอง คำนึงถึงค่าธรรมเนียมและสลิปเพจ | โค้ดตัดสินใจชุดเดียวกับตอนเทรดจริง: ใช้ rig เดียวกันทั้งสองแบบ |
-| **ปฏิบัติการกองเรือ** | systemd, SSH, Tailscale, Cloudflare Tunnel | ไม่มีพอร์ตขาเข้าที่เปิดเผย; เทเลเมตรีอยู่บน loopback เท่านั้น |
-| **เทเลเมตรี** | Zabbix, Prometheus, Grafana, แดชบอร์ด | เส้น equity, สุขภาพของ tick, badge ความเก่าของข้อมูล |
+| **ปฏิบัติการกองเรือ** | systemd (system + user units, `linger`), SSH, Tailscale, Cloudflare Tunnel | ไม่มีพอร์ตขาเข้าที่เปิดเผย; เทเลเมตรีอยู่บน loopback เท่านั้น |
+| **เทเลเมตรี** | Zabbix 7.0 LTS (หนึ่ง agent ต่อโฮสต์), Prometheus, Grafana, health endpoints | เส้น equity, สุขภาพของ tick, badge ความเก่าของข้อมูล |
 | **ความสมบูรณ์ของระบบ** | `tools/fleet_integrity.py` | ตรวจ miner / crontab / sudoers / พาธของ unit / พอร์ต พร้อม exit code |
+| **การแพ็กเกจ** | Docker + `docker-compose`, `venv`, `requirements.txt` | สภาพแวดล้อมที่ทำซ้ำได้บนสามโฮสต์ |
+| **คุณภาพ** | pytest (**382 passed, 3 skipped**), ruff | ชุดทดสอบที่รันได้คือเงื่อนไขตั้งต้นของการยืนยันสิ่งใดก็ตาม |
+| **CI** | GitHub Actions | lint และ tests เมื่อ push |
+| **การตั้งค่าและความลับ** | YAML node configs, หนึ่ง `.env_<node>` ต่อโหนด (mode 600, gitignored) | หนึ่งบัญชีต่อโหนด แยกจากกันด้วย `env_prefix` |
+| **การควบคุมเวอร์ชัน** | git, หนึ่งผู้เขียนต่อหนึ่งพาธ | ที่มา: ใครแก้อะไร และเมื่อไหร่ |
 
 ---
 

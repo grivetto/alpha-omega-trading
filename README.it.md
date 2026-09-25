@@ -89,16 +89,27 @@ osservati in produzione (vedi § Lezioni).
 3. **Nessuna strategia entra in produzione senza passare il gate**: expectancy netta positiva
    out-of-sample, ai costi *reali* del conto su cui gira.
 
+<p align="center">
+  <img src="assets/architettura-flotta.svg" alt="Architettura della flotta: tre nodi, un sub-account OKX ciascuno, una regia del rischio di portafoglio" width="100%"/>
+</p>
+
 ### Tecnologie principali
 
 | Componente | Tecnologia | Funzione |
 | :--- | :--- | :--- |
+| **Linguaggio / runtime** | Python 3.12+, AsyncIO | event loop del nodo, policy, supervisor |
+| **Accesso all'exchange** | CCXT 4.x — OKX EEA REST **e** WebSocket (`ccxt.pro`), hostname **`eea.okx.com`** | dati di mercato e routing degli ordini; le chiavi EU funzionano *solo* contro l'endpoint EEA |
 | **Core di esecuzione** | Python, AsyncIO, CCXT | Policy (trend / grid adattiva / mean-reversion), ciclo di vita degli ordini, contabilizzazione dei fill |
 | **Core di rischio** | Moduli di dominio puri, nessun I/O | Rischio per operazione, circuit breaker, limite di esposizione del conto, classificazione del finanziamento |
 | **Backtest** | Motore proprio, consapevole di commissioni e slippage | Lo stesso codice decisionale del live: un solo rig per entrambi |
-| **Operazioni di flotta** | systemd, SSH, Tailscale, Cloudflare Tunnel | Nessuna esposizione in ingresso; telemetria solo su loopback |
-| **Telemetria** | Zabbix, Prometheus, Grafana, dashboard | Curve di equity, salute dei tick, badge di obsolescenza |
+| **Operazioni di flotta** | systemd (unit di sistema + utente, `linger`), SSH, Tailscale, Cloudflare Tunnel | Nessuna esposizione in ingresso; telemetria solo su loopback |
+| **Telemetria** | Zabbix 7.0 LTS (un agent per host), Prometheus, Grafana, endpoint di health | Curve di equity, salute dei tick, badge di obsolescenza |
 | **Integrità** | `tools/fleet_integrity.py` | Controlli su miner / crontab / sudoers / path delle unit / porte, con exit code |
+| **Packaging** | Docker + `docker-compose`, `venv`, `requirements.txt` | Ambienti riproducibili su tre host |
+| **Qualità** | pytest (**382 passed, 3 skipped**), ruff | Una suite eseguibile è la precondizione per verificare qualsiasi cosa |
+| **CI** | GitHub Actions | lint e test a ogni push |
+| **Configurazione e segreti** | Config di nodo YAML, un `.env_<node>` per nodo (mode 600, in gitignore) | Un conto per nodo, isolato tramite `env_prefix` |
+| **Controllo di versione** | git, un solo writer per path | Provenienza: chi ha cambiato cosa, e quando |
 
 ---
 

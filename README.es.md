@@ -90,16 +90,27 @@ defectos que se observaron en producción (ver § Lecciones).
 3. **Ninguna estrategia entra en producción sin superar la puerta**: expectativa neta positiva fuera
    de muestra, a los costes *reales* de la cuenta en la que se ejecuta.
 
+<p align="center">
+  <img src="assets/architettura-flotta.svg" alt="Arquitectura de la flota: tres nodos, una sub-cuenta de OKX cada uno, un gobernador de riesgo de cartera" width="100%"/>
+</p>
+
 ### Tecnologías principales
 
 | Componente | Tecnología | Función |
 | :--- | :--- | :--- |
-| **Núcleo de ejecución** | Python, AsyncIO, CCXT | Políticas (trend / grid adaptativo / reversión a la media), ciclo de vida de órdenes, contabilidad de ejecuciones |
+| **Lenguaje / runtime** | Python 3.12+, AsyncIO | bucle de eventos del nodo, políticas, supervisor |
+| **Acceso al exchange** | CCXT 4.x — OKX EEA REST **y** WebSocket (`ccxt.pro`), hostname **`eea.okx.com`** | datos de mercado y enrutamiento de órdenes; las claves de la UE funcionan *solo* contra el endpoint EEA |
+| **Núcleo de ejecución** | Python, AsyncIO, CCXT | políticas (trend / grid adaptativo / reversión a la media), ciclo de vida de órdenes, contabilidad de ejecuciones |
 | **Núcleo de riesgo** | Módulos de dominio puros, sin I/O | Riesgo por operación, disyuntor, límite de exposición de la cuenta, clasificación de financiación |
 | **Backtest** | Motor propio, consciente de comisiones y deslizamiento | El mismo código de decisión que en vivo: un solo banco de pruebas para ambos |
-| **Operación de la flota** | systemd, SSH, Tailscale, Cloudflare Tunnel | Sin exposición entrante; telemetría solo en loopback |
-| **Telemetría** | Zabbix, Prometheus, Grafana, paneles | Curvas de equity, salud de los ticks, indicadores de obsolescencia |
+| **Operación de la flota** | systemd (unidades de sistema + de usuario, `linger`), SSH, Tailscale, Cloudflare Tunnel | Sin exposición entrante; telemetría solo en loopback |
+| **Telemetría** | Zabbix 7.0 LTS (un agente por host), Prometheus, Grafana, endpoints de salud | Curvas de equity, salud de los ticks, indicadores de obsolescencia |
 | **Integridad** | `tools/fleet_integrity.py` | Comprobaciones de miner / crontab / sudoers / rutas de unidades / puertos, con código de salida |
+| **Empaquetado** | Docker + `docker-compose`, `venv`, `requirements.txt` | Entornos reproducibles en los tres hosts |
+| **Calidad** | pytest (**382 passed, 3 skipped**), ruff | Una suite que se puede ejecutar es la condición previa para verificar cualquier cosa |
+| **CI** | GitHub Actions | lint y pruebas en cada push |
+| **Configuración y secretos** | Configuraciones de nodo en YAML, un `.env_<node>` por nodo (modo 600, en gitignore) | Una cuenta por nodo, aislada mediante `env_prefix` |
+| **Control de versiones** | git, un solo escritor por ruta | Procedencia: quién cambió qué, y cuándo |
 
 ---
 

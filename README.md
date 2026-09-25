@@ -89,16 +89,27 @@ were observed in production (see § Lessons).
 3. **No strategy enters production without passing the gate**: positive net expectancy
    out-of-sample, at the *real* costs of the account it runs on.
 
+<p align="center">
+  <img src="assets/architettura-flotta.svg" alt="Fleet architecture: three nodes, one OKX sub-account each, one portfolio risk governor" width="100%"/>
+</p>
+
 ### Core technologies
 
 | Component | Tech | Function |
 | :--- | :--- | :--- |
-| **Execution core** | Python, AsyncIO, CCXT | Policies (trend / adaptive grid / mean-reversion), order lifecycle, fill accounting |
+| **Language / runtime** | Python 3.12+, AsyncIO | node event loop, policies, supervisor |
+| **Exchange access** | CCXT 4.x — OKX EEA REST **and** WebSocket (`ccxt.pro`), hostname **`eea.okx.com`** | market data and order routing; EU keys work *only* against the EEA endpoint |
+| **Execution core** | Python, AsyncIO, CCXT | policies (trend / adaptive grid / mean-reversion), order lifecycle, fill accounting |
 | **Risk core** | Pure domain modules, no I/O | Per-trade risk, circuit breaker, account exposure cap, funding classification |
 | **Backtest** | Own engine, fee- and slippage-aware | The same decision code as live: one rig for both |
-| **Fleet ops** | systemd, SSH, Tailscale, Cloudflare Tunnel | No inbound exposure; telemetry only on loopback |
-| **Telemetry** | Zabbix, Prometheus, Grafana, dashboards | Equity curves, tick health, staleness badges |
+| **Fleet ops** | systemd (system + user units, `linger`), SSH, Tailscale, Cloudflare Tunnel | No inbound exposure; telemetry only on loopback |
+| **Telemetry** | Zabbix 7.0 LTS (one agent per host), Prometheus, Grafana, health endpoints | Equity curves, tick health, staleness badges |
 | **Integrity** | `tools/fleet_integrity.py` | Miner / crontab / sudoers / unit-path / port checks, with exit code |
+| **Packaging** | Docker + `docker-compose`, `venv`, `requirements.txt` | Reproducible environments across three hosts |
+| **Quality** | pytest (**382 passed, 3 skipped**), ruff | A suite that can be executed is the precondition for verifying anything |
+| **CI** | GitHub Actions | lint and tests on push |
+| **Config & secrets** | YAML node configs, one `.env_<node>` per node (mode 600, gitignored) | One account per node, isolated by `env_prefix` |
+| **Version control** | git, one writer per path | Provenance: who changed what, and when |
 
 ---
 

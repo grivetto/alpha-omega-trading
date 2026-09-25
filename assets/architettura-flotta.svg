@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 720" width="1120" height="720" role="img" aria-label="Alpha-Omega Trading — fleet architecture">
+  <rect width="1120" height="720" fill="#f8fafc"/>
+  <defs>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"/>
+    </marker>
+  </defs>
+
+  <text x="40" y="46" font-family="Helvetica,Arial,sans-serif" font-size="25" font-weight="bold" fill="#0f172a">Alpha-Omega Trading — topologia della flotta</text>
+  <text x="40" y="72" font-family="Helvetica,Arial,sans-serif" font-size="14" fill="#475569">Un nodo = una famiglia di strategie = un sub-account OKX dedicato. Il rischio e' di portafoglio, non di bot.</text>
+
+  <!-- exchange -->
+  <rect x="40" y="96" width="1040" height="86" rx="12" fill="#0f172a"/>
+  <text x="60" y="126" font-family="Helvetica,Arial,sans-serif" font-size="16" font-weight="bold" fill="#f8fafc">OKX EEA — eea.okx.com</text>
+  <text x="60" y="148" font-family="Helvetica,Arial,sans-serif" font-size="12" fill="#cbd5e1">Le chiavi EU funzionano SOLO su questo endpoint: su okx.com rispondono tutte 50119 "API key doesn't exist", che sembra una chiave morta.</text>
+  <g font-family="Helvetica,Arial,sans-serif" font-size="13">
+    <rect x="60" y="158" width="320" height="16" rx="4" fill="#1e293b"/>
+    <text x="70" y="171" fill="#e2e8f0">nuvolasub1</text>
+    <rect x="400" y="158" width="320" height="16" rx="4" fill="#1e293b"/>
+    <text x="410" y="171" fill="#e2e8f0">mc2sub1</text>
+    <rect x="740" y="158" width="320" height="16" rx="4" fill="#1e293b"/>
+    <text x="750" y="171" fill="#e2e8f0">marcosub1 · marcosol1 · marcodoge1</text>
+  </g>
+
+  <g stroke="#64748b" stroke-width="2" marker-end="url(#ar)">
+    <line x1="220" y1="182" x2="220" y2="228"/>
+    <line x1="560" y1="182" x2="560" y2="228"/>
+    <line x1="900" y1="182" x2="900" y2="228"/>
+  </g>
+
+  <!-- nodi -->
+  <g font-family="Helvetica,Arial,sans-serif">
+    <rect x="40" y="232" width="320" height="188" rx="12" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+    <text x="60" y="260" font-size="16" font-weight="bold" fill="#0f172a">NODO A — nuvola</text>
+    <text x="60" y="282" font-size="12" fill="#475569">87.106.3.15 · IONOS · systemd system unit</text>
+    <text x="60" y="306" font-size="13" font-weight="bold" fill="#1d4ed8">trend a orizzonte lungo (1d)</text>
+    <text x="60" y="330" font-size="12" fill="#475569">bot: LINK AVAX DOT UNI SUI MINA</text>
+    <text x="60" y="350" font-size="12" fill="#475569">health :8911 · trade service</text>
+    <text x="60" y="370" font-size="12" fill="#475569">zabbix agent: denaro.nuvola_trade.active</text>
+    <text x="60" y="400" font-size="12" font-style="italic" fill="#b45309">stato: NON FINANZIATO (dust)</text>
+
+    <rect x="400" y="232" width="320" height="188" rx="12" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+    <text x="420" y="260" font-size="16" font-weight="bold" fill="#0f172a">NODO B — mc2</text>
+    <text x="420" y="282" font-size="12" fill="#475569">192.168.1.99 · RAM 15 GB · user unit + linger</text>
+    <text x="420" y="306" font-size="13" font-weight="bold" fill="#1d4ed8">griglia adattiva (1h)</text>
+    <text x="420" y="330" font-size="12" fill="#475569">bot: BTC ETH SOL XRP DOGE TRX CRV</text>
+    <text x="420" y="350" font-size="12" fill="#475569">health :8911 · aggregator :8912 · dashboard :8913</text>
+    <text x="420" y="370" font-size="12" fill="#475569">feeder · exporter :9100</text>
+    <text x="420" y="400" font-size="12" font-style="italic" fill="#b45309">stato: NON FINANZIATO (dust)</text>
+
+    <rect x="760" y="232" width="320" height="188" rx="12" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+    <text x="780" y="260" font-size="16" font-weight="bold" fill="#0f172a">NODO C — MARCODG1</text>
+    <text x="780" y="282" font-size="12" fill="#475569">87.106.222.123 · IONOS · systemd system unit</text>
+    <text x="780" y="306" font-size="13" font-weight="bold" fill="#1d4ed8">momento a 4 ore</text>
+    <text x="780" y="330" font-size="12" fill="#475569">bot: ADA ARB XLM ALGO</text>
+    <text x="780" y="350" font-size="12" fill="#475569">health :8911 · aggregator :8912 · dashboard :8913</text>
+    <text x="780" y="370" font-size="12" fill="#475569">exporter :9100 · landing :8914</text>
+    <text x="780" y="400" font-size="12" font-style="italic" fill="#b45309">stato: NON FINANZIATO (dust)</text>
+  </g>
+
+  <!-- governor -->
+  <g stroke="#64748b" stroke-width="2" marker-end="url(#ar)">
+    <line x1="220" y1="420" x2="220" y2="466"/>
+    <line x1="560" y1="420" x2="560" y2="466"/>
+    <line x1="900" y1="420" x2="900" y2="466"/>
+  </g>
+  <rect x="40" y="470" width="1040" height="66" rx="12" fill="#1e293b"/>
+  <text x="60" y="498" font-family="Helvetica,Arial,sans-serif" font-size="15" font-weight="bold" fill="#f8fafc">GOVERNATORE DEL RISCHIO DI PORTAFOGLIO</text>
+  <text x="60" y="520" font-family="Helvetica,Arial,sans-serif" font-size="12" fill="#cbd5e1">un solo budget: 2% del capitale TOTALE · stop giornaliero -3% · drawdown massimo -10% · cap di esposizione per conto (somma dei bot, non per bot) · idempotenza clOrdId su ogni invio</text>
+
+  <!-- telemetria e integrita -->
+  <g font-family="Helvetica,Arial,sans-serif">
+    <rect x="40" y="560" width="510" height="126" rx="12" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+    <text x="60" y="588" font-size="15" font-weight="bold" fill="#0f172a">Telemetria e osservabilita'</text>
+    <text x="60" y="612" font-size="12" fill="#475569">Zabbix 7.0 LTS: un agent per host, item denaro.* (attivo, equity, bots, age, stato)</text>
+    <text x="60" y="632" font-size="12" fill="#475569">Prometheus + Grafana su MARCODG1 · exporter :9100 · dashboard :8913</text>
+    <text x="60" y="652" font-size="12" fill="#475569">health endpoint :8911 per nodo · landing :8914</text>
+    <text x="60" y="674" font-size="12" fill="#b91c1c">un file vecchio non e' un bot che gira: la staleness si controlla, non si presume</text>
+
+    <rect x="570" y="560" width="510" height="126" rx="12" fill="#ffffff" stroke="#94a3b8" stroke-width="1.5"/>
+    <text x="590" y="588" font-size="15" font-weight="bold" fill="#0f172a">Accesso e integrita'</text>
+    <text x="590" y="612" font-size="12" fill="#475569">SSH (chiavi) · Tailscale · Cloudflare Tunnel: nessuna porta in ingresso</text>
+    <text x="590" y="632" font-size="12" fill="#475569">tools/fleet_integrity.py: miner, crontab, sudoers, path delle unit, porte esposte</text>
+    <text x="590" y="652" font-size="12" fill="#475569">exit code 1 su allarme — sul campo: 14 allarmi su MARCODG1, 7 su nuvola</text>
+    <text x="590" y="674" font-size="12" fill="#b91c1c">systemd e cron versionati in deploy/, PROJECT_ROOT parametrico: il path drift ha causato 10 guasti su 12</text>
+  </g>
+</svg>
