@@ -84,6 +84,12 @@ PORTE_DA_SEGNALARE = {
 #: (un test non deve leggere la health della macchina che lo esegue).
 DIR_HEALTH_NOTE = ("/home/sergio/denaro/health", "/home/marco/denaro/health")
 
+#: Crontab di sistema e configurazione dell'agent Zabbix: costanti, cosi' i test
+#: possono puntarle a una directory temporanea senza permessi di root.
+DIR_CRONTAB = "/var/spool/cron/crontabs"
+CONF_ZABBIX = "/etc/zabbix/zabbix_agentd.conf"
+DIR_ZABBIX_D = "/etc/zabbix/zabbix_agentd.d"
+
 #: File .json nella health dir che NON sono heartbeat di un servizio (il check
 #: "fossile" non si applica): `infra_last_good.json` e' la cache ON-DEMAND del
 #: dashboard — la scrive serve_dashboard quando qualcuno chiede la pagina, e
@@ -178,7 +184,7 @@ def check_miner(e: Esito) -> None:
 
 def check_crontab(e: Esito) -> None:
     """Cron che rilanciano binari da directory temporanee o con `cron_clean`."""
-    base = "/var/spool/cron/crontabs"
+    base = DIR_CRONTAB
     if not os.path.isdir(base):
         return
     try:
@@ -203,15 +209,26 @@ def check_crontab(e: Esito) -> None:
                               "crontab installato da /dev/shm (artefatto di manomissione, "
                               "visto il 19/09 su mc2)")
                 continue
-            # Si giudica l'ESEGUIBILE, non la riga intera: `>> /tmp/log` e' solo una
+            # Si giudicano i PERCORSI, non la riga intera: `>> /tmp/log` e' solo una
             # redirezione e non deve diventare un allarme (falso positivo osservato il
-            # 25/09 su una riga di log legittima).
+            # 25/09 su una riga di log legittima). E si escludono i FILE DI LOCK:
+            # `flock -n /tmp/x.lock ...` e' la guardia di mutua esclusione dei cron
+            # legittimi (falso positivo osservato il 27/09 sui cron snapshot/quality).
             eseguibile = riga.split(">")[0]
+            trovato = None
             for d in DIR_TEMP:
-                if d + "/" in eseguibile:
-                    e.allarme("crontab", f"{u}: {riga.strip()[:120]}",
-                              f"cron che esegue un binario da {d}: nessun servizio "
-                              "legittimo vive nelle directory temporanee")
+                for token in eseguibile.split():
+                    if token.startswith(d + "/") and not token.endswith(
+                            (".lock", ".pid", ".sock")):
+                        trovato = (d, token)
+                        break
+                if trovato:
+                    break
+            if trovato:
+                d, _percorso = trovato
+                e.allarme("crontab", f"{u}: {riga.strip()[:120]}",
+                          f"cron che esegue un binario da {d}: nessun servizio "
+                          "legittimo vive nelle directory temporanee")
             if NOMI_PAYLOAD.search(eseguibile):
                 e.allarme("crontab", f"{u}: {riga.strip()[:120]}",
                           "cron con nome di payload")
@@ -219,13 +236,51 @@ def check_crontab(e: Esito) -> None:
 
 # --- check: porte esposte -------------------------------------------------------
 
+def _system_runs_attivi(percorsi=None) -> bool:
+    """L'agent Zabbix puo' eseguire comandi remoti (AllowKey=system.run[*])?
+
+    Dal 25/09/2026 su mc2 e MARCODG1 la regola e' commentata (vettore del miner):
+    il default di Zabbix >= 5, senza una AllowKey esplicita, e' system.run NEGATO.
+    Si legge comunque la configurazione, perche' il giorno che qualcuno la
+    riattiva il check deve tornare a urlare.
+    """
+    if percorsi is None:
+        percorsi = [CONF_ZABBIX]
+        if os.path.isdir(DIR_ZABBIX_D):
+            percorsi += [os.path.join(DIR_ZABBIX_D, f)
+                         for f in sorted(os.listdir(DIR_ZABBIX_D))
+                         if f.endswith(".conf")]
+    attivo = False
+    for p in percorsi:
+        try:
+            with open(p, encoding="utf-8", errors="replace") as f:
+                for riga in f:
+                    s = riga.strip()
+                    if not s or s.startswith("#") or "=" not in s:
+                        continue
+                    k, v = s.split("=", 1)
+                    k, v = k.strip(), v.strip()
+                    if k == "EnableRemoteCommands":
+                        attivo = (v == "1")
+                    elif k in ("AllowKey", "DenyKey") and "system.run" in v:
+                        attivo = (k == "AllowKey")
+        except (PermissionError, OSError):
+            continue
+    return attivo
+
+
 def check_porte(e: Esito) -> None:
     """Porte in ascolto che non hanno motivo di essere raggiungibili.
 
     L'audit del 25/09 ha trovato `postgres` e l'agent Zabbix in ascolto su indirizzi
     non-locali con `ufw` **inactive**: nessuno lo sapeva. Non e' una policy di
     sicurezza completa: e' il promemoria che l'esposizione va **vista**, non supposta.
+
+    Per la 10050 il pericolo vero e' la coppia "in ascolto + system.run attivo":
+    con `system.run` disattivato (hardening 25/09) un agent su indirizzi interni
+    non e' piu' esecuzione di comandi, ma resta un'esposizione da VEDERE -> nota.
     """
+    system_run = _system_runs_attivi()
     ss = _run(["ss", "-ltnp"])
     for riga in ss.splitlines()[1:]:
         parti = riga.split()
@@ -234,16 +289,23 @@ def check_porte(e: Esito) -> None:
         locale = parti[3]
         if locale.startswith("127.") or locale.startswith("[::1]"):
             continue                      # solo loopback: non e' esposizione
-        porta = locale.rsplit(":", 1)[-1]
-        if porta in PORTE_DA_SEGNALARE:
-            e.allarme("porte", riga.strip()[:130], PORTE_DA_SEGNALARE[porta])
+        indirizzo, _, porta = locale.rpartition(":")
+        if porta not in PORTE_DA_SEGNALARE:
+            continue
+        if (porta == "10050" and not system_run
+                and indirizzo not in ("0.0.0.0", "*", "::", "[::]")):
+            e.nota("porte", riga.strip()[:130],
+                   "agent Zabbix in ascolto su indirizzo interno, system.run "
+                   "NON attivo (hardening 25/09): esposto ma non eseguibile")
+            continue
+        e.allarme("porte", riga.strip()[:130], PORTE_DA_SEGNALARE[porta])
 
 
 # --- check: zabbix --------------------------------------------------------------
 
 def check_zabbix(e: Esito) -> None:
     """Esecuzione comandi remoti e regole sudo verso file inesistenti."""
-    conf = "/etc/zabbix/zabbix_agentd.conf"
+    conf = CONF_ZABBIX
     if os.path.exists(conf):
         try:
             with open(conf, encoding="utf-8", errors="replace") as f:

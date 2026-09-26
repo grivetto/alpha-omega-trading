@@ -228,3 +228,100 @@ def test_main_errore_interno_esce_2(mod, monkeypatch, capsys):
     out = json.loads(capsys.readouterr().out)
     assert out["esito"] == 2
     assert "boom del check" in out["errore"]
+
+
+# --- check_crontab ---------------------------------------------------------------
+
+def test_crontab_lock_in_tmp_non_allarma(mod, monkeypatch, tmp_path):
+    """`flock -n /tmp/x.lock` e' una guardia, non un eseguibile (falso positivo 27/09)."""
+    d = tmp_path / "crontabs"
+    d.mkdir()
+    (d / "sergio").write_text(
+        "* * * * * /usr/bin/flock -n /tmp/denaro_snapshot.lock /usr/bin/env "
+        "HEALTH_DIR=/x /venv/bin/python /x/snap.py >> /x/log 2>&1\n",
+        encoding="utf-8")
+    monkeypatch.setattr(mod, "DIR_CRONTAB", str(d))
+    e = mod.Esito()
+    mod.check_crontab(e)
+    assert e.allarmi == []
+
+
+def test_crontab_binario_in_tmp_allarma(mod, monkeypatch, tmp_path):
+    d = tmp_path / "crontabs"
+    d.mkdir()
+    (d / "sergio").write_text("* * * * * /tmp/evil.sh\n", encoding="utf-8")
+    monkeypatch.setattr(mod, "DIR_CRONTAB", str(d))
+    e = mod.Esito()
+    mod.check_crontab(e)
+    assert len(e.allarmi) == 1
+    assert "evil.sh" in e.allarmi[0]["prova"]
+
+
+def test_crontab_header_vixie_dev_shm_allarma(mod, monkeypatch, tmp_path):
+    """L'header d'installazione che cita /dev/shm e' una traccia di manomissione."""
+    d = tmp_path / "crontabs"
+    d.mkdir()
+    (d / "zabbix").write_text(
+        "# (/dev/shm/.cron_clean_421586 installed on Sat Sep 19 20:43:51 2026)\n",
+        encoding="utf-8")
+    monkeypatch.setattr(mod, "DIR_CRONTAB", str(d))
+    e = mod.Esito()
+    mod.check_crontab(e)
+    assert len(e.allarmi) == 1
+
+
+# --- check_porte ------------------------------------------------------------------
+
+class FakeSS:
+    """Sostituisce `_run` per il comando ss; tutto il resto -> ''."""
+
+    def __init__(self, righe):
+        self.righe = righe
+
+    def __call__(self, cmd, timeout=25):
+        if "ss" in cmd:
+            return "Recv-Q Send-Q Local Address:Port Peer\n" + "\n".join(self.righe) + "\n"
+        return ""
+
+
+def _zabbix_conf(tmp_path, testo):
+    conf = tmp_path / "zabbix_agentd.conf"
+    conf.write_text(testo, encoding="utf-8")
+    return conf
+
+
+def _prepara_zabbix(mod, monkeypatch, tmp_path, testo_conf, righe_ss):
+    monkeypatch.setattr(mod, "CONF_ZABBIX", str(_zabbix_conf(tmp_path, testo_conf)))
+    monkeypatch.setattr(mod, "DIR_ZABBIX_D", str(tmp_path / "assente"))
+    monkeypatch.setattr(mod, "_run", FakeSS(righe_ss))
+
+
+def test_porte_zabbix_system_run_off_e_nota(mod, monkeypatch, tmp_path):
+    """Agent su 10050 con system.run disattivato: esposto ma non eseguibile -> nota."""
+    _prepara_zabbix(mod, monkeypatch, tmp_path,
+                    "#AllowKey=system.run[*]\nListenIP=127.0.0.1,192.168.1.99\n",
+                    ['LISTEN 0 4096 192.168.1.99:10050 0.0.0.0:* users:(("zabbix_agentd",pid=3633,fd=5))'])
+    e = mod.Esito()
+    mod.check_porte(e)
+    assert e.allarmi == []
+    assert len(e.reperti) == 1 and e.reperti[0]["livello"] == "nota"
+
+
+def test_porte_zabbix_system_run_on_allarma(mod, monkeypatch, tmp_path):
+    """system.run riattivato: torna l'allarme, anche su indirizzo interno."""
+    _prepara_zabbix(mod, monkeypatch, tmp_path,
+                    "AllowKey=system.run[*]\n",
+                    ['LISTEN 0 4096 192.168.1.99:10050 0.0.0.0:* users:(("zabbix_agentd",pid=1,fd=5))'])
+    e = mod.Esito()
+    mod.check_porte(e)
+    assert len(e.allarmi) == 1
+
+
+def test_porte_zabbix_catch_all_allarma_anche_senza_system_run(mod, monkeypatch, tmp_path):
+    """0.0.0.0 = raggiungibile da chiunque: allarme anche con system.run off."""
+    _prepara_zabbix(mod, monkeypatch, tmp_path,
+                    "#AllowKey=system.run[*]\n",
+                    ['LISTEN 0 4096 0.0.0.0:10050 0.0.0.0:* users:(("zabbix_agentd",pid=1,fd=5))'])
+    e = mod.Esito()
+    mod.check_porte(e)
+    assert len(e.allarmi) == 1
