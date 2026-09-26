@@ -79,6 +79,19 @@ PORTE_DA_SEGNALARE = {
     "2375": "docker daemon in TCP non cifrato",
 }
 
+#: Directory health note della flotta: si sommano a --health-dir (se esistono su
+#: questa macchina). Stanno fuori dalla funzione perche' i test le neutralizzano
+#: (un test non deve leggere la health della macchina che lo esegue).
+DIR_HEALTH_NOTE = ("/home/sergio/denaro/health", "/home/marco/denaro/health")
+
+#: File .json nella health dir che NON sono heartbeat di un servizio (il check
+#: "fossile" non si applica): `infra_last_good.json` e' la cache ON-DEMAND del
+#: dashboard — la scrive serve_dashboard quando qualcuno chiede la pagina, e
+#: restare ferma di notte e' il suo comportamento normale. Falso positivo
+#: osservato su MARCODG1 il 26/09: ferma da 3h31m a dashboard non visitata.
+#: (trend.json e' invece una LISTA e viene gia' saltato per non-distinto.)
+FILE_HEALTH_NON_HEARTBEAT = {"infra_last_good.json"}
+
 
 class Esito:
     """Raccoglitore di reperti. Ogni reperto ha un livello, un check e una prova."""
@@ -265,28 +278,108 @@ def check_zabbix(e: Esito) -> None:
 
 # --- check: systemd ------------------------------------------------------------
 
+def _systemctl_props(unit: str, props) -> Dict[str, str]:
+    """Prop=Value per l'unita', in UNA chiamata (output deterministico per chiave)."""
+    cmd = ["systemctl", "show"]
+    for p in props:
+        cmd += ["-p", p]
+    cmd.append(unit)
+    out = _run(cmd)
+    d: Dict[str, str] = {}
+    for riga in out.splitlines():
+        if "=" in riga:
+            k, v = riga.split("=", 1)
+            d[k.strip()] = v.strip()
+    return d
+
+
+def _percorso_stato_restart() -> str:
+    """Dove si ricorda NRestarts fra due esecuzioni (override: FLEET_INTEGRITY_STATE)."""
+    return os.environ.get("FLEET_INTEGRITY_STATE") or os.path.join(
+        os.path.expanduser("~"), ".cache", "fleet_integrity", "restarts.json")
+
+
+def _carica_stato_restart() -> Dict[str, int]:
+    try:
+        with open(_percorso_stato_restart(), encoding="utf-8") as f:
+            d = json.load(f)
+        if not isinstance(d, dict):
+            return {}
+        out: Dict[str, int] = {}
+        for k, v in d.items():
+            try:
+                out[str(k)] = int(v)
+            except (TypeError, ValueError):
+                continue
+        return out
+    except Exception:  # noqa: BLE001
+        return {}
+
+
+def _salva_stato_restart(d: Dict[str, int]) -> None:
+    """Best-effort: senza stato il check resta valido, solo meno preciso."""
+    try:
+        p = _percorso_stato_restart()
+        os.makedirs(os.path.dirname(p), exist_ok=True)
+        tmp = p + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(d, f, ensure_ascii=False, indent=1, sort_keys=True)
+        os.replace(tmp, p)
+    except Exception:  # noqa: BLE001
+        pass
+
+
 def check_systemd(e: Esito) -> None:
-    """Unit denaro*: stato, restart patologici, path delle direttive inesistenti."""
+    """Unit denaro*: stato, restart patologici, path delle direttive inesistenti.
+
+    Due falsi positivi chiusi il 26/09 (osservati su MARCODG1), che rendevano il
+    check inutilizzabile come segnale:
+    - le unit `oneshot` comandate da un timer, fra un run e l'altro, sono
+      `inactive/dead` PER DESIGN (l'ultimo run e' riuscito): non sono guasti;
+    - `NRestarts` storici su unit ora stabili (113 e 710, da guasti vecchi): il
+      contatore da solo non dice "ciclo in corso". Si allarma se il contatore
+      CRESCE fra due esecuzioni del check (ciclo in corso ADESSO) oppure se
+      l'unita' e' giu' con un contatore patologico.
+    """
     out = _run(["systemctl", "list-units", "denaro*", "--all", "--no-pager",
                 "--plain", "--no-legend"])
+    restarts_prima = _carica_stato_restart()
+    restarts_ora: Dict[str, int] = {}
     for riga in out.splitlines():
         parti = riga.split()
         if len(parti) < 4:
             continue
         unit, load, active, sub = parti[0], parti[1], parti[2], parti[3]
-        if active != "active" and sub not in ("running", "exited"):
-            e.allarme("systemd", f"{unit} {active}/{sub}",
-                      "unita' della flotta non attiva: se e' un nodo, il trading e' fermo; "
-                      "se e' telemetria, la flotta e' cieca")
-        cat = _run(["systemctl", "show", "-p", "NRestarts", "--value", unit])
+        props = _systemctl_props(unit, ("Type", "Result", "NRestarts"))
+        tipo = props.get("Type", "")
+        risultato = props.get("Result", "")
         try:
-            n = int(cat.strip() or "0")
+            n = int(props.get("NRestarts", "0") or "0")
         except ValueError:
             n = 0
-        if n >= 50:
+        restarts_ora[unit] = n
+
+        if active != "active" and sub not in ("running", "exited"):
+            # oneshot riuscito (fra due run del timer) o oneshot in esecuzione
+            # ADESSO: stati normali, non guasti.
+            oneshot_ok = tipo == "oneshot" and (
+                risultato == "success"
+                or (active == "activating" and sub in ("start", "running")))
+            if not oneshot_ok:
+                e.allarme("systemd", f"{unit} {active}/{sub}",
+                          "unita' della flotta non attiva: se e' un nodo, il trading e' fermo; "
+                          "se e' telemetria, la flotta e' cieca")
+
+        prec = restarts_prima.get(unit)
+        if prec is not None and n - prec >= 10:
+            e.allarme("systemd", f"{unit} NRestarts={n} (era {prec})",
+                      "restart patologici IN CORSO fra due esecuzioni del check: "
+                      "l'unita' si sta riavviando a ripetizione adesso")
+        elif n >= 50 and active != "active":
             e.allarme("systemd", f"{unit} NRestarts={n}",
-                      "restart patologico: l'unita' e' in un ciclo morto e nessuno se ne "
-                      "accorge (osservati 553 e 560 restart)")
+                      "restart patologici su unita' non attiva: ciclo morto e nessuno "
+                      "se ne accorge (osservati 553 e 560 restart)")
+
         # path delle direttive
         for prop in ("ExecStart", "EnvironmentFile", "WorkingDirectory"):
             val = _run(["systemctl", "show", "-p", prop, "--value", unit]).strip()
@@ -301,6 +394,7 @@ def check_systemd(e: Esito) -> None:
                     e.allarme("systemd", f"{unit} {prop}={token}",
                               "direttiva che punta a un path inesistente: e' la causa "
                               "radice dei 1.113 restart osservati il 25/09")
+    _salva_stato_restart(restarts_ora)
 
 
 # --- check: trading ------------------------------------------------------------
@@ -312,7 +406,7 @@ def check_trading(e: Esito, dir_health: Optional[str] = None,
     candidati = []
     if dir_health:
         candidati.append(dir_health)
-    for d in ("/home/sergio/denaro/health", "/home/marco/denaro/health"):
+    for d in DIR_HEALTH_NOTE:
         if os.path.isdir(d) and d not in candidati:
             candidati.append(d)
     if not candidati:
@@ -322,7 +416,8 @@ def check_trading(e: Esito, dir_health: Optional[str] = None,
     ora = time.time()
     for d in candidati:
         try:
-            files = [f for f in os.listdir(d) if f.endswith(".json")]
+            files = [f for f in os.listdir(d)
+                     if f.endswith(".json") and f not in FILE_HEALTH_NON_HEARTBEAT]
         except (PermissionError, OSError):
             continue
         for f in files:
@@ -331,6 +426,11 @@ def check_trading(e: Esito, dir_health: Optional[str] = None,
                 with open(p, encoding="utf-8", errors="replace") as fh:
                     h = json.load(fh)
             except Exception:
+                continue
+            # i file di AGGREGAZIONE (es. trend.json) sono liste, non dict per
+            # bot: non hanno le chiavi di salute, e il check su di loro crashava
+            # (AttributeError: 'list' object has no attribute 'get', 26/09).
+            if not isinstance(h, dict):
                 continue
             eta = ora - os.path.getmtime(p)
             err = str(h.get("error") or "")
@@ -396,8 +496,21 @@ def main(argv: Optional[List[str]] = None) -> int:
     ap.add_argument("--json", action="store_true")
     args = ap.parse_args(argv)
 
-    risultati = [esegui(h, args.health_dir) for h in args.host] if args.host \
-        else [esegui(dir_health=args.health_dir)]
+    try:
+        risultati = [esegui(h, args.health_dir) for h in args.host] if args.host \
+            else [esegui(dir_health=args.health_dir)]
+    except Exception as exc:  # noqa: BLE001
+        # Un crash del CHECK non deve confondersi con un allarme: exit 1 =
+        # reperti trovati, exit 2 = il check stesso e' rotto. Osservato il
+        # 26/09: il crash su trend.json usciva 1, indistinguibile da un
+        # allarme vero, e l'unita' restava "failed" senza dire perche'.
+        errore = {"host": os.uname().nodename if hasattr(os, "uname") else "locale",
+                  "esito": 2, "errore": repr(exc)[:300], "reperti": []}
+        if args.json:
+            print(json.dumps(errore, indent=2, ensure_ascii=False))
+        else:
+            print(f"ERRORE INTERNO {errore['host']}: {errore['errore']}")
+        return 2
 
     if args.json:
         print(json.dumps(risultati if len(risultati) > 1 else risultati[0],
