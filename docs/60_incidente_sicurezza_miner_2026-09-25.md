@@ -120,3 +120,22 @@ Oggi tre difetti dello stesso tipo sono convissuti per giorni senza un allarme:
 Nessuno dei tre era un errore di strategia. Tutti e tre erano **assenza di un controllo che
 dichiara lo stato**. È la stessa correzione in tre punti: uno stato esplicito, una transizione
 loggata una volta, un allarme quando cambia.
+
+---
+
+## 60.8 Chiusura residui e riallineamento del check (27/09/2026)
+
+- **mc2** — completata anche qui la pulizia n. 2 del §60.4: rimosso il crontab `zabbix`
+  residuo (vuoto: solo l'header vixie del 19/09 20:43:51 che citava
+  `/dev/shm/.cron_clean_421586`); `crontab -u zabbix -l` ora risponde *no crontab for
+  zabbix*, come su MARCODG1. Rimossa la directory vuota `/var/tmp/.bin` (zabbix, 22/09).
+- **MARCODG1** — rimossi i binari disarmati in `/var/tmp/.X11-unix-socket/`
+  (`.kworker_sys`, `.self`): md5 verificati identici alle copie forensi in
+  `/root/quarantena_miner_20260925/binari/` **prima** della rimozione; nessun altro
+  residuo in `/var/tmp`.
+- **Check di flotta** (`tools/fleet_integrity.py`) — chiusi due falsi allarmi che lo
+  facevano fallire ogni 15 minuti: (a) i file di lock `flock` in `/tmp` dei cron
+  legittimi non sono "binari in directory temporanee"; (b) la porta 10050 è ALLARME
+  solo se `system.run` è attivo o l'ascolto è catch-all — con l'hardening del 25/09
+  l'esposizione interna resta una **nota** (vista, non sospetta). Se `system.run`
+  venisse riattivato, l'allarme tornerebbe.
