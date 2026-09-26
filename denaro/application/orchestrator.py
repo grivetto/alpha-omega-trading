@@ -1485,13 +1485,56 @@ class BotTask:
         self.state.stop_loss_triggered = True
         self.trading_paused = True
         self._last_error = f"STOP LOSS: drawdown {drawdown * 100:.1f}%"
+        # RICONCILIAZIONE PRE-STOP — il tracker puo' essere indietro di un tick, e
+        # il crollo che fa scattare lo stop e' lo stesso evento che riempie i NOSTRI
+        # buy (un limit buy sotto il mercato viene attraversato). Si chiede alla
+        # sede quali dei nostri ordini sono davvero riempiti PRIMA di fotografare
+        # la quota: senza questo lo stop legge quota=0 e NON vende l'asset appena
+        # comprato ("libero 0.3015 lasciato intatto" — il test di regressione
+        # test_stop_loss_chiude_posizioni_e_ferma lo dimostra).
+        # Il limite di sicurezza R1 resta intatto: si vende al massimo
+        # min(libero, quota), e solo cio' che la sede conferma come nostro.
+        _fill_non_processati = 0.0
+        for oid, info in list(self.state.open_buys.items()):
+            try:
+                o = await asyncio.to_thread(self.ex.fetch_order, oid,
+                                            self.cfg.symbol)
+            except Exception:  # noqa: BLE001
+                continue                    # irrisolvibile: non si contabilizza
+            st = str(o.get("status") or "open")
+            q = 0.0
+            for chiave in ("filled", "filled_amount", "executed_amount_base"):
+                v = o.get(chiave)
+                if v is None:
+                    continue
+                try:
+                    q = float(v)
+                except (TypeError, ValueError):
+                    q = 0.0
+                break
+            if q <= 0 and st in ("closed", "filled"):
+                q = float(info.get("amount") or 0.0)
+            if q > 0:
+                _fill_non_processati += q
+                await self._journal("buy_filled", order_id=oid,
+                                    entry=float(info.get("price") or 0.0),
+                                    amount=q, sell_target=None,
+                                    protezione="stop_loss")
+            # un ordine ancora APERTO (fill parziale) resta nella lista: lo
+            # cancella il ciclo qui sotto. Si toglie solo quando e' terminale.
+            if st in ("closed", "filled", "canceled", "expired", "rejected"):
+                self.state.open_buys.pop(oid, None)
         # FOTOGRAFIA DELLA QUOTA, PRIMA DI CANCELLARE: per una griglia la posizione
         # vive negli ordini di vendita aperti (`_quota_vendibile`), e la cancellazione
         # degli ordini qui sotto la azzera. Calcolarla dopo significava leggere zero e
         # non vendere nulla: lo stop di una griglia diventava un no-op silenzioso.
-        _quota = self._quota_vendibile()
-        log.warning("STOP LOSS %s: drawdown %.1f%% equity %.2f quota %.8f",
-                    self.cfg.symbol, drawdown * 100, equity, _quota)
+        # I fill riscattati sopra si sommano: sono asset del bot non ancora nel
+        # tracker, confermati dalla sede.
+        _quota = self._quota_vendibile() + _fill_non_processati
+        log.warning("STOP LOSS %s: drawdown %.1f%% equity %.2f quota %.8f "
+                    "(fill non processati riscattati: %.8f)",
+                    self.cfg.symbol, drawdown * 100, equity, _quota,
+                    _fill_non_processati)
 
         # prezzo per la vendita: dal parametro oppure fetch one-shot
         if price is None:
