@@ -107,6 +107,9 @@ strategies/*.json
 # lo avrebbe committato. Non e' mai finito nella storia, ma la falla va chiusa.
 .env_*
 *.env_*
+# Eccezione: l'example del banco a secco non contiene segreti (soli placeholder)
+# e va versionato — e' cio' che il proprietario copia per creare .env_banco.
+!config/.env_banco.example
 
 # ── Artefatti generati (2026-09-17) ──
 # Il brain genera centinaia di strategie e dataset: sono materiale di ricerca

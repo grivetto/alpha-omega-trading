@@ -1,0 +1,36 @@
+[Unit]
+Description=Money — Banco di prova a secco (pre-produzione, DRY-RUN)
+Documentation=https://github.com/grivetto/money/blob/main/docs/02_banco_di_prova_a_secco.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart={{PROJECT_ROOT}}/deploy/scripts/money_banco_secco.sh
+WorkingDirectory={{PROJECT_ROOT}}
+User={{BANCO_USER}}
+Group={{BANCO_USER}}
+StandardOutput=journal
+StandardError=journal
+
+# Hardening: nessun privilegio, filesystem in sola lettura tranne logs/.
+# I segreti NON passano da EnvironmentFile: li carica lo script (semantica
+# bash, piu' chiara con passphrase che contengono caratteri speciali).
+# Se BANCO_HEALTH_PATH punta fuori da PROJECT_ROOT/logs, aggiungere il path
+# a ReadWritePaths con un drop-in (systemctl edit money-banco-secco.service).
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths={{PROJECT_ROOT}}/logs
+CapabilityBoundingSet=
+LockPersonality=true
+MemoryDenyWriteExecute=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=true
+RestrictRealtime=true
+SystemCallFilter=@system-service
+SystemCallErrorNumber=EPERM
+
+[Install]
+WantedBy=multi-user.target

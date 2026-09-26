@@ -1,0 +1,11 @@
+[Unit]
+Description=Timer per fleet_integrity ogni 15 minuti
+Requires=fleet-integrity.service
+
+[Timer]
+OnBootSec=5m
+OnUnitActiveSec=15m
+Persistent=true
+
+[Install]
+WantedBy=timers.target

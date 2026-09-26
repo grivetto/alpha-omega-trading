@@ -1,0 +1,14 @@
+[Unit]
+Description=Denaro Fleet Integrity Check
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart={{PROJECT_ROOT}}/venv/bin/python3 -m tools.fleet_integrity --json
+WorkingDirectory={{PROJECT_ROOT}}
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target
