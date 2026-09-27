@@ -14,7 +14,7 @@ bots:
     # 100,0030 EUR nel FUNDING (versamento +74 EUR rispetto ai 26,0030 del
     # 26/09, misurato dal banco in collaudo); il trading ha totalEq 0. Il
     # banco legge ENTRAMBI e li riporta separati (spec §4.1).
-    capital: 100.0030
+    capital: 100.00       # tripwire tonda: il cash reale e' 100,0030; sotto 100 deve suonare
     frazione_per_posizione: 0.25
     min_notional: 1.0      # fallback, se il mercato non dichiara il minimo
     tick_interval: 300     # il timer systemd gira ogni 5 minuti
