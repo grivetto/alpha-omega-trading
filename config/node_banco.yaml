@@ -10,10 +10,11 @@ exchange_rest:
 bots:
   - symbol: BTC/EUR
     strategy: banco_secco
-    # Capitale REALE sul conto main (non quello aspirsto). Al 26/09/2026:
-    # 26,0030 EUR stanno nel FUNDING; il trading ha totalEq 0. Il banco legge
-    # ENTRAMBI e li riporta separati (spec §4.1).
-    capital: 26.0030
+    # Capitale REALE sul conto main (non quello aspirato). Al 27/09/2026:
+    # 100,0030 EUR nel FUNDING (versamento +74 EUR rispetto ai 26,0030 del
+    # 26/09, misurato dal banco in collaudo); il trading ha totalEq 0. Il
+    # banco legge ENTRAMBI e li riporta separati (spec §4.1).
+    capital: 100.0030
     frazione_per_posizione: 0.25
     min_notional: 1.0      # fallback, se il mercato non dichiara il minimo
     tick_interval: 300     # il timer systemd gira ogni 5 minuti
