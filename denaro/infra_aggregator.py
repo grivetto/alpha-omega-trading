@@ -184,9 +184,26 @@ def fetch_okx_balance(env):
             "enableRateLimit": True,
             "hostname": "eea.okx.com",
         })
-        b = ex.fetch_balance()
-        total = {k: round(v, 6) for k, v in b.get("total", {}).items() if v and v > 0}
-        free = {k: round(v, 6) for k, v in b.get("free", {}).items() if v and v > 0}
+        # 2026-09-27: fetch_balance() di default legge SOLO il trading account.
+        # I bonifici e i fondi fermi stanno nel FUNDING: la dashboard mostrava 0
+        # con 100 EUR reali sul conto. Si leggono ENTRAMBI e si sommano.
+        tot_merged, free_merged, letti = {}, {}, 0
+        for tipo in ("trading", "funding"):
+            try:
+                b = ex.fetch_balance({"type": tipo}) or {}
+                letti += 1
+            except Exception:
+                continue
+            for k, v in (b.get("total") or {}).items():
+                if v and float(v) > 0:
+                    tot_merged[k] = tot_merged.get(k, 0.0) + float(v)
+            for k, v in (b.get("free") or {}).items():
+                if v and float(v) > 0:
+                    free_merged[k] = free_merged.get(k, 0.0) + float(v)
+        if letti == 0:
+            return {"ok": False, "error": "fetch_balance fallito su trading e funding"}
+        total = {k: round(v, 6) for k, v in tot_merged.items()}
+        free = {k: round(v, 6) for k, v in free_merged.items()}
         val = {"ok": True, "total": total, "free": free}
         _balance_cache[key] = (now, val)
         return val
@@ -247,8 +264,19 @@ def _remote_okx_snippet(env_path, prefix=""):
         "import ccxt\n"
         "ex = ccxt.okx({'apiKey': g('OKX_API_KEY'), 'secret': g('OKX_API_SECRET'),"
         " 'password': g('OKX_PASSPHRASE'), 'hostname': 'eea.okx.com'})\n"
-        "b = ex.fetch_balance()\n"
-        "print(json.dumps({'ok': True, 'total': b.get('total', {}), 'free': b.get('free', {})}))\n"
+        # 2026-09-27: come fetch_okx_balance locale — trading E funding, mai solo trading
+        "tot = {}\nfre = {}\nnok = 0\n"
+        "for tipo in ('trading', 'funding'):\n"
+        "    try:\n"
+        "        b = ex.fetch_balance({'type': tipo}) or {}\n"
+        "        nok += 1\n"
+        "    except Exception:\n"
+        "        continue\n"
+        "    for k, v in (b.get('total') or {}).items():\n"
+        "        if v and float(v) > 0:\n            tot[k] = tot.get(k, 0.0) + float(v)\n"
+        "    for k, v in (b.get('free') or {}).items():\n"
+        "        if v and float(v) > 0:\n            fre[k] = fre.get(k, 0.0) + float(v)\n"
+        "print(json.dumps({'ok': nok > 0, 'total': tot, 'free': fre}))\n"
     )
 
 
