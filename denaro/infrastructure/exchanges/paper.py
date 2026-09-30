@@ -15,7 +15,9 @@ REALISMO v2 (parita' col live):
 - precision: amount/price arrotondati ai tick del mercato
 - MTM: equity = cash + asset×price (mark-to-market)
 
-Nessuna rete: il prezzo arriva dal MarketDataHub (reale) o da un fake nei test.
+Nessuna rete per gli ordini: il prezzo arriva dal MarketDataHub (reale) o da un
+fake nei test. Le CANDELE per il canale dei bot trend arrivano da REST pubblico
+OKX EEA (sola lettura, senza chiavi) via `fetch_ohlcv_raw`.
 """
 from __future__ import annotations
 
@@ -32,6 +34,8 @@ class PaperExchange:
     FEE = 0.001
     DEFAULT_MIN_NOTIONAL = 1.0   # ~minimo reale OKX/Kraken spot (EUR notional)
     DEFAULT_SLIPPAGE = 0.001     # 0.1% slippage sui market order (stop-loss)
+
+    _ccxt_pub = None
 
     def __init__(self, symbol: str, capital: float, quote: str = "EUR",
                  fee: float = FEE, min_notional: Optional[float] = None,
@@ -135,6 +139,39 @@ class PaperExchange:
 
     def fetch_ticker(self, symbol: str) -> dict:
         return {"last": self.price}
+
+    # --- candele PUBBLICHE (canale dei bot trend in paper) -------------------
+
+    @classmethod
+    def _public_ccxt(cls):
+        """Client ccxt OKX EEA pubblico, senza chiavi (solo dati di mercato)."""
+        if cls._ccxt_pub is None:
+            import ccxt
+            cls._ccxt_pub = ccxt.okx({"hostname": "eea.okx.com",
+                                      "enableRateLimit": True})
+        return cls._ccxt_pub
+
+    def fetch_ohlcv_raw(self, symbol: str, timeframe: str = "1d",
+                        limit: int = 300) -> list:
+        """OHLCV via RAW API PUBBLICA (stesso percorso del live OKXAdapter).
+
+        Bypassa il bug di ccxt 4.5.x su fetch_ohlcv. NESSUNA chiave: serve al
+        precaricamento e al refresh del canale (TrendPolicy) dei bot paper.
+        Ritorna [[ts, o, h, l, c, v], ...] con ts in secondi; [] su errore.
+        """
+        bar = {"1h": "1H", "15m": "15m", "1d": "1D"}.get(str(timeframe).lower(), "1D")
+        inst = str(symbol).replace("/", "-")
+        try:
+            ex = self._public_ccxt()
+            r = ex.publicGetMarketHistoryCandles(
+                {"instId": inst, "bar": bar, "limit": str(limit)})
+            data = r.get("data") if isinstance(r, dict) else r
+            return [[int(row[0]) / 1000.0, float(row[1]), float(row[2]),
+                     float(row[3]), float(row[4]), float(row[5])]
+                    for row in (data or [])]
+        except Exception as e:  # noqa: BLE001 - paper: mai bloccare per rete
+            log.warning("paper ohlcv %s fallito: %s", symbol, e)
+            return []
 
     def fetch_balance(self) -> dict:
         total = self.equity()
