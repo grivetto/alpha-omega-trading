@@ -21,6 +21,8 @@ USER = "Admin"
 PASS = "zabbix"
 
 BOTS = {
+    # [01/10/26] PULIZIA: host alpha-omega-bot-*-eur inesistenti da tempo, le
+    # rispettive sezioni di push sono state disattivate. Def legacy per memoria.
     "sol": ("alpha-omega-bot-sol-eur", "bot.sol"),
     "ada": ("alpha-omega-bot-ada-eur", "bot.ada"),
     "doge": ("alpha-omega-bot-doge-eur", "bot.doge"),
@@ -409,28 +411,8 @@ def main():
 
     data = []
 
-    # ── 1. Bot OKX (sol, ada) ──
-    for name, (host, prefix) in BOTS.items():
-        h = read_json(HEALTH_DIR / f"{name}.json")
-        # Auto-heal: status=0 se l'health file e' congelato (>150s)
-        if not h or is_stale(h.get("timestamp", 0)):
-            data.append({"host": host, "key": f"{prefix}.status", "value": 0})
-            continue
-        running = 1 if h.get("status") == "running" else 0
-        data += [
-            {"host": host, "key": f"{prefix}.status", "value": running},
-            {"host": host, "key": f"{prefix}.equity", "value": h.get("total_equity", 0)},
-            {"host": host, "key": f"{prefix}.free", "value": h.get("free_quote", 0)},
-            {"host": host, "key": f"{prefix}.buys", "value": h.get("buys", 0)},
-            {"host": host, "key": f"{prefix}.sells", "value": h.get("sells", 0)},
-            {"host": host, "key": f"{prefix}.pnl", "value": h.get("pnl", 0)},
-            {"host": host, "key": f"{prefix}.trades", "value": h.get("trades", 0)},
-            {"host": host, "key": f"{prefix}.wins", "value": h.get("wins", 0)},
-            {"host": host, "key": f"{prefix}.losses", "value": h.get("losses", 0)},
-            {"host": host, "key": f"{prefix}.volume", "value": h.get("volume", 0)},
-            {"host": host, "key": f"{prefix}.drawdown", "value": h.get("drawdown", 0)},
-            {"host": host, "key": f"{prefix}.uptime", "value": h.get("uptime", 0)},
-        ]
+    # ── 1. [rimosso 01/10/26] Bot legacy sol/ada/doge/eth — host inesistenti;
+    #     pulizia Zabbix: i 17 host alpha-omega-bot-* sono stati rimossi. ──
 
     # ── 2. [rimosso 01/10] Bot Kraken — Kraken fuori dal progetto. ──
 
@@ -441,7 +423,7 @@ def main():
         prices = infra.get("prices", {})
         data += [
             {"host": host, "key": "project.equity", "value": infra.get("total_equity", 0)},
-            {"host": host, "key": "project.bot_equity", "value": infra.get("bot_equity", 0)},
+            # [01/10/26] project.bot_equity rimosso (aggregato flotta storica).
         ]
         # Prezzi live
         for sym, key in [("SOL/EUR", "sol_eur"), ("ADA/EUR", "ada_eur"),
@@ -452,70 +434,27 @@ def main():
                 if t.get("pct24h") is not None:
                     data.append({"host": host, "key": f"price.{key}_24h",
                                  "value": round(t["pct24h"], 3)})
-        # PnL e trades totali dai bot
-        bots = infra.get("bots", {})
-        pnl_tot = sum(b.get("pnl", 0) for b in bots.values() if b.get("status") == "running")
-        tr_tot = sum(b.get("trades", 0) for b in bots.values() if b.get("status") == "running")
-        wins = sum(b.get("wins", 0) for b in bots.values() if b.get("status") == "running")
-        losses = sum(b.get("losses", 0) for b in bots.values() if b.get("status") == "running")
-        wr = round(wins / (wins + losses) * 100, 1) if (wins + losses) else 0
-        data += [
-            {"host": host, "key": "project.pnl_total", "value": round(pnl_tot, 4)},
-            {"host": host, "key": "project.trades_total", "value": tr_tot},
-            {"host": host, "key": "project.win_rate", "value": wr},
-        ]
+        # [01/10/26] project.pnl_total / trades_total / win_rate RIMOSSI:
+        # aggregati della flotta storica ormai a zero; item Zabbix eliminati.
 
     # ── 4. Paper bot v3.3 (RIMOSSO 2026-08-25): i motori paper v3.3 sono stati
     #     fermati/disabilitati (ridondanti) — i paper girano nel Node e sono
     #     pushati nella sezione 5 (node.*). I file paper_state sono congelati.
-    # ── 5. Node paper (M7 — da node_data health; staleness via timestamp) ──
-    for name, (symbol, host, prefix, fname) in NODE_BOTS.items():
-        h = read_json(NODE_DIR / fname)
-        if not h or is_stale(h.get("timestamp", 0)):
-            data.append({"host": host, "key": f"{prefix}.status", "value": 0})
-            continue
-        running = 1 if h.get("status") == "running" else 0
-        data += [
-            {"host": host, "key": f"{prefix}.status", "value": running},
-            {"host": host, "key": f"{prefix}.equity", "value": h.get("total_equity", 0)},
-            {"host": host, "key": f"{prefix}.buys", "value": h.get("buys", 0)},
-            {"host": host, "key": f"{prefix}.sells", "value": h.get("sells", 0)},
-            {"host": host, "key": f"{prefix}.pnl", "value": h.get("pnl", 0)},
-            {"host": host, "key": f"{prefix}.trades", "value": h.get("trades", 0)},
-        ]
-        # ATLAS v6: regime/ADX/ATR/risk
-        _push_atlas_metrics(data, host, prefix, h)
+    # ── 5. [rimosso 01/10/26] Node paper / bot live ATLAS / TREND paper: host
+    #     alpha-omega-node-paper/-trend inesistenti; pulizia Zabbix 01/10. ──
 
-    # ── 5b. Bot LIVE (da health_path v3.3: health/ada.json ecc.) — ATLAS v6 ──
-    for name, (host, prefix) in BOTS.items():
-        h = read_json(HEALTH_DIR / f"{name}.json")
-        if h and not is_stale(h.get("timestamp", 0)):
-            _push_atlas_metrics(data, host, prefix, h)
+    # ── 5b. [rimosso 01/10/26] Bot LIVE ATLAS (health/ada.json ecc.). ──
 
-    # ── 5c. istanza TREND paper (MARCODG1) ──
-    for name, (symbol, host, prefix, fname) in TREND_BOTS.items():
-        h = read_json(NODE_DIR.parent / "node_data_trend" / fname)
-        if not h or is_stale(h.get("timestamp", 0)):
-            data.append({"host": host, "key": f"{prefix}.status", "value": 0})
-            continue
-        running = 1 if h.get("status") == "running" else 0
-        data += [
-            {"host": host, "key": f"{prefix}.status", "value": running},
-            {"host": host, "key": f"{prefix}.equity", "value": h.get("total_equity", 0)},
-            {"host": host, "key": f"{prefix}.buys", "value": h.get("buys", 0)},
-            {"host": host, "key": f"{prefix}.sells", "value": h.get("sells", 0)},
-            {"host": host, "key": f"{prefix}.pnl", "value": h.get("pnl", 0)},
-            {"host": host, "key": f"{prefix}.trades", "value": h.get("trades", 0)},
-        ]
-        _push_atlas_metrics(data, host, prefix, h)
+    # ── 5c. [rimosso 01/10/26] istanza TREND paper (MARCODG1). ──
 
     # ── 5c-bis. [rimosso 01/10] TREND LIVE Kraken (trend_sol/trend_xrp). ──
 
     # ── 8. [01/10] Canary C1 · Raccolta P8 · Fabbrica ×20 ──
     push_novita(data)
 
-    # ── 6. Nodi Denaro remoti (nuvola, mc2) + auto-heal remoto ──
-    push_remote_nodes(data, auth)
+    # ── 6. [rimosso 01/10/26] push_remote_nodes disattivato: pushava su host
+    #     alpha-omega-node-nuvola/-mc2 (inesistenti). Lo stato nodi arriva da
+    #     push_services + canary/raccolta/fabbrica qui sotto. ──
 
     # ── 7. Servizi Denaro per macchina (systemctl is-active) ──
     push_services(data)
