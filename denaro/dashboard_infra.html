@@ -209,6 +209,11 @@ footer { margin-top: 30px; text-align: center; color: var(--dim); font-size: 11p
     <div id="scommessa"><div class="skeleton">—</div></div>
   </div>
 
+  <div class="card" style="margin-bottom:18px; border-color:rgba(10,255,157,0.35)">
+    <h2><span class="ico">◆</span> CANARY C1 — TRADING REALE (OKX EEA) · SPOT DOGE + SHORT X-PERP</h2>
+    <div class="kv-grid" id="canary"><div class="skeleton">—</div></div>
+  </div>
+
   <div class="grid">
     <div class="card"><h2><span class="ico">▒</span> PREZZI LIVE</h2><div id="prices"></div></div>
     <div class="card"><h2><span class="ico">▒</span> SALDI EXCHANGE</h2><div id="balances"></div></div>
@@ -264,11 +269,38 @@ const ORDER = [
   'marcodg1:okx:ALGO/EUR',
 ];
 
+function renderCanary(c) {
+  const el = $('canary');
+  if (!el) return;
+  c = c || {};
+  if (!c.status) {
+    el.innerHTML = '<div class="kv"><span class="k">canary</span><span class="v">' +
+      (c.error ? esc(c.error) : 'non attivo') + '</span></div>';
+    return;
+  }
+  const age = (typeof c.age_s === 'number') ? c.age_s : null;
+  const stale = (age === null || age > 2400 || c.ok === false);
+  const badge = stale
+    ? '<span style="color:#ff2e63">● DATO NON AGGIORNATO</span>'
+    : '<span style="color:#0aff9d">● LIVE</span>';
+  const sgn = (v) => ((Number(v) >= 0 ? '+' : '') + fmt(v, 4));
+  const rows = [
+    ['stato', badge + ' · ultimo check ' + (age === null ? '—' : Math.round(age / 60) + ' min fa')],
+    ['posizione', (c.perp_ct ?? '—') + ' ct SHORT X-PERP · ' + (c.spot_qty ?? '—') + ' DOGE spot'],
+    ['entry / mark', 'perp ' + fmt(c.perp_avg, 4) + ' · spot ' + fmt(c.spot_avg, 4) + ' · mark ' + fmt(c.mark, 4)],
+    ['pnl aperto', 'upl ' + sgn(c.upl || 0) + '€ · funding ' + sgn(c.funding || 0) + '€'],
+    ['copertura', 'delta ' + fmt(c.delta_qty, 2) + ' DOGE (tolleranza ≤ 1)'],
+    ['finestra', 'aperto ' + (c.ts_open ? esc(String(c.ts_open).replace('T', ' ').slice(0, 16)) + ' UTC' : '—') + ' · review 15/10'],
+  ];
+  el.innerHTML = rows.map(r => '<div class="kv"><span class="k">' + r[0] + '</span><span class="v">' + r[1] + '</span></div>').join('');
+}
+
 async function load() {
   try {
     const r = await fetch('/api/infra.json', {cache: 'no-store'});
     const d = await r.json();
     render(d);
+    renderCanary(d.canary);
   } catch (e) {
     $('sysstatus').textContent = 'SIGNAL LOST';
     $('dot').className = 'pulse warn';

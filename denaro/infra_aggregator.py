@@ -753,6 +753,41 @@ SERVICE_UNITS = {
 }
 
 
+CANARY_STATE = Path("/home/marco/hermes_scratch/canary_state.json")
+
+
+def collect_canary():
+    """[01/10] Stato del canary C1 (carry DOGE su OKX EEA) — per la dashboard.
+
+    Legge lo state scritto dal monitor `canary_carry.py status` su MARCODG1
+    (cron ogni 10'). Nessuna chiamata all'exchange qui: solo il file; se manca,
+    errore onesto invece di numeri inventati.
+    """
+    try:
+        st = json.loads(CANARY_STATE.read_text())
+        age = int(time.time() - CANARY_STATE.stat().st_mtime)
+    except Exception as exc:
+        return {"ok": False, "error": "state canary non leggibile: " + exc.__class__.__name__}
+    spot = st.get("spot") or {}
+    perp = st.get("perp") or {}
+    return {
+        "ok": bool(st.get("status") == "open" and age < 2400),
+        "status": st.get("status"),
+        "age_s": age,
+        "ts_open": st.get("ts_open"),
+        "symbol": "DOGE",
+        "spot_qty": spot.get("qty"),
+        "spot_avg": spot.get("avg_px"),
+        "perp_ct": perp.get("ct"),
+        "perp_avg": perp.get("avg_px"),
+        "mark": st.get("last_mark"),
+        "upl": st.get("last_upl"),
+        "funding": st.get("last_funding"),
+        "delta_qty": st.get("last_delta"),
+        "last_check": st.get("last_check"),
+    }
+
+
 def collect_services():
     """Stato dei servizi Denaro per macchina (systemctl is-active)."""
     out = {}
@@ -1014,6 +1049,7 @@ def collect():
                           or any(h.get("timestamp") for h in nb.values())),
         }
     data["node_totals"] = node_totals
+    data["canary"] = collect_canary()
     data["services"] = collect_services()
     data["trend"] = read_trend()[-240:]
     return data
