@@ -171,6 +171,30 @@ header { display: flex; align-items: flex-end; justify-content: space-between; m
 .kv .k { color: var(--dim); letter-spacing: 1px; }
 .kv .v { font-weight: 600; }
 
+/* ── CANARY MISSION CONTROL (agg. 01/10) ── */
+.board { margin: 22px 0 14px; border: 1px solid rgba(10,255,157,0.45); border-radius: 12px; padding: 20px 22px 16px; position: relative; overflow: hidden;
+  background: radial-gradient(1200px 300px at 15% -10%, rgba(10,255,157,0.10), transparent 60%),
+              radial-gradient(900px 260px at 95% 0%, rgba(255,43,214,0.08), transparent 55%), rgba(10,16,38,0.85);
+  box-shadow: inset 0 0 34px rgba(10,255,157,0.10); }
+.board .bd-head { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.orb { width: 14px; height: 14px; border-radius: 50%; background: var(--neon-green); box-shadow: 0 0 14px var(--neon-green); animation: orb 1.6s infinite; flex: none; }
+.orb.bad { background: var(--neon-red); box-shadow: 0 0 14px var(--neon-red); }
+@keyframes orb { 0%, 100% { opacity: 1; } 50% { opacity: .4; } }
+.board h2 { font-size: 15px; letter-spacing: 3px; color: var(--neon-green); margin: 0; }
+.board .day { font-size: 24px; font-weight: 900; letter-spacing: 2px; }
+.board .prog { flex: 1; min-width: 200px; height: 10px; border: 1px solid rgba(0,243,255,0.3); border-radius: 6px; overflow: hidden; background: rgba(0,243,255,0.05); }
+.board .prog i { display: block; height: 100%; width: 0%; background: linear-gradient(90deg, var(--neon-cyan), var(--neon-green)); box-shadow: 0 0 12px var(--neon-green); transition: width .8s; }
+.board .count { text-align: right; }
+.board .count .k { font-size: 9px; color: var(--dim); letter-spacing: 2px; }
+.board .count .v { font-size: 30px; font-weight: 900; color: var(--neon-cyan); font-variant-numeric: tabular-nums; letter-spacing: 1px; text-shadow: 0 0 18px rgba(0,243,255,0.6); }
+.board .grid2 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 16px; }
+.board .tile { border: 1px solid rgba(0,243,255,0.14); border-radius: 8px; padding: 10px 12px; background: rgba(4,6,15,0.5); }
+.board .tile .k { font-size: 9px; color: var(--dim); letter-spacing: 2px; margin-bottom: 5px; }
+.board .tile .v { font-size: 14px; font-weight: 800; }
+.board .sparkwrap { margin-top: 14px; border: 1px solid rgba(0,243,255,0.14); border-radius: 8px; padding: 8px 10px; background: rgba(4,6,15,0.5); }
+.board .sparkwrap .lbl { font-size: 9px; color: var(--dim); letter-spacing: 2px; margin-bottom: 4px; display: flex; justify-content: space-between; }
+@media (max-width: 1100px) { .board .grid2 { grid-template-columns: 1fr 1fr; } }
+
 footer { margin-top: 30px; text-align: center; color: var(--dim); font-size: 11px; letter-spacing: 2px; opacity: .7; }
 .skeleton { color: var(--dim); }
 @media (max-width: 1100px) { .bots { grid-template-columns: 1fr; } .hero { flex-direction: column; align-items: flex-start; } }
@@ -202,16 +226,35 @@ footer { margin-top: 30px; text-align: center; color: var(--dim); font-size: 11p
     <div class="eq-break" style="text-align:right;font-size:12px" id="eqdetail"></div>
   </div>
 
-  <div class="bots" id="bots"></div>
-
-  <div class="card" style="margin-bottom:18px; border-color:rgba(255,230,0,0.35)">
-    <h2><span class="ico">◈</span> SCOMMESSA ASIMMETRICA — AIRDROP FARMING · BASE</h2>
-    <div id="scommessa"><div class="skeleton">—</div></div>
+  <div class="board" id="board">
+    <div class="bd-head">
+      <div class="orb" id="orb"></div>
+      <div>
+        <h2>CANARY C1 — CARRY DOGE · OKX EEA</h2>
+        <div style="font-size:10px;color:var(--dim);letter-spacing:2px" id="board-state">—</div>
+      </div>
+      <div class="day" id="board-day">—</div>
+      <div class="prog"><i id="board-prog"></i></div>
+      <div class="count">
+        <div class="k">PROSSIMO FUNDING (UTC)</div>
+        <div class="v" id="board-count">--:--:--</div>
+      </div>
+    </div>
+    <div class="grid2">
+      <div class="tile"><div class="k">POSIZIONE</div><div class="v" id="t-pos">—</div></div>
+      <div class="tile"><div class="k">PNL APERTO (UPL + FUNDING)</div><div class="v" id="t-pnl">—</div></div>
+      <div class="tile"><div class="k">COPERTURA (DELTA vs TOLLERANZA)</div><div class="v" id="t-delta">—</div></div>
+      <div class="tile"><div class="k">ENTRY / MARK</div><div class="v" id="t-px">—</div></div>
+    </div>
+    <div class="sparkwrap">
+      <div class="lbl"><span>MARK DOGE — SAMPLING LIVE (SESSIONE)</span><span id="spark-n">0 campioni</span></div>
+      <svg id="spark" viewBox="0 0 1000 120" preserveAspectRatio="none" style="width:100%;height:110px;display:block"></svg>
+    </div>
   </div>
 
-  <div class="card" style="margin-bottom:18px; border-color:rgba(10,255,157,0.35)">
-    <h2><span class="ico">◆</span> CANARY C1 — TRADING REALE (OKX EEA) · SPOT DOGE + SHORT X-PERP</h2>
-    <div class="kv-grid" id="canary"><div class="skeleton">—</div></div>
+  <div class="card" style="margin-bottom:18px; border-color:rgba(0,243,255,0.25)">
+    <h2><span class="ico">▦</span> FLOTTA STORICA — IN PANCHINA</h2>
+    <div id="flotta"></div>
   </div>
 
   <div class="grid">
@@ -269,30 +312,88 @@ const ORDER = [
   'marcodg1:okx:ALGO/EUR',
 ];
 
-function renderCanary(c) {
-  const el = $('canary');
+/* ── CANARY C1 — mission control (01/10) ── */
+let markHist = [];
+
+function nextFundingUTC() {
+  const now = new Date();
+  const h = now.getUTCHours();
+  const day = h < 8 ? 8 : (h < 16 ? 16 : 24);
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), day, 0, 0));
+}
+
+function boardTick() {
+  const el = $('board-count');
   if (!el) return;
-  c = c || {};
-  if (!c.status) {
-    el.innerHTML = '<div class="kv"><span class="k">canary</span><span class="v">' +
-      (c.error ? esc(c.error) : 'non attivo') + '</span></div>';
-    return;
+  const s = Math.max(0, Math.floor((nextFundingUTC().getTime() - Date.now()) / 1000));
+  el.textContent = String(Math.floor(s / 3600)).padStart(2, '0') + ':' +
+    String(Math.floor((s % 3600) / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+}
+
+function renderBoard(d) {
+  const c = (d && d.canary) || {};
+  const stale = !c.status || c.ok === false || (typeof c.age_s === 'number' && c.age_s > 2400);
+  $('orb').className = 'orb' + (stale ? ' bad' : '');
+  $('board-state').textContent = !c.status
+    ? (c.error || 'in attesa del monitor canary…')
+    : (stale
+        ? 'DATO NON AGGIORNATO — ultimo check ' + Math.round((c.age_s || 0) / 60) + ' min fa'
+        : '● LIVE · check ' + Math.round((c.age_s || 0) / 60) + ' min fa · fee = schedule · review 15/10');
+  if (c.ts_open) {
+    const raw = String(c.ts_open);
+    const t0 = Date.parse(raw.includes('Z') || raw.includes('+') ? raw : raw + 'Z');
+    if (!isNaN(t0)) {
+      const elapsed = Date.now() - t0;
+      $('board-day').textContent = 'DAY ' + Math.min(14, Math.floor(elapsed / 86400000) + 1) + '/14';
+      $('board-prog').style.width = Math.max(0, Math.min(100, elapsed / (14 * 86400000) * 100)).toFixed(2) + '%';
+    }
   }
-  const age = (typeof c.age_s === 'number') ? c.age_s : null;
-  const stale = (age === null || age > 2400 || c.ok === false);
-  const badge = stale
-    ? '<span style="color:#ff2e63">● DATO NON AGGIORNATO</span>'
-    : '<span style="color:#0aff9d">● LIVE</span>';
-  const sgn = (v) => ((Number(v) >= 0 ? '+' : '') + fmt(v, 4));
-  const rows = [
-    ['stato', badge + ' · ultimo check ' + (age === null ? '—' : Math.round(age / 60) + ' min fa')],
-    ['posizione', (c.perp_ct ?? '—') + ' ct SHORT X-PERP · ' + (c.spot_qty ?? '—') + ' DOGE spot'],
-    ['entry / mark', 'perp ' + fmt(c.perp_avg, 4) + ' · spot ' + fmt(c.spot_avg, 4) + ' · mark ' + fmt(c.mark, 4)],
-    ['pnl aperto', 'upl ' + sgn(c.upl || 0) + '€ · funding ' + sgn(c.funding || 0) + '€'],
-    ['copertura', 'delta ' + fmt(c.delta_qty, 2) + ' DOGE (tolleranza ≤ 1)'],
-    ['finestra', 'aperto ' + (c.ts_open ? esc(String(c.ts_open).replace('T', ' ').slice(0, 16)) + ' UTC' : '—') + ' · review 15/10'],
-  ];
-  el.innerHTML = rows.map(r => '<div class="kv"><span class="k">' + r[0] + '</span><span class="v">' + r[1] + '</span></div>').join('');
+  if (!c.status) return;
+  $('t-pos').textContent = (c.perp_ct ?? '—') + ' ct SHORT · ' + (c.spot_qty ?? '—') + ' DOGE spot';
+  const upl = +c.upl || 0, fnd = +c.funding || 0, net = upl + fnd;
+  $('t-pnl').innerHTML = '<span style="color:' + (net >= 0 ? 'var(--neon-green)' : 'var(--neon-red)') + '">' +
+    (net >= 0 ? '+' : '') + fmt(net, 4) + '€</span><span style="font-size:10px;color:var(--dim)"> · upl ' +
+    (upl >= 0 ? '+' : '') + fmt(upl, 4) + ' · fund ' + (fnd >= 0 ? '+' : '') + fmt(fnd, 4) + '</span>';
+  $('t-delta').innerHTML = fmt(c.delta_qty, 2) + ' DOGE <span style="font-size:10px;color:var(--dim)">/ tolleranza 1</span>';
+  $('t-px').textContent = 'perp ' + fmt(c.perp_avg, 4) + ' · mark ' + fmt(c.mark, 4);
+  if (typeof c.mark === 'number' && c.mark > 0) {
+    const lastT = markHist.length ? markHist[markHist.length - 1].t : 0;
+    if (Date.now() / 1000 - lastT > 15) {
+      markHist.push({ t: Date.now() / 1000, m: c.mark });
+      if (markHist.length > 360) markHist.shift();
+    }
+  }
+  if (markHist.length >= 2) {
+    const xs = markHist.map(p => p.t), ys = markHist.map(p => p.m);
+    const t0s = Math.min(...xs), t1s = Math.max(...xs) || (t0s + 1);
+    const lo = Math.min(...ys), hi = Math.max(...ys);
+    const pad = (hi - lo) * 0.15 || hi * 0.0005;
+    const pts = markHist.map(p => ((p.t - t0s) / (t1s - t0s) * 1000).toFixed(1) + ',' +
+      (110 - (p.m - (lo - pad)) / ((hi + pad) - (lo - pad)) * 100).toFixed(1)).join(' ');
+    $('spark').innerHTML = '<polyline points="' + pts + '" fill="none" stroke="var(--neon-green)" stroke-width="2"/>' +
+      '<text x="8" y="16" fill="#5a6a9e" font-size="14">' + hi.toFixed(5) + '</text>' +
+      '<text x="8" y="114" fill="#5a6a9e" font-size="14">' + lo.toFixed(5) + '</text>';
+    $('spark-n').textContent = markHist.length + ' campioni';
+  }
+}
+
+function renderFlotta(d) {
+  const bots = d.bots || {};
+  const entries = ORDER.map(n => [n, bots[n]]).filter(([, b]) => b);
+  const active = entries.filter(([, b]) => !b.stale && b.status === 'running').length;
+  const chips = entries.map(([n, b]) => {
+    const meta = BOT_META[n] || { sym: n };
+    const st = b.stale ? 'stale' : (b.status || '?');
+    const col = st === 'running' ? 'var(--neon-green)' : (st === 'blocked' ? 'var(--neon-yellow)' : '#5a6a9e');
+    return '<span style="display:inline-block;margin:3px 6px 3px 0;padding:4px 10px;border:1px solid rgba(0,243,255,0.18);' +
+      'border-radius:5px;font-size:10px;letter-spacing:1px;color:' + col + '">' + esc(meta.sym) + ' · ' + esc(st) + '</span>';
+  }).join('');
+  $('flotta').innerHTML =
+    '<div class="row"><span class="k">BOT STORICI</span><span class="pill ' + (active ? 'ok' : 'warn') + '">' +
+    entries.length + ' IN PANCHINA · ' + active + ' ATTIVI</span></div>' +
+    '<div style="font-size:11px;color:var(--dim);margin:8px 0 6px">Tutti i bot della flotta precedente sono FERMI (€0, blocked). ' +
+    'Torneranno in gioco solo col piano di isolamento sub-account; la produzione attuale è il canary qui sopra.</div>' +
+    '<div>' + chips + '</div>';
 }
 
 async function load() {
@@ -300,7 +401,7 @@ async function load() {
     const r = await fetch('/api/infra.json', {cache: 'no-store'});
     const d = await r.json();
     render(d);
-    renderCanary(d.canary);
+    renderBoard(d);
   } catch (e) {
     $('sysstatus').textContent = 'SIGNAL LOST';
     $('dot').className = 'pulse warn';
@@ -331,53 +432,10 @@ const ebKeys = Object.keys(eb).filter(k => eb[k] && eb[k].ok && eb[k].eur !== nu
   const labels = Object.keys(bal).filter(k => bal[k] && bal[k].ok);
   $('eqdetail').innerHTML = 'CHANNELS: ' + labels.map(esc).join(' ⏺ ');
 
-  // Bots (ordinati)
+  // Flotta storica: riepilogo compatto (le 17 card dei bot spenti erano rumore)
   const bots = d.bots || {};
-  const bwrap = $('bots');
-  bwrap.innerHTML = '';
-  let shown = 0;
-  for (const name of ORDER) {
-    const b = bots[name];
-    // una card per un bot fermo da ore mostrerebbe equity vecchie come
-    // stato attuale: meglio nessuna card.
-    if (!b || b.stale) continue;
-    shown++;
-    const meta = BOT_META[name] || {sym: b.symbol || name, ex: b.exchange || '', color: '#00f3ff'};
-    const st = b.status || '?';
-    const stCls = st === 'running' ? 'running' : 'stopped';
-    const stTxt = st === 'running' ? 'OPERATIVE' : (st === 'no_file' ? 'NO DATA' : st.toUpperCase());
-    const pnl = b.pnl || 0;
-    const pnlTxt = (pnl >= 0 ? '+' : '') + fmt(pnl, 4) + '€';
-    // Posizione realmente detenuta (telemetria 2026-09-18): il bot resta
-    // "running" anche mentre e' dentro il mercato, quindi serve un badge
-    // dedicato per non confondere FLAT e IN POSIZIONE.
-    const inPos = Number(b.in_posizione) > 0;
-    const posTxt = inPos
-      ? 'IN POSIZIONE · ENTRY ' + fmt(b.pos_entry, 4) + '€ · STOP ' + (Number(b.pos_stop) > 0 ? fmt(b.pos_stop, 4) + '€' : 'n/d')
-      : 'FLAT';
-    const div = document.createElement('div');
-    div.className = 'bot';
-    div.style.setProperty('--bot-color', meta.color);
-    div.innerHTML = `
-      <div class="bot-head">
-        <div><div class="bot-name">${esc(meta.sym)}</div><div class="bot-sym">${esc(meta.ex)}</div></div>
-        <div style="display:flex;gap:6px;align-items:center">
-          ${inPos ? '<span class="badge inpos">IN POS</span>' : ''}
-          <span class="badge ${stCls}">${esc(stTxt)}</span>
-        </div>
-      </div>
-      <div class="bot-eq">${fmt(b.total_equity)}€</div>
-      <div class="bot-eq-label">EQUITY</div>
-      <div class="bot-pos ${inPos ? 'on' : ''}">${posTxt}</div>
-      <div class="bot-stats">
-        <div class="stat"><div class="v buys">${b.buys ?? 0}</div><div class="l">BUY</div></div>
-        <div class="stat"><div class="v sells">${b.sells ?? 0}</div><div class="l">SELL</div></div>
-        <div class="stat"><div class="v ${pnl >= 0 ? 'ok' : 'bad'}">${pnlTxt}</div><div class="l">PNL</div></div>
-        <div class="stat"><div class="v">${b.trades ?? 0}</div><div class="l">TRADE</div></div>
-      </div>`;
-    bwrap.appendChild(div);
-  }
-  if (shown === 0) bwrap.innerHTML = '<div class="card" style="grid-column:1/-1">FLOTTA FERMA — NESSUN BOT ATTIVO ORA</div>';
+  renderFlotta(d);
+  const shown = ORDER.filter(n => bots[n] && !bots[n].stale && bots[n].status === 'running').length;
 
   // Prezzi
   const pr = d.prices || {};
@@ -445,15 +503,20 @@ const ebKeys = Object.keys(eb).filter(k => eb[k] && eb[k].ok && eb[k].eur !== nu
     return `<div class="row"><span class="k">${esc(k)}</span><span class="pill ${up ? 'ok' : 'warn'}">${esc(v)}</span></div>`;
   }).join('') || '<div class="skeleton">—</div>';
 
-  // Status: con la flotta a zero bot freschi il badge lo dice esplicitamente
-  // (prima restava "CAUTION — COMPONENT OFFLINE", che sembrava un guasto).
-  const allOk = shown > 0 && ORDER.every(n => !bots[n] || bots[n].status === 'running');
-  if (shown === 0) {
+  // Status pill: prima la realtà operativa attuale (canary live), poi la flotta.
+  const cok = d.canary && d.canary.ok === true && d.canary.status === 'open';
+  if (cok) {
+    $('sysstatus').textContent = '◆ CANARY LIVE — OKX EEA';
+    $('dot').className = 'pulse';
+  } else if (d.canary && d.canary.status === 'open') {
+    $('sysstatus').textContent = 'CANARY: DATO NON AGGIORNATO';
+    $('dot').className = 'pulse warn';
+  } else if (shown === 0) {
     $('sysstatus').textContent = 'FLOTTA FERMA — NESSUN BOT ATTIVO';
     $('dot').className = 'pulse warn';
   } else {
-    $('sysstatus').textContent = allOk ? 'SYSTEM ONLINE' : 'CAUTION — COMPONENT OFFLINE';
-    $('dot').className = 'pulse' + (allOk ? '' : ' warn');
+    $('sysstatus').textContent = 'SYSTEM ONLINE';
+    $('dot').className = 'pulse';
   }
 
   // ── NODE ENGINE: tutti i bot (paper + live) ──
@@ -661,10 +724,10 @@ function renderScommessa(s) {
 
 function tick() { $('clock').textContent = new Date().toLocaleTimeString('it-IT'); }
 load();
-loadScommessa();
 setInterval(load, 30000);
-setInterval(loadScommessa, 60000);
 setInterval(tick, 1000);
+setInterval(boardTick, 1000);
+boardTick();
 tick();
 </script>
 </body>
