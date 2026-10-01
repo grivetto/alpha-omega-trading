@@ -253,7 +253,7 @@ footer { margin-top: 30px; text-align: center; color: var(--dim); font-size: 11p
   </div>
 
   <div class="card" style="margin-bottom:18px; border-color:rgba(0,243,255,0.25)">
-    <h2><span class="ico">▦</span> FLOTTA STORICA — IN PANCHINA</h2>
+    <h2><span class="ico">▦</span> OFFICINA PAPER — 17 BOT IN FORWARD TEST (SIMULATO)</h2>
     <div id="flotta"></div>
   </div>
 
@@ -304,12 +304,12 @@ const BOT_META = {
   'marcodg1:okx:ALGO/EUR': {sym: 'ALGO/EUR', ex: 'OKX·MARCOSUB1·TREND', color: '#ff9500'},
 };
 const ORDER = [
-  'mc2:okx:BTC/EUR', 'mc2:okx:ETH/EUR', 'mc2:okx:SOL/EUR',
-  'mc2:okx:XRP/EUR', 'mc2:okx:DOGE/EUR', 'mc2:okx:TRX/EUR',
-  'mc2:okx:CRV/EUR', 'nuvola:okx:LINK/EUR', 'nuvola:okx:AVAX/EUR',
-  'nuvola:okx:DOT/EUR', 'nuvola:okx:UNI/EUR', 'nuvola:okx:SUI/EUR', 'nuvola:okx:MINA/EUR',
-  'marcodg1:okx:ADA/EUR', 'marcodg1:okx:ARB/EUR', 'marcodg1:okx:XLM/EUR',
-  'marcodg1:okx:ALGO/EUR',
+  'mc2:paper:BTC/EUR', 'mc2:paper:ETH/EUR', 'mc2:paper:SOL/EUR',
+  'mc2:paper:XRP/EUR', 'mc2:paper:DOGE/EUR', 'mc2:paper:TRX/EUR',
+  'mc2:paper:CRV/EUR', 'nuvola:paper:LINK/EUR', 'nuvola:paper:AVAX/EUR',
+  'nuvola:paper:DOT/EUR', 'nuvola:paper:UNI/EUR', 'nuvola:paper:SUI/EUR', 'nuvola:paper:MINA/EUR',
+  'marcodg1:paper:ADA/EUR', 'marcodg1:paper:ARB/EUR', 'marcodg1:paper:XLM/EUR',
+  'marcodg1:paper:ALGO/EUR',
 ];
 
 /* ── CANARY C1 — mission control (01/10) ── */
@@ -379,20 +379,21 @@ function renderBoard(d) {
 
 function renderFlotta(d) {
   const bots = d.bots || {};
-  const entries = ORDER.map(n => [n, bots[n]]).filter(([, b]) => b);
-  const active = entries.filter(([, b]) => !b.stale && b.status === 'running').length;
-  const chips = entries.map(([n, b]) => {
-    const meta = BOT_META[n] || { sym: n };
-    const st = b.stale ? 'stale' : (b.status || '?');
-    const col = st === 'running' ? 'var(--neon-green)' : (st === 'blocked' ? 'var(--neon-yellow)' : '#5a6a9e');
+  const fresh = ORDER.filter(n => bots[n] && !bots[n].stale && bots[n].status === 'running').length;
+  const chips = ORDER.map(n => {
+    const b = bots[n] || {};
+    const sym = n.split(':').pop();
+    const ok = !b.stale && b.status === 'running';
+    const st = b.stale ? 'stale' : (b.status || 'n/d');
+    const col = ok ? 'var(--neon-green)' : (st === 'stale' ? '#5a6a9e' : 'var(--neon-yellow)');
     return '<span style="display:inline-block;margin:3px 6px 3px 0;padding:4px 10px;border:1px solid rgba(0,243,255,0.18);' +
-      'border-radius:5px;font-size:10px;letter-spacing:1px;color:' + col + '">' + esc(meta.sym) + ' · ' + esc(st) + '</span>';
+      'border-radius:5px;font-size:10px;letter-spacing:1px;color:' + col + '">' + esc(sym) + ' · ' + esc(ok ? 'paper ✓' : st) + '</span>';
   }).join('');
   $('flotta').innerHTML =
-    '<div class="row"><span class="k">BOT STORICI</span><span class="pill ' + (active ? 'ok' : 'warn') + '">' +
-    entries.length + ' IN PANCHINA · ' + active + ' ATTIVI</span></div>' +
-    '<div style="font-size:11px;color:var(--dim);margin:8px 0 6px">Tutti i bot della flotta precedente sono FERMI (€0, blocked). ' +
-    'Torneranno in gioco solo col piano di isolamento sub-account; la produzione attuale è il canary qui sopra.</div>' +
+    '<div class="row"><span class="k">OFFICINA PAPER — FORWARD TEST (SIMULATO)</span><span class="pill ' + (fresh === ORDER.length ? 'ok' : 'warn') + '">' +
+    fresh + ' / ' + ORDER.length + ' ATTIVI</span></div>' +
+    '<div style="font-size:11px;color:var(--dim);margin:8px 0 6px">I 17 bot trend della flotta girano in forward test sui prezzi live: ' +
+    'fill simulati, nessun ordine, nessuna chiave. Il live del progetto è il canary qui sopra.</div>' +
     '<div>' + chips + '</div>';
 }
 
