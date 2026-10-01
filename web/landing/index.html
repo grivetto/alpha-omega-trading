@@ -270,14 +270,16 @@ footer .cur{vertical-align:-2px}
     <h2>system.live</h2>
     <div class="sub">real numbers, straight from the aggregator grid — no mock data, ever</div>
     <div class="livewrap">
-      <div class="cell"><div class="k">fleet equity</div><div class="v grn" id="lv-eq">--</div></div>
-      <div class="cell"><div class="k">bots running</div><div class="v" id="lv-run">--</div></div>
-      <div class="cell"><div class="k">realized pnl</div><div class="v" id="lv-pnl">--</div></div>
+      <div class="cell"><div class="k">capital (live)</div><div class="v grn" id="lv-eq">--</div></div>
+      <div class="cell"><div class="k">canary window</div><div class="v" id="lv-run">--</div></div>
+      <div class="cell"><div class="k">canary upl</div><div class="v" id="lv-pnl">--</div></div>
       <div class="cell"><div class="k">data age</div><div class="v" id="lv-age">--</div></div>
     </div>
     <div class="nodes" id="nodes"></div>
     <div class="livemeta" id="lv-meta"><span class="dot">●</span> connecting to denaro-api.grivetto.eu …</div>
     <div class="livemeta" id="lv-canary"><span class="dot">●</span> canary …</div>
+    <div class="livemeta" id="lv-paper"><span class="dot">●</span> paper fleet …</div>
+    <div class="livemeta"><span class="dot">●</span> <b>fabbrica ×50</b> · tick 6s · paper-first edge research</div>
   </section>
 
   <section id="about" class="rv">
@@ -316,9 +318,9 @@ footer .cur{vertical-align:-2px}
     <div class="sub">current missions</div>
     <div class="grid3">
       <div class="card">
-        <span class="pill pap">PAPER MODE</span>
+        <span class="pill pap">PAPER MODE</span><span class="pill ok" style="margin-left:6px">CANARY LIVE</span>
         <h3>DENARO</h3>
-        <p>Multi-node crypto trading infrastructure on OKX — risk-managed bots, reconciled PnL, pre-trade checks, kill switches and paper fleets running in parallel. If it can't reconcile, it doesn't trade.</p>
+        <p>Multi-node crypto trading infrastructure on OKX — risk-managed bots, reconciled PnL, pre-trade checks, kill switches and paper fleets running in parallel. If it can't reconcile, it doesn't trade. First live canary — a DOGE funding carry — is up on real money, small and fully reconciled.</p>
         <a class="lnk" href="https://denaro.grivetto.eu" target="_blank" rel="noopener">enter the grid</a>
       </div>
       <div class="card">
@@ -368,7 +370,7 @@ setTimeout(gl,900);setInterval(function(){if(Math.random()<.42)gl()},4200);
 /* terminal typing */
 var lines=[
  {c:"whoami",o:"ops — systems engineer · hardcore mode: ON"},
- {c:"uptime --fleet",o:"3 nodes · multi-bot grid · self-healing since forever"},
+ {c:"uptime --fleet",o:"3 nodes · paper fleet + 1 live canary · self-healing since forever"},
  {c:"cat /etc/motd",o:"build systems that run alone. never lie about PnL."},
  {c:"ls ~/missions",o:"denaro/  telemetry/  self-healing-ops/  ...more cooking"},
  {c:"echo $CONTACT",o:"denaro.grivetto.eu · grafana.grivetto.eu"}
@@ -433,33 +435,45 @@ if(!RM&&cv){
 /* live fleet */
 function money(v){return v.toLocaleString("it-IT",{minimumFractionDigits:2,maximumFractionDigits:2})+" €"}
 function render(d){
-  var t=d.node_totals||{},bots=d.bots||{};
-  var eq=0,run=0,pnl=0;
-  Object.keys(t).forEach(function(k){eq+=+t[k].equity||0;run+=+t[k].running||0;pnl+=+t[k].pnl||0});
+  var bots=d.bots||{};
+  var eq=+d.total_equity||0;
+  var c=d.canary||{};
+  var dayTxt="—";
+  if(c.ts_open){var t0=Date.parse(c.ts_open);if(!isNaN(t0)){dayTxt="DAY "+Math.min(14,Math.floor((Date.now()-t0)/86400000)+1)+"/14";}}
+  var cupl=(+c.upl||0)+(+c.funding||0);
   var age=Math.max(0,Date.now()/1000-(+d.generated||0));
   document.getElementById("lv-eq").textContent=money(eq);
-  document.getElementById("lv-run").textContent=run;
-  var pe=document.getElementById("lv-pnl");pe.textContent=money(pnl);
-  pe.className="v "+(pnl>=0?"grn":"red");
+  document.getElementById("lv-run").textContent=dayTxt;
+  var pe=document.getElementById("lv-pnl");pe.textContent=(cupl>=0?"+":"")+cupl.toFixed(4)+" €";
+  pe.className="v "+(cupl>=0?"grn":"red");
   document.getElementById("lv-age").textContent=Math.round(age)+" s";
-  /* nodes */
-  var max=1;Object.keys(t).forEach(function(k){max=Math.max(max,+t[k].equity||0)});
+  /* accounts */
+  var eb=d.equity_breakdown||{};
+  var names=Object.keys(eb).filter(function(k){return eb[k]&&eb[k].ok&&eb[k].eur!=null});
+  var max=1;names.forEach(function(k){max=Math.max(max,+eb[k].eur||0)});
   var box=document.getElementById("nodes");box.innerHTML="";
-  Object.keys(t).sort().forEach(function(k){
-    var n=t[k],w=Math.max(2,(+n.equity||0)/max*100);
+  names.sort().forEach(function(k){
+    var e=+eb[k].eur||0,w=Math.max(2,e/max*100);
     var row=document.createElement("div");row.className="nr";
     row.innerHTML='<div class="nm">'+k+'</div><div class="track"><div class="fill" style="width:'+w+'%"></div></div>'+
-      '<div class="val">'+money(+n.equity||0)+' · '+(+n.running||0)+' bot</div>';
+      '<div class="val">'+money(e)+'</div>';
     box.appendChild(row);
   });
   var m=document.getElementById("lv-meta");
   m.className="livemeta";m.innerHTML='<span class="dot">●</span> live from aggregator · payload '+
     (isFinite(age)?Math.round(age):"?")+'s old · '+Object.keys(bots).length+' bots tracked · refresh 30s';
+  /* paper fleet (officina) */
+  var lp=document.getElementById("lv-paper");
+  if(lp){
+    var nt=d.node_totals||{},np=0;
+    Object.keys(nt).forEach(function(k){np+=+nt[k].paper_running||0});
+    lp.innerHTML='<span class="dot">●</span> <b>paper fleet</b> · '+np+' bots running · simulated capital, production code path';
+  }
   /* canary C1 (carry reale, agg. 01/10) */
   var lc=document.getElementById("lv-canary");
   if(lc){
     var c=d.canary||{};
-    var fx=function(v){return (v===undefined||v===null)?"—":v};
+    var fx=function(v){return (v===undefined||v===null)?"—":(typeof v==="number"?Math.round(v*1e6)/1e6:v)};
     var f4=function(v){v=(+v||0);return (v>=0?"+":"")+v.toFixed(4)};
     if(c.status==="open"){
       var cAge=(typeof c.age_s==="number")?c.age_s:null;
