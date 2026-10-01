@@ -43,7 +43,7 @@
 | **Unfunded state** | ✅ explicit `ok` / `sottocapitalizzato` / `non_finanziato` / `illeggibile` | 18 tests |
 | **Account exposure cap** | ✅ wired into the node (registry existed, nobody built it) | 15 tests |
 | **Fleet integrity check** | ✅ `tools/fleet_integrity.py`, exit code 1 on any alarm | 14 alarms on MARCODG1, 7 on nuvola |
-| **Live trading** | ✅ one live canary (DOGE carry): small, reconciled, funding accruing | rest of the fleet: paper + research |
+| **Live trading** | ✅ **one live bot** (carry C1, DOGE): size deliberately minimal, fully reconciled, funding accruing | the project's first real execution; rest of the fleet: paper + research |
 | **Telemetry services** | ⚠️ 4 units in pathological restart (path drift) | `denaro-watchdog` failed |
 | **Security** | ⚠️ one host was compromised, now contained | see § Security |
 | **Economy** | ⚠️ current fee tier cancels the edge — see § The economics | measured on real fees |
@@ -92,6 +92,55 @@ were observed in production (see § Lessons).
 <p align="center">
   <img src="assets/architettura-flotta.svg" alt="Fleet architecture: three nodes, one OKX sub-account each, one portfolio risk governor" width="100%"/>
 </p>
+
+### The operations layer — the same machines, second role (2026-10-02)
+
+One machine = one strategy family = one sub-account is the *trading* design. The same three
+machines also carry everything that builds, watches and guards the fleet: a hub, an operations
+room and a monitoring post.
+
+```
+               ┌──────────────────── OKX EEA (eea.okx.com) ─────────────────────┐
+               │ live: 1 canary carry (DOGE) · the rest: paper — no orders      │
+               └────────────────────────▲──────────────────────▲────────────────┘
+                           orders       │                      │  market data / public API
+ ┌─────────────────────────────────────┴──┐  ┌───────────────┴───────────────────┐
+ │ mc2 — hub & workshop                   │  │ MARCODG1 — operations room        │
+ │ · Hermes — direction, code, review     │  │ · aggregator :8912 → 34 bots      │
+ │ · fabric master — one action every 3 s │  │ · dashboard :8913 · landing :8914 │
+ │ · Zabbix 7.0 (Docker) + alerting       │  │ · Grafana :3000 · health :8911    │
+ │ · A0-MC2 coder (Gemini 2.5 Flash)      │  │ · canary (live) · dry bench       │
+ │ · fabric worker — every 5 s            │  │ · fabric worker — every 5 s       │
+ └────────────────────────────────────────┘  └───────────────────────────────────┘
+ ┌────────────────────────────────────────┐
+ │ nuvola — monitoring post               │
+ │ · health :8911 · exporter :9100        │
+ │ · Zabbix agent + tunnel → mc2          │
+ │ · fabric worker — every 5 s            │
+ └────────────────────────────────────────┘
+   telemetry: paper fleet (simulated, all three nodes) → aggregator → dashboard + landing →
+   Zabbix «Money» (38 hosts — bots, machines, project; auto-heal on known faults)
+```
+
+**The live bot** — since 01/10 a real bot trades on OKX EEA: carry **C1** (DOGE spot + X-Perp
+short, 1× isolated, size deliberately minimal), fully reconciled against the exchange; funding
+accrues three times a day (00/08/16 UTC) and the net is slightly positive at the time of
+writing. The 14-day validation window closes on **15/10** with pre-registered criteria
+(`docs/16`). It is the project's **first real execution**: everything else stays paper +
+research.
+
+![Denaro system — 02/10/2026](assets/foto-sistema-2026-10-02.png)
+
+*Full-resolution visual: [`FOTO_SISTEMA_2026-10-02.html`](https://github.com/grivetto/money/blob/main/FOTO_SISTEMA_2026-10-02.html) (sibling `money` repo).*
+
+**In pratica** — work flows through one loop with four possible executors: two Agent Zero coders
+(mc2 and PC), a DSH peer session and a free OpenCode executor. Every delivery is reviewed by
+Hermes with the tests re-run in the repository before anything lands; research itself lives in
+the sibling repo [`money`](https://github.com/grivetto/money): idea → pre-registered spec →
+executor → review → measure → 8-criteria gate → promote or archive → dry bench → canary →
+minimum-size live. Heartbeats and freshness checks cover every critical daemon: the fabric tick
+and the node shards are watched, and Zabbix auto-heals known fault patterns while raising the
+rest.
 
 ### Core technologies
 

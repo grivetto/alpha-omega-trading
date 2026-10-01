@@ -43,7 +43,7 @@
 | **Stato non finanziato** | ✅ esplicito `ok` / `sottocapitalizzato` / `non_finanziato` / `illeggibile` | 18 test |
 | **Limite di esposizione del conto** | ✅ integrato nel nodo (il registro esisteva, nessuno lo aveva costruito) | 15 test |
 | **Controllo di integrità della flotta** | ✅ `tools/fleet_integrity.py`, exit code 1 su qualsiasi allarme | 14 allarmi su MARCODG1, 7 su nuvola |
-| **Trading live** | ✅ un canary live (carry DOGE): piccolo, riconciliato, funding in maturazione | il resto della flotta: paper + ricerca |
+| **Trading live** | ✅ **un bot live** (carry C1, DOGE): taglia volutamente minima, completamente riconciliato, funding in maturazione | la prima esecuzione reale del progetto; il resto: paper + ricerca |
 | **Servizi di telemetria** | ⚠️ 4 unit in riavvio patologico (path drift) | `denaro-watchdog` failed |
 | **Sicurezza** | ⚠️ un host è stato compromesso, ora contenuto | vedi § Sicurezza |
 | **Economia** | ⚠️ la fascia commissionale attuale annulla l'edge — vedi § L'economia | misurato su commissioni reali |
@@ -92,6 +92,55 @@ osservati in produzione (vedi § Lezioni).
 <p align="center">
   <img src="assets/architettura-flotta.svg" alt="Architettura della flotta: tre nodi, un sub-account OKX ciascuno, una regia del rischio di portafoglio" width="100%"/>
 </p>
+
+### Il livello operativo — le stesse macchine, secondo ruolo (02/10/2026)
+
+Una macchina = una famiglia di strategie = un sub-account è il disegno *di trading*. Le stesse
+tre macchine reggono anche tutto ciò che costruisce, osserva e protegge la flotta: un hub, una
+sala operativa e un posto di monitoraggio.
+
+```
+               ┌──────────────────── OKX EEA (eea.okx.com) ─────────────────────┐
+               │ live: 1 canary carry (DOGE) · il resto: paper — zero ordini    │
+               └────────────────────────▲──────────────────────▲────────────────┘
+                           ordini       │                      │  dati di mercato / API pubblica
+ ┌─────────────────────────────────────┴──┐  ┌───────────────┴───────────────────┐
+ │ mc2 — hub e officina                   │  │ MARCODG1 — sala operativa         │
+ │ · Hermes — direzione, codice, review   │  │ · aggregator :8912 → 34 bot       │
+ │ · fabbrica master — azione ogni 3 s    │  │ · dashboard :8913 · landing :8914 │
+ │ · Zabbix 7.0 (Docker) + alert          │  │ · Grafana :3000 · health :8911    │
+ │ · A0-MC2 operaio (Gemini 2.5 Flash)    │  │ · canary (live) · banco a secco   │
+ │ · fabbrica worker — ogni 5 s           │  │ · fabbrica worker — ogni 5 s      │
+ └────────────────────────────────────────┘  └───────────────────────────────────┘
+ ┌────────────────────────────────────────┐
+ │ nuvola — posto di monitoraggio         │
+ │ · health :8911 · exporter :9100        │
+ │ · Zabbix agent + tunnel → mc2          │
+ │ · fabbrica worker — ogni 5 s           │
+ └────────────────────────────────────────┘
+   telemetria: flotta paper (simulata, su tutti e tre i nodi) → aggregator → dashboard + landing →
+   Zabbix «Money» (38 host — bot, macchine, progetto; auto-heal sui guasti noti)
+```
+
+**Il bot live** — dal 01/10 un bot reale opera su OKX EEA: carry **C1** (DOGE spot + short
+X-Perp, 1× isolated, taglia volutamente minima), completamente riconciliato con l'exchange; il
+funding matura tre volte al giorno (00/08/16 UTC) e il netto è leggermente positivo al momento
+della scrittura. La finestra di validazione di 14 giorni chiude il **15/10** con criteri
+pre-dichiarati (`docs/16`). È la **prima esecuzione reale** del progetto: il resto resta paper +
+ricerca.
+
+![Denaro — sistema al 02/10/2026](assets/foto-sistema-2026-10-02.png)
+
+*Visual a piena risoluzione: [`FOTO_SISTEMA_2026-10-02.html`](https://github.com/grivetto/money/blob/main/FOTO_SISTEMA_2026-10-02.html) (repo gemello `money`).*
+
+**In pratica** — il lavoro scorre in un unico anello con quattro esecutori possibili: due operai
+Agent Zero (mc2 e PC), una sessione peer DSH e un esecutore OpenCode gratuito. Ogni consegna è
+ri-verificata da Hermes con i test rieseguiti nel repository prima che qualcosa entri; la ricerca
+vive nel repo gemello [`money`](https://github.com/grivetto/money): idea → spec pre-registrata →
+esecutore → review → misura → cancello a 8 criteri → promozione o archivio → banco a secco →
+canary → live a taglia minima. Heartbeat e controlli di freschezza coprono ogni daemon critico:
+il tick della fabbrica e gli shard dei nodi sono sorvegliati, e Zabbix auto-ripara i guasti noti
+mentre alza gli altri.
 
 ### Tecnologie principali
 
