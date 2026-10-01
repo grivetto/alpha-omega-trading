@@ -403,6 +403,45 @@ def push_novita(data):
     ]
 
 
+# Officina paper (01/10/26): heartbeat della flotta riconvertita — per nodo,
+# numero di bot paper freschi (<300s) e eta' del file piu' vecchio. Se un nodo
+# smette di tickare, gli item flotta.paper_* lo dicono (trigger dedicati).
+PAPER_WATCH = {
+    "MARCODG1": {"ssh": None, "dir": "/home/marco/denaro/health"},
+    "mc2": {"ssh": ["sergio@127.0.0.1", "-p", "2222"],
+            "dir": "/home/sergio/denaro/health"},
+    "nuvola": {"ssh": ["sergio@87.106.3.15", "-p", "22"],
+               "dir": "/home/sergio/denaro/health"},
+}
+
+
+def push_flotta_paper(data):
+    now = time.time()
+    for host, cfg in PAPER_WATCH.items():
+        d = cfg["dir"]
+        if cfg["ssh"]:
+            ssh_args = " ".join(cfg["ssh"])
+            cmd = (f"ssh -o BatchMode=yes -o ConnectTimeout=5 {ssh_args} "
+                   f"'for f in {d}/*_paper.json; do stat -c %Y \"$f\" 2>/dev/null; done'")
+            try:
+                r = subprocess.run(["bash", "-c", cmd], capture_output=True,
+                                   text=True, timeout=20)
+                mts = [int(x) for x in r.stdout.split() if x.strip().isdigit()]
+            except Exception:
+                mts = []
+        else:
+            try:
+                mts = [int(p.stat().st_mtime) for p in Path(d).glob("*_paper.json")]
+            except Exception:
+                mts = []
+        fresh = sum(1 for m in mts if now - m <= 300)
+        oldest = int(now - min(mts)) if mts else 10 ** 9
+        data += [
+            {"host": host, "key": "flotta.paper_n", "value": fresh},
+            {"host": host, "key": "flotta.paper_age_s", "value": oldest},
+        ]
+
+
 def main():
     auth = rpc("user.login", {"username": USER, "password": PASS})
     if not auth:
@@ -451,6 +490,9 @@ def main():
 
     # ── 8. [01/10] Canary C1 · Raccolta P8 · Fabbrica ×20 ──
     push_novita(data)
+
+    # ── 8b. [01/10] Flotta paper (officina): heartbeat per nodo ──
+    push_flotta_paper(data)
 
     # ── 6. [rimosso 01/10/26] push_remote_nodes disattivato: pushava su host
     #     alpha-omega-node-nuvola/-mc2 (inesistenti). Lo stato nodi arriva da
