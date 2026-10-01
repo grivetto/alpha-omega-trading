@@ -862,8 +862,12 @@ def collect_services():
         units = cfg["units"]
         if cfg["ssh"]:
             ssh_args = " ".join(cfg["ssh"])
+            # NB: fallback per user unit (mc2: denaro-node-mc2 e' una --user unit;
+            # `systemctl is-active` a scope di sistema la legge "inactive").
             cmd = (f"ssh -o BatchMode=yes -o ConnectTimeout=5 {ssh_args} "
-                   f"'for u in {' '.join(units)}; do s=$(systemctl is-active $u 2>/dev/null); echo $u=$s; done'")
+                   f"'for u in {' '.join(units)}; do s=$(systemctl is-active $u 2>/dev/null); "
+                   f"if [ \"$s\" != active ]; then s=$(XDG_RUNTIME_DIR=/run/user/1000 systemctl --user is-active $u 2>/dev/null); fi; "
+                   f"echo $u=$s; done'")
             try:
                 r = subprocess.run(["bash", "-c", cmd], capture_output=True,
                                    text=True, timeout=20)

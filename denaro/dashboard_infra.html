@@ -559,7 +559,7 @@ function renderNodes(d) {
   if (!Object.keys(nt).length) { wrap.innerHTML = '<div class="skeleton">NESSUN NODO</div>'; return; }
   const colors = { marcodg1: '#00f3ff', nuvola: '#ff2bd6', mc2: '#b026ff' };
   for (const [name, n] of Object.entries(nt)) {
-    const up = n.reachable && n.running > 0;
+    const up = !!n.reachable;
     const div = document.createElement('div');
     div.className = 'row';
     div.style.borderLeft = `3px solid ${colors[name] || '#00f3ff'}`;
@@ -568,10 +568,10 @@ function renderNodes(d) {
       <span class="k" style="display:flex;align-items:center;gap:10px">
         <b style="color:${colors[name] || '#00f3ff'}">${esc(name)}</b>
         <span class="pill ${up ? 'ok' : 'bad'}">${up ? 'UP' : 'DOWN'}</span>
-        <span style="color:var(--dim);font-size:10px">${n.running??0}/${n.bots??0} bot</span>
+        <span style="color:var(--dim);font-size:10px">${n.paper_running??0} paper · ${n.running??0} live</span>
       </span>
       <span class="v" style="display:flex;gap:14px">
-        <span>EQ <b>${fmt(n.equity||0)}€</b></span>
+        <span>LIVE EQ <b>${fmt(n.equity||0)}€</b></span>
         <span>PNL <b style="color:${(n.pnl||0)>=0?'var(--neon-green)':'var(--neon-red)'}">${(n.pnl||0)>=0?'+':''}${fmt(n.pnl,3)}</b></span>
         <span>TR <b>${n.trades??0}</b></span>
       </span>`;
