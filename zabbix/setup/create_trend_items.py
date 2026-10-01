@@ -2,10 +2,11 @@
 """Crea host + item Zabbix per: istanza TREND paper (alpha-omega-node-trend)
 e TREND LIVE Kraken (alpha-omega-bot-trend-live). Eseguito su MARCODG1."""
 import json
+import os
 import urllib.request
 
 API = "http://127.0.0.1:1080/api_jsonrpc.php"
-USER, PASS = "Admin", "zabbix"
+USER, PASS = "Admin", os.environ.get("ZBX_PASS", "")  # segreto rimosso dal repo (01/10/26)
 GROUP = "Denaro Bots"
 
 

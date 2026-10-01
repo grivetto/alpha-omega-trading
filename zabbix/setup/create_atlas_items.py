@@ -2,10 +2,11 @@
 """Crea gli item trapper ATLAS v6 (regime/adx/atr/rsi/ema200/strategy/
 stop_loss/cap_*) per host node (paper, nuvola, mc2) e bot live (sol/ada/kraken)."""
 import json
+import os
 import urllib.request
 
 API = "http://127.0.0.1:1080/api_jsonrpc.php"
-USER, PASS = "Admin", "zabbix"
+USER, PASS = "Admin", os.environ.get("ZBX_PASS", "")  # segreto rimosso dal repo (01/10/26)
 
 # host -> lista (base_key, simboli)
 HOSTS = {

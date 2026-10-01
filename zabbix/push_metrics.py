@@ -17,8 +17,16 @@ BASE = Path("/home/marco/denaro")
 HEALTH_DIR = BASE / "health"
 NODE_DIR = Path("/home/marco/alpha-omega-trading/node_data")
 API = "http://127.0.0.1:1080/api_jsonrpc.php"
-USER = "Admin"
-PASS = "zabbix"
+# [01/10/26] sicurezza: NIENTE credenziali nel sorgente (repo pubblico).
+# Fonti: $ZBX_CRED_FILE (default ~/.zbx_cred, formato "Utente:Password")
+# oppure variabili d'ambiente ZBX_USER / ZBX_PASS.
+import os
+_cred_file = Path(os.environ.get("ZBX_CRED_FILE", str(Path.home() / ".zbx_cred")))
+try:
+    _zuser, _zpass = _cred_file.read_text().strip().split(":", 1)
+except Exception:
+    _zuser, _zpass = os.environ.get("ZBX_USER", "Admin"), os.environ.get("ZBX_PASS", "")
+USER, PASS = _zuser, _zpass
 
 BOTS = {
     # [01/10/26] PULIZIA: host alpha-omega-bot-*-eur inesistenti da tempo, le
@@ -79,6 +87,7 @@ SERVICES = {
         "units": [
             "denaro-node-paper", "denaro-health-marcodg1", "denaro-aggregator-marcodg1",
             "denaro-dashboard-marcodg1", "denaro-node-marcodg1-xrp", "cloudflared-denaro", "zabbix-agent",
+            "denaro-landing",
         ],
     },
     "nuvola": {
@@ -374,32 +383,45 @@ def push_novita(data):
     data += [
         {"host": "MARCODG1", "key": "svc.canary", "value": ok},
         {"host": "MARCODG1", "key": "canary.age_s", "value": c_age},
-        {"host": "MARCODG1", "key": "canary.upl", "value": float(cs.get("last_upl") or 0)},
-        {"host": "MARCODG1", "key": "canary.delta_qty", "value": c_delta},
+        {"host": "MARCODG1", "key": "canary.upl", "value": round(float(cs.get("last_upl") or 0), 4)},
+        {"host": "MARCODG1", "key": "canary.funding", "value": round(float(cs.get("last_funding") or 0), 4)},
+        {"host": "MARCODG1", "key": "canary.delta_qty", "value": round(c_delta, 6)},
     ]
     # Raccolta + Fabbrica (mc2 via tunnel inverso)
     racc_age = fab_age = 10 ** 9
     racc_rows = 0
+    racc_run_age = 10 ** 9
+    hard_ok = 0
     try:
         cmd = ("ssh -o BatchMode=yes -o ConnectTimeout=5 sergio@127.0.0.1 -p 2222 "
                "'{ stat -c %Y /home/sergio/money/data/funding_xperp.jsonl 2>/dev/null || echo 0; "
                "wc -l < /home/sergio/money/data/funding_xperp.jsonl 2>/dev/null || echo 0; "
-               "stat -c %Y /home/sergio/money/fabbrica/metrics.prom 2>/dev/null || echo 0; }'")
+               "stat -c %Y /home/sergio/money/fabbrica/metrics.prom 2>/dev/null || echo 0; "
+               "stat -c %Y /home/sergio/money/data/raccolta_last_run 2>/dev/null || echo 0; "
+               "(sudo -n iptables -C INPUT -j MC2HARD >/dev/null 2>&1 && "
+               "sudo -n ip6tables -C INPUT -j MC2HARD >/dev/null 2>&1 && echo 1 || echo 0); }'")
         r = subprocess.run(["bash", "-c", cmd], capture_output=True, text=True, timeout=25)
         nums = [x for x in r.stdout.split() if x]
-        if len(nums) >= 3:
-            mt1, rows, mt2 = int(float(nums[0])), int(float(nums[1])), int(float(nums[2]))
+        if len(nums) >= 5:
+            mt1, rows, mt2, mmt, hard = (int(float(nums[0])), int(float(nums[1])),
+                                         int(float(nums[2])), int(float(nums[3])),
+                                         int(float(nums[4])))
             racc_age = int(now - mt1) if mt1 > 0 else 10 ** 9
             racc_rows = rows
             fab_age = int(now - mt2) if mt2 > 0 else 10 ** 9
+            # [01/10] svc.raccolta = "il collector e' girato" (marker a fine run),
+            # non l'eta' del data-file (tra eventi funding: solo duplicati).
+            racc_run_age = int(now - mmt) if mmt > 0 else 10 ** 9
+            hard_ok = hard
     except Exception:
         pass
     data += [
-        {"host": "mc2", "key": "svc.raccolta", "value": 1 if racc_age < 21600 else 0},
+        {"host": "mc2", "key": "svc.raccolta", "value": 1 if racc_run_age < 21600 else 0},
         {"host": "mc2", "key": "raccolta.rows", "value": racc_rows},
         {"host": "mc2", "key": "raccolta.age_s", "value": racc_age},
         {"host": "mc2", "key": "svc.fabbrica", "value": 1 if fab_age < 120 else 0},
         {"host": "mc2", "key": "fabbrica.tick_age_s", "value": fab_age},
+        {"host": "mc2", "key": "mc2.sec.hardening", "value": hard_ok},
     ]
 
 

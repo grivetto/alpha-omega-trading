@@ -99,7 +99,7 @@ NODE_RESTART_COOLDOWN_S = 1800.0  # max 1 restart nodo/30min (promozioni strateg
 # ── Zabbix (trapper API raggiungibile da MARCODG1 via tunnel 1080) ──────────
 ZABBIX_API = "http://127.0.0.1:1080/api_jsonrpc.php"
 ZABBIX_USER = "Admin"
-ZABBIX_PASS = "zabbix"
+ZABBIX_PASS = os.environ.get("ZABBIX_PASS", "")  # segreto rimosso dal repo (01/10/26)
 ZABBIX_HOSTS = {"marcodg1": "MARCODG1", "nuvola": "nuvola", "mc2": "mc2"}
 
 # ── Hermes AI ─────────────────────────────────────────────────────────────────

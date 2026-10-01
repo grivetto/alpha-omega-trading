@@ -2,10 +2,11 @@
 """Fix value_type degli item ATLAS v6: 3 (unsigned int) -> 0 (float).
 I decimali (atr_pct 0.558, rsi 39.7, adx 18.98) venivano troncati."""
 import json
+import os
 import urllib.request
 
 API = "http://127.0.0.1:1080/api_jsonrpc.php"
-USER, PASS = "Admin", "zabbix"
+USER, PASS = "Admin", os.environ.get("ZBX_PASS", "")  # segreto rimosso dal repo (01/10/26)
 
 
 def rpc(method, params, auth=None):

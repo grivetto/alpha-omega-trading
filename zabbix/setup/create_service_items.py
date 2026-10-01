@@ -3,10 +3,11 @@
 10688 MARCODG1) per monitorare lo stato dei servizi Denaro per ciascuna macchina.
 Alimentati da push_metrics.py via SSH (systemctl is-active)."""
 import json
+import os
 import urllib.request
 
 API = "http://127.0.0.1:1080/api_jsonrpc.php"
-USER, PASS = "Admin", "zabbix"
+USER, PASS = "Admin", os.environ.get("ZBX_PASS", "")  # segreto rimosso dal repo (01/10/26)
 
 # hostid -> lista unit
 HOST_SERVICES = {

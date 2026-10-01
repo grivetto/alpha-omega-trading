@@ -8,6 +8,7 @@ Invia TUTTE le metriche del progetto a Zabbix (trapper API).
 Eseguito ogni minuto via cron.
 """
 import json
+import os
 import subprocess
 import time
 import urllib.request
@@ -18,7 +19,7 @@ HEALTH_DIR = BASE / "health"
 NODE_DIR = Path("/home/marco/alpha-omega-trading/node_data")
 API = "http://127.0.0.1:1080/api_jsonrpc.php"
 USER = "Admin"
-PASS = "zabbix"
+PASS = os.environ.get("ZBX_PASS", "")  # segreto rimosso dal repo (01/10/26)
 
 BOTS = {
     "sol": ("alpha-omega-bot-sol-eur", "bot.sol"),

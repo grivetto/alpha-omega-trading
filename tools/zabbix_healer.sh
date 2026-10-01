@@ -6,7 +6,7 @@ set -uo pipefail
 
 ZABBIX_URL="${ZABBIX_URL:-http://100.87.24.42:1080/api_jsonrpc.php}"
 ZABBIX_USER="${ZABBIX_USER:-Admin}"
-ZABBIX_PASS="${ZABBIX_PASS:-zabbix}"
+ZABBIX_PASS="${ZABBIX_PASS:?imposta ZABBIX_PASS (vedi ~/.zbx_cred)}"
 LOG_FILE="${HEALER_LOG:-/home/sergio/logs/zabbix_healer.log}"
 STATE_FILE="${HEALER_STATE:-/tmp/zabbix_healer_state.json}"
 HEAL_COOLDOWN="${HEAL_COOLDOWN:-300}"

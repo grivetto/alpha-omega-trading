@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Crea gli item trapper mancanti per gli host node nuvola/mc2 (item.create)."""
 import json
+import os
 import urllib.request
 
 API = "http://127.0.0.1:1080/api_jsonrpc.php"
-USER, PASS = "Admin", "zabbix"
+USER, PASS = "Admin", os.environ.get("ZBX_PASS", "")  # segreto rimosso dal repo (01/10/26)
 
 NODE_HOSTS = {
     "alpha-omega-node-nuvola": "10698",

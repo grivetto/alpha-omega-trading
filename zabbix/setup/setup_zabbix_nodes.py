@@ -6,11 +6,12 @@ Uso:  python3 setup_zabbix_nodes.py
 Eseguito da MARCODG1 (tunnel 1080 verso Zabbix).
 """
 import json
+import os
 import sys
 import urllib.request
 
 API = "http://127.0.0.1:1080/api_jsonrpc.php"
-USER, PASS = "Admin", "zabbix"
+USER, PASS = "Admin", os.environ.get("ZBX_PASS", "")  # segreto rimosso dal repo (01/10/26)
 GROUP = "Denaro Trading"
 
 # host -> unit systemd (per auto-heal remoto)
