@@ -387,6 +387,13 @@ def push_novita(data):
         {"host": "MARCODG1", "key": "canary.funding", "value": round(float(cs.get("last_funding") or 0), 4)},
         {"host": "MARCODG1", "key": "canary.delta_qty", "value": round(c_delta, 6)},
     ]
+    # [02/10] Sync bot->Zabbix (script zabbix_bots.py, cron 1/min): sveglio =
+    # log scritto negli ultimi 300s. Item svc.zabbix_bots su MARCODG1
+    # (trigger "Sync bot Zabbix fermo" = last()=0). Un solo scrittore: qui.
+    bots_log = Path("/home/marco/denaro/logs/zabbix_bots.log")
+    bots_age = int(now - bots_log.stat().st_mtime) if bots_log.exists() else 10 ** 9
+    data.append({"host": "MARCODG1", "key": "svc.zabbix_bots",
+                 "value": 1 if bots_age < 300 else 0})
     # Raccolta + Fabbrica (mc2 via tunnel inverso)
     racc_age = fab_age = 10 ** 9
     racc_rows = 0
