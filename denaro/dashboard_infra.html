@@ -262,7 +262,8 @@ footer { margin-top: 30px; text-align: center; color: var(--dim); font-size: 11p
     <div class="card"><h2><span class="ico">▒</span> SALDI EXCHANGE</h2><div id="balances"></div></div>
     
     <div class="card"><h2><span class="ico">▒</span> ZABBIX</h2><div id="zabbix"></div>
-      <a class="zabbix-btn" href="https://mgrivett.ddns.net/zabbix" target="_blank">APRI ZABBIX ▸</a>
+      <a class="zabbix-btn" href="https://zab.grivetto.eu" target="_blank">APRI ZABBIX ▸</a>
+      <a class="zabbix-btn" style="margin-top:6px" href="https://zab.grivetto.eu/zabbix.php?action=latest.view" target="_blank">BOT — STORIA &amp; STATO ▸</a>
     </div>
     <div class="card"><h2><span class="ico">▒</span> SISTEMA</h2><div class="kv-grid" id="system"></div></div>
     <div class="card"><h2><span class="ico">▒</span> CONTAINER</h2><div id="docker"></div></div>
@@ -393,7 +394,9 @@ function renderFlotta(d) {
     '<div class="row"><span class="k">OFFICINA PAPER — FORWARD TEST (SIMULATO)</span><span class="pill ' + (fresh === ORDER.length ? 'ok' : 'warn') + '">' +
     fresh + ' / ' + ORDER.length + ' ATTIVI</span></div>' +
     '<div style="font-size:11px;color:var(--dim);margin:8px 0 6px">I 17 bot trend della flotta girano in forward test sui prezzi live: ' +
-    'fill simulati, nessun ordine, nessuna chiave. Il live del progetto è il canary qui sopra.</div>' +
+    'fill simulati, nessun ordine, nessuna chiave. Il live del progetto è il canary qui sopra. ' +
+    'Storia e stato completo su <a href="https://zab.grivetto.eu/zabbix.php?action=latest.view" target="_blank" style="color:var(--neon-cyan)">ZABBIX ▸</a> (' +
+    Object.keys(bots).length + ' bot monitorati, aggiornati ogni minuto).</div>' +
     '<div>' + chips + '</div>';
 }
 
