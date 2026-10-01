@@ -45,6 +45,22 @@ REMOTE_NODES = {
     },
 }
 
+# Officina paper (01/10/26): i health *_paper.json dei node riconvertiti vivono
+# in denaro/health su ogni nodo (su nuvola NON in node_data).
+PAPER_SOURCES = {
+    "nuvola": {"ssh": ["sergio@87.106.3.15", "-p", "22"],
+               "dir": "/home/sergio/denaro/health"},
+    "mc2": {"ssh": ["sergio@127.0.0.1", "-p", "2222"],
+            "dir": "/home/sergio/denaro/health"},
+}
+# Officina paper locale su MARCODG1 (istanza xrp riconvertita)
+LOCAL_PAPER = [
+    ("marcodg1:paper:ADA/EUR", "/home/marco/denaro/health/ada_marcodg1_live_paper.json"),
+    ("marcodg1:paper:ARB/EUR", "/home/marco/denaro/health/arb_marcodg1_live_paper.json"),
+    ("marcodg1:paper:XLM/EUR", "/home/marco/denaro/health/xlm_marcodg1_live_paper.json"),
+    ("marcodg1:paper:ALGO/EUR", "/home/marco/denaro/health/algo_marcodg1_live_paper.json"),
+]
+
 # Conti OKX. I .env stanno su macchine DIVERSE e le chiavi sono IP-bound, quindi
 # ogni conto va letto SULLA macchina che lo possiede: vedi sorgenti_conti().
 # Il prefisso seleziona le chiavi del subaccount (es. MARCOSUB1_OKX_API_KEY);
@@ -635,6 +651,23 @@ def collect_node_bots():
                 bots[_k] = _h
                 _extra_cache[_k] = (time.time(), _h)
 
+    # ── Officina paper (01/10/26): health *_paper.json — chiavi
+    #    "<nodo>:paper:<SYM>"; il live/l legacy resta su "<nodo>:okx:<SYM>".
+    for _pk, _pp in LOCAL_PAPER:
+        try:
+            _h = json.loads(Path(_pp).read_text())
+            _h["mode"] = "paper"
+            bots[_pk] = _h
+        except Exception:
+            continue
+    for _node_name in PAPER_SOURCES:
+        try:
+            for _sym, _h in fetch_remote_paper(_node_name).items():
+                _h["mode"] = "paper"
+                bots[f"{_node_name}:paper:{_sym}"] = _h
+        except Exception:
+            continue
+
     # Nodi remoti: chiavi "nuvola:paper:ADA/EUR", "mc2:paper:ADA/EUR" ecc.
     for node_name, cfg in REMOTE_NODES.items():
         for sym, h in fetch_remote_node_bots(node_name).items():
@@ -665,6 +698,39 @@ def _parse_dump(testo):
         i0, i1 = blocco.find("{"), blocco.rfind("}")
         fuori.append(blocco[i0:i1 + 1] if 0 <= i0 < i1 else "")
     return fuori
+
+
+def fetch_remote_paper(node_name):
+    """Legge i *_paper.json (officina) del nodo remoto — cache TTL come il live."""
+    cfg = PAPER_SOURCES.get(node_name)
+    if not cfg:
+        return {}
+    cache_key = f"remote_paper:{node_name}"
+    now = time.time()
+    hit = _remote_cache.get(cache_key)
+    if hit and now - hit[0] < _REMOTE_TTL:
+        return hit[1]
+    ssh_args = " ".join(cfg["ssh"])
+    d = cfg["dir"]
+    cmd = (f"ssh -o BatchMode=yes -o ConnectTimeout=5 {ssh_args} "
+           f"'for f in {d}/*_paper.json; do echo ===FILE===; cat \"$f\" 2>/dev/null; echo; done'")
+    out = {}
+    try:
+        r = subprocess.run(["bash", "-c", cmd], capture_output=True, text=True, timeout=20)
+        if r.returncode == 0 and r.stdout.strip():
+            for block in r.stdout.split("===FILE===")[1:]:
+                i0, i1 = block.find("{"), block.rfind("}")
+                if not (0 <= i0 < i1):
+                    continue
+                try:
+                    h = json.loads(block[i0:i1 + 1])
+                except Exception:
+                    continue
+                out[h.get("symbol") or "unknown"] = h
+    except Exception:
+        return {}
+    _remote_cache[cache_key] = (now, out)
+    return out
 
 
 def fetch_remote_node_bots(node_name):
@@ -734,9 +800,10 @@ SERVICE_UNITS = {
     "marcodg1": {
         "ssh": [],
         "units": [
-            "denaro-node-marcodg1-xrp", "denaro-node-trend", "denaro-node-paper",
+            "denaro-node-marcodg1-xrp", "denaro-node-paper",
             "denaro-health-marcodg1", "denaro-aggregator-marcodg1",
-            "zabbix-agent",
+            "denaro-dashboard-marcodg1", "denaro-landing",
+            "cloudflared-denaro", "zabbix-agent",
         ],
     },
     "nuvola": {
@@ -747,7 +814,7 @@ SERVICE_UNITS = {
     "mc2": {
         "ssh": ["sergio@127.0.0.1", "-p", "2222"],  # tunnel inverso
         "units": ["denaro-node-mc2", "denaro-feeder-mc2", "denaro-health-mc2",
-                  "denaro-aggregator-mc2", "denaro-dashboard-mc2",
+                  "denaro-dashboard-mc2",
                   "zabbix-agent", "zabbix-tunnel-reverse"],
     },
 }
@@ -947,7 +1014,7 @@ def collect():
             continue
         if _v.get("stale"):
             continue
-        if _k.startswith(("mc2:okx:", "nuvola:okx:", "marcodg1:okx:")):
+        if _k.startswith(("mc2:okx:", "nuvola:okx:", "marcodg1:okx:")) or ":paper:" in _k:
             if _k not in bots or bots[_k].get("status") in (None, "no_file", "error"):
                 bots[_k] = _v
     # Alcune fonti etichettano gli stessi bot in modo diverso: il glob dei nodi
@@ -957,6 +1024,9 @@ def collect():
     for _pref in ("mc2", "nuvola", "marcodg1"):
         for _k, _v in list(node_bots.items()):
             if not _k.startswith(_pref + ":") or _k.startswith(_pref + ":okx:"):
+                continue
+            if ":paper:" in _k:
+                # chiavi officina (01/10): già nella forma voluta, niente remap
                 continue
             if not isinstance(_v, dict) or _v.get("stale"):
                 continue
@@ -1038,10 +1108,20 @@ def collect():
             prefix = f"{node_name}:"
             nb = {k: v for k, v in node_bots.items() if k.startswith(prefix)}
         running = [b for b in nb.values()
-                   if b.get("status") == "running" and not b.get("stale")]
+                   if b.get("status") == "running" and not b.get("stale")
+                   and b.get("mode") == "live"]
+        # paper: dedup per simbolo (lo stesso file puo' arrivare da due chiavi:
+        # "<nodo>:<SYM>" dal glob legacy e "<nodo>:paper:<SYM>" dall'officina).
+        _paper = {}
+        for _bk, _bv in nb.items():
+            if (_bv.get("status") == "running" and not _bv.get("stale")
+                    and _bv.get("mode") != "live"):
+                _paper[_bv.get("symbol") or _bk] = _bv
+        paper_running = _paper
         node_totals[node_name] = {
             "bots": len(nb),
             "running": len(running),
+            "paper_running": len(paper_running),
             "pnl": round(sum(b.get("pnl", 0) for b in running), 4),
             "trades": sum(b.get("trades", 0) for b in running),
             "equity": round(sum(b.get("total_equity", 0) for b in running), 2),
