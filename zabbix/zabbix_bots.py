@@ -140,8 +140,10 @@ def ensure_graphs(auth, wanted):
     hostids = [m["hostid"] for m in wanted.values() if m.get("hostid")]
     if not hostids:
         return 0
-    g = rpc("graph.get", {"hostids": hostids, "output": ["graphid", "hostid", "name"]}, auth) or []
-    have = {x["hostid"] for x in g if x.get("name") == GRAPH_NAME}
+    g = rpc("graph.get", {"hostids": hostids, "output": ["graphid", "name"],
+                          "selectHosts": ["hostid"]}, auth) or []
+    have = {h.get("hostid") for x in g if x.get("name") == GRAPH_NAME
+            for h in (x.get("hosts") or [])}
     it = rpc("item.get", {"hostids": hostids, "output": ["itemid", "key_", "hostid"]}, auth) or []
     by = {}
     for i in it:
