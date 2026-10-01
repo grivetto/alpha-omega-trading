@@ -360,7 +360,7 @@ def heal_if_stale() -> None:
     _save_heal_state(state)
 
 
-CANARY_STATE = Path("/home/marco/hermes_scratch/canary_state.json")
+CANARY_STATE = Path("/home/marco/canary/canary_state.json")
 
 
 def push_novita(data):

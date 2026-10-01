@@ -820,7 +820,7 @@ SERVICE_UNITS = {
 }
 
 
-CANARY_STATE = Path("/home/marco/hermes_scratch/canary_state.json")
+CANARY_STATE = Path("/home/marco/canary/canary_state.json")
 
 
 def collect_canary():
