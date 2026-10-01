@@ -213,17 +213,53 @@ def push_values(auth, wanted):
     return len(data) if ok else 0
 
 
-def disable_missing(auth, wanted):
+STATE_FILE = Path("/tmp/zabbix_bots_missing.json")
+MISSING_GRACE_S = 1800  # disabilita solo dopo 30 min di assenza continuativa
+
+
+def load_state():
+    try:
+        return json.loads(STATE_FILE.read_text())
+    except Exception:
+        return {}
+
+
+def save_state(st):
+    try:
+        STATE_FILE.write_text(json.dumps(st))
+    except Exception:
+        pass
+
+
+def sync_host_status(auth, wanted):
+    """Riabilita gli host tornati nel payload; disabilita (con grazia 30m)
+    i bot spariti. Un singolo campione mancante NON basta: l'aggregator puo'
+    avere buchi transitori (visto il 02/10: 6 bot nuvola assenti per un ciclo)."""
+    now = time.time()
+    st = load_state()
     existing = rpc("host.get", {"search": {"host": PREFIX},
                                 "output": ["hostid", "host", "status"]}, auth) or []
     off = 0
+    re_on = 0
     for h in existing:
-        if h["host"] in wanted or str(h.get("status")) == "1":
+        name = h["host"]
+        if name in wanted:
+            st.pop(name, None)
+            if str(h.get("status")) == "1":
+                if rpc("host.update", {"hostid": h["hostid"], "status": 0}, auth):
+                    re_on += 1
+                    print(f"riabilitato (tornato nel payload): {name}")
             continue
-        if rpc("host.update", {"hostid": h["hostid"], "status": 1}, auth):
-            off += 1
-            print(f"disabilitato (non piu' nel payload): {h['host']}")
-    return off
+        first = st.get(name)
+        if first is None:
+            st[name] = now
+            continue
+        if str(h.get("status")) != "1" and now - first > MISSING_GRACE_S:
+            if rpc("host.update", {"hostid": h["hostid"], "status": 1}, auth):
+                off += 1
+                print(f"disabilitato (assente da {int(now - first)}s): {name}")
+    save_state(st)
+    return off, re_on
 
 
 def main():
@@ -255,9 +291,9 @@ def main():
     gc = ensure_graphs(auth, wanted)
     tc = ensure_triggers(auth, wanted)
     pushed = push_values(auth, wanted)
-    off = disable_missing(auth, wanted)
+    off, re_on = sync_host_status(auth, wanted)
     print(f"BOTS SYNC OK: bot={len(wanted)} host+{hc} item+{ic} grafi+{gc} "
-          f"trigger+{tc} push={pushed} off={off}")
+          f"trigger+{tc} push={pushed} off={off} riabili={re_on}")
     return 0
 
 
