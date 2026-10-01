@@ -16,7 +16,7 @@
   <a href="https://github.com/ccxt/ccxt"><img src="https://img.shields.io/badge/CCXT-4.x-1E88E5?style=flat-square" alt="CCXT"></a>
   <a href="https://www.docker.com/"><img src="https://img.shields.io/badge/Docker-Containerized-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker"></a>
   <a href="https://www.zabbix.com/"><img src="https://img.shields.io/badge/Zabbix-7.0_LTS-D40000?style=flat-square&logo=zabbix&logoColor=white" alt="Zabbix 7.0 LTS"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-CC0_1.0-blue.svg?style=flat-square" alt="CC0 License"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-EUPL_1.1-blue.svg?style=flat-square" alt="EUPL 1.1 License"></a>
 </p>
 
 <p align="center">
@@ -28,13 +28,12 @@
 
 ---
 
-## 📊 Estado de un vistazo — 2026-09-25
+## 📊 Estado de un vistazo — actualizado 2026-10-01
 
-> **La flota NO está operando ahora mismo, y no se supone que deba hacerlo.** Todos los nodos en vivo
-> informan actualmente `NON FINANZIATO`: las cuentas del exchange detrás de las claves API en vivo
-> contienen **~0,15 EUR de polvo**. El motor se niega a operar con un saldo que no puede medir con
-> honestidad y, a partir de esta versión, lo *dice* en lugar de saltarse ticks en silencio. La
-> financiación es una decisión deliberada y separada.
+> **La flota opera solo con lo que pasa la puerta — y la primera excepción real está en marcha.** Desde
+> 2026-10-01 un **canary** con dinero real corre en OKX EEA: un carry de funding de DOGE (spot + hedge de perp),
+> totalmente reconciliado, con funding devengándose tres veces al día. Todo lo demás sigue en paper mientras la
+> investigación paga su peaje. Tamaño deliberadamente pequeño: es un experimento, no una cosecha.
 
 | Área | Estado | Evidencia |
 | :--- | :--- | :--- |
@@ -44,7 +43,7 @@
 | **Estado sin fondos** | ✅ explícito `ok` / `sottocapitalizzato` / `non_finanziato` / `illeggibile` | 18 tests |
 | **Límite de exposición de la cuenta** | ✅ conectado al nodo (el registro existía, nadie lo había construido) | 15 tests |
 | **Comprobación de integridad de la flota** | ✅ `tools/fleet_integrity.py`, código de salida 1 ante cualquier alarma | 14 alarmas en MARCODG1, 7 en nuvola |
-| **Trading en vivo** | ⛔ el saldo de la cuenta es polvo (~0,15 EUR) | diario: 882 + 604 ticks saltados |
+| **Trading en vivo** | ✅ un canary en vivo (carry de DOGE): pequeño, reconciliado, funding devengándose | resto de la flota: paper + investigación |
 | **Servicios de telemetría** | ⚠️ 4 unidades en reinicio patológico (deriva de rutas) | `denaro-watchdog` fallido |
 | **Seguridad** | ⚠️ un host fue comprometido, ahora contenido | ver § Seguridad |
 | **Economía** | ⚠️ el tramo de comisiones actual anula la ventaja — ver § La economía | medido sobre comisiones reales |
@@ -205,8 +204,8 @@ Contención, con copias forenses tomadas **antes** de cualquier borrado:
 | regla `sudo` huérfana para `zabbix` | eliminada → *no tiene permiso para ejecutar sudo* |
 | `AllowKey=system.run[*]` | deshabilitado en **ambos** hosts |
 
-**Pendiente para el propietario:** revocar el PAT de GitHub encontrado en texto claro en un historial
-de shell; rotar las credenciales de Zabbix; decidir si reconstruir el host comprometido; regenerar el
+**Cerrado desde (2026-10-01):** credenciales de Zabbix rotadas; frontend de monitoreo tras Cloudflare Access; secretos en texto claro eliminados de este repositorio. **Aún pendiente para el propietario:** revocar el PAT de GitHub encontrado en texto claro en un historial
+de shell; decidir si reconstruir el host comprometido; regenerar el
 almacén de claves (7 de 7 claves de OKX que contiene están muertas); revisar el cortafuegos (`ufw`
 inactivo, `5432` y `10050` expuestos).
 
@@ -306,4 +305,4 @@ sistema. Nunca operes con capital que no puedas permitirte perder.
 
 ## 📄 Licencia
 
-Dedicado al dominio público bajo Creative Commons Zero (CC0 1.0 Universal). Véase [LICENSE](LICENSE).
+Publicado bajo la **European Union Public Licence v. 1.1 (EUPL-1.1)**. Véase [LICENSE](LICENSE).

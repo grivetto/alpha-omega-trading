@@ -16,7 +16,7 @@
   <a href="https://github.com/ccxt/ccxt"><img src="https://img.shields.io/badge/CCXT-4.x-1E88E5?style=flat-square" alt="CCXT"></a>
   <a href="https://www.docker.com/"><img src="https://img.shields.io/badge/Docker-Containerized-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker"></a>
   <a href="https://www.zabbix.com/"><img src="https://img.shields.io/badge/Zabbix-7.0_LTS-D40000?style=flat-square&logo=zabbix&logoColor=white" alt="Zabbix 7.0 LTS"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-CC0_1.0-blue.svg?style=flat-square" alt="CC0 License"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-EUPL_1.1-blue.svg?style=flat-square" alt="EUPL 1.1 License"></a>
 </p>
 
 <p align="center">
@@ -28,12 +28,12 @@
 
 ---
 
-## 📊 Status at a glance — 2026-09-25
+## 📊 Status at a glance — updated 2026-10-01
 
-> **The fleet is NOT trading right now, and it is not supposed to be.** Every live node currently
-> reports `NON FINANZIATO`: the exchange accounts behind the live API keys hold **~0.15 EUR of
-> dust**. The engine refuses to trade a balance it cannot honestly measure, and as of this release
-> it *says so* instead of skipping ticks in silence. Funding is a deliberate, separate decision.
+> **The fleet trades only what passes the gate — and the first live exception is on.** Since
+> 2026-10-01 one real-money **canary** runs on OKX EEA: a DOGE funding carry (spot + perp hedge),
+> fully reconciled, with funding accruing three times a day. Everything else still runs in paper
+> while the research pays its toll. Size is deliberately small: it is an experiment, not a harvest.
 
 | Area | State | Evidence |
 | :--- | :--- | :--- |
@@ -43,7 +43,7 @@
 | **Unfunded state** | ✅ explicit `ok` / `sottocapitalizzato` / `non_finanziato` / `illeggibile` | 18 tests |
 | **Account exposure cap** | ✅ wired into the node (registry existed, nobody built it) | 15 tests |
 | **Fleet integrity check** | ✅ `tools/fleet_integrity.py`, exit code 1 on any alarm | 14 alarms on MARCODG1, 7 on nuvola |
-| **Live trading** | ⛔ account balance is dust (~0.15 EUR) | journal: 882 + 604 skipped ticks |
+| **Live trading** | ✅ one live canary (DOGE carry): small, reconciled, funding accruing | rest of the fleet: paper + research |
 | **Telemetry services** | ⚠️ 4 units in pathological restart (path drift) | `denaro-watchdog` failed |
 | **Security** | ⚠️ one host was compromised, now contained | see § Security |
 | **Economy** | ⚠️ current fee tier cancels the edge — see § The economics | measured on real fees |
@@ -200,8 +200,7 @@ Containment, with forensic copies taken **before** any deletion:
 | orphan `sudo` rule for `zabbix` | removed → *not allowed to run sudo* |
 | `AllowKey=system.run[*]` | disabled on **both** hosts |
 
-**Open for the owner:** revoke the GitHub PAT found in clear text in a shell history; rotate Zabbix
-credentials; decide whether to rebuild the compromised host; regenerate the key vault (7 of 7 OKX
+**Done since (2026-10-01):** Zabbix credentials rotated; monitoring frontend behind Cloudflare Access; plaintext secrets purged from this repository. **Still open for the owner:** revoke the GitHub PAT found in clear text in a shell history; decide whether to rebuild the compromised host; regenerate the key vault (7 of 7 OKX
 keys in it are dead); review the firewall (`ufw` inactive, `5432` and `10050` exposed).
 
 ---
@@ -296,4 +295,4 @@ afford to lose.
 
 ## 📄 License
 
-Dedicated to the public domain under Creative Commons Zero (CC0 1.0 Universal). See [LICENSE](LICENSE).
+Released under the **European Union Public Licence v. 1.1 (EUPL-1.1)**. See [LICENSE](LICENSE).

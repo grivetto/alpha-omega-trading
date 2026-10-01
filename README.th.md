@@ -16,7 +16,7 @@
   <a href="https://github.com/ccxt/ccxt"><img src="https://img.shields.io/badge/CCXT-4.x-1E88E5?style=flat-square" alt="CCXT"></a>
   <a href="https://www.docker.com/"><img src="https://img.shields.io/badge/Docker-Containerized-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker"></a>
   <a href="https://www.zabbix.com/"><img src="https://img.shields.io/badge/Zabbix-7.0_LTS-D40000?style=flat-square&logo=zabbix&logoColor=white" alt="Zabbix 7.0 LTS"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-CC0_1.0-blue.svg?style=flat-square" alt="CC0 License"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-EUPL_1.1-blue.svg?style=flat-square" alt="EUPL 1.1 License"></a>
 </p>
 
 <p align="center">
@@ -28,13 +28,12 @@
 
 ---
 
-## 📊 สถานะโดยสรุป — 2026-09-25
+## 📊 สถานะโดยสรุป — อัปเดต 2026-10-01
 
-> **ขณะนี้กองเรือไม่ได้เทรด และมันก็ไม่ควรจะเทรดด้วย** ทุกโหนดเทรดจริงในตอนนี้รายงาน
-> `NON FINANZIATO`: บัญชีตัวแลกเปลี่ยนที่อยู่เบื้องหลังคีย์ API เทรดจริงถือ **เศษเหรียญ ~0.15 EUR**
-> เอ็นจินปฏิเสธที่จะเทรดบนยอดคงเหลือที่มันไม่สามารถวัดได้อย่างซื่อตรง และในการปล่อยเวอร์ชันนี้
-> มัน*บอกออกมาชัด ๆ* แทนที่จะข้าม tick ไปอย่างเงียบ ๆ การเติมเงินทุนเป็นการตัดสินใจที่ตั้งใจ
-> และแยกออกมาต่างหาก
+> **กองเรือเทรดเฉพาะสิ่งที่ผ่านประตูได้ — และข้อยกเว้นจริงข้อแรกเปิดแล้ว** ตั้งแต่
+> 2026-10-01 **canary** เงินจริงหนึ่งตัวรันบน OKX EEA: funding carry ของ DOGE (spot + perp
+> hedge) กระทบยอดครบถ้วน funding เข้าวันละสามครั้ง ส่วนที่เหลือยังรันแบบ paper ขณะที่
+> งานวิจัยจ่ายค่าผ่านทางของมัน ขนาดตั้งใจให้เล็ก: นี่คือการทดลอง ไม่ใช่การเก็บเกี่ยว
 
 | พื้นที่ | สถานะ | หลักฐาน |
 | :--- | :--- | :--- |
@@ -44,7 +43,7 @@
 | **สถานะไม่มีเงินทุน** | ✅ ชัดเจน `ok` / `sottocapitalizzato` / `non_finanziato` / `illeggibile` | 18 tests |
 | **เพดานความเสี่ยงต่อบัญชี** | ✅ ต่อเข้าโหนดแล้ว (มี registry อยู่แล้ว แต่ไม่มีใครสร้างมัน) | 15 tests |
 | **การตรวจสอบความสมบูรณ์ของกองเรือ** | ✅ `tools/fleet_integrity.py`, exit code 1 เมื่อมีสัญญาณเตือนใด ๆ | 14 สัญญาณเตือนบน MARCODG1, 7 บน nuvola |
-| **การเทรดจริง** | ⛔ ยอดคงเหลือในบัญชีเป็นเศษเหรียญ (~0.15 EUR) | journal: ข้าม tick 882 + 604 ครั้ง |
+| **การเทรดจริง** | ✅ canary ตัวจริง 1 ตัว (DOGE carry): เล็ก กระทบยอดครบ funding เข้าต่อเนื่อง | ที่เหลือของกองเรือ: paper + งานวิจัย |
 | **บริการเทเลเมตรี** | ⚠️ 4 units รีสตาร์ทวนผิดปกติ (พาธคลาดเคลื่อน) | `denaro-watchdog` ล้มเหลว |
 | **ความปลอดภัย** | ⚠️ โฮสต์หนึ่งเครื่องถูกบุกรุก ตอนนี้ควบคุมไว้ได้แล้ว | ดู § ความปลอดภัย |
 | **เศรษฐศาสตร์** | ⚠️ ระดับค่าธรรมเนียมปัจจุบันหักล้าง edge จนหมด — ดู § เศรษฐศาสตร์ | วัดจากค่าธรรมเนียมจริง |
@@ -204,8 +203,8 @@ os.makedirs(...) + open(...)     -> OK
 | กฎ `sudo` ที่ไม่มีเจ้าของของ `zabbix` | ลบออกแล้ว → *ไม่ได้รับอนุญาตให้รัน sudo* |
 | `AllowKey=system.run[*]` | ปิดใช้งานบน**ทั้งสอง**โฮสต์ |
 
-**เรื่องที่เจ้าของต้องจัดการต่อ:** เพิกถอน GitHub PAT ที่พบเป็นข้อความธรรมดาในประวัติเชลล์;
-หมุนเวียนข้อมูลประจำตัวของ Zabbix; ตัดสินใจว่าจะสร้างโฮสต์ที่ถูกบุกรุกใหม่หรือไม่;
+**ปิดแล้วตั้งแต่ (2026-10-01):** หมุนเวียนข้อมูลประจำตัว Zabbix แล้ว; หน้า monitoring อยู่หลัง Cloudflare Access; ลบความลับแบบข้อความธรรมดาออกจาก repository นี้แล้ว **ยังต้องดำเนินการโดยเจ้าของ:** เพิกถอน GitHub PAT ที่พบเป็นข้อความธรรมดาในประวัติเชลล์;
+ตัดสินใจว่าจะสร้างโฮสต์ที่ถูกบุกรุกใหม่หรือไม่;
 สร้าง key vault ใหม่ (คีย์ OKX ในนั้นตายทั้ง 7 จาก 7); ทบทวน firewall (`ufw` ไม่ทำงาน,
 `5432` และ `10050` เปิดเผยอยู่)
 
@@ -303,4 +302,4 @@ python -m denaro.backtest --config config/node_nuvola_trade.yaml --days 60 --fee
 
 ## 📄 สัญญาอนุญาต
 
-อุทิศแก่สาธารณสมบัติภายใต้ Creative Commons Zero (CC0 1.0 Universal) ดู [LICENSE](LICENSE)
+เผยแพร่ภายใต้ **European Union Public Licence v. 1.1 (EUPL-1.1)** ดู [LICENSE](LICENSE)
