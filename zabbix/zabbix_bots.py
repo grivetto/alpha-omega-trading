@@ -24,8 +24,7 @@ from pathlib import Path
 API = "http://127.0.0.1:1080/api_jsonrpc.php"
 INFRA = "http://127.0.0.1:8912/api/infra.json"
 CRED = Path.home() / ".zbx_cred"
-GROUP_DENARO = "22"   # gruppo Denaro
-GROUP_BOTS = "25"     # gruppo Trading Bots (azioni/alert gia' configurati)
+GROUP_MONEY = "28"   # gruppo Money (unico gruppo di progetto, dal 02/10)
 PREFIX = "bot-"
 GRAPH_NAME = "Trading (equity/pnl/trades)"
 
@@ -100,7 +99,7 @@ def ensure_hosts(auth, wanted, byhost):
             continue
         res = rpc("host.create", {
             "host": host, "name": meta["display"],
-            "groups": [{"groupid": GROUP_DENARO}, {"groupid": GROUP_BOTS}],
+            "groups": [{"groupid": GROUP_MONEY}],
             "tags": [{"tag": "node", "value": meta["node"]},
                      {"tag": "mode", "value": meta["mode"]},
                      {"tag": "symbol", "value": meta["symbol"]}],
