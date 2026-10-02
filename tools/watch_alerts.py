@@ -4,12 +4,15 @@
 Modalità:
   check    (default) — mc2: container docker attesi, unit utente critiche, disco.
   carry    — MARCODG1 via ssh: raggiungibilità, monitor canary fermo, anomalie canary.
+  bots     — salute bot dal payload aggregatore: regressioni running->giù con rientro,
+             nodi non raggiungibili dall'aggregatore.
   flotta   — fleet_integrity sui nodi remoti (MARCODG1, nuvola): allarme se compaiono ALLARMI.
   digest   — riepilogo giornaliero (sempre inviato): capitale, flotta, canary.
   selftest — invia allarme di prova + rientro (verifica end-to-end della catena).
 
 Cron (mc2):
   */5   watch_alerts.py check
+  */10  watch_alerts.py bots
   */15  watch_alerts.py carry
   */30  watch_alerts.py flotta
   0 9   watch_alerts.py digest
@@ -123,6 +126,88 @@ def check_carry() -> int:
     return cambi
 
 
+BOTS_STATO = Path.home() / ".denaro_alerts" / "bots_running.json"
+
+
+def _fetch_infra() -> dict:
+    """Payload dell'aggregatore master (MARCODG1) via ssh: vista completa della flotta."""
+    r = _ssh("curl -s -m 10 http://127.0.0.1:8912/infra.json", 40)
+    if r.returncode != 0 or not (r.stdout or "").strip():
+        raise RuntimeError("aggregatore non raggiungibile")
+    return json.loads(r.stdout)
+
+
+def check_bots() -> int:
+    """Salute dei bot: regressioni 'running -> giu'' con allarme/rientro.
+
+    Baseline al primo giro; poi confronto dell'insieme dei bot `running` con lo stato
+    salvato. Nodi non raggiungibili dall'aggregatore: un allarme per nodo (non per bot).
+    """
+    try:
+        d = _fetch_infra()
+    except Exception as e:  # noqa: BLE001
+        return gestisci("bots:check", True,
+                        f"⚠️ bots: aggregatore non leggibile ({type(e).__name__})",
+                        "✅ bots: aggregatore di nuovo leggibile")
+    bots = {k: b for k, b in (d.get("bots") or {}).items() if isinstance(b, dict)}
+    non_rag = {n for n, t in (d.get("node_totals") or {}).items()
+               if isinstance(t, dict) and not t.get("reachable", True)}
+    cambi = 0
+    for n in sorted(non_rag):
+        cambi += gestisci(f"botnode:{n}", True,
+                          f"⚠️ nodo {n} non raggiungibile dall'aggregatore",
+                          f"✅ nodo {n} di nuovo raggiungibile")
+
+    def _dettaglio(k: str) -> str:
+        b = bots.get(k) or {}
+        if not b:
+            return " (assente dal payload)"
+        parti = [f"status {b.get('status')}"]
+        if b.get("stale"):
+            parti.append("stale")
+        if b.get("age_s") is not None:
+            parti.append(f"age {float(b['age_s']):.0f}s")
+        err = str(b.get("error") or "")[:70]
+        if err:
+            parti.append(err)
+        return " (" + " · ".join(parti) + ")"
+
+    correnti = {k for k, b in bots.items()
+                if str(b.get("status")) == "running" and not b.get("stale")
+                and k.split(":")[0] not in non_rag}
+    try:
+        stato = json.loads(BOTS_STATO.read_text(encoding="utf-8"))
+        precedenti = set(stato.get("running") or [])
+    except Exception:  # noqa: BLE001
+        precedenti = set()
+    if not precedenti:
+        BOTS_STATO.parent.mkdir(parents=True, exist_ok=True)
+        BOTS_STATO.write_text(
+            json.dumps({"running": sorted(correnti), "baseline_ts": time.time()}), encoding="utf-8")
+        print(f"bots: baseline registrata ({len(correnti)} running)")
+        return cambi
+    persi = {k for k in (precedenti - correnti) if k.split(":")[0] not in non_rag}
+    nuovi = correnti - precedenti
+    if len(persi) > 3:
+        cambi += gestisci("bot:massa", True,
+                          f"⚠️ FLOTTA: {len(persi)} bot NON running — "
+                          + ", ".join(sorted(persi)[:8]) + (" …" if len(persi) > 8 else ""),
+                          "✅ FLOTTA: bot tutti di nuovo running")
+    else:
+        for k in sorted(persi):
+            cambi += gestisci(f"bot:{k}", True,
+                              f"⚠️ bot {k} NON running{_dettaglio(k)}",
+                              f"✅ bot {k} di nuovo running")
+    if not persi:
+        cambi += gestisci("bot:massa", False, "", "✅ FLOTTA: bot tutti di nuovo running")
+    for k in sorted(nuovi):
+        cambi += gestisci(f"bot:{k}", False, "", f"✅ bot {k} di nuovo running")
+    BOTS_STATO.parent.mkdir(parents=True, exist_ok=True)
+    BOTS_STATO.write_text(
+        json.dumps({"running": sorted(correnti), "baseline_ts": time.time()}), encoding="utf-8")
+    return cambi
+
+
 def check_flotta() -> int:
     """fleet_integrity sui nodi remoti: allarme al canale se compare un ALLARME."""
     tool = Path(__file__).resolve().parent / "fleet_integrity.py"
@@ -182,6 +267,8 @@ def main(argv: list[str]) -> int:
         cambi = check_locale()
     elif mode == "carry":
         cambi = check_carry()
+    elif mode == "bots":
+        cambi = check_bots()
     elif mode == "flotta":
         cambi = check_flotta()
     elif mode == "digest":
