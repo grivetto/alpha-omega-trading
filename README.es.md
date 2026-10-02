@@ -99,7 +99,7 @@ Además del trading, las mismas máquinas — más un **nodo de agentes** (Omarc
 lo que construye, vigila y protege la flota: hub (mc2), sala de operaciones (MARCODG1), puesto de
 monitorización (nuvola) y el banco de operarios (A0-MC2 + A0-PC con Gemini 2.5, DSH, OpenCode)
 que entregan a Hermes — nada entra sin revisión. Desde el 01/10 un bot real opera carry C1 (DOGE)
-en OKX EEA: tamaño mínimo, reconciliado contra el exchange, validación hasta el 15/10.
+en OKX EEA: tamaño mínimo, reconciliado contra el exchange, validación hasta el 15/10. El **03/10** el propietario depositó **+1.000 EUR** (funding wallet, verificado read-only) para escalar el carry — despliegue condicionado a la revisión.
 
 ![Sistema Denaro — 03/10/2026](assets/foto-sistema-2026-10-03.png)
 

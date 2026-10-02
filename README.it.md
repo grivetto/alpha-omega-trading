@@ -134,6 +134,9 @@ della scrittura. La finestra di validazione di 14 giorni chiude il **15/10** con
 pre-dichiarati (`docs/16`). È la **prima esecuzione reale** del progetto: il resto resta paper +
 ricerca.
 
+Il **03/10** l'owner ha depositato **+1.000 EUR** (funding wallet OKX, verificato in sola
+lettura: +1.000,00 esatti) per la scala del carry — deploy subordinato alla review del **15/10**.
+
 ![Denaro — sistema al 03/10/2026](assets/foto-sistema-2026-10-03.png)
 
 *Visual a piena risoluzione: [`FOTO_SISTEMA_2026-10-03.html`](https://github.com/grivetto/money/blob/main/FOTO_SISTEMA_2026-10-03.html) (repo gemello `money`).*

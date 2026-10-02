@@ -134,6 +134,9 @@ writing. The 14-day validation window closes on **15/10** with pre-registered cr
 (`docs/16`). It is the project's **first real execution**: everything else stays paper +
 research.
 
+On **03/10** the owner deposited **+1,000 EUR** (OKX funding wallet, verified read-only:
++1,000.00 exact) to fund the carry scale-up — deployment gated on the **15/10** review.
+
 ![Denaro system — 03/10/2026](assets/foto-sistema-2026-10-03.png)
 
 *Full-resolution visual: [`FOTO_SISTEMA_2026-10-03.html`](https://github.com/grivetto/money/blob/main/FOTO_SISTEMA_2026-10-03.html) (sibling `money` repo).*
