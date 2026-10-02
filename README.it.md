@@ -28,7 +28,7 @@
 
 ---
 
-## 📊 Stato in sintesi — aggiornato 2026-10-01
+## 📊 Stato in sintesi — aggiornato 2026-10-03
 
 > **La flotta fa trading solo con ciò che passa il cancello — e la prima eccezione live è attiva.** Dal
 > 2026-10-01 un **canary** in denaro reale gira su OKX EEA: un carry di funding su DOGE (spot + hedge perp),
@@ -37,14 +37,16 @@
 
 | Area | Stato | Evidenza |
 | :--- | :--- | :--- |
-| **Ordine del repository** | ✅ riconciliato con `origin`, il lavoro di tutte le sessioni committato | 5 commit pubblicati, `main` allineato |
+| **Ordine del repository** | ✅ riconciliato con `origin`, il lavoro di tutte le sessioni committato | commit `[hermes]`/`[dsh]` pushati, `main` allineato (03/10) |
 | **Suite di test** | ✅ **finalmente eseguibile** (prima 63 failed / 50 errors, tutti ambientali) | vedi § Testing |
 | **Idempotenza degli ordini** | ✅ implementata (`clOrdId` su ogni invio, journalato *prima* dell'ordine) | 7 test |
 | **Stato non finanziato** | ✅ esplicito `ok` / `sottocapitalizzato` / `non_finanziato` / `illeggibile` | 18 test |
 | **Limite di esposizione del conto** | ✅ integrato nel nodo (il registro esisteva, nessuno lo aveva costruito) | 15 test |
 | **Controllo di integrità della flotta** | ✅ `tools/fleet_integrity.py`, exit code 1 su qualsiasi allarme | 14 allarmi su MARCODG1, 7 su nuvola |
 | **Trading live** | ✅ **un bot live** (carry C1, DOGE): taglia volutamente minima, completamente riconciliato, funding in maturazione | la prima esecuzione reale del progetto; il resto: paper + ricerca |
-| **Servizi di telemetria** | ⚠️ 4 unit in riavvio patologico (path drift) | `denaro-watchdog` failed |
+| **Capitale** | ✅ **~1.100 EUR** su OKX (l'owner ha depositato **+1.000 EUR il 03/10**, verificato in sola lettura) | funding wallet; deploy condizionato alla review del 15/10 |
+| **Servizi di telemetria** | ✅ sweep pulito sui tre nodi (03/10); l'uscita dichiarata del banco (exit 2 = non finanziato) non è più un failure systemd | sweep `systemctl` + drop-in `10-exit2.conf` |
+| **Allarmi** | ✅ canale Telegram live (`@DenaroAlertBot`): watchdog fabbrica collegato (max 1/h + messaggio di rientro) | iniziativa «zero silenzi» |
 | **Sicurezza** | ⚠️ un host è stato compromesso, ora contenuto | vedi § Sicurezza |
 | **Economia** | ⚠️ la fascia commissionale attuale annulla l'edge — vedi § L'economia | misurato su commissioni reali |
 

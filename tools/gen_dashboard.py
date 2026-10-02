@@ -4,9 +4,11 @@
 La fonte autoritativa è infra.json servito da MARCODG1:8912 (infra_aggregator.py),
 che aggrega bot, saldi, prezzi ed errori di TUTTI i nodi.
 
-Portafoglio reale: dedup per fingerprint di asset (un account Kraken condiviso tra
-più nodi NON si conta due volte). Stima conservativa = OKX main + OKX marcosub1
-+ OKX mc2sub1 + OKX nuvolasub1 (sub distinti) + 1× Kraken (account unico).
+Portafoglio reale: dedup per fingerprint di asset (storicamente un account Kraken
+condiviso tra più nodi non si contava due volte; oggi Kraken è fuori gioco).
+Stima conservativa = OKX main + OKX marcosub1 + OKX mc2sub1 + OKX nuvolasub1.
+Prezzi: Binance come primario + completamento dai prezzi OKX del payload per gli
+asset mancanti (es. DOGE) e stablecoin USDC≈USD.
 """
 import json
 import shlex
@@ -79,6 +81,40 @@ def fetch_binance_prices() -> dict[str, float]:
                 out[asset] = usdt * out["USD"]
         except Exception:
             pass
+    return out
+
+
+def completa_prezzi(prices: dict[str, float], infra: dict) -> dict[str, float]:
+    """Completa i prezzi mancanti con le quotazioni OKX del payload (fonte primaria EEA).
+
+    - crypto: dalle chiavi tipo `DOGE/EUR` del payload ricava `DOGE` = prezzo in EUR;
+    - stablecoin: `USDC` ~ `USD` (cambio USD/EUR da Binance; se assente, fallback via
+      ticker USDC-EUR di OKX, poi 0.90 prudenziale).
+    """
+    out = dict(prices)
+    for coppia, prezzo in (infra.get("prices") or {}).items():
+        try:
+            base, quote = str(coppia).split("/")
+            if quote.upper() == "EUR" and float(prezzo) > 0:
+                out.setdefault(base.upper(), float(prezzo))
+        except (ValueError, TypeError):
+            continue
+    if out.get("USD", 0.0) <= 0.0:
+        try:
+            r = subprocess.run(
+                ["curl", "-s", "-m", "8", "-H", "User-Agent: Mozilla/5.0",
+                 "https://eea.okx.com/api/v5/market/ticker?instId=USDC-EUR"],
+                capture_output=True, text=True, timeout=10,
+            )
+            data = json.loads(r.stdout) if r.stdout else {}
+            px = float(((data.get("data") or [{}])[0]).get("last") or 0.0)
+            if px > 0:
+                out["USD"] = px
+        except Exception:
+            pass
+    if out.get("USD", 0.0) <= 0.0:
+        out["USD"] = 0.90  # fallback prudente: USDT/USDC ~ 1 USD
+    out.setdefault("USDC", out["USD"])
     return out
 
 
@@ -280,7 +316,7 @@ def main():
             entry["points"] = entry["points"][-240:]
     HISTORY.write_text(json.dumps(history))
 
-    prices = fetch_binance_prices()
+    prices = completa_prezzi(fetch_binance_prices(), infra)
     portfolio = fetch_portfolio_via_aggregator(prices)
 
     payload = {

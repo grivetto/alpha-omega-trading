@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ATLAS · Denaro — Fleet Dashboard</title>
+<style>
+:root{
+  --bg:#0b0e14; --panel:#131722; --panel2:#1a2030; --border:#232a3b;
+  --text:#e6e9f0; --dim:#8a93a6; --cyan:#22d3ee; --green:#34d399;
+  --red:#f87171; --yellow:#fbbf24; --purple:#a78bfa; --blue:#60a5fa;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'Inter','Segoe UI',system-ui,sans-serif;min-height:100vh}
+.container{max-width:1300px;margin:0 auto;padding:24px}
+.header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:24px}
+.header h1{font-size:1.6rem;font-weight:700;letter-spacing:.5px}
+.header h1 span{background:linear-gradient(90deg,var(--cyan),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.badges{display:flex;gap:8px;flex-wrap:wrap}
+.badge{padding:4px 12px;border-radius:20px;font-size:.75rem;font-weight:600;border:1px solid var(--border)}
+.badge.live{color:var(--green);border-color:rgba(52,211,153,.4);background:rgba(52,211,153,.08)}
+.badge.paper{color:var(--yellow);border-color:rgba(251,191,36,.4);background:rgba(251,191,36,.08)}
+.badge.updated{color:var(--dim);border-color:var(--border)}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:24px}
+.stat-card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:18px}
+.stat-card .label{font-size:.72rem;text-transform:uppercase;letter-spacing:1px;color:var(--dim);margin-bottom:6px}
+.stat-card .value{font-size:1.7rem;font-weight:700}
+.stat-card .sub{font-size:.75rem;color:var(--dim);margin-top:4px}
+
+/* ── per-macchina gruppi ── */
+.machine{margin-bottom:28px}
+.machine-head{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:14px 18px;margin-bottom:14px}
+.machine-head .m-name{font-size:1.15rem;font-weight:700;letter-spacing:.5px}
+.machine-head .m-ip{font-size:.72rem;color:var(--dim);margin-left:8px}
+.machine-head .m-stats{margin-left:auto;display:flex;gap:16px;font-size:.8rem}
+.machine-head .m-stats b{font-size:1rem}
+.machine-head .pill{padding:3px 10px;border-radius:12px;font-size:.68rem;font-weight:700;text-transform:uppercase}
+.pill.live{background:rgba(52,211,153,.15);color:var(--green);border:1px solid rgba(52,211,153,.4)}
+.pill.paper{background:rgba(251,191,36,.12);color:var(--yellow);border:1px solid rgba(251,191,36,.35)}
+.machine-groups{display:grid;grid-template-columns:1fr;gap:14px}
+.group-label{display:flex;align-items:center;gap:8px;font-size:.8rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin:6px 0 10px}
+.group-label .glive{color:var(--green)}
+.group-label .gpaper{color:var(--yellow)}
+.group-label .count{color:var(--dim);font-weight:400;text-transform:none}
+.bot-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}
+.bot-card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px;transition:border-color .2s;position:relative}
+.bot-card:hover{border-color:var(--cyan)}
+.bot-card .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.bot-card .sym{font-weight:700;font-size:1.05rem}
+.bot-card .node{font-size:.72rem;color:var(--dim);margin-left:8px}
+.bot-card .status{font-size:.68rem;font-weight:700;padding:3px 10px;border-radius:12px;text-transform:uppercase}
+.status.running{background:rgba(52,211,153,.12);color:var(--green)}
+.status.blocked,.status.error{background:rgba(248,113,113,.12);color:var(--red)}
+.status.stopped,.status.paused{background:rgba(251,191,36,.12);color:var(--yellow)}
+.bot-card .mode-tag{position:absolute;top:12px;right:12px;font-size:.62rem;font-weight:800;padding:3px 8px;border-radius:8px;letter-spacing:1px}
+.mode-tag.LIVE{background:var(--green);color:#04130d}
+.mode-tag.PAPER{background:var(--yellow);color:#150f00}
+.metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.metric{background:var(--panel2);border-radius:10px;padding:10px}
+.metric .m-label{font-size:.65rem;color:var(--dim);text-transform:uppercase;letter-spacing:.5px}
+.metric .m-val{font-size:1.05rem;font-weight:600;margin-top:2px}
+.metric .m-val.pos{color:var(--green)}
+.metric .m-val.neg{color:var(--red)}
+.err{margin-top:10px;font-size:.72rem;color:var(--red);background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.2);border-radius:8px;padding:8px;word-break:break-word}
+.chart-wrap{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px;margin-top:14px}
+canvas{width:100%;height:220px;display:block}
+.legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:10px;font-size:.75rem;color:var(--dim)}
+.legend .li{display:flex;align-items:center;gap:6px}
+.legend .sw{width:10px;height:10px;border-radius:3px;display:inline-block}
+.footer{margin-top:32px;text-align:center;color:var(--dim);font-size:.72rem;padding-bottom:20px}
+.empty{color:var(--dim);font-size:.85rem;padding:20px;text-align:center;border:1px dashed var(--border);border-radius:12px}
+.stats-grid{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.stats-grid .stat-card:not(.portfolio){min-height:96px}
+.stat-card.portfolio{grid-column:1 / -1;min-height:280px;padding:22px 24px;background:linear-gradient(135deg,#1a1530 0%,#131722 60%,#0d1424 100%);border:1px solid rgba(167,139,250,.45);box-shadow:0 0 24px rgba(167,139,250,.18)}
+.stat-card.portfolio .pf-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:14px}
+.stat-card.portfolio .pf-title{font-size:.78rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--purple);font-weight:700;display:flex;align-items:center;gap:8px}
+.stat-card.portfolio .pf-total{font-size:3rem;font-weight:800;letter-spacing:-1px;font-family:'Orbitron','Segoe UI',system-ui,sans-serif;background:linear-gradient(90deg,var(--cyan),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1.05}
+.stat-card.portfolio .pf-total .pf-cur{font-size:1.2rem;color:var(--dim);-webkit-text-fill-color:var(--dim);margin-right:6px;letter-spacing:0}
+.stat-card.portfolio .pf-sub{font-size:.7rem;color:var(--dim);margin-top:6px;letter-spacing:.5px}
+.stat-card.portfolio .pf-accounts{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px 16px;margin-top:14px;padding-top:14px;border-top:1px solid rgba(167,139,250,.18)}
+.stat-card.portfolio .pf-acc{display:flex;flex-direction:column;gap:4px;padding:10px 12px;background:rgba(10,16,38,.55);border:1px solid rgba(255,255,255,.04);border-radius:8px}
+.stat-card.portfolio .pf-acc-head{display:flex;justify-content:space-between;align-items:baseline;gap:6px}
+.stat-card.portfolio .pf-acc-name{font-size:.75rem;font-weight:700;color:var(--text);letter-spacing:.5px}
+.stat-card.portfolio .pf-acc-name .pf-tag{font-size:.6rem;color:var(--dim);font-weight:400;margin-left:4px;text-transform:uppercase;letter-spacing:1px}
+.stat-card.portfolio .pf-acc-val{font-size:1rem;font-weight:700;color:var(--green);font-family:'Orbitron',monospace}
+.stat-card.portfolio .pf-acc-assets{font-size:.65rem;color:var(--dim);line-height:1.4}
+.stat-card.portfolio .pf-acc-assets b{color:var(--cyan);font-weight:600}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>ATLAS · <span>DENARO</span> FLEET</h1>
+    <div class="badges">
+      <span class="badge live" id="badge-live">0 LIVE</span>
+      <span class="badge paper" id="badge-paper">0 PAPER</span>
+      <span class="badge updated" id="badge-updated">—</span>
+    </div>
+  </div>
+
+  <div class="stats-grid" id="stats"></div>
+  <div id="machines"></div>
+
+  <div class="section">
+    <div class="chart-wrap">
+      <canvas id="chart"></canvas>
+      <div class="legend" id="legend"></div>
+    </div>
+  </div>
+
+  <div class="footer">Alpha-Omega Trading · orchestrato da Hermes + DeepSeek · aggiornato ogni 5 min</div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const COLORS=['#22d3ee','#a78bfa','#34d399','#fbbf24','#60a5fa','#f87171','#f472b6','#4ade80'];
+const MACHINES={mc2:'mc2 · casa (CGNAT)',nuvola:'nuvola · VPS monitoraggio',MARCODG1:'MARCODG1 · VPS OKX'};
+
+function pnlCls(v){return (v||0)>=0?'pos':'neg';}
+function fmt(v,d=2){return v==null?'—':(typeof v==='number'?v.toFixed(d):v);}
+function pnlFmt(v){return v==null?'—':((v>=0?'+':'')+v.toFixed(2));}
+
+function friendlyAccountLabel(raw){
+  // normalizza "denaro (mc2sub1)" / "alpha (marcosub1)" / "kraken (nuvola)" in label human-readable
+  if(!raw) return '—';
+  const s = String(raw);
+  const m = s.match(/^(\w+)\s*\(([^)]+)\)\s*$/);
+  if(!m) return s;
+  const ex = m[1].toUpperCase();
+  const sub = m[2];
+  // nascondi il suffisso standard (sub1) per leggibilità
+  const short = sub.replace(/sub1$/i, '').replace(/_/g, ' ');
+  return `${ex} · ${short}`;
+}
+
+function portfolioSubline(d){
+  const p = d.portfolio;
+  if(!p || p.total_eur==null) return 'aggregato live in tempo reale';
+  const accounts = p.by_account || [];
+  if(!accounts.length) return 'aggregato live in tempo reale';
+  const okxTotal = accounts.filter(a=>a.exchange==='okx').reduce((s,a)=>s+a.total_eur,0);
+  const krakenTotal = accounts.filter(a=>a.exchange==='kraken').reduce((s,a)=>s+a.total_eur,0);
+  const parts = [`OKX ${fmt(okxTotal)} €`];
+  if(krakenTotal>0) parts.push(`Kraken ${fmt(krakenTotal)} €`);
+  parts.push(`${accounts.length} conti reali`);
+  return parts.join(' · ');
+}
+
+function portfolioMeta(d){
+  const p = d.portfolio;
+  if(!p) return '';
+  const lines = [];
+  if(p.as_of) lines.push(`snapshot: <b style="color:var(--text)">${(p.as_of||'').slice(0,16).replace('T',' ')}</b>`);
+  if(p.warning) lines.push(`<span style="color:var(--yellow)">⚠ ${p.warning}</span>`);
+  if(p.cached) lines.push(`<span style="color:var(--dim)">cache: ${p.cached_age||0}s fa</span>`);
+  return lines.join('<br>');
+}
+
+function portfolioAccounts(d){
+  const p = d.portfolio;
+  if(!p || !p.by_account || !p.by_account.length){
+    return '<div class="pf-acc"><div class="pf-acc-name">Nessun dato</div><div class="pf-acc-assets">aggregatore non ancora pronto</div></div>';
+  }
+  return p.by_account.map(a=>{
+    const label = friendlyAccountLabel(a.account || a.label);
+    const assets = a.assets || {};
+    const assetChips = Object.entries(assets)
+      .map(([k,v])=>`<b>${v.amount>=1?v.amount.toFixed(2):v.amount.toFixed(4)}</b> ${k}`)
+      .join(' · ');
+    const uid = (a.account||'').match(/(\w{8})$/);
+    const tag = uid ? uid[1] : a.exchange;
+    return `<div class="pf-acc">
+      <div class="pf-acc-head">
+        <span class="pf-acc-name">${label}<span class="pf-tag">${tag}</span></span>
+        <span class="pf-acc-val">${fmt(a.total_eur)} €</span>
+      </div>
+      <div class="pf-acc-assets">${assetChips || '—'}</div>
+    </div>`;
+  }).join('');
+}
+
+function card(b){
+  const st=(b.status||'unknown').toLowerCase();
+  const err=(b.error&&b.error!=='')?`<div class="err">⚠ ${b.error}</div>`:'';
+  return `<div class="bot-card">
+    <span class="mode-tag ${b.mode}">${b.mode}</span>
+    <div class="top">
+      <div><span class="sym">${b.symbol||'—'}</span></div>
+      <span class="status ${st}">${st}</span>
+    </div>
+    <div class="metrics">
+      <div class="metric"><div class="m-label">Equity</div><div class="m-val">${fmt(b.total_equity)} €</div></div>
+      <div class="metric"><div class="m-label">PnL</div><div class="m-val ${pnlCls(b.pnl)}">${pnlFmt(b.pnl)} €</div></div>
+      <div class="metric"><div class="m-label">Trades</div><div class="m-val">${b.trades??0} <span style="color:var(--dim);font-size:.7rem">(${b.wins??0}W/${b.losses??0}L)</span></div></div>
+      <div class="metric"><div class="m-label">Drawdown</div><div class="m-val ${(b.drawdown||0)>0.1?'neg':''}">${((b.drawdown||0)*100).toFixed(1)}%</div></div>
+      <div class="metric"><div class="m-label">Capitale</div><div class="m-val">${fmt(b.capital)} €</div></div>
+      <div class="metric"><div class="m-label">Win rate</div><div class="m-val">${b.win_rate_pct?b.win_rate_pct.toFixed(1)+'%':'—'}</div></div>
+    </div>
+    ${err}
+  </div>`;
+}
+
+function group(bots,mode){
+  const sel=bots.filter(b=>b.mode===mode);
+  if(!sel.length)return `<div class="empty">Nessun bot ${mode} su questa macchina</div>`;
+  return `<div class="bot-grid">${sel.map(card).join('')}</div>`;
+}
+
+function render(d){
+  $('badge-live').textContent = `${d.counts.live} LIVE`;
+  $('badge-paper').textContent = `${d.counts.paper} PAPER`;
+  $('badge-updated').textContent = 'aggiornato ' + (d.generated_at||'').slice(5,16).replace('T',' ');
+
+  const all=[...d.live,...d.paper];
+  const totEq=all.reduce((s,b)=>s+(b.total_equity||0),0);
+  const totPnl=all.reduce((s,b)=>s+(b.pnl||0),0);
+  const totTr=all.reduce((s,b)=>s+(b.trades||0),0);
+  const livePnl=d.live.reduce((s,b)=>s+(b.pnl||0),0);
+  const liveTr=d.live.reduce((s,b)=>s+(b.trades||0),0);
+  const errs=d.live.filter(b=>b.status==='blocked'||b.status==='error').length;
+  $('stats').innerHTML=`
+    <div class="stat-card portfolio">
+      <div class="pf-head">
+        <div>
+          <div class="pf-title">💎 Portafoglio Totale (reale)</div>
+          <div class="pf-total"><span class="pf-cur">€</span>${d.portfolio&&d.portfolio.total_eur!=null?fmt(d.portfolio.total_eur):'—'}</div>
+          <div class="pf-sub">${portfolioSubline(d)}</div>
+        </div>
+        <div style="text-align:right;font-size:.7rem;color:var(--dim);line-height:1.4">
+          ${portfolioMeta(d)}
+        </div>
+      </div>
+      <div class="pf-accounts">${portfolioAccounts(d)}</div>
+    </div>
+    <div class="stat-card"><div class="label">Equity Bot</div><div class="value">${fmt(totEq)} €</div><div class="sub">${d.live.length} live + ${d.paper.length} paper</div></div>
+    <div class="stat-card"><div class="label">PnL Cumulato</div><div class="value ${pnlCls(totPnl)}">${pnlFmt(totPnl)} €</div><div class="sub">live: ${pnlFmt(livePnl)} €</div></div>
+    <div class="stat-card"><div class="label">Trade Totali</div><div class="value">${totTr}</div><div class="sub">live: ${liveTr}</div></div>
+    <div class="stat-card"><div class="label">Bot in Errore</div><div class="value" style="color:${errs?'var(--red)':'var(--green)'}">${errs}</div><div class="sub">live bloccati/errori</div></div>`;
+
+  // raggruppa per macchina
+  const nodes=[...new Set(all.map(b=>b.node))].sort();
+  const order={mc2:0,nuvola:1,MARCODG1:2};
+  nodes.sort((a,b)=>(order[a]??9)-(order[b]??9));
+  $('machines').innerHTML=nodes.map(node=>{
+    const bots=all.filter(b=>b.node===node);
+    const nLive=bots.filter(b=>b.mode==='LIVE').length;
+    const nPaper=bots.filter(b=>b.mode==='PAPER').length;
+    const eq=bots.reduce((s,b)=>s+(b.total_equity||0),0);
+    const pnl=bots.reduce((s,b)=>s+(b.pnl||0),0);
+    return `<div class="machine">
+      <div class="machine-head">
+        <div><span class="m-name">${MACHINES[node]||node}</span></div>
+        <div class="m-stats">
+          <span>Equity <b>${fmt(eq)}€</b></span>
+          <span>PnL <b class="${pnlCls(pnl)}">${pnlFmt(pnl)}€</b></span>
+          <span class="pill live">${nLive} LIVE</span>
+          <span class="pill paper">${nPaper} PAPER</span>
+        </div>
+      </div>
+      <div class="machine-groups">
+        <div class="group-label"><span class="glive">● TRADING LIVE</span> <span class="count">(${nLive})</span></div>
+        ${group(bots,'LIVE')}
+        <div class="group-label" style="margin-top:14px"><span class="gpaper">● PAPER TRADING</span> <span class="count">(${nPaper})</span></div>
+        ${group(bots,'PAPER')}
+      </div>
+    </div>`;
+  }).join('');
+
+  drawChart(d.history||{});
+}
+
+function drawChart(history){
+  const cv=$('chart'), ctx=cv.getContext('2d');
+  const entries=Object.entries(history).filter(([k,v])=>(v.points||[]).length>=2);
+  const DPR=window.devicePixelRatio||1;
+  const W=cv.clientWidth||600, H=220;
+  cv.width=W*DPR; cv.height=H*DPR; ctx.scale(DPR,DPR);
+  ctx.clearRect(0,0,W,H);
+
+  if(!entries.length){ctx.fillStyle='#8a93a6';ctx.font='14px sans-serif';ctx.textAlign='center';ctx.fillText('In attesa di dati trend... (i punti si accumulano ogni 5 min)',W/2,H/2);return;}
+
+  let min=Infinity,max=-Infinity;
+  const series=entries.map(([k,v])=>{
+    const pts=v.points.map(p=>p.eq);
+    min=Math.min(min,...pts); max=Math.max(max,...pts);
+    return {k,pts};
+  });
+  const pad=(max-min)*0.1||1; min-=pad; max+=pad;
+  const n=Math.max(...series.map(s=>s.pts.length));
+
+  ctx.strokeStyle='#1a2030'; ctx.lineWidth=1;
+  for(let i=0;i<=4;i++){
+    const y=H-(H*i/4);
+    ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();
+    ctx.fillStyle='#8a93a6';ctx.font='10px sans-serif';ctx.textAlign='left';
+    ctx.fillText((min+(max-min)*i/4).toFixed(0)+'€',4,y-4);
+  }
+
+  series.forEach((s,idx)=>{
+    const col=COLORS[idx%COLORS.length];
+    ctx.strokeStyle=col;ctx.lineWidth=2;ctx.beginPath();
+    s.pts.forEach((v,i)=>{
+      const x=(n===1)?W/2:(i/(n-1))*W;
+      const y=H-((v-min)/(max-min))*H;
+      i?ctx.lineTo(x,y):ctx.moveTo(x,y);
+    });
+    ctx.stroke();
+  });
+
+  $('legend').innerHTML=entries.map(([k],i)=>{
+    const parts=k.split(':');
+    const node=parts[0],sym=parts[1],kind=parts[2];
+    return `<span class="li"><span class="sw" style="background:${COLORS[i%COLORS.length]}"></span>${node} ${sym} (${kind})</span>`;
+  }).join('');
+}
+
+async function load(){
+  try{
+    const r=await fetch('/denaro/data/combined.json?_='+Date.now());
+    render(await r.json());
+  }catch(e){
+    $('machines').innerHTML='<div class="empty">Errore caricamento dati: '+e.message+'</div>';
+  }
+}
+load();setInterval(load,60000);
+</script>
+</body>
+</html>

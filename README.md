@@ -28,7 +28,7 @@
 
 ---
 
-## 📊 Status at a glance — updated 2026-10-01
+## 📊 Status at a glance — updated 2026-10-03
 
 > **The fleet trades only what passes the gate — and the first live exception is on.** Since
 > 2026-10-01 one real-money **canary** runs on OKX EEA: a DOGE funding carry (spot + perp hedge),
@@ -37,14 +37,16 @@
 
 | Area | State | Evidence |
 | :--- | :--- | :--- |
-| **Repository order** | ✅ reconciled with `origin`, all sessions' work committed | 5 commits published, `main` aligned |
+| **Repository order** | ✅ reconciled with `origin`, all sessions' work committed | sessions' commits `[hermes]`/`[dsh]` pushed, `main` aligned (03/10) |
 | **Test suite** | ✅ **finally executable** (was 63 failed / 50 errors, all environmental) | see § Testing |
 | **Order idempotency** | ✅ implemented (`clOrdId` on every dispatch, journaled *before* the order) | 7 tests |
 | **Unfunded state** | ✅ explicit `ok` / `sottocapitalizzato` / `non_finanziato` / `illeggibile` | 18 tests |
 | **Account exposure cap** | ✅ wired into the node (registry existed, nobody built it) | 15 tests |
 | **Fleet integrity check** | ✅ `tools/fleet_integrity.py`, exit code 1 on any alarm | 14 alarms on MARCODG1, 7 on nuvola |
 | **Live trading** | ✅ **one live bot** (carry C1, DOGE): size deliberately minimal, fully reconciled, funding accruing | the project's first real execution; rest of the fleet: paper + research |
-| **Telemetry services** | ⚠️ 4 units in pathological restart (path drift) | `denaro-watchdog` failed |
+| **Capital** | ✅ **~1,100 EUR** on OKX (owner deposited **+1,000 EUR on 03/10**, verified read-only) | funding wallet; deployment gated on the 15/10 review |
+| **Telemetry services** | ✅ clean sweep across the three nodes (03/10); the banco's declared un-funded exit (code 2) no longer surfaces as a systemd failure | `systemctl` sweep + `10-exit2.conf` drop-in |
+| **Alerting** | ✅ Telegram channel live (`@DenaroAlertBot`): fabric watchdog wired (max 1/h + recovery message) | zero-silence initiative |
 | **Security** | ⚠️ one host was compromised, now contained | see § Security |
 | **Economy** | ⚠️ current fee tier cancels the edge — see § The economics | measured on real fees |
 
