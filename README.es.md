@@ -93,6 +93,18 @@ defectos que se observaron en producción (ver § Lecciones).
   <img src="assets/architettura-flotta.svg" alt="Arquitectura de la flota: tres nodos, una sub-cuenta de OKX cada uno, un gobernador de riesgo de cartera" width="100%"/>
 </p>
 
+### Capa operativa — las mismas máquinas, segundo rol (03/10/2026)
+
+Además del trading, las mismas máquinas — más un **nodo de agentes** (Omarchy, LAN) — llevan todo
+lo que construye, vigila y protege la flota: hub (mc2), sala de operaciones (MARCODG1), puesto de
+monitorización (nuvola) y el banco de operarios (A0-MC2 + A0-PC con Gemini 2.5, DSH, OpenCode)
+que entregan a Hermes — nada entra sin revisión. Desde el 01/10 un bot real opera carry C1 (DOGE)
+en OKX EEA: tamaño mínimo, reconciliado contra el exchange, validación hasta el 15/10.
+
+![Sistema Denaro — 03/10/2026](assets/foto-sistema-2026-10-03.png)
+
+*Visual a resolución completa: [`FOTO_SISTEMA_2026-10-03.html`](https://github.com/grivetto/money/blob/main/FOTO_SISTEMA_2026-10-03.html) (repo hermano `money`).*
+
 ### Tecnologías principales
 
 | Componente | Tecnología | Función |

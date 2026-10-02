@@ -93,7 +93,7 @@ osservati in produzione (vedi § Lezioni).
   <img src="assets/architettura-flotta.svg" alt="Architettura della flotta: tre nodi, un sub-account OKX ciascuno, una regia del rischio di portafoglio" width="100%"/>
 </p>
 
-### Il livello operativo — le stesse macchine, secondo ruolo (02/10/2026)
+### Il livello operativo — le stesse macchine, secondo ruolo (rev. 03/10/2026)
 
 Una macchina = una famiglia di strategie = un sub-account è il disegno *di trading*. Le stesse
 tre macchine reggono anche tutto ciò che costruisce, osserva e protegge la flotta: un hub, una
@@ -118,6 +118,11 @@ sala operativa e un posto di monitoraggio.
  │ · Zabbix agent + tunnel → mc2          │
  │ · fabbrica worker — ogni 5 s           │
  └────────────────────────────────────────┘
+ ┌────────────────────────────────────────┐
+ │ nodo agenti (Omarchy, LAN) — agenti    │
+ │ · DSH harness — ricerca (dsh-mc2)      │
+ │ · OpenCode — esecutore task free       │
+ └────────────────────────────────────────┘
    telemetria: flotta paper (simulata, su tutti e tre i nodi) → aggregator → dashboard + landing →
    Zabbix «Money» (38 host — bot, macchine, progetto; auto-heal sui guasti noti)
 ```
@@ -129,12 +134,13 @@ della scrittura. La finestra di validazione di 14 giorni chiude il **15/10** con
 pre-dichiarati (`docs/16`). È la **prima esecuzione reale** del progetto: il resto resta paper +
 ricerca.
 
-![Denaro — sistema al 02/10/2026](assets/foto-sistema-2026-10-02.png)
+![Denaro — sistema al 03/10/2026](assets/foto-sistema-2026-10-03.png)
 
-*Visual a piena risoluzione: [`FOTO_SISTEMA_2026-10-02.html`](https://github.com/grivetto/money/blob/main/FOTO_SISTEMA_2026-10-02.html) (repo gemello `money`).*
+*Visual a piena risoluzione: [`FOTO_SISTEMA_2026-10-03.html`](https://github.com/grivetto/money/blob/main/FOTO_SISTEMA_2026-10-03.html) (repo gemello `money`).*
 
-**In pratica** — il lavoro scorre in un unico anello con quattro esecutori possibili: due operai
-Agent Zero (mc2 e PC), una sessione peer DSH e un esecutore OpenCode gratuito. Ogni consegna è
+**In pratica** — il lavoro scorre in un unico anello con una piccola squadra di esecutori: due operai
+Agent Zero (mc2 e PC), una sessione peer DSH, esecutori OpenCode gratuiti — più il **nodo agenti**
+(Omarchy, LAN: DSH + OpenCode), collegato allo stesso canale e anello di review. Ogni consegna è
 ri-verificata da Hermes con i test rieseguiti nel repository prima che qualcosa entri; la ricerca
 vive nel repo gemello [`money`](https://github.com/grivetto/money): idea → spec pre-registrata →
 esecutore → review → misura → cancello a 8 criteri → promozione o archivio → banco a secco →

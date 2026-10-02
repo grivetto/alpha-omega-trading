@@ -93,7 +93,7 @@ were observed in production (see § Lessons).
   <img src="assets/architettura-flotta.svg" alt="Fleet architecture: three nodes, one OKX sub-account each, one portfolio risk governor" width="100%"/>
 </p>
 
-### The operations layer — the same machines, second role (2026-10-02)
+### The operations layer — the same machines, second role (rev. 2026-10-03)
 
 One machine = one strategy family = one sub-account is the *trading* design. The same three
 machines also carry everything that builds, watches and guards the fleet: a hub, an operations
@@ -118,6 +118,11 @@ room and a monitoring post.
  │ · Zabbix agent + tunnel → mc2          │
  │ · fabric worker — every 5 s            │
  └────────────────────────────────────────┘
+ ┌────────────────────────────────────────┐
+ │ agents node (Omarchy, LAN) — agents    │
+ │ · DSH harness — research (dsh-mc2)     │
+ │ · OpenCode — free task executor        │
+ └────────────────────────────────────────┘
    telemetry: paper fleet (simulated, all three nodes) → aggregator → dashboard + landing →
    Zabbix «Money» (38 hosts — bots, machines, project; auto-heal on known faults)
 ```
@@ -129,12 +134,13 @@ writing. The 14-day validation window closes on **15/10** with pre-registered cr
 (`docs/16`). It is the project's **first real execution**: everything else stays paper +
 research.
 
-![Denaro system — 02/10/2026](assets/foto-sistema-2026-10-02.png)
+![Denaro system — 03/10/2026](assets/foto-sistema-2026-10-03.png)
 
-*Full-resolution visual: [`FOTO_SISTEMA_2026-10-02.html`](https://github.com/grivetto/money/blob/main/FOTO_SISTEMA_2026-10-02.html) (sibling `money` repo).*
+*Full-resolution visual: [`FOTO_SISTEMA_2026-10-03.html`](https://github.com/grivetto/money/blob/main/FOTO_SISTEMA_2026-10-03.html) (sibling `money` repo).*
 
-**In pratica** — work flows through one loop with four possible executors: two Agent Zero coders
-(mc2 and PC), a DSH peer session and a free OpenCode executor. Every delivery is reviewed by
+**In pratica** — work flows through one loop with a small bench of executors: two Agent Zero coders
+(mc2 and PC), a DSH peer session, free OpenCode executors — plus the **agents node** (Omarchy,
+LAN: DSH + OpenCode), wired to the same channel and review loop. Every delivery is reviewed by
 Hermes with the tests re-run in the repository before anything lands; research itself lives in
 the sibling repo [`money`](https://github.com/grivetto/money): idea → pre-registered spec →
 executor → review → measure → 8-criteria gate → promote or archive → dry bench → canary →
