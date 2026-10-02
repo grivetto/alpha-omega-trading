@@ -22,6 +22,7 @@ Anti-spam e retry: tools/alert_lib.py (max 1 messaggio/ora per chiave + spool).
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -53,10 +54,17 @@ def docker_stati() -> dict:
 
 
 def unit_stato(unit: str) -> str:
+    # Cron non ha XDG/DBUS: senza queste env `systemctl --user` fallisce
+    # ("Failed to connect to bus") e TUTTE le unit risultano 'unknown' -> falsi
+    # allarmi (visto 03/10: 3 messaggi di errore). Iniettiamo le variabili se mancano.
+    env = os.environ.copy()
+    env.setdefault("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}")
+    env.setdefault("DBUS_SESSION_BUS_ADDRESS", f"unix:path=/run/user/{os.getuid()}/bus")
     try:
         r = subprocess.run(["systemctl", "--user", "is-active", unit],
-                           capture_output=True, text=True, timeout=15)
-        return (r.stdout or "").strip() or "unknown"
+                           capture_output=True, text=True, timeout=15, env=env)
+        out = (r.stdout or "").strip()
+        return out or "unknown"
     except Exception:  # noqa: BLE001
         return "unknown"
 
@@ -140,23 +148,51 @@ def _fetch_infra() -> dict:
 def check_bots() -> int:
     """Salute dei bot: regressioni 'running -> giu'' con allarme/rientro.
 
-    Baseline al primo giro; poi confronto dell'insieme dei bot `running` con lo stato
-    salvato. Nodi non raggiungibili dall'aggregatore: un allarme per nodo (non per bot).
+    Anti-flap: una condizione diventa allarme solo dopo 2 rilevazioni CONSECUTIVE
+    (10' col cron */10): i buchi transitori dell'aggregatore non devono suonare
+    (lezione Zabbix: un campione mancante non e' un guasto). Nodi non raggiungibili
+    dall'aggregatore: allarme per-nodo, non per-bot. Baseline al primo giro.
     """
+    try:
+        stato = json.loads(BOTS_STATO.read_text(encoding="utf-8"))
+    except Exception:  # noqa: BLE001
+        stato = {}
+    conf = {str(k): int(v) for k, v in (stato.get("conferme") or {}).items()}
+    cambi = 0
+
+    def _bump(chiave: str, presente: bool) -> int:
+        conf[chiave] = (conf.get(chiave, 0) + 1) if presente else 0
+        return conf[chiave]
+
+    def _salva() -> None:
+        BOTS_STATO.parent.mkdir(parents=True, exist_ok=True)
+        stato["conferme"] = conf
+        BOTS_STATO.write_text(json.dumps(stato), encoding="utf-8")
+
     try:
         d = _fetch_infra()
     except Exception as e:  # noqa: BLE001
-        return gestisci("bots:check", True,
-                        f"⚠️ bots: aggregatore non leggibile ({type(e).__name__})",
-                        "✅ bots: aggregatore di nuovo leggibile")
+        if _bump("bots:check", True) >= 2:
+            cambi += gestisci("bots:check", True,
+                              f"⚠️ bots: aggregatore non leggibile ({type(e).__name__})",
+                              "✅ bots: aggregatore di nuovo leggibile")
+        _salva()
+        return cambi
+    _bump("bots:check", False)
+    cambi += gestisci("bots:check", False, "", "✅ bots: aggregatore di nuovo leggibile")
+
     bots = {k: b for k, b in (d.get("bots") or {}).items() if isinstance(b, dict)}
     non_rag = {n for n, t in (d.get("node_totals") or {}).items()
                if isinstance(t, dict) and not t.get("reachable", True)}
-    cambi = 0
-    for n in sorted(non_rag):
-        cambi += gestisci(f"botnode:{n}", True,
-                          f"⚠️ nodo {n} non raggiungibile dall'aggregatore",
-                          f"✅ nodo {n} di nuovo raggiungibile")
+    for n in sorted({k.split(":")[0] for k in bots} | set(d.get("node_totals") or {})):
+        if n in non_rag:
+            if _bump(f"botnode:{n}", True) >= 2:
+                cambi += gestisci(f"botnode:{n}", True,
+                                  f"⚠️ nodo {n} non raggiungibile dall'aggregatore",
+                                  f"✅ nodo {n} di nuovo raggiungibile")
+        else:
+            _bump(f"botnode:{n}", False)
+            cambi += gestisci(f"botnode:{n}", False, "", f"✅ nodo {n} di nuovo raggiungibile")
 
     def _dettaglio(k: str) -> str:
         b = bots.get(k) or {}
@@ -175,36 +211,41 @@ def check_bots() -> int:
     correnti = {k for k, b in bots.items()
                 if str(b.get("status")) == "running" and not b.get("stale")
                 and k.split(":")[0] not in non_rag}
-    try:
-        stato = json.loads(BOTS_STATO.read_text(encoding="utf-8"))
-        precedenti = set(stato.get("running") or [])
-    except Exception:  # noqa: BLE001
-        precedenti = set()
+    precedenti = set(stato.get("running") or [])
     if not precedenti:
-        BOTS_STATO.parent.mkdir(parents=True, exist_ok=True)
-        BOTS_STATO.write_text(
-            json.dumps({"running": sorted(correnti), "baseline_ts": time.time()}), encoding="utf-8")
+        stato["running"] = sorted(correnti)
+        stato["baseline_ts"] = time.time()
+        _salva()
         print(f"bots: baseline registrata ({len(correnti)} running)")
         return cambi
     persi = {k for k in (precedenti - correnti) if k.split(":")[0] not in non_rag}
-    nuovi = correnti - precedenti
-    if len(persi) > 3:
+    # rientri: bot che era in problema (conf>0 da un giro precedente) ed e' tornato running
+    for k in sorted(correnti):
+        chiave = f"bot:{k}"
+        if conf.get(chiave, 0) > 0:
+            conf[chiave] = 0
+            cambi += gestisci(chiave, False, "", f"✅ bot {k} di nuovo running")
+    confermati = set()
+    for k in sorted(persi):
+        if _bump(f"bot:{k}", True) >= 2:
+            confermati.add(k)
+    if len(confermati) > 3:
         cambi += gestisci("bot:massa", True,
-                          f"⚠️ FLOTTA: {len(persi)} bot NON running — "
-                          + ", ".join(sorted(persi)[:8]) + (" …" if len(persi) > 8 else ""),
+                          f"⚠️ FLOTTA: {len(confermati)} bot NON running — "
+                          + ", ".join(sorted(confermati)[:8])
+                          + (" …" if len(confermati) > 8 else ""),
                           "✅ FLOTTA: bot tutti di nuovo running")
     else:
-        for k in sorted(persi):
+        if not confermati:
+            cambi += gestisci("bot:massa", False, "", "✅ FLOTTA: bot tutti di nuovo running")
+        for k in sorted(confermati):
             cambi += gestisci(f"bot:{k}", True,
                               f"⚠️ bot {k} NON running{_dettaglio(k)}",
                               f"✅ bot {k} di nuovo running")
-    if not persi:
-        cambi += gestisci("bot:massa", False, "", "✅ FLOTTA: bot tutti di nuovo running")
-    for k in sorted(nuovi):
-        cambi += gestisci(f"bot:{k}", False, "", f"✅ bot {k} di nuovo running")
-    BOTS_STATO.parent.mkdir(parents=True, exist_ok=True)
-    BOTS_STATO.write_text(
-        json.dumps({"running": sorted(correnti), "baseline_ts": time.time()}), encoding="utf-8")
+    # il set persistito non "dimentica" un bot caduto finche' non rientra: serve alla
+    # conferma a 2 giri e al rientro; un bot ritirato si toglie a mano dallo stato.
+    stato["running"] = sorted(set(correnti) | precedenti)
+    _salva()
     return cambi
 
 

@@ -40,9 +40,21 @@ def _scrivi(p: Path, data) -> None:
         pass
 
 
+def _registra_inviato(testo: str) -> None:
+    """Audit locale: una riga per OGNI messaggio partito (timestamp + prima riga)."""
+    try:
+        DIR.mkdir(parents=True, exist_ok=True)
+        prima = (testo.strip().splitlines() or [""])[0][:120]
+        with (DIR / "sent.log").open("a", encoding="utf-8") as f:
+            f.write(f"{time.strftime('%F %T')} | {prima}\n")
+    except Exception:  # noqa: BLE001
+        pass
+
+
 def invia_o_spool(testo: str) -> bool:
     """Invia; se fallisce accoda nello spool (riprovato al prossimo giro)."""
     if notifica_tg.invia(testo):
+        _registra_inviato(testo)
         return True
     try:
         DIR.mkdir(parents=True, exist_ok=True)
@@ -66,6 +78,7 @@ def flush_spool(max_n: int = 20) -> int:
             except Exception:  # noqa: BLE001
                 continue
             if d.get("testo") and notifica_tg.invia(d["testo"]):
+                _registra_inviato(str(d["testo"]))
                 inviati += 1
                 continue
         resta.append(r)
