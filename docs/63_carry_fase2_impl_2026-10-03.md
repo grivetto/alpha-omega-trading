@@ -1,6 +1,6 @@
 # 63 — Carry Fase 2: pianificatore multi-coppia (spec di implementazione) — 03/10/2026
 
-STATO: consegnata a **DSH-MC2** (canale `hermes_bridge/dsh-mc2/`, REQ F2, 03/10).
+STATO: **integrata** (03/10) — `carry/carry_fase2.py` + `tools/tests/test_carry_fase2.py` (54 casi di test; review + riesecuzione Hermes: 72/72 con la suite tools). Interpretazione confermata: spot arrotondato per eccesso (delta ≥ 0). Prossimo: estensione esecuzione canary multi-coppia (Hermes, dry-run prima).
 Il **pianificatore** è un modulo PURO (qui sotto). L'**esecuzione ordini** resta
 riservata a Hermes sul percorso del denaro: questo componente non invia nulla.
 
