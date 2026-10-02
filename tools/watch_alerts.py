@@ -3,14 +3,15 @@
 
 Modalità:
   check    (default) — mc2: container docker attesi, unit utente critiche, disco.
-  carry    — MARCODG1 via ssh: raggiungibilità, monitor canary fermo, anomalie canary,
-             (i servizi core li copre fleet_integrity centrale quando abilitato).
+  carry    — MARCODG1 via ssh: raggiungibilità, monitor canary fermo, anomalie canary.
+  flotta   — fleet_integrity sui nodi remoti (MARCODG1, nuvola): allarme se compaiono ALLARMI.
   digest   — riepilogo giornaliero (sempre inviato): capitale, flotta, canary.
   selftest — invia allarme di prova + rientro (verifica end-to-end della catena).
 
 Cron (mc2):
   */5   watch_alerts.py check
   */15  watch_alerts.py carry
+  */30  watch_alerts.py flotta
   0 9   watch_alerts.py digest
 
 Anti-spam e retry: tools/alert_lib.py (max 1 messaggio/ora per chiave + spool).
@@ -122,6 +123,30 @@ def check_carry() -> int:
     return cambi
 
 
+def check_flotta() -> int:
+    """fleet_integrity sui nodi remoti: allarme al canale se compare un ALLARME."""
+    tool = Path(__file__).resolve().parent / "fleet_integrity.py"
+    try:
+        r = subprocess.run([sys.executable, str(tool), "--host", "MARCODG1",
+                            "--host", "nuvola", "--json"],
+                           capture_output=True, text=True, timeout=240)
+        dati = json.loads(r.stdout)
+        assert isinstance(dati, list)
+    except Exception:  # noqa: BLE001
+        return gestisci("flotta:check", True,
+                        "⚠️ fleet_integrity: output non leggibile (check rotto?)",
+                        "✅ fleet_integrity: di nuovo leggibile")
+    problemi = []
+    for h in dati:
+        allarmi = [x for x in (h.get("reperti") or []) if x.get("livello") == "ALLARME"]
+        if allarmi:
+            problemi.append(f"{h.get('host')}: {len(allarmi)} — {str(allarmi[0].get('prova'))[:60]}")
+    problema = bool(problemi)
+    return gestisci("flotta:allarmi", problema,
+                    "⚠️ FLEET: " + "; ".join(problemi)[:300],
+                    "✅ FLEET: nessun allarme sui nodi remoti")
+
+
 def digest() -> int:
     righe = ["🫀 Denaro — check giornaliero"]
     try:
@@ -157,6 +182,8 @@ def main(argv: list[str]) -> int:
         cambi = check_locale()
     elif mode == "carry":
         cambi = check_carry()
+    elif mode == "flotta":
+        cambi = check_flotta()
     elif mode == "digest":
         return digest()
     elif mode == "selftest":

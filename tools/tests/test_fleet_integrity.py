@@ -230,6 +230,70 @@ def test_main_errore_interno_esce_2(mod, monkeypatch, capsys):
     assert "boom del check" in out["errore"]
 
 
+# --- esecuzione remota ---------------------------------------------------------
+
+class FakeSSH:
+    """Sostituisce `_run` per il comando ssh; verifica stdin e cmd."""
+
+    def __init__(self, risposta_json: Dict[str, Any]):
+        self.risposta = json.dumps(risposta_json)
+        self.chiamate: List[Dict[str, Any]] = []
+
+    def __call__(self, cmd, timeout=25, input=None):
+        self.chiamate.append({"cmd": cmd, "timeout": timeout, "input": input})
+        if "ssh" in cmd and "python3 - --json" in " ".join(cmd):
+            return self.risposta + "\n"
+        return ""
+
+
+def test_esegui_remoto_passa_script_via_stdin(mod, monkeypatch):
+    """L'esecuzione remota invia lo script via stdin a 'python3 - --json'."""
+    risposta = {"host": "nuvola", "esito": 0, "reperti": []}
+    fake = FakeSSH(risposta)
+    monkeypatch.setattr(mod, "_run", fake)
+    # monkeypatch sys.argv[0] perche' esegui() lo usa per leggere lo script
+    import sys
+    argv0_orig = sys.argv[0]
+    try:
+        sys.argv[0] = str(ROOT / "tools" / "fleet_integrity.py")
+        res = mod.esegui(host="nuvola")
+    finally:
+        sys.argv[0] = argv0_orig
+    assert res == {"host": "nuvola", "esito": 0, "reperti": []}
+    assert len(fake.chiamate) == 1
+    chiamata = fake.chiamate[0]
+    assert chiamata["cmd"] == ["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=15", "nuvola", "python3 - --json"]
+    assert chiamata["timeout"] == 90
+    assert chiamata["input"] is not None
+    assert "def esegui" in chiamata["input"]  # lo script completo passato via stdin
+
+
+def test_esegui_remoto_allarme_se_ssh_fallisce(mod, monkeypatch):
+    """Se ssh non produce output JSON valido, torna allarme ssh."""
+    class FakeSSHFail:
+        def __init__(self):
+            self.chiamate = []
+        def __call__(self, cmd, timeout=25, input=None):
+            self.chiamate.append({"cmd": cmd, "timeout": timeout, "input": input})
+            if "ssh" in cmd and "python3 - --json" in " ".join(cmd):
+                return "not json at all\n"
+            return ""
+    fake = FakeSSHFail()
+    monkeypatch.setattr(mod, "_run", fake)
+    import sys
+    argv0_orig = sys.argv[0]
+    try:
+        sys.argv[0] = str(ROOT / "tools" / "fleet_integrity.py")
+        res = mod.esegui(host="MARCODG1")
+    finally:
+        sys.argv[0] = argv0_orig
+    assert res["host"] == "MARCODG1"
+    assert res["esito"] == 1
+    assert len(res["reperti"]) == 1
+    assert res["reperti"][0]["check"] == "ssh"
+    assert "controllo remoto non eseguibile" in res["reperti"][0]["cosa"]
+
+
 # --- check_crontab ---------------------------------------------------------------
 
 def test_crontab_lock_in_tmp_non_allarma(mod, monkeypatch, tmp_path):

@@ -123,10 +123,10 @@ class Esito:
 
 # --- esecuzione comandi ---------------------------------------------------------
 
-def _run(cmd: List[str], timeout: int = 25) -> str:
+def _run(cmd: List[str], timeout: int = 25, input: Optional[str] = None) -> str:
     """Esegue un comando di sola lettura. Vuoto se fallisce: il check lo dira'."""
     try:
-        out = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
+        out = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout, input=input)
         return out.stdout or ""
     except Exception:
         return ""
@@ -498,6 +498,11 @@ def check_trading(e: Esito, dir_health: Optional[str] = None,
             err = str(h.get("error") or "")
             blocked = h.get("blocked")
             if eta > max_eta_s:
+                # [03/10] I bot DICHIARATI non operativi (status blocked/stopped: es. dry-bench
+                # non finanziati o ritirati) non hanno heartbeat atteso: il loro file fermo
+                # non e' un allarme. Se ripartono, il file riprende e il check torna vivo.
+                if str(h.get("status") or "").lower() in ("blocked", "stopped"):
+                    continue
                 e.allarme("trading", f"{f} eta'={eta:.0f}s",
                           "health FOSSILE mentre il servizio risulta attivo: nessuno "
                           "scrive piu' lo stato del bot")
@@ -512,12 +517,19 @@ def check_trading(e: Esito, dir_health: Optional[str] = None,
 def esegui(host: Optional[str] = None, dir_health: Optional[str] = None) -> Dict[str, Any]:
     """Esegue i check. Con `host`, li esegue REMOTI via ssh con questo stesso file."""
     if host:
-        remoto = ("python3 - " if not sys.argv[0].endswith(".py") else f"python3 {sys.argv[0]} ")
-        cmd = ["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=15", host,
-               f"{remoto}--json"]
-        out = _run(cmd, timeout=90)
+        script_path = sys.argv[0]
         try:
-            dati = json.loads(out.strip().splitlines()[-1])
+            with open(script_path, encoding="utf-8") as f:
+                script_content = f.read()
+        except Exception:
+            return {"host": host, "esito": 1,
+                    "reperti": [{"livello": "ALLARME", "check": "ssh",
+                                 "prova": f"impossibile leggere {script_path}",
+                                 "cosa": "controllo remoto non eseguibile: script locale non leggibile"}]}
+        cmd = ["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=15", host, "python3 - --json"]
+        out = _run(cmd, timeout=90, input=script_content)
+        try:
+            dati = json.loads(out.strip())
             dati["host"] = host
             return dati
         except Exception:
