@@ -62,6 +62,18 @@ def _call(tok: str, metodo: str, **params):
         return json.loads(r.read().decode())
 
 
+def invia(testo: str) -> bool:
+    """Invia un messaggio sul canale di progetto. False se config mancante o invio fallito."""
+    tok, chat = _config()
+    if not tok or not chat:
+        return False
+    try:
+        _call(tok, "sendMessage", chat_id=chat, text=testo)
+        return True
+    except Exception:  # noqa: BLE001
+        return False
+
+
 def main(argv: list[str]) -> int:
     tok, chat = _config()
 
