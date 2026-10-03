@@ -32,23 +32,47 @@
 
 > **The fleet trades only what passes the gate — and the first live exception is on.** Since
 > 2026-10-01 one real-money **canary** runs on OKX EEA: a DOGE funding carry (spot + perp hedge),
-> fully reconciled, with funding accruing three times a day. Everything else still runs in paper
-> while the research pays its toll. Size is deliberately small: it is an experiment, not a harvest.
+> fully reconciled, with funding accruing three times a day (day 3/14: funding +0.0076 USDC,
+> net ≈ +0.009 USDC). Everything else still runs in paper while the research pays its toll. Size
+> is deliberately small: it is an experiment, not a harvest.
 
 | Area | State | Evidence |
 | :--- | :--- | :--- |
 | **Repository order** | ✅ reconciled with `origin`, all sessions' work committed | sessions' commits `[hermes]`/`[dsh]` pushed, `main` aligned (03/10) |
-| **Test suite** | ✅ **finally executable** (was 63 failed / 50 errors, all environmental) | see § Testing |
+| **Test suite** | ✅ **finally executable** (was 63 failed / 50 errors, all environmental) — today **387 passed, 3 skipped** | see § Testing |
 | **Order idempotency** | ✅ implemented (`clOrdId` on every dispatch, journaled *before* the order) | 7 tests |
 | **Unfunded state** | ✅ explicit `ok` / `sottocapitalizzato` / `non_finanziato` / `illeggibile` | 18 tests |
 | **Account exposure cap** | ✅ wired into the node (registry existed, nobody built it) | 15 tests |
 | **Fleet integrity check** | ✅ `tools/fleet_integrity.py`, exit code 1 on any alarm | 14 alarms on MARCODG1, 7 on nuvola |
-| **Live trading** | ✅ **one live bot** (carry C1, DOGE): size deliberately minimal, fully reconciled, funding accruing | the project's first real execution; rest of the fleet: paper + research |
+| **Live trading** | ✅ **one live bot** (carry C1, DOGE): size deliberately minimal, fully reconciled, funding accruing (funding +0.0076, net ≈ +0.009 USDC, day 3/14) | the project's first real execution; rest of the fleet: paper + research |
 | **Capital** | ✅ **~1,100 EUR** on OKX (owner deposited **+1,000 EUR on 03/10**, verified read-only) | funding wallet; deployment gated on the 15/10 review |
-| **Telemetry services** | ✅ clean sweep across the three nodes (03/10); the banco's declared un-funded exit (code 2) no longer surfaces as a systemd failure | `systemctl` sweep + `10-exit2.conf` drop-in |
-| **Alerting** | ✅ Telegram channel live (`@DenaroAlertBot`): fabric watchdog wired (max 1/h + recovery message) | zero-silence initiative |
+| **Telemetry services** | ✅ clean sweep across the three nodes (03/10) + **post-reboot check 34/34** (`tools/postboot_check.sh`); the banco's declared un-funded exit (code 2) no longer surfaces as a systemd failure | `systemctl` sweep + `10-exit2.conf` drop-in |
+| **Alerting** | ✅ Telegram channel live (`@DenaroAlertBot`): watchdog across **bots · canary · fleet** (anti-flap on 2 consecutive detections, recovery message) + 09:00 digest | zero-silence initiative |
+| **Squad & agents** | ✅ **8 executors + 1 director** on 3 machines: `A0-win` · `A0-mc2` · `DSH-mc2/omarchy/win` · `opencode-mc2/omarchy` · `agy-omarchy` — every delivery reviewed by Hermes, tests re-run in-repo | see § The operations layer |
 | **Security** | ⚠️ one host was compromised, now contained | see § Security |
 | **Economy** | ⚠️ current fee tier cancels the edge — see § The economics | measured on real fees |
+
+---
+
+## 📜 The story — from «La Baracca» to a measured fleet
+
+The project was originally nicknamed *«La Baracca»* — Italian for a makeshift contraption always
+needing another patch. The name aged well: for a year it was exactly that — bots that ran, numbers
+that did not reconcile, zero euros earned, through several attempts and several AI tools (OpenClaw,
+Hermes, Agent Zero, DeepSeek TUI). The turning point was not a feature. It was a decision: stop
+building, start measuring — and make the measuring a gate.
+
+| When | What happened | The lesson it left |
+| :--- | :--- | :--- |
+| **2026, spring → summer** | The `denaro` series: four codebases one after another — Binance on a phone, a first `money` (grid, DCA, scalper, hedge, futures, sentiment), **this** repository (49,162 lines, 17 bots, three machines), `denaro2` on the VPSes | building the system *first* and looking for something to capture *afterwards* does not work |
+| **2026-09** | The audit (`docs/01`): «the system works, on an unsupervised baracca» — unversioned services, capital the accounts did not have, 1,486 ticks lost silently, 10 of 12 outages from one stale path | stop; re-found |
+| **2026-09-23 → 30** | The re-foundation: three nodes = three families = three accounts; risk becomes a portfolio property (2% / −3% / −10%); the **8-criteria gate** becomes code; experiments are pre-registered and judged one by one | the gate is not a guideline: it is code, and its rejection is binding |
+| **2026-10-01** | **The first real order of the project** executes on OKX EEA; the **canary C1** (DOGE funding carry) opens — minimal size, fully reconciled | an experiment, not a harvest |
+| **2026-10-03** | Owner deposits **+1,000 EUR**; the fleet gains its agents (`DSH`, `A0`, `opencode`, `agy`), live alerting, and a post-reboot check (34/34) | capital does not create the edge — it makes the gain *visible* |
+
+The old codebases live in the sibling [`money`](https://github.com/grivetto/money) repository —
+`legacy/`, tracked with their history, memory rather than foundation. Research happens there;
+**nothing reaches production without passing the gate.**
 
 ---
 
@@ -111,7 +135,7 @@ room and a monitoring post.
  │ · Hermes — direction, code, review     │  │ · aggregator :8912 → 34 bots      │
  │ · fabric master — one action every 3 s │  │ · dashboard :8913 · landing :8914 │
  │ · Zabbix 7.0 (Docker) + alerting       │  │ · Grafana :3000 · health :8911    │
- │ · A0-MC2 coder (Gemini 2.5 Flash)      │  │ · canary (live) · dry bench       │
+ │ · A0-mc2 coder · DSH-mc2 (dsh-web)     │  │ · canary (live) · dry bench       │
  │ · fabric worker — every 5 s            │  │ · fabric worker — every 5 s       │
  └────────────────────────────────────────┘  └───────────────────────────────────┘
  ┌────────────────────────────────────────┐
@@ -122,8 +146,8 @@ room and a monitoring post.
  └────────────────────────────────────────┘
  ┌────────────────────────────────────────┐
  │ agents node (Omarchy, LAN) — agents    │
- │ · DSH harness — research (dsh-mc2)     │
- │ · OpenCode — free task executor        │
+ │ · DSH-omarchy — harness + dsh-web      │
+ │ · opencode-omarchy · agy-omarchy       │
  └────────────────────────────────────────┘
    telemetry: paper fleet (simulated, all three nodes) → aggregator → dashboard + landing →
    Zabbix «Money» (38 hosts — bots, machines, project; auto-heal on known faults)
@@ -131,27 +155,30 @@ room and a monitoring post.
 
 **The live bot** — since 01/10 a real bot trades on OKX EEA: carry **C1** (DOGE spot + X-Perp
 short, 1× isolated, size deliberately minimal), fully reconciled against the exchange; funding
-accrues three times a day (00/08/16 UTC) and the net is slightly positive at the time of
-writing. The 14-day validation window closes on **15/10** with pre-registered criteria
-(`docs/16`). It is the project's **first real execution**: everything else stays paper +
-research.
+accrues three times a day (00/08/16 UTC) and the net is slightly positive (day 3/14: funding
++0.0076 USDC, net ≈ +0.009 USDC). The 14-day validation window closes on **15/10** with
+pre-registered criteria (`docs/16`). It is the project's **first real execution**: everything else
+stays paper + research.
 
 On **03/10** the owner deposited **+1,000 EUR** (OKX funding wallet, verified read-only:
 +1,000.00 exact) to fund the carry scale-up — deployment gated on the **15/10** review.
 
 ![Denaro system — 03/10/2026](assets/foto-sistema-2026-10-03.png)
 
-*Full-resolution visual: [`FOTO_SISTEMA_2026-10-03.html`](https://github.com/grivetto/money/blob/main/FOTO_SISTEMA_2026-10-03.html) (sibling `money` repo).*
+*Full-resolution visual: [`FOTO_SISTEMA_2026-10-03.html`](https://github.com/grivetto/money/blob/main/FOTO_SISTEMA_2026-10-03.html) · squad: [`FOTO_SQUADRA_2026-10-03.html`](https://github.com/grivetto/money/blob/main/FOTO_SQUADRA_2026-10-03.html) (sibling `money` repo).*
 
 **In pratica** — work flows through one loop with a small bench of executors: two Agent Zero coders
-(mc2 and PC), a DSH peer session, free OpenCode executors — plus the **agents node** (Omarchy,
-LAN: DSH + OpenCode), wired to the same channel and review loop. Every delivery is reviewed by
-Hermes with the tests re-run in the repository before anything lands; research itself lives in
-the sibling repo [`money`](https://github.com/grivetto/money): idea → pre-registered spec →
-executor → review → measure → 8-criteria gate → promote or archive → dry bench → canary →
-minimum-size live. Heartbeats and freshness checks cover every critical daemon: the fabric tick
-and the node shards are watched, and Zabbix auto-heals known fault patterns while raising the
-rest.
+(`A0-mc2` and `A0-win` on the PC), three DSH instances (`DSH-mc2`, `DSH-omarchy` research peer,
+`DSH-win` legacy peer), free OpenCode executors (`opencode-mc2`, `opencode-omarchy`) and
+`agy-omarchy` (Antigravity) — plus the **agents node** (Omarchy, LAN), wired to the same channel and
+review loop. Every delivery is reviewed by Hermes with the tests re-run in the repository before
+anything lands; research itself lives in the sibling repo
+[`money`](https://github.com/grivetto/money): idea → pre-registered spec → executor → review →
+measure → 8-criteria gate → promote or archive → dry bench → canary → minimum-size live.
+Heartbeats and freshness checks cover every critical daemon: the fabric tick and the node shards
+are watched, and Zabbix auto-heals known fault patterns while raising the rest.
+
+![The squad — 03/10/2026](assets/foto-squadra-2026-10-03.png)
 
 ### Core technologies
 
@@ -164,9 +191,9 @@ rest.
 | **Backtest** | Own engine, fee- and slippage-aware | The same decision code as live: one rig for both |
 | **Fleet ops** | systemd (system + user units, `linger`), SSH, Tailscale, Cloudflare Tunnel | No inbound exposure; telemetry only on loopback |
 | **Telemetry** | Zabbix 7.0 LTS (one agent per host), Prometheus, Grafana, health endpoints | Equity curves, tick health, staleness badges |
-| **Integrity** | `tools/fleet_integrity.py` | Miner / crontab / sudoers / unit-path / port checks, with exit code |
+| **Integrity** | `tools/fleet_integrity.py` + `tools/postboot_check.sh` | Miner / crontab / sudoers / unit-path / port checks, with exit code; one-command post-reboot verification (34 checks) |
 | **Packaging** | Docker + `docker-compose`, `venv`, `requirements.txt` | Reproducible environments across three hosts |
-| **Quality** | pytest (**382 passed, 3 skipped**), ruff | A suite that can be executed is the precondition for verifying anything |
+| **Quality** | pytest (**387 passed, 3 skipped**), ruff | A suite that can be executed is the precondition for verifying anything |
 | **CI** | GitHub Actions | lint and tests on push |
 | **Config & secrets** | YAML node configs, one `.env_<node>` per node (mode 600, gitignored) | One account per node, isolated by `env_prefix` |
 | **Version control** | git, one writer per path | Provenance: who changed what, and when |
@@ -176,7 +203,7 @@ rest.
 ## 🧪 Testing — and why it was the biggest fix of this cycle
 
 ```bash
-python -m pytest denaro/tests -q      # 382 passed, 3 skipped
+python -m pytest denaro/tests -q      # 387 passed, 3 skipped
 ```
 
 For weeks the suite reported **63 failed and 50 errors**. Almost none of them were code defects:
@@ -299,6 +326,9 @@ cp .env.example .env         # credentials stay local: never commit secrets
 python tools/fleet_integrity.py
 python tools/fleet_integrity.py --host nuvola --host MARCODG1 --host mc2
 
+# post-reboot verification (34 checks across all nodes)
+bash tools/postboot_check.sh
+
 # tests
 python -m pytest denaro/tests -q
 
@@ -313,18 +343,19 @@ python -m denaro.backtest --config config/node_nuvola_trade.yaml --days 60 --fee
 
 ## 🚧 Open work, in order of value
 
-1. **Record the grid position on fill.** The one remaining real test failure: a grid buys, the fill
-   is not recorded as an open position, and the stop falls back to deducing it from sell orders.
-   Correct, but not sufficient.
-2. **Test isolation.** One test passes alone and fails in the suite → shared state between tests.
-   Related: `pytest-asyncio` is not installed and `asyncio_mode` is an unknown option, so async
-   tests currently run through an unexplained mechanism.
-3. **Telemetry** — 4 units in pathological restart, all from `~/denaro` vs `~/alpha-omega-trading`
-   path drift.
-4. **Version the infrastructure** (`deploy/systemd/`, `deploy/cron/` with a parameterised
-   `PROJECT_ROOT`): the root cause of 10 of 12 broken units, and of the blindness about who changed
-   what.
-5. **Capital.** The decisive variable, and deliberately separate from the code.
+1. **Canary C1 review — 15/10.** The 14-day validation window closes with pre-registered criteria
+   (`docs/16`); the multi-pair carry scale-up deploys right after a green light — plan written and
+   ready (`money/docs/20`), owner-gated.
+2. **The first promoted edge is still missing — the honest headline.** Every strategy family
+   measured so far is archived; the live thesis (funding carry) is in validation, not yet promoted.
+   Research continues in the sibling repo (P-series registry, M1 validation release).
+3. **DSH-win backlog**: several requests await an owner turn on the Windows peer (file channel
+   `hermes_bridge/dsh/`).
+4. **Minor known gaps, kept honest:** grid fill recording fallback (carried since 09/25); async
+   tests still run through an undocumented mechanism.
+5. **Keep the workshop a workshop:** everything that restarts has a check
+   (`tools/postboot_check.sh`, verified 34/34 post-reboot), and everything that breaks has an alert
+   (`@DenaroAlertBot`, watchdog across bots · canary · fleet).
 
 ## 🗺 Scaling path
 
@@ -334,12 +365,12 @@ together is the experiment already run — and it produced 14% aggregate risk, b
 other on shared equity, and one stop liquidating another bot's inventory.
 
 - [x] **Now:** repository in order, three critical defects closed with proof, integrity check
-      operational, suite executable.
-- [ ] **Next:** grid fill recording, test isolation, telemetry repaired, infrastructure versioned.
-- [ ] **Then:** the fee gate — put **one** account into a clean state and request the derivatives
-      upgrade. It touches no deployment, it is reversible, and it is the only action that unlocks
-      frequency.
-- [ ] **Then:** staged capital, and only on out-of-sample evidence.
+      operational, suite executable, infrastructure versioned (`deploy/`).
+- [x] **Then:** the fee gate — derivatives opened on OKX EEA (`acctLv 2`); the tooling is back in
+      a position to use it.
+- [x] **2026-10-03:** owner deposited **+1,000 EUR**; capital is staged, deployment gated on the
+      **15/10** canary review.
+- [ ] **Next:** the first promoted edge out-of-sample — everything else already waits for it.
 
 ---
 

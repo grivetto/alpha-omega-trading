@@ -28,7 +28,7 @@
 
 ---
 
-## 📊 Estado de un vistazo — actualizado 2026-10-01
+## 📊 Estado de un vistazo — actualizado 2026-10-03
 
 > **La flota opera solo con lo que pasa la puerta — y la primera excepción real está en marcha.** Desde
 > 2026-10-01 un **canary** con dinero real corre en OKX EEA: un carry de funding de DOGE (spot + hedge de perp),
@@ -43,10 +43,21 @@
 | **Estado sin fondos** | ✅ explícito `ok` / `sottocapitalizzato` / `non_finanziato` / `illeggibile` | 18 tests |
 | **Límite de exposición de la cuenta** | ✅ conectado al nodo (el registro existía, nadie lo había construido) | 15 tests |
 | **Comprobación de integridad de la flota** | ✅ `tools/fleet_integrity.py`, código de salida 1 ante cualquier alarma | 14 alarmas en MARCODG1, 7 en nuvola |
-| **Trading en vivo** | ✅ un canary en vivo (carry de DOGE): pequeño, reconciliado, funding devengándose | resto de la flota: paper + investigación |
-| **Servicios de telemetría** | ⚠️ 4 unidades en reinicio patológico (deriva de rutas) | `denaro-watchdog` fallido |
+| **Trading en vivo** | ✅ un canary en vivo (carry C1 de DOGE): tamaño mínimo, reconciliado, funding devengándose (día 3/14) | resto de la flota: paper + investigación |
+| **Servicios de telemetría** | ✅ barrido limpio en los tres nodos (03/10) + check post-reinicio 34/34 | sweep `systemctl` + `postboot_check.sh` |
 | **Seguridad** | ⚠️ un host fue comprometido, ahora contenido | ver § Seguridad |
 | **Economía** | ⚠️ el tramo de comisiones actual anula la ventaja — ver § La economía | medido sobre comisiones reales |
+
+---
+
+## 📜 La historia — de «La Baracca» a una flota medida
+
+*«La Baracca»* — el «cacharro» que siempre necesita otro parche: durante un año el proyecto fue
+exactamente eso — bots que corrían, números que no cuadraban, cero euros ganados. El punto de
+inflexión fue una decisión: dejar de construir y empezar a medir. Hoy la flota opera solo lo que
+pasa el gate de 8 criterios; desde el 01/10 un canary carry (DOGE) corre con dinero real
+(review 15/10), capital ~1.100 EUR. Historia completa: `README.md` / `README.it.md` · la
+investigación vive en el repo gemelo [`money`](https://github.com/grivetto/money).
 
 ---
 
@@ -97,7 +108,7 @@ defectos que se observaron en producción (ver § Lecciones).
 
 Además del trading, las mismas máquinas — más un **nodo de agentes** (Omarchy, LAN) — llevan todo
 lo que construye, vigila y protege la flota: hub (mc2), sala de operaciones (MARCODG1), puesto de
-monitorización (nuvola) y el banco de operarios (A0-MC2 + A0-PC con Gemini 2.5, DSH, OpenCode)
+monitorización (nuvola) y el banco de operarios (A0-mc2 + A0-win con Gemini 2.5, DSH ×3, OpenCode ×2, agy-omarchy)
 que entregan a Hermes — nada entra sin revisión. Desde el 01/10 un bot real opera carry C1 (DOGE)
 en OKX EEA: tamaño mínimo, reconciliado contra el exchange, validación hasta el 15/10. El **03/10** el propietario depositó **+1.000 EUR** (funding wallet, verificado read-only) para escalar el carry — despliegue condicionado a la revisión.
 
@@ -118,7 +129,7 @@ en OKX EEA: tamaño mínimo, reconciliado contra el exchange, validación hasta 
 | **Telemetría** | Zabbix 7.0 LTS (un agente por host), Prometheus, Grafana, endpoints de salud | Curvas de equity, salud de los ticks, indicadores de obsolescencia |
 | **Integridad** | `tools/fleet_integrity.py` | Comprobaciones de miner / crontab / sudoers / rutas de unidades / puertos, con código de salida |
 | **Empaquetado** | Docker + `docker-compose`, `venv`, `requirements.txt` | Entornos reproducibles en los tres hosts |
-| **Calidad** | pytest (**382 passed, 3 skipped**), ruff | Una suite que se puede ejecutar es la condición previa para verificar cualquier cosa |
+| **Calidad** | pytest (**387 passed, 3 skipped**), ruff | Una suite que se puede ejecutar es la condición previa para verificar cualquier cosa |
 | **CI** | GitHub Actions | lint y pruebas en cada push |
 | **Configuración y secretos** | Configuraciones de nodo en YAML, un `.env_<node>` por nodo (modo 600, en gitignore) | Una cuenta por nodo, aislada mediante `env_prefix` |
 | **Control de versiones** | git, un solo escritor por ruta | Procedencia: quién cambió qué, y cuándo |
@@ -128,7 +139,7 @@ en OKX EEA: tamaño mínimo, reconciliado contra el exchange, validación hasta 
 ## 🧪 Pruebas — y por qué fueron la mayor corrección de este ciclo
 
 ```bash
-python -m pytest denaro/tests -q      # 382 passed, 3 skipped
+python -m pytest denaro/tests -q      # 387 passed, 3 skipped
 ```
 
 Durante semanas la suite reportaba **63 fallos y 50 errores**. Casi ninguno eran defectos de código:
@@ -281,7 +292,7 @@ python -m denaro.backtest --config config/node_nuvola_trade.yaml --days 60 --fee
    pruebas. Relacionado: `pytest-asyncio` no está instalado y `asyncio_mode` es una opción
    desconocida, así que las pruebas asíncronas se ejecutan actualmente mediante un mecanismo sin
    explicar.
-3. **Telemetría** — 4 unidades en reinicio patológico, todas por la deriva de rutas entre `~/denaro`
+3. **Telemetría** — reparada (barrido limpio 03/10, post-reinicio 34/34); antes: deriva de rutas entre `~/denaro`
    y `~/alpha-omega-trading`.
 4. **Versionar la infraestructura** (`deploy/systemd/`, `deploy/cron/` con un `PROJECT_ROOT`
    parametrizado): la causa raíz de 10 de 12 unidades rotas, y de la ceguera sobre quién cambió qué.
