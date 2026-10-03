@@ -19,8 +19,8 @@ echo "-- mc2: servizi utente (linger) e timer"
 for u in denaro-node-mc2 hermes-gateway fabbrica-tick.timer; do chk_uunit "$u"; done
 echo
 echo "-- mc2: porte chiave"
-c=$(curl -s -o /dev/null -m 5 -w '%{http_code}' http://127.0.0.1:3080/ || true)
-[ "$c" = "401" ] && ok "dsh-web :3080 (401 = atteso)" || bad "dsh-web :3080 (HTTP $c)"
+c=$(curl -s -o /dev/null -m 5 -w '%{http_code}' http://127.0.0.1:4080/ || true)
+[ "$c" = "401" ] && ok "dsh-web :4080 (401 = atteso)" || bad "dsh-web :4080 (HTTP $c)"
 c=$(curl -s -o /dev/null -m 5 -w '%{http_code}' http://127.0.0.1:8642/ || true)
 [ -n "$c" ] && [ "$c" != "000" ] && ok "hermes-gateway :8642 (HTTP $c)" || bad "hermes-gateway :8642 (HTTP $c)"
 echo
@@ -42,8 +42,8 @@ echo
 echo "-- omarchy (nodo agenti)"
 if ssh -o BatchMode=yes -o ConnectTimeout=8 omarchy 'systemctl is-active --quiet dsh-web' 2>/dev/null; then
   ok "omarchy: ssh + dsh-web attivi"
-  c=$(ssh -o BatchMode=yes -o ConnectTimeout=8 omarchy 'curl -s -o /dev/null -m 5 -w "%{http_code}" http://127.0.0.1:3080/' 2>/dev/null || true)
-  [ "$c" = "401" ] && ok "omarchy dsh-web :3080 (401 = atteso)" || bad "omarchy dsh-web :3080 (HTTP $c)"
+  c=$(ssh -o BatchMode=yes -o ConnectTimeout=8 omarchy 'curl -s -o /dev/null -m 5 -w "%{http_code}" http://127.0.0.1:5080/' 2>/dev/null || true)
+  [ "$c" = "401" ] && ok "omarchy dsh-web :5080 (401 = atteso)" || bad "omarchy dsh-web :5080 (HTTP $c)"
 else
   bad "omarchy non raggiungibile o dsh-web giu"
 fi
