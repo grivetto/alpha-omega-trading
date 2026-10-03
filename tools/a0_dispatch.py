@@ -25,6 +25,7 @@ INLINE = "--inline" in sys.argv
 CTX = None
 MSG_FILE = None
 PULL = None
+SINCE = -1
 if "--pull" in sys.argv:
     _p = sys.argv.index("--pull")
     PULL = (sys.argv[_p + 1], sys.argv[_p + 2])
@@ -34,10 +35,21 @@ elif "--ctx" in sys.argv:
     _i = sys.argv.index("--ctx")
     CTX = sys.argv[_i + 1]
     MINUTES = 3.0
+    _skip = False
     for _j in range(_i + 2, len(sys.argv)):
         _a = sys.argv[_j]
+        if _skip:
+            _skip = False
+            continue
         if _a == "--msg":
             MSG_FILE = sys.argv[_j + 1]
+            _skip = True
+        elif _a == "--since":
+            try:
+                SINCE = int(sys.argv[_j + 1])
+            except (ValueError, IndexError):
+                pass
+            _skip = True
         elif not _a.startswith("--"):
             try:
                 MINUTES = float(_a)
@@ -152,7 +164,7 @@ def main():
         st, raw = call("POST", "/api/message_async", {"text": msg, "context": ctxid},
                        headers={"X-CSRF-Token": token})
         print("kickoff:", st, raw[:160].decode(errors="replace"))
-    max_no = -1
+    max_no = SINCE
     seen = 0
     end = time.time() + MINUTES * 60
     while time.time() < end:
