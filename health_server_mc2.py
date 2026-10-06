@@ -15,8 +15,11 @@ from pathlib import Path
 HEALTH_DIR = Path(os.getenv("HEALTH_DIR", "/home/sergio/denaro/health"))
 PORT = int(os.getenv("HEALTH_PORT", "8911"))
 HOST = os.getenv("HEALTH_HOST", "127.0.0.1")
-# Nomi file reali su mc2 (verificati 2026-08-26)
-BOTS = {"btc": "btc_mc2", "crv": "crv_mc2", "doge": "doge_mc2", "eth": "eth_mc2", "sol": "sol_mc2", "trx": "trx_mc2", "xrp": "xrp_mc2"}
+# Nomi file reali su mc2 (aggiornati 2026-10-06: flotta riconvertita a OFFICINA PAPER
+# il 01/10; i vecchi btc_mc2.json sono in health/_archivio_pre_paper_20261001/).
+BOTS = {"btc": "btc_mc2_paper", "crv": "crv_mc2_paper", "doge": "doge_mc2_paper",
+        "eth": "eth_mc2_paper", "sol": "sol_mc2_paper", "trx": "trx_mc2_paper",
+        "xrp": "xrp_mc2_paper"}
 
 
 def read_health(name: str):

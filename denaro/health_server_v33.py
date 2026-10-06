@@ -41,7 +41,10 @@ class Handler(BaseHTTPRequestHandler):
         try:
             if path in ("/health", ""):
                 bots = {}
-                for name in ("ada_marcodg1_live", "algo_marcodg1_live", "arb_marcodg1_live", "xlm_marcodg1_live"):
+                # 2026-10-06: flotta riconvertita a OFFICINA PAPER (01/10); i file
+                # reali sono *_marcodg1_live_paper.json (i vecchi in _archivio_pre_paper).
+                for name in ("ada_marcodg1_live_paper", "algo_marcodg1_live_paper",
+                             "arb_marcodg1_live_paper", "xlm_marcodg1_live_paper"):
                     h = read_health(name)
                     if h:
                         bots[name] = h
