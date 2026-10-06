@@ -575,29 +575,12 @@ def collect_node_bots():
     # Ognuno scrive in una dir dedicata (node_data_trade / node_data_xrp) che
     # il collector generico non guarda: li leggiamo per path esplicito.
     _extra_live = [
-        # 2026-09-17: la flotta e' passata al TREND GIORNALIERO su 15 asset
-        # (5 per conto, senza sovrapposizioni). Prima erano 2 bot con
-        # momentum e mean-reversion, entrambi senza alpha misurato.
-        ("nuvola:okx:LINK/EUR", "ssh", "nuvola",
-         "/home/sergio/denaro/health/link_nuvola_live.json"),
-        ("nuvola:okx:AVAX/EUR", "ssh", "nuvola",
-         "/home/sergio/denaro/health/avax_nuvola_live.json"),
-        ("nuvola:okx:DOT/EUR", "ssh", "nuvola",
-         "/home/sergio/denaro/health/dot_nuvola_live.json"),
-        ("nuvola:okx:UNI/EUR", "ssh", "nuvola",
-         "/home/sergio/denaro/health/uni_nuvola_live.json"),
-        ("nuvola:okx:SUI/EUR", "ssh", "nuvola",
-         "/home/sergio/denaro/health/sui_nuvola_live.json"),
-        ("nuvola:okx:MINA/EUR", "ssh", "nuvola",
-         "/home/sergio/denaro/health/mina_nuvola_live.json"),
-        ("marcodg1:okx:ADA/EUR", "ssh", "MARCODG1",
-         "/home/marco/denaro/health/ada_marcodg1_live.json"),
-        ("marcodg1:okx:ARB/EUR", "ssh", "MARCODG1",
-         "/home/marco/denaro/health/arb_marcodg1_live.json"),
-        ("marcodg1:okx:XLM/EUR", "ssh", "MARCODG1",
-         "/home/marco/denaro/health/xlm_marcodg1_live.json"),
-        ("marcodg1:okx:ALGO/EUR", "ssh", "MARCODG1",
-         "/home/marco/denaro/health/algo_marcodg1_live.json"),
+        # 2026-10-06: le 10 voci nuvola/marcodg1 che stavano qui puntavano ai file
+        # *_live.json del mondo pre-officina (fermi dal 30/09-01/10): erano la fonte
+        # delle card "equity inattendibile"/"no_file" accanto alle card paper VIVE.
+        # I bot sono stati riconvertiti a OFFICINA PAPER (01/10) e le loro card vivono
+        # su "<nodo>:paper:<SYM>" (fetch_remote_paper, *_paper.json). Voci rimosse;
+        # i file legacy sono archiviati in health/_archivio_pre_paper_20261006/.
     ]
     # UNA ssh per HOST, non una per bot: prima erano 10 connessioni per ciclo
     # e bastava che UNA fallisse per far sparire la card di quel bot dalla
@@ -915,16 +898,10 @@ def collect():
         "mc2:okx:DOGE/EUR": Path("/home/sergio/denaro/health/doge_mc2.json"),
         "mc2:okx:TRX/EUR": Path("/home/sergio/denaro/health/trx_mc2.json"),
         "mc2:okx:CRV/EUR": Path("/home/sergio/denaro/health/crv_mc2.json"),
-        "nuvola:okx:LINK/EUR": Path("/home/sergio/denaro/health/link_nuvola_live.json"),
-        "nuvola:okx:AVAX/EUR": Path("/home/sergio/denaro/health/avax_nuvola_live.json"),
-        "nuvola:okx:DOT/EUR": Path("/home/sergio/denaro/health/dot_nuvola_live.json"),
-        "nuvola:okx:UNI/EUR": Path("/home/sergio/denaro/health/uni_nuvola_live.json"),
-        "nuvola:okx:SUI/EUR": Path("/home/sergio/denaro/health/sui_nuvola_live.json"),
-        "nuvola:okx:MINA/EUR": Path("/home/sergio/denaro/health/mina_nuvola_live.json"),
-        "marcodg1:okx:ADA/EUR": Path("/home/marco/denaro/health/ada_marcodg1_live.json"),
-        "marcodg1:okx:ARB/EUR": Path("/home/marco/denaro/health/arb_marcodg1_live.json"),
-        "marcodg1:okx:XLM/EUR": Path("/home/marco/denaro/health/xlm_marcodg1_live.json"),
-        "marcodg1:okx:ALGO/EUR": Path("/home/marco/denaro/health/algo_marcodg1_live.json"),
+        # 2026-10-06: rimosse le 10 voci nuvola/marcodg1 che puntavano ai file
+        # *_live.json pre-officina (ora archiviati in health/_archivio_pre_paper_20261006/):
+        # erano la fonte delle card "no_file" accanto alle card paper vive. Le card dei
+        # bot riconvertiti vivono su "<nodo>:paper:<SYM>" (fetch_remote_paper, *_paper.json).
     }
     for bot_id, p in live_bots_map.items():
         if p.exists():
