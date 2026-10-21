@@ -727,6 +727,28 @@ class BotTask:
             log.info("IRFMR %s: price=%.6f z=%.2f inv=%.4f reason=%s to_place=%d to_sell=%d",
                      self.cfg.symbol, price, z_val, self.policy._inventory,
                      decision.reason, len(decision.to_place), len(decision.to_sell))
+        elif hasattr(self.policy, 'segnale_breakout'):
+            # TREND policy (officina paper): la reason porta gia' i valori
+            # (chiusura/canale/ema) ma nessuno la stampa — senza questa riga
+            # un bot fermo e' indistinguibile da un mercato senza breakout.
+            # Rate-limit per bot: una riga ogni ~10 min, mai una per tick.
+            _ora = time.time()
+            if _ora - getattr(self, '_ultimo_trend_log', 0.0) >= 600.0:
+                self._ultimo_trend_log = _ora
+                try:
+                    _b = list(getattr(self.policy, 'barre', None) or [])
+                    _close = float(_b[-1]["c"]) if _b else float(price)
+                    _canale = float(getattr(self.policy, 'donchian', 0.0) or 0.0)
+                    _manca = ((_canale - _close) / _close * 100.0
+                              if _close > 0 and _canale > 0 else 0.0)
+                    log.info("TREND %s: barre=%d close=%.6f canale=%.6f "
+                             "(manca %.2f%%) ema=%.6f atr=%.6f | %s",
+                             self.cfg.symbol, len(_b), _close, _canale, _manca,
+                             float(getattr(self.policy, 'ema', 0.0) or 0.0),
+                             float(getattr(self.policy, 'atr', 0.0) or 0.0),
+                             decision.reason)
+                except Exception:  # noqa: BLE001 - diagnostica non critica
+                    pass
 
         # 3a-0) STOP MONITORATO: le policy che escono a trigger (trend) NON
         #       emettono una vendita limite — un limite sotto il mercato si
